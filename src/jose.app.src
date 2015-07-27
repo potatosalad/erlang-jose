@@ -1,0 +1,22 @@
+%% -*- mode: erlang; tab-width: 4; indent-tabs-mode: 1; st-rulers: [70] -*-
+%% vim: ts=4 sw=4 ft=erlang noet
+{application, jose, [
+	{description, "JSON Object Signing and Encryption"},
+	{vsn, "1.0.0"},
+	{id, "git"},
+	{registered, []},
+	{applications, [
+		kernel,
+		stdlib,
+		crypto,
+		asn1,
+		public_key,
+		crypto_rsassa_pss,
+		jsx
+	]},
+	{modules, []},
+	{contributors, ["Andrew Bennett"]},
+	{licenses, ["Mozilla Public License Version 2.0"]},
+	{links, [{"Github", "https://github.com/potatosalad/erlang-jose"}]}
+]}.
+
