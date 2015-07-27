@@ -1,10 +1,10 @@
-# JSON Object Signing and Encryption (JOSE)
+# JOSE
 
 [![Build Status](https://travis-ci.org/potatosalad/erlang-jose.png?branch=master)](https://travis-ci.org/potatosalad/erlang-jose)
 
 JSON Object Signing and Encryption (JOSE) for Erlang and Elixir.
 
-## JSON Web Encryption (JWE) [RFC 7516](https://tools.ietf.org/html/rfc7516)
+### JSON Web Encryption (JWE) [RFC 7516](https://tools.ietf.org/html/rfc7516)
 
 #### `"alg"` [RFC 7518 Section 4](https://tools.ietf.org/html/rfc7518#section-4)
 
@@ -39,7 +39,7 @@ JSON Object Signing and Encryption (JOSE) for Erlang and Elixir.
 
 - [X] `DEF`
 
-## JSON Web Key (JWK) [RFC 7517](https://tools.ietf.org/html/rfc7517)
+### JSON Web Key (JWK) [RFC 7517](https://tools.ietf.org/html/rfc7517)
 
 #### `"alg"` [RFC 7518 Section 6](https://tools.ietf.org/html/rfc7518#section-6)
 
@@ -47,7 +47,7 @@ JSON Object Signing and Encryption (JOSE) for Erlang and Elixir.
 - [X] `RSA`
 - [X] `oct`
 
-## JSON Web Signature (JWS) [RFC 7515](https://tools.ietf.org/html/rfc7515)
+### JSON Web Signature (JWS) [RFC 7515](https://tools.ietf.org/html/rfc7515)
 
 #### `"alg"` [RFC 7518 Section 3](https://tools.ietf.org/html/rfc7518#section-3)
 
