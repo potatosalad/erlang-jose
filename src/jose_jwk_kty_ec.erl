@@ -126,7 +126,10 @@ sign(Message, DigestType, ECPrivateKey=#'ECPrivateKey'{}) ->
 	#'ECDSA-Sig-Value'{ r = R, s = S } = public_key:der_decode('ECDSA-Sig-Value', DERSignature),
 	RBin = int_to_bin(R),
 	SBin = int_to_bin(S),
-	Signature = << RBin/binary, SBin/binary >>,
+	Size = max(byte_size(RBin), byte_size(SBin)),
+	RPad = pad(RBin, Size),
+	SPad = pad(SBin, Size),
+	Signature = << RPad/binary, SPad/binary >>,
 	Signature;
 sign(_Message, _DigestType, {#'ECPoint'{}, _}) ->
 	erlang:error(not_supported).
@@ -138,20 +141,11 @@ signer(#'ECPrivateKey'{}, _Fields, _PlainText) ->
 
 verify(Message, DigestType, Signature, ECPublicKey={#'ECPoint'{}, _}) ->
 	SignatureLen = byte_size(Signature),
-	{RBin0, SBin0} = split_binary(Signature, (SignatureLen div 2)),
-	R0 = crypto:bytes_to_integer(RBin0),
-	S0 = crypto:bytes_to_integer(SBin0),
-	DERSignature0 = public_key:der_encode('ECDSA-Sig-Value', #'ECDSA-Sig-Value'{ r = R0, s = S0 }),
-	case {public_key:verify(Message, DigestType, DERSignature0, ECPublicKey), (SignatureLen rem 2)} of
-		{false, 1} ->
-			{RBin1, SBin1} = split_binary(Signature, (SignatureLen div 2) + (SignatureLen rem 2)),
-			R1 = crypto:bytes_to_integer(RBin1),
-			S1 = crypto:bytes_to_integer(SBin1),
-			DERSignature1 = public_key:der_encode('ECDSA-Sig-Value', #'ECDSA-Sig-Value'{ r = R1, s = S1 }),
-			public_key:verify(Message, DigestType, DERSignature1, ECPublicKey);
-		{Verified, _} ->
-			Verified
-	end;
+	{RBin, SBin} = split_binary(Signature, (SignatureLen div 2)),
+	R = crypto:bytes_to_integer(RBin),
+	S = crypto:bytes_to_integer(SBin),
+	DERSignature = public_key:der_encode('ECDSA-Sig-Value', #'ECDSA-Sig-Value'{ r = R, s = S }),
+	public_key:verify(Message, DigestType, DERSignature, ECPublicKey);
 verify(Message, DigestType, Signature, #'ECPrivateKey'{parameters=ECParameters, publicKey=Octets0}) ->
 	Octets = case Octets0 of
 		{_, Octets1} ->
@@ -244,6 +238,12 @@ int_to_bin_neg(-1, Ds=[MSB|_]) when MSB >= 16#80 ->
 	list_to_binary(Ds);
 int_to_bin_neg(X,Ds) ->
 	int_to_bin_neg(X bsr 8, [(X band 255)|Ds]).
+
+%% @private
+pad(Bin, Size) when byte_size(Bin) =:= Size ->
+	Bin;
+pad(Bin, Size) ->
+	pad(<< 0, Bin/binary >>, Size).
 
 %% @private
 parameters_to_crv(secp256r1) ->
