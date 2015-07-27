@@ -260,5 +260,5 @@ public_key_to_x_y(<< 16#04, X:32/binary, Y:32/binary >>) ->
 	{X, Y};
 public_key_to_x_y(<< 16#04, X:48/binary, Y:48/binary >>) ->
 	{X, Y};
-public_key_to_x_y(<< 16#04, X:64/binary, Y:64/binary >>) ->
+public_key_to_x_y(<< 16#04, X:66/binary, Y:66/binary >>) ->
 	{X, Y}.
