@@ -1,0 +1,12 @@
+language: erlang
+
+sudo: false
+
+otp_release:
+  - 18.0
+
+notifications:
+  email: false
+
+script:
+  - "make tests"
