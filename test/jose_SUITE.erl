@@ -108,6 +108,8 @@ jwk_c(C) ->
 	{_, C_9_DATA} = jose_jwe:compact(C_8_ENC_MAP),
 	%% Make sure decryption also works
 	{C_1_JSON_DATA, _} = jose_jwe:block_decrypt(C_4_TXT, C_9_DATA),
+	%% Encrypt and Decrypt
+	{_, C_1_JWK} = jose_jwk:from_map(C_4_TXT, jose_jwk:to_map(C_4_TXT, C_2_JWE, C_1_JWK)),
 	ok.
 
 % JSON Web Signature (JWS)
