@@ -22,4 +22,5 @@ deps
 logs
 test/ct.cover.spec
 /_build
+/cover
 *.ez

@@ -11,8 +11,8 @@
 -module(jose_jwe_zip).
 
 %% jose_jwe callbacks
--export([from_json/1]).
--export([to_json/2]).
+-export([from_map/1]).
+-export([to_map/2]).
 
 %% jose_jwe_zip callbacks
 -export([compress/2]).
@@ -34,10 +34,10 @@
 %% jose_jwe callbacks
 %%====================================================================
 
-from_json(Fields = #{ <<"zip">> := <<"DEF">> }) ->
+from_map(Fields = #{ <<"zip">> := <<"DEF">> }) ->
 	{#jose_jwe_zip{ zip = zlib }, maps:remove(<<"zip">>, Fields)}.
 
-to_json(#jose_jwe_zip{ zip = zlib }, Fields) ->
+to_map(#jose_jwe_zip{ zip = zlib }, Fields) ->
 	Fields#{ <<"zip">> => <<"DEF">> }.
 
 %%====================================================================
