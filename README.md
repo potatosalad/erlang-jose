@@ -4,6 +4,8 @@
 
 JSON Object Signing and Encryption (JOSE) for Erlang and Elixir.
 
+## Algorithm Support
+
 ### JSON Web Encryption (JWE) [RFC 7516](https://tools.ietf.org/html/rfc7516)
 
 #### `"alg"` [RFC 7518 Section 4](https://tools.ietf.org/html/rfc7518#section-4)
@@ -60,7 +62,9 @@ JSON Object Signing and Encryption (JOSE) for Erlang and Elixir.
 - [X] `ES256`
 - [X] `ES384`
 - [X] `ES512`
-- [X] `PS256`
-- [X] `PS384`
-- [X] `PS512`
+- [X] `PS256` \*
+- [X] `PS384` \*
+- [X] `PS512` \*
 - [X] `none`
+
+\* The [crypto_rsassa_pss](https://github.com/potatosalad/erlang-crypto_rsassa_pss) project must be included as a dependency.
