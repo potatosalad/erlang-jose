@@ -140,12 +140,16 @@ derive_key(_) ->
 key_encryptor(KTY, Fields, Key) ->
 	jose_jwk_kty:key_encryptor(KTY, Fields, Key).
 
+public_encrypt(PlainText, [{rsa_pad, rsa_pkcs1_oaep256_padding}], RSAPublicKey=#'RSAPublicKey'{}) ->
+	jose_jwa_pkcs1:rsaes_oaep_encrypt(sha256, PlainText, RSAPublicKey);
 public_encrypt(PlainText, Options, RSAPublicKey=#'RSAPublicKey'{}) ->
 	public_key:encrypt_public(PlainText, RSAPublicKey, Options);
 public_encrypt(PlainText, Options, #'RSAPrivateKey'{modulus=Modulus, publicExponent=PublicExponent}) ->
 	RSAPublicKey = #'RSAPublicKey'{modulus=Modulus, publicExponent=PublicExponent},
 	public_encrypt(PlainText, Options, RSAPublicKey).
 
+private_decrypt(CipherText, [{rsa_pad, rsa_pkcs1_oaep256_padding}], RSAPrivateKey=#'RSAPrivateKey'{}) ->
+	jose_jwa_pkcs1:rsaes_oaep_decrypt(sha256, CipherText, RSAPrivateKey);
 private_decrypt(CipherText, Options, RSAPrivateKey=#'RSAPrivateKey'{}) ->
 	public_key:decrypt_private(CipherText, RSAPrivateKey, Options);
 private_decrypt(_CipherText, _Options, #'RSAPublicKey'{}) ->

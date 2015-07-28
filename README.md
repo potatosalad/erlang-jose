@@ -12,7 +12,7 @@ JSON Object Signing and Encryption (JOSE) for Erlang and Elixir.
 
 - [X] `RSA1_5`
 - [X] `RSA-OAEP`
-- [ ] `RSA-OAEP-256`
+- [X] `RSA-OAEP-256`
 - [X] `A128KW`
 - [X] `A192KW`
 - [X] `A256KW`
