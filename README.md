@@ -37,7 +37,7 @@ JSON Object Signing and Encryption (JOSE) for Erlang and Elixir.
 - [X] `A192GCM`
 - [X] `A256GCM`
 
-\* Implemented in pure Erlang, may be less performant than other supported encryption algorithms.  See [jose_jwa_aes.erl](https://github.com/potatosalad/erlang-jose/blob/master/src/jose_jwa_aes.erl) for implementationd details.
+\* Implemented in pure Erlang, may be less performant than other supported encryption algorithms.  See [jose_jwa_aes.erl](https://github.com/potatosalad/erlang-jose/blob/master/src/jose_jwa_aes.erl) for implementation details.
 
 #### `"zip"` [RFC 7518 Section 7.3](https://tools.ietf.org/html/rfc7518#section-7.3)
 
