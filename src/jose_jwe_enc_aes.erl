@@ -26,7 +26,7 @@
 
 %% Types
 -record(jose_jwe_enc_aes, {
-	cipher  = undefined :: undefined | aes_cbc128 | aes_cbc256 | aes_gcm,
+	cipher  = undefined :: undefined | aes_cbc128 | aes_cbc192 | aes_cbc256 | aes_gcm,
 	bits    = undefined :: undefined | pos_integer(),
 	cek_len = undefined :: undefined | pos_integer(),
 	iv_len  = undefined :: undefined | pos_integer(),
@@ -146,6 +146,26 @@ block_decrypt({AAD, CipherText, CipherTag}, CEK, IV, #jose_jwe_enc_aes{
 			andalso byte_size(IV) =:= IVLen ->
 	crypto:block_decrypt(Cipher, CEK, IV, {AAD, CipherText, CipherTag});
 block_decrypt({AAD, CipherText, CipherTag}, CEK, IV, #jose_jwe_enc_aes{
+		cipher=aes_cbc192,
+		cek_len=CEKLen,
+		iv_len=IVLen,
+		enc_len=EncLen,
+		mac_len=MacLen,
+		tag_len=TagLen,
+		hmac=HMAC})
+			when byte_size(CEK) =:= CEKLen
+			andalso byte_size(IV) =:= IVLen ->
+	<< MacKey:MacLen/binary, EncKey:EncLen/binary >> = CEK,
+	AADLength = << (bit_size(AAD)):1/unsigned-big-integer-unit:64 >>,
+	MacData = << AAD/binary, IV/binary, CipherText/binary, AADLength/binary >>,
+	case crypto:hmac(HMAC, MacKey, MacData) of
+		<< CipherTag:TagLen/binary, _/binary >> ->
+			PlainText = jose_jwa_pkcs7:unpad(jose_jwa_aes:block_decrypt(192, EncKey, IV, CipherText)),
+			PlainText;
+		_ ->
+			error
+	end;
+block_decrypt({AAD, CipherText, CipherTag}, CEK, IV, #jose_jwe_enc_aes{
 		cipher=Cipher,
 		cek_len=CEKLen,
 		iv_len=IVLen,
@@ -175,6 +195,22 @@ block_encrypt({AAD, PlainText}, CEK, IV, #jose_jwe_enc_aes{
 			andalso byte_size(IV) =:= IVLen ->
 	crypto:block_encrypt(Cipher, CEK, IV, {AAD, PlainText});
 block_encrypt({AAD, PlainText}, CEK, IV, #jose_jwe_enc_aes{
+		cipher=aes_cbc192,
+		cek_len=CEKLen,
+		iv_len=IVLen,
+		enc_len=EncLen,
+		mac_len=MacLen,
+		tag_len=TagLen,
+		hmac=HMAC})
+			when byte_size(CEK) =:= CEKLen
+			andalso byte_size(IV) =:= IVLen ->
+	<< MacKey:MacLen/binary, EncKey:EncLen/binary, _/binary >> = CEK,
+	CipherText = jose_jwa_aes:block_encrypt(192, EncKey, IV, jose_jwa_pkcs7:pad(PlainText)),
+	AADLength = << (bit_size(AAD)):1/unsigned-big-integer-unit:64 >>,
+	MacData = << AAD/binary, IV/binary, CipherText/binary, AADLength/binary >>,
+	<< CipherTag:TagLen/binary, _/binary >> = crypto:hmac(HMAC, MacKey, MacData),
+	{CipherText, CipherTag};
+block_encrypt({AAD, PlainText}, CEK, IV, #jose_jwe_enc_aes{
 		cipher=Cipher,
 		cek_len=CEKLen,
 		iv_len=IVLen,
@@ -202,7 +238,7 @@ next_iv(#jose_jwe_enc_aes{iv_len=IVLen}) ->
 %%====================================================================
 
 cipher_supported() ->
-	[aes_cbc128, aes_cbc256, aes_gcm].
+	[aes_cbc128, aes_cbc192, aes_cbc256, aes_gcm].
 
 hmac_supported() ->
 	[sha256, sha384, sha512].
