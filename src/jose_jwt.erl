@@ -93,10 +93,8 @@ to_map(Other) ->
 %% API functions
 %%====================================================================
 
-sign(JWK=#jose_jwk{}, JWT=#jose_jwt{}) ->
-	{Modules0, JWTBinary} = to_binary(JWT),
-	{Modules1, SignedMap} = jose_jwk:sign(JWTBinary, JWK),
-	{maps:merge(Modules0, Modules1), SignedMap};
+sign(JWK=#jose_jwk{kty={Module, KTY}, fields=Fields}, JWT=#jose_jwt{}) ->
+	sign(JWK, Module:signer(KTY, Fields, JWT), JWT);
 sign(JWKOther, JWTOther) ->
 	sign(jose_jwk:from(JWKOther), from(JWTOther)).
 
@@ -104,6 +102,14 @@ sign(JWK=#jose_jwk{}, JWS=#jose_jws{}, JWT=#jose_jwt{}) ->
 	{Modules0, JWTBinary} = to_binary(JWT),
 	{Modules1, SignedMap} = jose_jwk:sign(JWTBinary, JWS, JWK),
 	{maps:merge(Modules0, Modules1), SignedMap};
+sign(JWKOther, {JWSModules, JWSMap=#{ <<"typ">> := _ }}, JWTOther) ->
+	sign(JWKOther, jose_jws:from({JWSModules, JWSMap}), JWTOther);
+sign(JWKOther, {JWSModules, JWSMap0}, JWTOther) when is_map(JWSMap0) ->
+	Keys = [<<"typ">>] -- maps:keys(JWSMap0),
+	JWSMap1 = normalize_signer(Keys, JWSMap0),
+	sign(JWKOther, {JWSModules, JWSMap1}, JWTOther);
+sign(JWKOther, JWSMap, JWTOther) when is_map(JWSMap) ->
+	sign(JWKOther, {#{}, JWSMap}, JWTOther);
 sign(JWKOther, JWSOther, JWTOther) ->
 	sign(jose_jwk:from(JWKOther), jose_jws:from(JWSOther), from(JWTOther)).
 
@@ -120,6 +126,12 @@ verify(Other, Signed) ->
 %%%-------------------------------------------------------------------
 %%% Internal functions
 %%%-------------------------------------------------------------------
+
+%% @private
+normalize_signer([<<"typ">> | Keys], Map) ->
+	normalize_signer(Keys, Map#{ <<"typ">> => <<"JWT">> });
+normalize_signer([], Map) ->
+	Map.
 
 %% @private
 record_to_map(_JWT, Modules, Fields) ->

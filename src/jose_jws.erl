@@ -3,8 +3,9 @@
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <andrew@pixid.com>
 %%% @copyright 2014-2015, Andrew Bennett
-%%% @doc
-%%%
+%%% @doc JSON Web Signature (JWS)
+%%% See RFC 7515: https://tools.ietf.org/html/rfc7515
+%%% See: https://tools.ietf.org/html/draft-ietf-jose-jws-signing-input-options-00
 %%% @end
 %%% Created :  21 Jul 2015 by Andrew Bennett <andrew@pixid.com>
 %%%-------------------------------------------------------------------
@@ -37,6 +38,8 @@
 -export([expand/1]).
 -export([sign/3]).
 -export([sign/4]).
+-export([signing_input/2]).
+-export([signing_input/3]).
 -export([verify/2]).
 
 -define(ALG_ECDSA_MODULE,          jose_jws_alg_ecdsa).
@@ -80,6 +83,10 @@ from_map({Modules, Map}) when is_map(Modules) andalso is_map(Map) ->
 from_map({JWS, Modules = #{ alg := Module }, Map=#{ <<"alg">> := _ }}) ->
 	{ALG, Fields} = Module:from_map(Map),
 	from_map({JWS#jose_jws{ alg = {Module, ALG} }, maps:remove(alg, Modules), Fields});
+from_map({JWS, Modules, Map=#{ <<"b64">> := B64 }}) ->
+	from_map({JWS#jose_jws{ b64 = B64 }, Modules, maps:remove(<<"b64">>, Map)});
+from_map({JWS, Modules, Map=#{ <<"sph">> := SPH }}) ->
+	from_map({JWS#jose_jws{ sph = SPH }, Modules, maps:remove(<<"sph">>, Map)});
 from_map({JWS, Modules, Map=#{ <<"alg">> := << "ES", _/binary >> }}) ->
 	from_map({JWS, Modules#{ alg => ?ALG_ECDSA_MODULE }, Map});
 from_map({JWS, Modules, Map=#{ <<"alg">> := << "HS", _/binary >> }}) ->
@@ -164,9 +171,9 @@ sign(Keys=[_ | _], PlainText, Header, JWS=#jose_jws{alg={ALGModule, ALG}})
 	{Modules, ProtectedBinary} = to_binary(JWS),
 	Protected = base64url:encode(ProtectedBinary),
 	Payload = base64url:encode(PlainText),
-	Message = << Protected/binary, $., Payload/binary >>,
+	SigningInput = signing_input(PlainText, Protected, JWS),
 	Signatures = [begin
-		{Key, base64url:encode(ALGModule:sign(Key, Message, ALG))}
+		{Key, base64url:encode(ALGModule:sign(Key, SigningInput, ALG))}
 	end || Key <- Keys],
 	{Modules, #{
 		<<"payload">> => Payload,
@@ -180,12 +187,39 @@ sign(Key, PlainText, Header, JWS=#jose_jws{alg={ALGModule, ALG}})
 	{Modules, ProtectedBinary} = to_binary(JWS),
 	Protected = base64url:encode(ProtectedBinary),
 	Payload = base64url:encode(PlainText),
-	Message = << Protected/binary, $., Payload/binary >>,
-	Signature = base64url:encode(ALGModule:sign(Key, Message, ALG)),
+	SigningInput = signing_input(PlainText, Protected, JWS),
+	Signature = base64url:encode(ALGModule:sign(Key, SigningInput, ALG)),
 	{Modules, maps:put(<<"payload">>, Payload,
 		signature_to_map(Protected, Header, Key, Signature))};
 sign(Key, PlainText, Header, Other) ->
 	sign(Key, PlainText, Header, from(Other)).
+
+%% See https://tools.ietf.org/html/draft-ietf-jose-jws-signing-input-options-00
+signing_input(Payload, JWS=#jose_jws{}) ->
+	{_, ProtectedBinary} = to_binary(JWS),
+	Protected = base64url:encode(ProtectedBinary),
+	signing_input(Payload, Protected, JWS);
+signing_input(Payload, Other) ->
+	signing_input(Payload, from(Other)).
+
+signing_input(PlainText, Protected, #jose_jws{b64=B64, sph=SPH})
+		when (B64 =:= true
+			orelse B64 =:= undefined)
+		andalso (SPH =:= true
+			orelse SPH =:= undefined) ->
+	Payload = base64url:encode(PlainText),
+	<< Protected/binary, $., Payload/binary >>;
+signing_input(PlainText, _Protected, #jose_jws{b64=B64, sph=false})
+		when (B64 =:= true
+			orelse B64 =:= undefined) ->
+	Payload = base64url:encode(PlainText),
+	<< Payload/binary >>;
+signing_input(Payload, Protected, #jose_jws{b64=false, sph=SPH})
+		when (SPH =:= true
+			orelse SPH =:= undefined) ->
+	<< Protected/binary, $., Payload/binary >>;
+signing_input(Payload, _Protected, #jose_jws{b64=false, sph=false}) ->
+	<< Payload/binary >>.
 
 verify(Key, SignedMap) when is_map(SignedMap) ->
 	verify(Key, {#{}, SignedMap});
@@ -199,8 +233,9 @@ verify(Key, {Modules, #{
 		<<"signature">> := EncodedSignature}}) ->
 	JWS = #jose_jws{alg={ALGModule, ALG}} = from_binary({Modules, base64url:decode(Protected)}),
 	Signature = base64url:decode(EncodedSignature),
-	Message = << Protected/binary, $., Payload/binary >>,
-	{ALGModule:verify(Key, Message, Signature, ALG), base64url:decode(Payload), JWS};
+	PlainText = base64url:decode(Payload),
+	SigningInput = signing_input(PlainText, Protected, JWS),
+	{ALGModule:verify(Key, SigningInput, Signature, ALG), PlainText, JWS};
 verify(Keys = [_ | _], {Modules, Signed=#{
 		<<"payload">> := _Payload,
 		<<"signatures">> := EncodedSignatures}})
@@ -224,6 +259,12 @@ verify(Key, {Modules, #{
 record_to_map(JWS=#jose_jws{alg={Module, ALG}}, Modules, Fields0) ->
 	Fields1 = Module:to_map(ALG, Fields0),
 	record_to_map(JWS#jose_jws{alg=undefined}, Modules#{ alg => Module }, Fields1);
+record_to_map(JWS=#jose_jws{b64=B64}, Modules, Fields0) when is_boolean(B64) ->
+	Fields1 = Fields0#{ <<"b64">> => B64 },
+	record_to_map(JWS#jose_jws{b64=undefined}, Modules, Fields1);
+record_to_map(JWS=#jose_jws{sph=SPH}, Modules, Fields0) when is_boolean(SPH) ->
+	Fields1 = Fields0#{ <<"sph">> => SPH },
+	record_to_map(JWS#jose_jws{sph=undefined}, Modules, Fields1);
 record_to_map(_JWS, Modules, Fields) ->
 	{Modules, Fields}.
 
