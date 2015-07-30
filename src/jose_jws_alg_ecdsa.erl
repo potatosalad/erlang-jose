@@ -9,6 +9,8 @@
 %%% Created :  23 Jul 2015 by Andrew Bennett <andrew@pixid.com>
 %%%-------------------------------------------------------------------
 -module(jose_jws_alg_ecdsa).
+-behaviour(jose_jws).
+-behaviour(jose_jws_alg).
 
 -include("jose_jwk.hrl").
 

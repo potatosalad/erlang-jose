@@ -13,6 +13,16 @@
 -include("jose_jwk.hrl").
 -include("jose_jws.hrl").
 
+-callback from_map(Fields) -> State
+	when
+		Fields :: map(),
+		State  :: any().
+-callback to_map(State, Fields) -> Map
+	when
+		State  :: any(),
+		Fields :: map(),
+		Map    :: map().
+
 %% Decode API
 -export([from/1]).
 -export([from_binary/1]).

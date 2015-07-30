@@ -9,6 +9,8 @@
 %%% Created :  23 Jul 2015 by Andrew Bennett <andrew@pixid.com>
 %%%-------------------------------------------------------------------
 -module(jose_jwk_kty_ec).
+-behaviour(jose_jwk).
+-behaviour(jose_jwk_kty).
 
 -include_lib("public_key/include/public_key.hrl").
 
@@ -20,11 +22,8 @@
 -export([to_thumbprint_map/2]).
 %% jose_jwk_kty callbacks
 -export([block_encryptor/3]).
--export([derive_key/1]).
 -export([derive_key/2]).
 -export([key_encryptor/3]).
--export([public_encrypt/3]).
--export([private_decrypt/3]).
 -export([sign/3]).
 -export([signer/3]).
 -export([verify/4]).
@@ -96,9 +95,6 @@ block_encryptor(_KTY, _Fields, _PlainText) ->
 		<<"enc">> => <<"A128GCM">>
 	}.
 
-derive_key(_) ->
-	erlang:error(not_supported).
-
 derive_key({ECPoint=#'ECPoint'{}, _}, ECPrivateKey=#'ECPrivateKey'{}) ->
 	public_key:compute_key(ECPoint, ECPrivateKey);
 derive_key(#'ECPrivateKey'{parameters=ECParameters, publicKey=Octets0}, ECPrivateKey=#'ECPrivateKey'{}) ->
@@ -114,12 +110,6 @@ derive_key(#'ECPrivateKey'{parameters=ECParameters, publicKey=Octets0}, ECPrivat
 
 key_encryptor(KTY, Fields, Key) ->
 	jose_jwk_kty:key_encryptor(KTY, Fields, Key).
-
-public_encrypt(_PlainText, _Options, _Key) ->
-	erlang:error(not_supported).
-
-private_decrypt(_CipherText, _Options, _Key) ->
-	erlang:error(not_supported).
 
 sign(Message, DigestType, ECPrivateKey=#'ECPrivateKey'{}) ->
 	DERSignature = public_key:sign(Message, DigestType, ECPrivateKey),

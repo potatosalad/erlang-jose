@@ -9,6 +9,8 @@
 %%% Created :  23 Jul 2015 by Andrew Bennett <andrew@pixid.com>
 %%%-------------------------------------------------------------------
 -module(jose_jwk_kty_rsa).
+-behaviour(jose_jwk).
+-behaviour(jose_jwk_kty).
 
 -include_lib("public_key/include/public_key.hrl").
 
@@ -20,7 +22,6 @@
 -export([to_thumbprint_map/2]).
 %% jose_jwk_kty callbacks
 -export([block_encryptor/3]).
--export([derive_key/1]).
 -export([key_encryptor/3]).
 -export([public_encrypt/3]).
 -export([private_decrypt/3]).
@@ -134,11 +135,15 @@ block_encryptor(_KTY, _Fields, _PlainText) ->
 		<<"enc">> => <<"A128CBC-HS256">>
 	}.
 
-derive_key(_) ->
-	erlang:error(not_supported).
-
 key_encryptor(KTY, Fields, Key) ->
 	jose_jwk_kty:key_encryptor(KTY, Fields, Key).
+
+private_decrypt(CipherText, [{rsa_pad, rsa_pkcs1_oaep256_padding}], RSAPrivateKey=#'RSAPrivateKey'{}) ->
+	jose_jwa_pkcs1:rsaes_oaep_decrypt(sha256, CipherText, RSAPrivateKey);
+private_decrypt(CipherText, Options, RSAPrivateKey=#'RSAPrivateKey'{}) ->
+	public_key:decrypt_private(CipherText, RSAPrivateKey, Options);
+private_decrypt(_CipherText, _Options, #'RSAPublicKey'{}) ->
+	erlang:error(not_supported).
 
 public_encrypt(PlainText, [{rsa_pad, rsa_pkcs1_oaep256_padding}], RSAPublicKey=#'RSAPublicKey'{}) ->
 	jose_jwa_pkcs1:rsaes_oaep_encrypt(sha256, PlainText, RSAPublicKey);
@@ -147,13 +152,6 @@ public_encrypt(PlainText, Options, RSAPublicKey=#'RSAPublicKey'{}) ->
 public_encrypt(PlainText, Options, #'RSAPrivateKey'{modulus=Modulus, publicExponent=PublicExponent}) ->
 	RSAPublicKey = #'RSAPublicKey'{modulus=Modulus, publicExponent=PublicExponent},
 	public_encrypt(PlainText, Options, RSAPublicKey).
-
-private_decrypt(CipherText, [{rsa_pad, rsa_pkcs1_oaep256_padding}], RSAPrivateKey=#'RSAPrivateKey'{}) ->
-	jose_jwa_pkcs1:rsaes_oaep_decrypt(sha256, CipherText, RSAPrivateKey);
-private_decrypt(CipherText, Options, RSAPrivateKey=#'RSAPrivateKey'{}) ->
-	public_key:decrypt_private(CipherText, RSAPrivateKey, Options);
-private_decrypt(_CipherText, _Options, #'RSAPublicKey'{}) ->
-	erlang:error(not_supported).
 
 sign(Message, {rsa_pkcs1_v1_5, DigestType}, RSAPrivateKey=#'RSAPrivateKey'{}) ->
 	public_key:sign(Message, DigestType, RSAPrivateKey);

@@ -14,6 +14,30 @@
 -include("jose_jwk.hrl").
 -include("jose_jws.hrl").
 
+-callback from_map(Fields) -> KTY
+	when
+		Fields :: map(),
+		KTY    :: any().
+-callback to_key(KTY) -> Key
+	when
+		KTY :: any(),
+		Key :: any().
+-callback to_map(KTY, Fields) -> Map
+	when
+		KTY    :: any(),
+		Fields :: map(),
+		Map    :: map().
+-callback to_public_map(KTY, Fields) -> Map
+	when
+		KTY    :: any(),
+		Fields :: map(),
+		Map    :: map().
+-callback to_thumbprint_map(KTY, Fields) -> Map
+	when
+		KTY    :: any(),
+		Fields :: map(),
+		Map    :: map().
+
 %% Decode API
 -export([from/1]).
 -export([from/2]).
@@ -62,11 +86,10 @@
 
 %% Types
 -type key() :: #jose_jwk{}.
--type set() :: #jose_jwk_set{}.
 
 -export_type([key/0]).
--export_type([set/0]).
 
+-define(KEYS_MODULE,     jose_jwk_set).
 -define(KTY_EC_MODULE,   jose_jwk_kty_ec).
 -define(KTY_HMAC_MODULE, jose_jwk_kty_hmac).
 -define(KTY_RSA_MODULE,  jose_jwk_kty_rsa).
@@ -131,17 +154,22 @@ from_map(Map) when is_map(Map) ->
 	from_map({#{}, Map});
 from_map({Modules, Map}) when is_map(Modules) andalso is_map(Map) ->
 	from_map({#jose_jwk{}, Modules, Map});
+from_map({JWK, Modules=#{ keys := Module }, Map=#{ <<"keys">> := _ }}) ->
+	{KEYS, Fields} = Module:from_map(Map),
+	from_map({JWK#jose_jwk{ keys = {Module, KEYS} }, maps:remove(keys, Modules), Fields});
 from_map({JWK, Modules=#{ kty := Module }, Map=#{ <<"kty">> := _ }}) ->
 	{KTY, Fields} = Module:from_map(Map),
 	from_map({JWK#jose_jwk{ kty = {Module, KTY} }, maps:remove(kty, Modules), Fields});
+from_map({JWK, Modules, Map=#{ <<"keys">> := _ }}) ->
+	from_map({JWK, Modules#{ keys => ?KEYS_MODULE }, Map});
 from_map({JWK, Modules, Map=#{ <<"kty">> := <<"EC">> }}) ->
 	from_map({JWK, Modules#{ kty => ?KTY_EC_MODULE }, Map});
 from_map({JWK, Modules, Map=#{ <<"kty">> := <<"oct">> }}) ->
 	from_map({JWK, Modules#{ kty => ?KTY_HMAC_MODULE }, Map});
 from_map({JWK, Modules, Map=#{ <<"kty">> := <<"RSA">> }}) ->
 	from_map({JWK, Modules#{ kty => ?KTY_RSA_MODULE }, Map});
-from_map({#jose_jwk{ kty = undefined }, _Modules, _Map}) ->
-	{error, {missing_required_keys, [<<"kty">>]}};
+from_map({#jose_jwk{ keys = undefined, kty = undefined }, _Modules, _Map}) ->
+	{error, {missing_required_keys, [<<"keys">>, <<"kty">>]}};
 from_map({JWK, _Modules, Fields}) ->
 	JWK#jose_jwk{ fields = Fields }.
 
@@ -250,8 +278,8 @@ to_key(#jose_jwk{kty={Module, KTY}}) ->
 to_key(Other) ->
 	to_key(from(Other)).
 
-to_map(#jose_jwk{kty={Module, KTY}, fields=Fields}) ->
-	{#{ kty => Module }, Module:to_map(KTY, Fields)};
+to_map(JWK=#jose_jwk{fields=Fields}) ->
+	record_to_map(JWK, #{}, Fields);
 to_map(Other) ->
 	to_map(from(Other)).
 
@@ -410,3 +438,13 @@ normalize_box([<<"epk">> | Keys], Map, OtherPublicJWK, MyPrivateJWK) ->
 	normalize_box(Keys, Map#{ <<"epk">> => MyPublicMap }, OtherPublicJWK, MyPrivateJWK);
 normalize_box([], Map, _, _) ->
 	Map.
+
+%% @private
+record_to_map(JWK=#jose_jwk{keys={Module, KEYS}}, Modules, Fields0) ->
+	Fields1 = Module:to_map(KEYS, Fields0),
+	record_to_map(JWK#jose_jwk{keys=undefined}, Modules#{ keys => Module }, Fields1);
+record_to_map(JWK=#jose_jwk{kty={Module, KTY}}, Modules, Fields0) ->
+	Fields1 = Module:to_map(KTY, Fields0),
+	record_to_map(JWK#jose_jwk{kty=undefined}, Modules#{ kty => Module }, Fields1);
+record_to_map(_JWK, Modules, Fields) ->
+	{Modules, Fields}.

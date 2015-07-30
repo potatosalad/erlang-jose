@@ -9,6 +9,8 @@
 %%% Created :  23 Jul 2015 by Andrew Bennett <andrew@pixid.com>
 %%%-------------------------------------------------------------------
 -module(jose_jwe_alg_ecdh_es).
+-behaviour(jose_jwe).
+-behaviour(jose_jwe_alg).
 
 -include_lib("public_key/include/public_key.hrl").
 
@@ -18,11 +20,11 @@
 -export([from_map/1]).
 -export([to_map/2]).
 %% jose_jwe_alg callbacks
--export([algorithm/1]).
 -export([key_decrypt/3]).
 -export([key_encrypt/3]).
 -export([next_cek/4]).
 %% API
+-export([algorithm/1]).
 
 %% Types
 -type ec_public_key() :: {#'ECPoint'{},{namedCurve, Oid::tuple()} | #'ECParameters'{}}.
@@ -68,11 +70,6 @@ to_map(A = ?ECDH_ES, F) ->
 %%====================================================================
 %% jose_jwe_alg callbacks
 %%====================================================================
-
-algorithm(?ECDH_ES_A128KW) -> <<"ECDH-ES+A128KW">>;
-algorithm(?ECDH_ES_A192KW) -> <<"ECDH-ES+A192KW">>;
-algorithm(?ECDH_ES_A256KW) -> <<"ECDH-ES+A256KW">>;
-algorithm(?ECDH_ES)        -> <<"ECDH-ES">>.
 
 key_decrypt(#jose_jwk{kty={MyPrivateKTYModule, MyPrivateKTY}}, EncryptedKey, JWEECDHES=#jose_jwe_alg_ecdh_es{epk={EphemeralPublicKey, _}}) ->
 	DerivedKey = case erlang:function_exported(MyPrivateKTYModule, derive_key, 2) of
@@ -136,6 +133,11 @@ next_cek(_Key, ENCModule, ENC, #jose_jwe_alg_ecdh_es{}) ->
 %%====================================================================
 %% API functions
 %%====================================================================
+
+algorithm(?ECDH_ES_A128KW) -> <<"ECDH-ES+A128KW">>;
+algorithm(?ECDH_ES_A192KW) -> <<"ECDH-ES+A192KW">>;
+algorithm(?ECDH_ES_A256KW) -> <<"ECDH-ES+A256KW">>;
+algorithm(?ECDH_ES)        -> <<"ECDH-ES">>.
 
 %%%-------------------------------------------------------------------
 %%% Internal functions

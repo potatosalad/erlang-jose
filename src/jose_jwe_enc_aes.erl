@@ -9,6 +9,8 @@
 %%% Created :  22 Jul 2015 by Andrew Bennett <andrew@pixid.com>
 %%%-------------------------------------------------------------------
 -module(jose_jwe_enc_aes).
+-behaviour(jose_jwe).
+-behaviour(jose_jwe_enc).
 
 %% jose_jwe callbacks
 -export([from_map/1]).

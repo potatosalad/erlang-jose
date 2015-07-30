@@ -9,6 +9,8 @@
 %%% Created :  23 Jul 2015 by Andrew Bennett <andrew@pixid.com>
 %%%-------------------------------------------------------------------
 -module(jose_jwe_alg_aes_kw).
+-behaviour(jose_jwe).
+-behaviour(jose_jwe_alg).
 
 -include("jose_jwk.hrl").
 

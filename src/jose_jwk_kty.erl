@@ -12,6 +12,68 @@
 
 -include_lib("public_key/include/public_key.hrl").
 
+-callback block_encryptor(KTY, Fields, PlainText) -> JWEMap
+	when
+		KTY       :: any(),
+		Fields    :: map(),
+		PlainText :: iodata(),
+		JWEMap    :: map().
+-callback derive_key(KTY) -> DerivedKey
+	when
+		KTY        :: any(),
+		DerivedKey :: iodata().
+-callback derive_key(OtherKTY, KTY) -> DerivedKey
+	when
+		OtherKTY   :: any(),
+		KTY        :: any(),
+		DerivedKey :: iodata().
+-callback key_encryptor(KTY, Fields, Key) -> JWEMap
+	when
+		KTY    :: any(),
+		Fields :: map(),
+		Key    :: any(),
+		JWEMap :: map().
+-callback private_decrypt(CipherText, Options, KTY) -> PlainText
+	when
+		CipherText :: iodata(),
+		Options    :: any(),
+		KTY        :: any(),
+		PlainText  :: iodata().
+-callback public_encrypt(PlainText, Options, KTY) -> CipherText
+	when
+		PlainText  :: iodata(),
+		Options    :: any(),
+		KTY        :: any(),
+		CipherText :: iodata().
+-callback sign(Message, Options, KTY) -> Signature
+	when
+		Message   :: iodata(),
+		Options   :: any(),
+		KTY       :: any(),
+		Signature :: iodata().
+-callback signer(KTY, Fields, Message) -> JWSMap
+	when
+		KTY     :: any(),
+		Fields  :: map(),
+		Message :: any(),
+		JWSMap  :: map().
+-callback verify(Message, Options, Signature, KTY) -> boolean()
+	when
+		Message   :: iodata(),
+		Options   :: any(),
+		Signature :: iodata(),
+		KTY       :: any().
+
+-optional_callbacks([block_encryptor/3]).
+-optional_callbacks([derive_key/1]).
+-optional_callbacks([derive_key/2]).
+-optional_callbacks([key_encryptor/3]).
+-optional_callbacks([private_decrypt/3]).
+-optional_callbacks([public_encrypt/3]).
+-optional_callbacks([sign/3]).
+-optional_callbacks([signer/3]).
+-optional_callbacks([verify/4]).
+
 %% API
 -export([from_key/1]).
 -export([key_encryptor/3]).

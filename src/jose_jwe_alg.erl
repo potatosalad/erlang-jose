@@ -9,3 +9,26 @@
 %%% Created :  23 Jul 2015 by Andrew Bennett <andrew@pixid.com>
 %%%-------------------------------------------------------------------
 -module(jose_jwe_alg).
+
+-callback key_decrypt(Key, {ENCModule, ENC, EncryptedKey}, ALG) -> DecryptedKey
+	when
+		Key          :: any(),
+		ENCModule    :: module(),
+		ENC          :: any(),
+		EncryptedKey :: iodata(),
+		ALG          :: any(),
+		DecryptedKey :: iodata().
+-callback key_encrypt(Key, DecryptedKey, ALG) -> {EncryptedKey, NewALG}
+	when
+		Key          :: any(),
+		DecryptedKey :: iodata(),
+		ALG          :: any(),
+		EncryptedKey :: iodata(),
+		NewALG       :: any().
+-callback next_cek(Key, ENCModule, ENC, ALG) -> DecryptedKey
+	when
+		Key          :: any(),
+		ENCModule    :: module(),
+		ENC          :: any(),
+		ALG          :: any(),
+		DecryptedKey :: iodata().

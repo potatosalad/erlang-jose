@@ -6,17 +6,15 @@
 %%% @doc
 %%%
 %%% @end
-%%% Created :  21 Jul 2015 by Andrew Bennett <andrew@pixid.com>
+%%% Created :  29 Jul 2015 by Andrew Bennett <andrew@pixid.com>
 %%%-------------------------------------------------------------------
 
--ifndef(JOSE_JWK_HRL).
+-ifndef(JOSE_JWT_HRL).
 
--record(jose_jwk, {
-	keys   = undefined :: undefined | {module(), any()},
-	kty    = undefined :: undefined | {module(), any()},
-	fields = #{}       :: map()
+-record(jose_jwt, {
+	fields = #{} :: map()
 }).
 
--define(JOSE_JWK_HRL, 1).
+-define(JOSE_JWT_HRL, 1).
 
 -endif.

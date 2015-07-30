@@ -9,46 +9,54 @@
 %%% Created :  22 Jul 2015 by Andrew Bennett <andrew@pixid.com>
 %%%-------------------------------------------------------------------
 -module(jose_jwe_zip).
+-behaviour(jose_jwe).
+
+-callback compress(Uncompressed, ZIP) -> Compressed
+	when
+		Uncompressed :: iodata(),
+		ZIP          :: any(),
+		Compressed   :: iodata().
+-callback uncompress(Compressed, ZIP) -> Uncompressed
+	when
+		Compressed   :: iodata(),
+		ZIP          :: any(),
+		Uncompressed :: iodata().
 
 %% jose_jwe callbacks
 -export([from_map/1]).
 -export([to_map/2]).
-
 %% jose_jwe_zip callbacks
 -export([compress/2]).
 -export([uncompress/2]).
-
 %% API
 -export([zip_supported/0]).
 
 %% Types
--record(jose_jwe_zip, {
-	zip = undefined :: undefined | zlib
-}).
-
--type zip() :: #jose_jwe_zip{}.
+-type zip() :: zlib.
 
 -export_type([zip/0]).
+
+-define(DEF, zlib).
 
 %%====================================================================
 %% jose_jwe callbacks
 %%====================================================================
 
 from_map(Fields = #{ <<"zip">> := <<"DEF">> }) ->
-	{#jose_jwe_zip{ zip = zlib }, maps:remove(<<"zip">>, Fields)}.
+	{?DEF, maps:remove(<<"zip">>, Fields)}.
 
-to_map(#jose_jwe_zip{ zip = zlib }, Fields) ->
+to_map(?DEF, Fields) ->
 	Fields#{ <<"zip">> => <<"DEF">> }.
 
 %%====================================================================
 %% jose_jwe_zip callbacks
 %%====================================================================
 
-compress(Uncompressed, #jose_jwe_zip{zip=ZIP}) ->
-	ZIP:compress(Uncompressed).
+compress(Uncompressed, zlib) ->
+	zlib:compress(Uncompressed).
 
-uncompress(Compressed, #jose_jwe_zip{zip=ZIP}) ->
-	ZIP:uncompress(Compressed).
+uncompress(Compressed, zlib) ->
+	zlib:uncompress(Compressed).
 
 %%====================================================================
 %% API functions

@@ -9,6 +9,8 @@
 %%% Created :  21 Jul 2015 by Andrew Bennett <andrew@pixid.com>
 %%%-------------------------------------------------------------------
 -module(jose_jwk_kty_hmac).
+-behaviour(jose_jwk).
+-behaviour(jose_jwk_kty).
 
 %% jose_jwk callbacks
 -export([from_map/1]).
@@ -20,8 +22,6 @@
 -export([block_encryptor/3]).
 -export([derive_key/1]).
 -export([key_encryptor/3]).
--export([public_encrypt/3]).
--export([private_decrypt/3]).
 -export([sign/3]).
 -export([signer/3]).
 -export([verify/4]).
@@ -65,12 +65,6 @@ derive_key(Key) ->
 
 key_encryptor(KTY, Fields, Key) ->
 	jose_jwk_kty:key_encryptor(KTY, Fields, Key).
-
-public_encrypt(_PlainText, _Options, _Key) ->
-	erlang:error(not_supported).
-
-private_decrypt(_CipherText, _Options, _Key) ->
-	erlang:error(not_supported).
 
 sign(Message, DigestType, Key) ->
 	crypto:hmac(DigestType, Key, Message).

@@ -9,6 +9,8 @@
 %%% Created :  23 Jul 2015 by Andrew Bennett <andrew@pixid.com>
 %%%-------------------------------------------------------------------
 -module(jose_jws_alg_none).
+-behaviour(jose_jws).
+-behaviour(jose_jws_alg).
 
 %% jose_jws callbacks
 -export([from_map/1]).
