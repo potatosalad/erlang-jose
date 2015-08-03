@@ -18,10 +18,12 @@
 %% API functions
 %%====================================================================
 
+-spec pad(binary()) -> binary().
 pad(Bin) ->
 	Size = 16 - (byte_size(Bin) rem 16),
 	pad(Size, Bin).
 
+-spec unpad(binary()) -> binary().
 unpad(Data) ->
 	P = binary:last(Data),
 	Size = byte_size(Data) - P,

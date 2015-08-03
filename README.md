@@ -64,9 +64,7 @@ JSON Object Signing and Encryption (JOSE) for Erlang and Elixir.
 - [X] `ES256`
 - [X] `ES384`
 - [X] `ES512`
-- [X] `PS256` \*
-- [X] `PS384` \*
-- [X] `PS512` \*
+- [X] `PS256`
+- [X] `PS384`
+- [X] `PS512`
 - [X] `none`
-
-\* The [crypto_rsassa_pss](https://github.com/potatosalad/erlang-crypto_rsassa_pss) project must be included as a dependency.

@@ -146,7 +146,12 @@ private_decrypt(_CipherText, _Options, #'RSAPublicKey'{}) ->
 	erlang:error(not_supported).
 
 public_encrypt(PlainText, [{rsa_pad, rsa_pkcs1_oaep256_padding}], RSAPublicKey=#'RSAPublicKey'{}) ->
-	jose_jwa_pkcs1:rsaes_oaep_encrypt(sha256, PlainText, RSAPublicKey);
+	case jose_jwa_pkcs1:rsaes_oaep_encrypt(sha256, PlainText, RSAPublicKey) of
+		{ok, CipherText} ->
+			CipherText;
+		{error, Reason} ->
+			erlang:error(Reason)
+	end;
 public_encrypt(PlainText, Options, RSAPublicKey=#'RSAPublicKey'{}) ->
 	public_key:encrypt_public(PlainText, RSAPublicKey, Options);
 public_encrypt(PlainText, Options, #'RSAPrivateKey'{modulus=Modulus, publicExponent=PublicExponent}) ->
@@ -156,28 +161,26 @@ public_encrypt(PlainText, Options, #'RSAPrivateKey'{modulus=Modulus, publicExpon
 sign(Message, {rsa_pkcs1_v1_5, DigestType}, RSAPrivateKey=#'RSAPrivateKey'{}) ->
 	public_key:sign(Message, DigestType, RSAPrivateKey);
 sign(Message, {rsa_pss, DigestType}, RSAPrivateKey=#'RSAPrivateKey'{}) ->
-	crypto_rsassa_pss:sign(Message, DigestType, RSAPrivateKey);
+	case jose_jwa_pkcs1:rsassa_pss_sign(DigestType, Message, RSAPrivateKey) of
+		{ok, Signature} ->
+			Signature;
+		{error, Reason} ->
+			erlang:error(Reason)
+	end;
 sign(Message, DigestType, RSAPrivateKey=#'RSAPrivateKey'{}) ->
 	sign(Message, {rsa_pkcs1_v1_5, DigestType}, RSAPrivateKey);
 sign(_Message, _DigestType, #'RSAPublicKey'{}) ->
 	erlang:error(not_supported).
 
 signer(_Key, _Fields, _PlainText) ->
-	case code:is_loaded(crypto_rsassa_pss) of
-		false ->
-			#{
-				<<"alg">> => <<"RS256">>
-			};
-		_ ->
-			#{
-				<<"alg">> => <<"PS256">>
-			}
-	end.
+	#{
+		<<"alg">> => <<"PS256">>
+	}.
 
 verify(Message, {rsa_pkcs1_v1_5, DigestType}, Signature, RSAPublicKey=#'RSAPublicKey'{}) ->
 	public_key:verify(Message, DigestType, Signature, RSAPublicKey);
 verify(Message, {rsa_pss, DigestType}, Signature, RSAPublicKey=#'RSAPublicKey'{}) ->
-	crypto_rsassa_pss:verify(Message, DigestType, Signature, RSAPublicKey);
+	jose_jwa_pkcs1:rsassa_pss_verify(DigestType, Message, Signature, RSAPublicKey);
 verify(Message, DigestType, Signature, #'RSAPrivateKey'{modulus=Modulus, publicExponent=PublicExponent}) ->
 	RSAPublicKey = #'RSAPublicKey'{modulus=Modulus, publicExponent=PublicExponent},
 	verify(Message, DigestType, Signature, RSAPublicKey);
