@@ -3,7 +3,9 @@
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <andrew@pixid.com>
 %%% @copyright 2014-2015, Andrew Bennett
-%%% @doc Advanced Encryption Standard (AES) with Cipher Block Chaining (CBC), as defined in NIST.800-38A
+%%% @doc Advanced Encryption Standard (AES), as defined in NIST.800-38A
+%%% Cipher Block Chaining (CBC)
+%%% Electronic Codebook (ECB)
 %%% See NIST.800-38A: http://csrc.nist.gov/publications/nistpubs/800-38a/sp800-38a.pdf
 %%% @end
 %%% Created :  28 Jul 2015 by Andrew Bennett <andrew@pixid.com>
@@ -11,54 +13,76 @@
 -module(jose_jwa_aes).
 
 %% API
+-export([block_decrypt/3]).
 -export([block_decrypt/4]).
+-export([block_encrypt/3]).
 -export([block_encrypt/4]).
 
 %%====================================================================
 %% API functions
 %%====================================================================
 
+%% ECB
+block_decrypt(Bits, Key, CipherText)
+		when (Bits =:= 128
+			orelse Bits =:= 192
+			orelse Bits =:= 256)
+		andalso bit_size(Key) =:= Bits ->
+	{St, RoundKey} = aes_key_expansion(Bits, Key),
+	ecb_block_decrypt(St, RoundKey, CipherText, <<>>).
+
+%% CBC
 block_decrypt(Bits, Key, IV, CipherText)
 		when (Bits =:= 128
 			orelse Bits =:= 192
 			orelse Bits =:= 256)
 		andalso bit_size(Key) =:= Bits
 		andalso bit_size(IV) =:= 128 ->
-	{St, RoundKey} = key_expansion(Bits, Key),
+	{St, RoundKey} = aes_key_expansion(Bits, Key),
 	cbc_block_decrypt(St, RoundKey, IV, CipherText, <<>>).
 
+%% ECB
+block_encrypt(Bits, Key, PlainText)
+		when (Bits =:= 128
+			orelse Bits =:= 192
+			orelse Bits =:= 256)
+		andalso bit_size(Key) =:= Bits ->
+	{St, RoundKey} = aes_key_expansion(Bits, Key),
+	ecb_block_encrypt(St, RoundKey, PlainText, <<>>).
+
+%% CBC
 block_encrypt(Bits, Key, IV, PlainText)
 		when (Bits =:= 128
 			orelse Bits =:= 192
 			orelse Bits =:= 256)
 		andalso bit_size(Key) =:= Bits
 		andalso bit_size(IV) =:= 128 ->
-	{St, RoundKey} = key_expansion(Bits, Key),
+	{St, RoundKey} = aes_key_expansion(Bits, Key),
 	cbc_block_encrypt(St, RoundKey, IV, PlainText, <<>>).
 
 %%%-------------------------------------------------------------------
-%%% Internal CBC functions
+%%% Internal AES functions
 %%%-------------------------------------------------------------------
 
 %% @private
-cbc_add_round_key(B0, RoundKey, {Nb, _, _}, Round) ->
-	B1 = cbc_add_round_key(0, 0, B0, RoundKey, Nb, Round),
-	B2 = cbc_add_round_key(1, 0, B1, RoundKey, Nb, Round),
-	B3 = cbc_add_round_key(2, 0, B2, RoundKey, Nb, Round),
-	B4 = cbc_add_round_key(3, 0, B3, RoundKey, Nb, Round),
+aes_add_round_key(B0, RoundKey, {Nb, _, _}, Round) ->
+	B1 = aes_add_round_key(0, 0, B0, RoundKey, Nb, Round),
+	B2 = aes_add_round_key(1, 0, B1, RoundKey, Nb, Round),
+	B3 = aes_add_round_key(2, 0, B2, RoundKey, Nb, Round),
+	B4 = aes_add_round_key(3, 0, B3, RoundKey, Nb, Round),
 	B4.
 
 %% @private
-cbc_add_round_key(_I, 4, Block, _RoundKey, _Nb, _Round) ->
+aes_add_round_key(_I, 4, Block, _RoundKey, _Nb, _Round) ->
 	Block;
-cbc_add_round_key(I, J, B0, RoundKey, Nb, Round) ->
+aes_add_round_key(I, J, B0, RoundKey, Nb, Round) ->
 	RK = bget(RoundKey, Round * Nb * 4 + I * Nb + J),
 	BK = bget(B0, I * 4 + J),
 	B1 = bset(B0, I * 4 + J, BK bxor RK),
-	cbc_add_round_key(I, J + 1, B1, RoundKey, Nb, Round).
+	aes_add_round_key(I, J + 1, B1, RoundKey, Nb, Round).
 
 %% @private
-key_expansion(Bits, Key) ->
+aes_key_expansion(Bits, Key) ->
 	% The number of columns comprising a state in AES.
 	Nb = 4,
 	% The number of 32 bit words in a key.
@@ -73,11 +97,11 @@ key_expansion(Bits, Key) ->
 	KeysLen = Nb * (Nr + 1) * Nk * 8,
 	Keys = << Key/binary, 0:(KeysLen - KeyLen) >>,
 	St = {Nb, Nk, Nr},
-	{St, key_expansion((KeyLen div 32), (Nb * (Nr + 1)), St, Keys)}.
+	{St, aes_key_expansion((KeyLen div 32), (Nb * (Nr + 1)), St, Keys)}.
 
-key_expansion(Rs, Rs, _, RoundKey) ->
+aes_key_expansion(Rs, Rs, _, RoundKey) ->
 	RoundKey;
-key_expansion(I, Rs, St={Nb, Nk, _}, RoundKey) ->
+aes_key_expansion(I, Rs, St={Nb, Nk, _}, RoundKey) ->
 	T0 = bget(RoundKey, (I - 1) * Nb + 0),
 	T1 = bget(RoundKey, (I - 1) * Nb + 1),
 	T2 = bget(RoundKey, (I - 1) * Nb + 2),
@@ -128,46 +152,39 @@ key_expansion(I, Rs, St={Nb, Nk, _}, RoundKey) ->
 	RK1 = bset(RK0, I * Nb + 1, A1),
 	RK2 = bset(RK1, I * Nb + 2, A2),
 	RK3 = bset(RK2, I * Nb + 3, A3),
-	key_expansion(I + 1, Rs, St, RK3).
+	aes_key_expansion(I + 1, Rs, St, RK3).
 
 %%%-------------------------------------------------------------------
-%%% Internal CBC decrypt functions
+%%% Internal AES decrypt functions
 %%%-------------------------------------------------------------------
 
 %% @private
-cbc_block_decrypt(_St, _RoundKey, _IV, <<>>, PlainText) ->
-	PlainText;
-cbc_block_decrypt(St, RoundKey, IV, << Block:128/bitstring, CipherText/bitstring >>, PlainText) ->
-	Decrypted = crypto:exor(cbc_inverse_cipher(St, RoundKey, Block), IV),
-	cbc_block_decrypt(St, RoundKey, IV, CipherText, << PlainText/binary, Decrypted/binary >>).
-
-%% @private
-cbc_inverse_cipher(St={_, _, Nr}, RoundKey, B0) ->
-	B1 = cbc_add_round_key(B0, RoundKey, St, Nr),
-	B2 = cbc_inverse_cipher_rounds(Nr - 1, St, RoundKey, B1),
-	B3 = cbc_inverse_shift_rows(B2),
-	B4 = cbc_inverse_sub_bytes(B3),
-	B5 = cbc_add_round_key(B4, RoundKey, St, 0),
+aes_inverse_cipher(St={_, _, Nr}, RoundKey, B0) ->
+	B1 = aes_add_round_key(B0, RoundKey, St, Nr),
+	B2 = aes_inverse_cipher_rounds(Nr - 1, St, RoundKey, B1),
+	B3 = aes_inverse_shift_rows(B2),
+	B4 = aes_inverse_sub_bytes(B3),
+	B5 = aes_add_round_key(B4, RoundKey, St, 0),
 	B5.
 
 %% @private
-cbc_inverse_cipher_rounds(0, _St, _RoundKey, B) ->
+aes_inverse_cipher_rounds(0, _St, _RoundKey, B) ->
 	B;
-cbc_inverse_cipher_rounds(Round, St, RoundKey, B0) ->
-	B1 = cbc_inverse_shift_rows(B0),
-	B2 = cbc_inverse_sub_bytes(B1),
-	B3 = cbc_add_round_key(B2, RoundKey, St, Round),
-	B4 = cbc_inverse_mix_columns(B3),
-	cbc_inverse_cipher_rounds(Round - 1, St, RoundKey, B4).
+aes_inverse_cipher_rounds(Round, St, RoundKey, B0) ->
+	B1 = aes_inverse_shift_rows(B0),
+	B2 = aes_inverse_sub_bytes(B1),
+	B3 = aes_add_round_key(B2, RoundKey, St, Round),
+	B4 = aes_inverse_mix_columns(B3),
+	aes_inverse_cipher_rounds(Round - 1, St, RoundKey, B4).
 
 %% @private
-cbc_inverse_mix_columns(B) ->
-	cbc_inverse_mix_columns(0, B).
+aes_inverse_mix_columns(B) ->
+	aes_inverse_mix_columns(0, B).
 
 %% @private
-cbc_inverse_mix_columns(4, B) ->
+aes_inverse_mix_columns(4, B) ->
 	B;
-cbc_inverse_mix_columns(I, B0) ->
+aes_inverse_mix_columns(I, B0) ->
 	A = bget(B0, I * 4 + 0),
 	B = bget(B0, I * 4 + 1),
 	C = bget(B0, I * 4 + 2),
@@ -176,10 +193,10 @@ cbc_inverse_mix_columns(I, B0) ->
 	B2 = bset(B1, I * 4 + 1, g9x(A) bxor gex(B) bxor gbx(C) bxor gdx(D)),
 	B3 = bset(B2, I * 4 + 2, gdx(A) bxor g9x(B) bxor gex(C) bxor gbx(D)),
 	B4 = bset(B3, I * 4 + 3, gbx(A) bxor gdx(B) bxor g9x(C) bxor gex(D)),
-	cbc_inverse_mix_columns(I + 1, B4).
+	aes_inverse_mix_columns(I + 1, B4).
 
 %% @private
-cbc_inverse_shift_rows(B0) ->
+aes_inverse_shift_rows(B0) ->
 	% Rotate first row 1 columns to right
 	T0 = bget(B0, 3 * 4 + 1),
 	B1 = bset(B0, 3 * 4 + 1, bget(B0, 2 * 4 + 1)),
@@ -202,59 +219,52 @@ cbc_inverse_shift_rows(B0) ->
 	BC.
 
 %% @private
-cbc_inverse_sub_bytes(B0) ->
-	B1 = cbc_inverse_sub_bytes(0, 0, B0),
-	B2 = cbc_inverse_sub_bytes(1, 0, B1),
-	B3 = cbc_inverse_sub_bytes(2, 0, B2),
-	B4 = cbc_inverse_sub_bytes(3, 0, B3),
+aes_inverse_sub_bytes(B0) ->
+	B1 = aes_inverse_sub_bytes(0, 0, B0),
+	B2 = aes_inverse_sub_bytes(1, 0, B1),
+	B3 = aes_inverse_sub_bytes(2, 0, B2),
+	B4 = aes_inverse_sub_bytes(3, 0, B3),
 	B4.
 
 %% @private
-cbc_inverse_sub_bytes(_I, 4, B) ->
+aes_inverse_sub_bytes(_I, 4, B) ->
 	B;
-cbc_inverse_sub_bytes(I, J, B0) ->
+aes_inverse_sub_bytes(I, J, B0) ->
 	T0 = bget(B0, J * 4 + I),
 	B1 = bset(B0, J * 4 + I, isBox(T0)),
-	cbc_inverse_sub_bytes(I, J + 1, B1).
+	aes_inverse_sub_bytes(I, J + 1, B1).
 
 %%%-------------------------------------------------------------------
-%%% Internal CBC encrypt functions
+%%% Internal AES encrypt functions
 %%%-------------------------------------------------------------------
 
 %% @private
-cbc_block_encrypt(_St, _RoundKey, _IV, <<>>, CipherText) ->
-	CipherText;
-cbc_block_encrypt(St, RoundKey, IV, << Block:128/bitstring, PlainText/bitstring >>, CipherText) ->
-	Encrypted = cbc_cipher(St, RoundKey, crypto:exor(Block, IV)),
-	cbc_block_encrypt(St, RoundKey, IV, PlainText, << CipherText/binary, Encrypted/binary >>).
-
-%% @private
-cbc_cipher(St={_, _, Nr}, RoundKey, B0) ->
-	B1 = cbc_add_round_key(B0, RoundKey, St, 0),
-	B2 = cbc_cipher_rounds(1, St, RoundKey, B1),
-	B3 = cbc_sub_bytes(B2),
-	B4 = cbc_shift_rows(B3),
-	B5 = cbc_add_round_key(B4, RoundKey, St, Nr),
+aes_cipher(St={_, _, Nr}, RoundKey, B0) ->
+	B1 = aes_add_round_key(B0, RoundKey, St, 0),
+	B2 = aes_cipher_rounds(1, St, RoundKey, B1),
+	B3 = aes_sub_bytes(B2),
+	B4 = aes_shift_rows(B3),
+	B5 = aes_add_round_key(B4, RoundKey, St, Nr),
 	B5.
 
 %% @private
-cbc_cipher_rounds(Nr, _St={_, _, Nr}, _RoundKey, B) ->
+aes_cipher_rounds(Nr, _St={_, _, Nr}, _RoundKey, B) ->
 	B;
-cbc_cipher_rounds(Round, St, RoundKey, B0) ->
-	B1 = cbc_sub_bytes(B0),
-	B2 = cbc_shift_rows(B1),
-	B3 = cbc_mix_columns(B2),
-	B4 = cbc_add_round_key(B3, RoundKey, St, Round),
-	cbc_cipher_rounds(Round + 1, St, RoundKey, B4).
+aes_cipher_rounds(Round, St, RoundKey, B0) ->
+	B1 = aes_sub_bytes(B0),
+	B2 = aes_shift_rows(B1),
+	B3 = aes_mix_columns(B2),
+	B4 = aes_add_round_key(B3, RoundKey, St, Round),
+	aes_cipher_rounds(Round + 1, St, RoundKey, B4).
 
 %% @private
-cbc_mix_columns(B) ->
-	cbc_mix_columns(0, B).
+aes_mix_columns(B) ->
+	aes_mix_columns(0, B).
 
 %% @private
-cbc_mix_columns(4, B) ->
+aes_mix_columns(4, B) ->
 	B;
-cbc_mix_columns(I, B0) ->
+aes_mix_columns(I, B0) ->
 	A = bget(B0, I * 4 + 0),
 	B = bget(B0, I * 4 + 1),
 	C = bget(B0, I * 4 + 2),
@@ -263,10 +273,10 @@ cbc_mix_columns(I, B0) ->
 	B2 = bset(B1, I * 4 + 1, A bxor g2x(B) bxor g3x(C) bxor D),
 	B3 = bset(B2, I * 4 + 2, A bxor B bxor g2x(C) bxor g3x(D)),
 	B4 = bset(B3, I * 4 + 3, g3x(A) bxor B bxor C bxor g2x(D)),
-	cbc_mix_columns(I + 1, B4).
+	aes_mix_columns(I + 1, B4).
 
 %% @private
-cbc_shift_rows(B0) ->
+aes_shift_rows(B0) ->
 	% Rotate first row 1 columns to left
 	T0 = bget(B0, 0 * 4 + 1),
 	B1 = bset(B0, 0 * 4 + 1, bget(B0, 1 * 4 + 1)),
@@ -289,20 +299,64 @@ cbc_shift_rows(B0) ->
 	BC.
 
 %% @private
-cbc_sub_bytes(B0) ->
-	B1 = cbc_sub_bytes(0, 0, B0),
-	B2 = cbc_sub_bytes(1, 0, B1),
-	B3 = cbc_sub_bytes(2, 0, B2),
-	B4 = cbc_sub_bytes(3, 0, B3),
+aes_sub_bytes(B0) ->
+	B1 = aes_sub_bytes(0, 0, B0),
+	B2 = aes_sub_bytes(1, 0, B1),
+	B3 = aes_sub_bytes(2, 0, B2),
+	B4 = aes_sub_bytes(3, 0, B3),
 	B4.
 
 %% @private
-cbc_sub_bytes(_I, 4, B) ->
+aes_sub_bytes(_I, 4, B) ->
 	B;
-cbc_sub_bytes(I, J, B0) ->
+aes_sub_bytes(I, J, B0) ->
 	T0 = bget(B0, J * 4 + I),
 	B1 = bset(B0, J * 4 + I, sBox(T0)),
-	cbc_sub_bytes(I, J + 1, B1).
+	aes_sub_bytes(I, J + 1, B1).
+
+%%%-------------------------------------------------------------------
+%%% Internal CBC decrypt functions
+%%%-------------------------------------------------------------------
+
+%% @private
+cbc_block_decrypt(_St, _RoundKey, _IV, <<>>, PlainText) ->
+	PlainText;
+cbc_block_decrypt(St, RoundKey, IV, << Block:128/bitstring, CipherText/bitstring >>, PlainText) ->
+	Decrypted = crypto:exor(aes_inverse_cipher(St, RoundKey, Block), IV),
+	cbc_block_decrypt(St, RoundKey, Block, CipherText, << PlainText/binary, Decrypted/binary >>).
+
+%%%-------------------------------------------------------------------
+%%% Internal CBC encrypt functions
+%%%-------------------------------------------------------------------
+
+%% @private
+cbc_block_encrypt(_St, _RoundKey, _IV, <<>>, CipherText) ->
+	CipherText;
+cbc_block_encrypt(St, RoundKey, IV, << Block:128/bitstring, PlainText/bitstring >>, CipherText) ->
+	Encrypted = aes_cipher(St, RoundKey, crypto:exor(Block, IV)),
+	cbc_block_encrypt(St, RoundKey, Encrypted, PlainText, << CipherText/binary, Encrypted/binary >>).
+
+%%%-------------------------------------------------------------------
+%%% Internal ECB decrypt functions
+%%%-------------------------------------------------------------------
+
+%% @private
+ecb_block_decrypt(_St, _RoundKey, <<>>, PlainText) ->
+	PlainText;
+ecb_block_decrypt(St, RoundKey, << Block:128/bitstring, CipherText/bitstring >>, PlainText) ->
+	Decrypted = aes_inverse_cipher(St, RoundKey, Block),
+	ecb_block_decrypt(St, RoundKey, CipherText, << PlainText/binary, Decrypted/binary >>).
+
+%%%-------------------------------------------------------------------
+%%% Internal ECB encrypt functions
+%%%-------------------------------------------------------------------
+
+%% @private
+ecb_block_encrypt(_St, _RoundKey, <<>>, CipherText) ->
+	CipherText;
+ecb_block_encrypt(St, RoundKey, << Block:128/bitstring, PlainText/bitstring >>, CipherText) ->
+	Encrypted = aes_cipher(St, RoundKey, Block),
+	ecb_block_encrypt(St, RoundKey, PlainText, << CipherText/binary, Encrypted/binary >>).
 
 %%%-------------------------------------------------------------------
 %%% Internal functions

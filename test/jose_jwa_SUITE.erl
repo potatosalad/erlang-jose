@@ -15,7 +15,19 @@
 -export([end_per_group/2]).
 
 %% Tests.
--export([aes_block_encrypt_and_block_decrypt/1]).
+-export([aes_cbc_block_encrypt_and_cbc_block_decrypt/1]).
+-export([aes_cbc_block_encrypt_and_crypto_block_decrypt/1]).
+-export([aes_crypto_block_encrypt_and_cbc_block_decrypt/1]).
+-export([aes_crypto_block_encrypt_and_ecb_block_decrypt/1]).
+-export([aes_ecb_block_encrypt_and_ecb_block_decrypt/1]).
+-export([aes_ecb_block_encrypt_and_crypto_block_decrypt/1]).
+-export([aes_kw_128_128/1]).
+-export([aes_kw_128_192/1]).
+-export([aes_kw_128_256/1]).
+-export([aes_kw_192_192/1]).
+-export([aes_kw_192_256/1]).
+-export([aes_kw_256_256/1]).
+-export([aes_kw_wrap_and_unwrap/1]).
 -export([concat_kdf/1]).
 -export([concat_kdf_keylen/1]).
 -export([constant_time_compare/1]).
@@ -34,6 +46,7 @@ all() ->
 	[
 		constant_time_compare,
 		{group, jose_jwa_aes},
+		{group, jose_jwa_aes_kw},
 		{group, jose_jwa_concat_kdf},
 		{group, jose_jwa_pkcs1},
 		{group, jose_jwa_pkcs5},
@@ -43,7 +56,21 @@ all() ->
 groups() ->
 	[
 		{jose_jwa_aes, [parallel], [
-			aes_block_encrypt_and_block_decrypt
+			aes_cbc_block_encrypt_and_cbc_block_decrypt,
+			aes_cbc_block_encrypt_and_crypto_block_decrypt,
+			aes_crypto_block_encrypt_and_cbc_block_decrypt,
+			aes_crypto_block_encrypt_and_ecb_block_decrypt,
+			aes_ecb_block_encrypt_and_ecb_block_decrypt,
+			aes_ecb_block_encrypt_and_crypto_block_decrypt
+		]},
+		{jose_jwa_aes_kw, [parallel], [
+			aes_kw_128_128,
+			aes_kw_128_192,
+			aes_kw_128_256,
+			aes_kw_192_192,
+			aes_kw_192_256,
+			aes_kw_256_256,
+			aes_kw_wrap_and_unwrap
 		]},
 		{jose_jwa_concat_kdf, [parallel], [
 			concat_kdf,
@@ -86,9 +113,93 @@ end_per_group(_Group, _Config) ->
 %% Tests
 %%====================================================================
 
-aes_block_encrypt_and_block_decrypt(Config) ->
+aes_cbc_block_encrypt_and_cbc_block_decrypt(Config) ->
 	ct_property_test:quickcheck(
-		jose_jwa_aes_props:prop_block_encrypt_and_block_decrypt(),
+		jose_jwa_aes_props:prop_cbc_block_encrypt_and_cbc_block_decrypt(),
+		Config).
+
+aes_cbc_block_encrypt_and_crypto_block_decrypt(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwa_aes_props:prop_cbc_block_encrypt_and_crypto_block_decrypt(),
+		Config).
+
+aes_crypto_block_encrypt_and_cbc_block_decrypt(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwa_aes_props:prop_crypto_block_encrypt_and_cbc_block_decrypt(),
+		Config).
+
+aes_crypto_block_encrypt_and_ecb_block_decrypt(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwa_aes_props:prop_crypto_block_encrypt_and_ecb_block_decrypt(),
+		Config).
+
+aes_ecb_block_encrypt_and_ecb_block_decrypt(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwa_aes_props:prop_ecb_block_encrypt_and_ecb_block_decrypt(),
+		Config).
+
+aes_ecb_block_encrypt_and_crypto_block_decrypt(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwa_aes_props:prop_ecb_block_encrypt_and_crypto_block_decrypt(),
+		Config).
+
+%% See [https://tools.ietf.org/html/rfc3394#section-4.1]
+aes_kw_128_128(_Config) ->
+	KEK = << 16#000102030405060708090A0B0C0D0E0F:1/unsigned-big-integer-unit:128 >>,
+	KeyData = << 16#00112233445566778899AABBCCDDEEFF:1/unsigned-big-integer-unit:128 >>,
+	CipherText = << 16#1FA68B0A8112B447AEF34BD8FB5A7B829D3E862371D2CFE5:1/unsigned-big-integer-unit:192 >>,
+	CipherText = jose_jwa_aes_kw:wrap(KeyData, KEK),
+	KeyData = jose_jwa_aes_kw:unwrap(CipherText, KEK),
+	true.
+
+%% See [https://tools.ietf.org/html/rfc3394#section-4.2]
+aes_kw_128_192(_Config) ->
+	KEK = << 16#000102030405060708090A0B0C0D0E0F1011121314151617:1/unsigned-big-integer-unit:192 >>,
+	KeyData = << 16#00112233445566778899AABBCCDDEEFF:1/unsigned-big-integer-unit:128 >>,
+	CipherText = << 16#96778B25AE6CA435F92B5B97C050AED2468AB8A17AD84E5D:1/unsigned-big-integer-unit:192 >>,
+	CipherText = jose_jwa_aes_kw:wrap(KeyData, KEK),
+	KeyData = jose_jwa_aes_kw:unwrap(CipherText, KEK),
+	true.
+
+%% See [https://tools.ietf.org/html/rfc3394#section-4.3]
+aes_kw_128_256(_Config) ->
+	KEK = << 16#000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F:1/unsigned-big-integer-unit:256 >>,
+	KeyData = << 16#00112233445566778899AABBCCDDEEFF:1/unsigned-big-integer-unit:128 >>,
+	CipherText = << 16#64E8C3F9CE0F5BA263E9777905818A2A93C8191E7D6E8AE7:1/unsigned-big-integer-unit:192 >>,
+	CipherText = jose_jwa_aes_kw:wrap(KeyData, KEK),
+	KeyData = jose_jwa_aes_kw:unwrap(CipherText, KEK),
+	true.
+
+%% See [https://tools.ietf.org/html/rfc3394#section-4.4]
+aes_kw_192_192(_Config) ->
+	KEK = << 16#000102030405060708090A0B0C0D0E0F1011121314151617:1/unsigned-big-integer-unit:192 >>,
+	KeyData = << 16#00112233445566778899AABBCCDDEEFF0001020304050607:1/unsigned-big-integer-unit:192 >>,
+	CipherText = << 16#031D33264E15D33268F24EC260743EDCE1C6C7DDEE725A936BA814915C6762D2:1/unsigned-big-integer-unit:256 >>,
+	CipherText = jose_jwa_aes_kw:wrap(KeyData, KEK),
+	KeyData = jose_jwa_aes_kw:unwrap(CipherText, KEK),
+	true.
+
+%% See [https://tools.ietf.org/html/rfc3394#section-4.5]
+aes_kw_192_256(_Config) ->
+	KEK = << 16#000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F:1/unsigned-big-integer-unit:256 >>,
+	KeyData = << 16#00112233445566778899AABBCCDDEEFF0001020304050607:1/unsigned-big-integer-unit:192 >>,
+	CipherText = << 16#A8F9BC1612C68B3FF6E6F4FBE30E71E4769C8B80A32CB8958CD5D17D6B254DA1:1/unsigned-big-integer-unit:256 >>,
+	CipherText = jose_jwa_aes_kw:wrap(KeyData, KEK),
+	KeyData = jose_jwa_aes_kw:unwrap(CipherText, KEK),
+	true.
+
+%% See [https://tools.ietf.org/html/rfc3394#section-4.6]
+aes_kw_256_256(_Config) ->
+	KEK = << 16#000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F:1/unsigned-big-integer-unit:256 >>,
+	KeyData = << 16#00112233445566778899AABBCCDDEEFF000102030405060708090A0B0C0D0E0F:1/unsigned-big-integer-unit:256 >>,
+	CipherText = << 16#28C9F404C4B810F4CBCCB35CFB87F8263F5786E2D80ED326CBC7F0E71A99F43BFB988B9B7A02DD21:2/unsigned-big-integer-unit:160 >>,
+	CipherText = jose_jwa_aes_kw:wrap(KeyData, KEK),
+	KeyData = jose_jwa_aes_kw:unwrap(CipherText, KEK),
+	true.
+
+aes_kw_wrap_and_unwrap(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwa_aes_kw_props:prop_wrap_and_unwrap(),
 		Config).
 
 concat_kdf(Config) ->
