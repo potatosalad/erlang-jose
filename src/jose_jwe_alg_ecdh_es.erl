@@ -71,7 +71,15 @@ to_map(A = ?ECDH_ES, F) ->
 %% jose_jwe_alg callbacks
 %%====================================================================
 
+key_decrypt({#jose_jwk{kty={OtherPublicKTYModule, OtherPublicKTY}}, MyPrivateJWK}, EncryptedKey, JWEECDHES=#jose_jwe_alg_ecdh_es{epk={EphemeralPublicKey, _}}) ->
+	case OtherPublicKTYModule:to_key(OtherPublicKTY) of
+		EphemeralPublicKey ->
+			key_decrypt(MyPrivateJWK, EncryptedKey, JWEECDHES);
+		_ ->
+			error
+	end;
 key_decrypt(#jose_jwk{kty={MyPrivateKTYModule, MyPrivateKTY}}, EncryptedKey, JWEECDHES=#jose_jwe_alg_ecdh_es{epk={EphemeralPublicKey, _}}) ->
+	_ = code:ensure_loaded(MyPrivateKTYModule),
 	DerivedKey = case erlang:function_exported(MyPrivateKTYModule, derive_key, 2) of
 		false ->
 			MyPrivateKTYModule:derive_key(EphemeralPublicKey);
@@ -94,6 +102,7 @@ key_decrypt(Z, {_ENCModule, _ENC, EncryptedKey}, JWEECDHES=#jose_jwe_alg_ecdh_es
 key_encrypt(_Key, _DecryptedKey, JWEECDHES=#jose_jwe_alg_ecdh_es{bits=undefined}) ->
 	{<<>>, JWEECDHES};
 key_encrypt({#jose_jwk{kty={OtherPublicKTYModule, OtherPublicKTY}}, #jose_jwk{kty={_, MyPrivateKTY}}}, DecryptedKey, JWEECDHES) ->
+	_ = code:ensure_loaded(OtherPublicKTYModule),
 	DerivedKey = case erlang:function_exported(OtherPublicKTYModule, derive_key, 2) of
 		false ->
 			OtherPublicKTYModule:derive_key(OtherPublicKTY);
@@ -111,6 +120,7 @@ key_encrypt(Z, DecryptedKey, JWEECDHES=#jose_jwe_alg_ecdh_es{apu=APU, apv=APV, b
 	{jose_jwa_aes_kw:wrap(DecryptedKey, DerivedKey), JWEECDHES}.
 
 next_cek({#jose_jwk{kty={OtherPublicKTYModule, OtherPublicKTY}}, #jose_jwk{kty={_, MyPrivateKTY}}}, ENCModule, ENC, JWEECDHES=#jose_jwe_alg_ecdh_es{bits=undefined}) ->
+	_ = code:ensure_loaded(OtherPublicKTYModule),
 	DerivedKey = case erlang:function_exported(OtherPublicKTYModule, derive_key, 2) of
 		false ->
 			OtherPublicKTYModule:derive_key(OtherPublicKTY);

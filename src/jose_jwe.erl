@@ -38,11 +38,13 @@
 -export([block_encrypt/4]).
 -export([block_encrypt/5]).
 -export([compact/1]).
+-export([compress/2]).
 -export([expand/1]).
 -export([key_decrypt/3]).
 -export([key_encrypt/3]).
 -export([next_cek/2]).
 -export([next_iv/1]).
+-export([uncompress/2]).
 
 -define(ALG_AES_KW_MODULE,  jose_jwe_alg_aes_kw).
 -define(ALG_DIR_MODULE,     jose_jwe_alg_dir).
@@ -158,13 +160,13 @@ block_decrypt(Key, {Modules, #{
 		<<"tag">> := EncodedCipherTag,
 		<<"aad">> := EncodedAAD}}) ->
 	ConcatAAD = << Protected/binary, $., EncodedAAD/binary >>,
-	JWE = #jose_jwe{alg={ALGModule, ALG}, enc={ENCModule, ENC}} = from_binary({Modules, base64url:decode(Protected)}),
+	JWE = #jose_jwe{enc={ENCModule, ENC}} = from_binary({Modules, base64url:decode(Protected)}),
 	EncryptedKey = base64url:decode(EncodedEncryptedKey),
 	IV = base64url:decode(EncodedIV),
 	CipherText = base64url:decode(EncodedCipherText),
 	CipherTag = base64url:decode(EncodedCipherTag),
-	CEK = ALGModule:key_decrypt(Key, {ENCModule, ENC, EncryptedKey}, ALG),
-	PlainText = maybe_uncompress(ENCModule:block_decrypt({ConcatAAD, CipherText, CipherTag}, CEK, IV, ENC), JWE),
+	CEK = key_decrypt(Key, EncryptedKey, JWE),
+	PlainText = uncompress(ENCModule:block_decrypt({ConcatAAD, CipherText, CipherTag}, CEK, IV, ENC), JWE),
 	{PlainText, JWE};
 block_decrypt(Key, {Modules, #{
 		<<"protected">> := Protected,
@@ -172,13 +174,13 @@ block_decrypt(Key, {Modules, #{
 		<<"iv">> := EncodedIV,
 		<<"ciphertext">> := EncodedCipherText,
 		<<"tag">> := EncodedCipherTag}}) ->
-	JWE = #jose_jwe{alg={ALGModule, ALG}, enc={ENCModule, ENC}} = from_binary({Modules, base64url:decode(Protected)}),
+	JWE = #jose_jwe{enc={ENCModule, ENC}} = from_binary({Modules, base64url:decode(Protected)}),
 	EncryptedKey = base64url:decode(EncodedEncryptedKey),
 	IV = base64url:decode(EncodedIV),
 	CipherText = base64url:decode(EncodedCipherText),
 	CipherTag = base64url:decode(EncodedCipherTag),
-	CEK = ALGModule:key_decrypt(Key, {ENCModule, ENC, EncryptedKey}, ALG),
-	PlainText = maybe_uncompress(ENCModule:block_decrypt({Protected, CipherText, CipherTag}, CEK, IV, ENC), JWE),
+	CEK = key_decrypt(Key, EncryptedKey, JWE),
+	PlainText = uncompress(ENCModule:block_decrypt({Protected, CipherText, CipherTag}, CEK, IV, ENC), JWE),
 	{PlainText, JWE}.
 
 block_encrypt(Key, Block, JWE=#jose_jwe{}) ->
@@ -193,13 +195,12 @@ block_encrypt(Key, Block, CEK, JWE=#jose_jwe{}) ->
 block_encrypt(Key, Block, CEK, Other) ->
 	block_encrypt(Key, Block, CEK, from(Other)).
 
-block_encrypt(Key, PlainText, CEK, IV, JWE0=#jose_jwe{alg={ALGModule, ALG0}, enc={ENCModule, ENC}})
+block_encrypt(Key, PlainText, CEK, IV, JWE0=#jose_jwe{enc={ENCModule, ENC}})
 		when is_binary(PlainText) ->
-	{EncryptedKey, ALG1} = ALGModule:key_encrypt(Key, CEK, ALG0),
-	JWE1 = JWE0#jose_jwe{alg={ALGModule, ALG1}},
+	{EncryptedKey, JWE1} = key_encrypt(Key, CEK, JWE0),
 	{Modules, ProtectedBinary} = to_binary(JWE1),
 	Protected = base64url:encode(ProtectedBinary),
-	{CipherText, CipherTag} = ENCModule:block_encrypt({Protected, maybe_compress(PlainText, JWE1)}, CEK, IV, ENC),
+	{CipherText, CipherTag} = ENCModule:block_encrypt({Protected, compress(PlainText, JWE1)}, CEK, IV, ENC),
 	{Modules, #{
 		<<"protected">> => Protected,
 		<<"encrypted_key">> => base64url:encode(EncryptedKey),
@@ -207,16 +208,15 @@ block_encrypt(Key, PlainText, CEK, IV, JWE0=#jose_jwe{alg={ALGModule, ALG0}, enc
 		<<"ciphertext">> => base64url:encode(CipherText),
 		<<"tag">> => base64url:encode(CipherTag)
 	}};
-block_encrypt(Key, {AAD0, PlainText}, CEK, IV, JWE0=#jose_jwe{alg={ALGModule, ALG0}, enc={ENCModule, ENC}})
+block_encrypt(Key, {AAD0, PlainText}, CEK, IV, JWE0=#jose_jwe{enc={ENCModule, ENC}})
 		when is_binary(AAD0)
 		andalso is_binary(PlainText) ->
-	{EncryptedKey, ALG1} = ALGModule:key_encrypt(Key, CEK, ALG0),
-	JWE1 = JWE0#jose_jwe{alg={ALGModule, ALG1}},
+	{EncryptedKey, JWE1} = key_encrypt(Key, CEK, JWE0),
 	{Modules, ProtectedBinary} = to_binary(JWE1),
 	Protected = base64url:encode(ProtectedBinary),
 	AAD1 = base64url:encode(AAD0),
 	ConcatAAD = << Protected/binary, $., AAD1/binary >>,
-	{CipherText, CipherTag} = ENCModule:block_encrypt({ConcatAAD, maybe_compress(PlainText, JWE1)}, CEK, IV, ENC),
+	{CipherText, CipherTag} = ENCModule:block_encrypt({ConcatAAD, compress(PlainText, JWE1)}, CEK, IV, ENC),
 	{Modules, #{
 		<<"protected">> => Protected,
 		<<"encrypted_key">> => base64url:encode(EncryptedKey),
@@ -246,6 +246,13 @@ compact({Modules, #{
 compact(Map) when is_map(Map) ->
 	compact({#{}, Map}).
 
+compress(PlainText, #jose_jwe{zip={Module, ZIP}}) ->
+	Module:compress(PlainText, ZIP);
+compress(PlainText, #jose_jwe{}) ->
+	PlainText;
+compress(PlainText, Other) ->
+	compress(PlainText, from(Other)).
+
 expand({Modules, Binary}) when is_binary(Binary) ->
 	case binary:split(Binary, <<".">>, [global]) of
 		[Protected, EncryptedKey, InitializationVector, CipherText, AuthenticationTag] ->
@@ -262,8 +269,8 @@ expand({Modules, Binary}) when is_binary(Binary) ->
 expand(Binary) when is_binary(Binary) ->
 	expand({#{}, Binary}).
 
-key_decrypt(Key, EncryptedKey, #jose_jwe{alg={ALGModule, ALG}}) ->
-	ALGModule:key_decrypt(Key, EncryptedKey, ALG);
+key_decrypt(Key, EncryptedKey, #jose_jwe{alg={ALGModule, ALG}, enc={ENCModule, ENC}}) ->
+	ALGModule:key_decrypt(Key, {ENCModule, ENC, EncryptedKey}, ALG);
 key_decrypt(Key, EncryptedKey, Other) ->
 	key_decrypt(Key, EncryptedKey, from(Other)).
 
@@ -284,21 +291,16 @@ next_iv(#jose_jwe{enc={ENCModule, ENC}}) ->
 next_iv(Other) ->
 	next_iv(from(Other)).
 
+uncompress(CipherText, #jose_jwe{zip={Module, ZIP}}) ->
+	Module:uncompress(CipherText, ZIP);
+uncompress(CipherText, #jose_jwe{}) ->
+	CipherText;
+uncompress(CipherText, Other) ->
+	uncompress(CipherText, from(Other)).
+
 %%%-------------------------------------------------------------------
 %%% Internal functions
 %%%-------------------------------------------------------------------
-
-%% @private
-maybe_compress(PlainText, #jose_jwe{zip={Module, ZIP}}) ->
-	Module:compress(PlainText, ZIP);
-maybe_compress(PlainText, _) ->
-	PlainText.
-
-%% @private
-maybe_uncompress(Compressed, #jose_jwe{zip={Module, ZIP}}) ->
-	Module:uncompress(Compressed, ZIP);
-maybe_uncompress(Compressed, _) ->
-	Compressed.
 
 %% @private
 record_to_map(JWE=#jose_jwe{alg={Module, ALG}}, Modules, Fields0) ->

@@ -148,7 +148,12 @@ from_file(Key, File) when is_binary(File) orelse is_list(File) ->
 	from_file(Key, {#{}, File}).
 
 from_key(Key) ->
-	jose_jwk_kty:from_key(Key).
+	case jose_jwk_kty:from_key(Key) of
+		{KTYModule, {KTY, Fields}} when KTYModule =/= error ->
+			#jose_jwk{ kty = {KTYModule, KTY}, fields = Fields };
+		FromKeyError ->
+			FromKeyError
+	end.
 
 from_map(Map) when is_map(Map) ->
 	from_map({#{}, Map});
