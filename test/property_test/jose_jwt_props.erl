@@ -2,14 +2,121 @@
 %% vim: ts=4 sw=4 ft=erlang noet
 -module(jose_jwt_props).
 
+-include_lib("public_key/include/public_key.hrl").
+
 -include_lib("triq/include/triq.hrl").
 
 -compile(export_all).
 
-prop_one_plus_one() ->
-	_ = application:ensure_all_started(cutkey),
-	?FORALL(One,
-		oneof([1]),
+base64url_binary() ->
+	?LET(Binary,
+		binary(),
+		base64url:encode(Binary)).
+
+binary_map() ->
+	?LET(List,
+		list({base64url_binary(), base64url_binary()}),
+		maps:from_list(List)).
+
+modulus_size()  -> int(2048, 4096). % int(256, 8192) | pos_integer().
+exponent_size() -> return(65537). % pos_integer().
+
+rsa_keypair(ModulusSize) ->
+	?LET(ExponentSize,
+		exponent_size(),
 		begin
-			(One + One) =:= 2
+			case cutkey:rsa(ModulusSize, ExponentSize, [{return, key}]) of
+				{ok, PrivateKey=#'RSAPrivateKey'{modulus=Modulus, publicExponent=PublicExponent}} ->
+					{PrivateKey, #'RSAPublicKey'{modulus=Modulus, publicExponent=PublicExponent}};
+				{error, _} ->
+					erlang:error({badarg, [ModulusSize, ExponentSize, [{return, key}]]})
+			end
+		end).
+
+% ec_curve() ->
+% 	oneof([
+% 		secp256r1,
+% 		secp384r1,
+% 		secp521r1
+% 	]).
+
+% ec_keypair(CurveId) ->
+% 	ECPrivateKey = #'ECPrivateKey'{parameters=ECParameters, publicKey=Octets0} = public_key:generate_key({namedCurve, pubkey_cert_records:namedCurves(CurveId)}),
+% 	Octets = case Octets0 of
+% 		{_, Octets1} ->
+% 			Octets1;
+% 		_ ->
+% 			Octets0
+% 	end,
+% 	ECPoint = #'ECPoint'{point=Octets},
+% 	ECPublicKey = {ECPoint, ECParameters},
+% 	{ECPrivateKey, ECPublicKey}.
+
+% jwk_ec() ->
+% 	?LET(CurveId,
+% 		ec_curve(),
+% 		begin
+% 			{PrivateKey, PublicKey} = ec_keypair(CurveId),
+% 			oneof([jose_jwk:from_key(PrivateKey), jose_jwk:from_key(PublicKey)])
+% 		end).
+
+jwk_hmac() ->
+	?LET(Key,
+		binary(32),
+		jose_jwk:from_map(#{
+			<<"kty">> => <<"oct">>,
+			<<"k">> => base64url:encode(Key)
+		})).
+
+jwk_rsa() ->
+	?LET({_ModulusSize, {PrivateKey, _PublicKey}},
+		?LET(ModulusSize,
+			modulus_size(),
+			{ModulusSize, rsa_keypair(ModulusSize)}),
+		return(jose_jwk:from_key(PrivateKey))).
+
+jwk() ->
+	frequency([
+		{50, jwk_hmac()},
+		{1,  jwk_rsa()}
+	]).
+	% oneof([
+	% 	% jwk_ec(),
+	% 	jwk_hmac(),
+	% 	jwk_rsa()
+	% ]).
+
+jwk_jwt() ->
+	?LET({JWK, JWTMap},
+		{jwk(), binary_map()},
+		{JWK, jose_jwt:from_map(JWTMap)}).
+
+prop_from_map_and_to_map() ->
+	?FORALL({JWK, JWTMap},
+		{jwk(), binary_map()},
+		begin
+			JWT = jose_jwt:from_map(JWTMap),
+			JWTMap =:= element(2, jose_jwt:to_map(JWT))
+		end).
+
+prop_encrypt_and_decrypt() ->
+	?FORALL({JWK, JWT},
+		jwk_jwt(),
+		begin
+			Encrypted = jose_jwt:encrypt(JWK, JWT),
+			CompactEncrypted = jose_jwe:compact(Encrypted),
+			Decrypted = {JWE, _} = jose_jwt:decrypt(JWK, Encrypted),
+			{JWE, JWT} =:= Decrypted
+			andalso {JWE, JWT} =:= jose_jwt:decrypt(JWK, CompactEncrypted)
+		end).
+
+prop_sign_and_verify() ->
+	?FORALL({JWK, JWT},
+		jwk_jwt(),
+		begin
+			Signed = jose_jwt:sign(JWK, JWT),
+			CompactSigned = jose_jws:compact(Signed),
+			Verified = {_, _, JWS} = jose_jwt:verify(JWK, Signed),
+			{true, JWT, JWS} =:= Verified
+			andalso {true, JWT, JWS} =:= jose_jwt:verify(JWK, CompactSigned)
 		end).

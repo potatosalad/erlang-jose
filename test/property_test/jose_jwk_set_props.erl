@@ -8,9 +8,14 @@
 
 -compile(export_all).
 
+base64url_binary() ->
+	?LET(Binary,
+		binary(),
+		base64url:encode(Binary)).
+
 binary_map() ->
 	?LET(List,
-		list({binary(), binary()}),
+		list({base64url_binary(), base64url_binary()}),
 		maps:from_list(List)).
 
 modulus_size()  -> int(256, 512). % int(256, 8192) | pos_integer().
@@ -91,5 +96,5 @@ prop_from_map_and_to_map() ->
 			{JWKs, maps:merge(Extras, JWKSetMap)}),
 		begin
 			JWKSet = jose_jwk:from_map(JWKSetMap),
-			JWKSetMap =:= element(2, jose_jwk:to_map(JWKSetMap))
+			JWKSetMap =:= element(2, jose_jwk:to_map(JWKSet))
 		end).

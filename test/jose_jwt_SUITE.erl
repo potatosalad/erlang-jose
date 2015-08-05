@@ -1,0 +1,68 @@
+%% -*- mode: erlang; tab-width: 4; indent-tabs-mode: 1; st-rulers: [70] -*-
+%% vim: ts=4 sw=4 ft=erlang noet
+-module(jose_jwt_SUITE).
+
+-include_lib("common_test/include/ct.hrl").
+
+-include("jose.hrl").
+
+%% ct.
+-export([all/0]).
+-export([groups/0]).
+-export([init_per_suite/1]).
+-export([end_per_suite/1]).
+-export([init_per_group/2]).
+-export([end_per_group/2]).
+
+%% Tests.
+-export([from_map_and_to_map/1]).
+-export([encrypt_and_decrypt/1]).
+-export([sign_and_verify/1]).
+
+all() ->
+	[
+		{group, jose_jwt}
+	].
+
+groups() ->
+	[
+		{jose_jwt, [parallel], [
+			from_map_and_to_map,
+			encrypt_and_decrypt,
+			sign_and_verify
+		]}
+	].
+
+init_per_suite(Config) ->
+	_ = application:ensure_all_started(jose),
+	_ = application:ensure_all_started(cutkey),
+	ct_property_test:init_per_suite(Config).
+
+end_per_suite(_Config) ->
+	_ = application:stop(jose),
+	ok.
+
+init_per_group(_Group, Config) ->
+	Config.
+
+end_per_group(_Group, _Config) ->
+	ok.
+
+%%====================================================================
+%% Tests
+%%====================================================================
+
+from_map_and_to_map(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwt_props:prop_from_map_and_to_map(),
+		Config).
+
+encrypt_and_decrypt(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwt_props:prop_encrypt_and_decrypt(),
+		Config).
+
+sign_and_verify(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwt_props:prop_sign_and_verify(),
+		Config).

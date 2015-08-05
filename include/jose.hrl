@@ -14,6 +14,7 @@
 -include("jose_jwe.hrl").
 -include("jose_jwk.hrl").
 -include("jose_jws.hrl").
+-include("jose_jwt.hrl").
 
 -define(JOSE_HRL, 1).
 

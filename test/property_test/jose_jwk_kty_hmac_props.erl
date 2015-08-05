@@ -6,9 +6,14 @@
 
 -compile(export_all).
 
+base64url_binary() ->
+	?LET(Binary,
+		binary(),
+		base64url:encode(Binary)).
+
 binary_map() ->
 	?LET(List,
-		list({binary(), binary()}),
+		list({base64url_binary(), base64url_binary()}),
 		maps:from_list(List)).
 
 jwk_map() ->

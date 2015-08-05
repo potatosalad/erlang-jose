@@ -10,6 +10,7 @@
 %%%-------------------------------------------------------------------
 -module(jose_jwt).
 
+-include("jose_jwe.hrl").
 -include("jose_jwk.hrl").
 -include("jose_jws.hrl").
 -include("jose_jwt.hrl").
@@ -24,6 +25,9 @@
 -export([to_file/2]).
 -export([to_map/1]).
 %% API
+-export([decrypt/2]).
+-export([encrypt/2]).
+-export([encrypt/3]).
 -export([sign/2]).
 -export([sign/3]).
 -export([verify/2]).
@@ -93,6 +97,38 @@ to_map(Other) ->
 %% API functions
 %%====================================================================
 
+decrypt(Key, {Modules, Encrypted}) when is_map(Modules) andalso is_map(Encrypted) ->
+	{JWTBinary, JWE=#jose_jwe{}} = jose_jwe:block_decrypt(Key, {Modules, Encrypted}),
+	{JWE, from_binary({Modules, JWTBinary})};
+decrypt(Key, {Modules, Encrypted = << ${, _/binary >>}) when is_map(Modules) ->
+	EncryptedMap = jsx:decode(Encrypted, [return_maps]),
+	decrypt(Key, {Modules, EncryptedMap});
+decrypt(Key, {Modules, Encrypted}) when is_map(Modules) andalso is_binary(Encrypted) ->
+	{JWTBinary, JWE=#jose_jwe{}} = jose_jwe:block_decrypt(Key, {Modules, Encrypted}),
+	{JWE, from_binary({Modules, JWTBinary})};
+decrypt(Key, Encrypted) when is_map(Encrypted) orelse is_binary(Encrypted) ->
+	decrypt(Key, {#{}, Encrypted}).
+
+encrypt(JWK=#jose_jwk{kty={Module, KTY}, fields=Fields}, JWT=#jose_jwt{}) ->
+	encrypt(JWK, Module:block_encryptor(KTY, Fields, JWT), JWT);
+encrypt(JWKOther, JWTOther) ->
+	encrypt(jose_jwk:from(JWKOther), from(JWTOther)).
+
+encrypt(JWK=#jose_jwk{}, JWE=#jose_jwe{}, JWT=#jose_jwt{}) ->
+	{Modules0, JWTBinary} = to_binary(JWT),
+	{Modules1, SignedMap} = jose_jwk:block_encrypt(JWTBinary, JWE, JWK),
+	{maps:merge(Modules0, Modules1), SignedMap};
+encrypt(JWKOther, {JWEModules, JWEMap=#{ <<"typ">> := _ }}, JWTOther) ->
+	encrypt(JWKOther, jose_jwe:from({JWEModules, JWEMap}), JWTOther);
+encrypt(JWKOther, {JWEModules, JWEMap0}, JWTOther) when is_map(JWEMap0) ->
+	Keys = [<<"typ">>] -- maps:keys(JWEMap0),
+	JWEMap1 = normalize_block_encryptor(Keys, JWEMap0),
+	encrypt(JWKOther, {JWEModules, JWEMap1}, JWTOther);
+encrypt(JWKOther, JWEMap, JWTOther) when is_map(JWEMap) ->
+	encrypt(JWKOther, {#{}, JWEMap}, JWTOther);
+encrypt(JWKOther, JWEOther, JWTOther) ->
+	encrypt(jose_jwk:from(JWKOther), jose_jwe:from(JWEOther), from(JWTOther)).
+
 sign(JWK=#jose_jwk{kty={Module, KTY}, fields=Fields}, JWT=#jose_jwt{}) ->
 	sign(JWK, Module:signer(KTY, Fields, JWT), JWT);
 sign(JWKOther, JWTOther) ->
@@ -126,6 +162,12 @@ verify(Other, Signed) ->
 %%%-------------------------------------------------------------------
 %%% Internal functions
 %%%-------------------------------------------------------------------
+
+%% @private
+normalize_block_encryptor([<<"typ">> | Keys], Map) ->
+	normalize_block_encryptor(Keys, Map#{ <<"typ">> => <<"JWT">> });
+normalize_block_encryptor([], Map) ->
+	Map.
 
 %% @private
 normalize_signer([<<"typ">> | Keys], Map) ->
