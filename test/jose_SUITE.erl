@@ -20,6 +20,7 @@
 -export([jwe_a_2/1]).
 -export([jwe_a_3/1]).
 -export([jwk_c/1]).
+-export([jwk_rsa_multi/1]).
 -export([jws_a_1/1]).
 -export([jws_a_2/1]).
 -export([jws_a_3/1]).
@@ -41,7 +42,8 @@ groups() ->
 			jwe_a_3
 		]},
 		{jose_jwk, [parallel], [
-			jwk_c
+			jwk_c,
+			jwk_rsa_multi
 		]},
 		{jose_jws, [parallel], [
 			jws_a_1,
@@ -273,6 +275,31 @@ jwk_c(Config) ->
 	{C_1_JSON_DATA, _} = jose_jwe:block_decrypt(C_4_TXT, C_9_DATA),
 	%% Encrypt and Decrypt
 	{_, C_1_JWK} = jose_jwk:from_map(C_4_TXT, jose_jwk:to_map(C_4_TXT, C_2_JWE, C_1_JWK)),
+	ok.
+
+jwk_rsa_multi(Config) ->
+	JWK = jose_jwk:from_pem_file(data_file("rsa-multi.pem", Config)),
+	PlainText = <<"I've Got a Lovely Bunch of Coconuts">>,
+	Encrypted = jose_jwk:block_encrypt(PlainText, JWK),
+	CompactEncrypted = jose_jwe:compact(Encrypted),
+	{PlainText, _} = jose_jwk:block_decrypt(Encrypted, JWK),
+	{PlainText, _} = jose_jwk:block_decrypt(CompactEncrypted, JWK),
+	Message = <<"Secret Message">>,
+	Signed = jose_jwk:sign(Message, JWK),
+	CompactSigned = jose_jws:compact(Signed),
+	{true, Message, _} = jose_jwk:verify(Signed, JWK),
+	{true, Message, _} = jose_jwk:verify(CompactSigned, JWK),
+	{_, Map} = jose_jwk:to_map(JWK),
+	JWK = jose_jwk:from_map(Map),
+	Password = <<"My Passphrase">>,
+	PEM = element(2, jose_jwk:to_pem(JWK)),
+	EncryptedPEM = element(2, jose_jwk:to_pem(Password, JWK)),
+	JWK = jose_jwk:from_pem(PEM),
+	JWK = jose_jwk:from_pem(Password, EncryptedPEM),
+	JWK = jose_jwk:from_pem(jose_jwk:to_pem(JWK)),
+	JWK = jose_jwk:from_pem(Password, jose_jwk:to_pem(Password, JWK)),
+	{_, JWK} = jose_jwk:from_binary(Password, jose_jwk:to_binary(Password, JWK)),
+	{_, JWK} = jose_jwk:from_binary(Password, jose_jwe:compact(jose_jwk:to_map(Password, JWK))),
 	ok.
 
 % JSON Web Signature (JWS)

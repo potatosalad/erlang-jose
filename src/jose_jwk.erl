@@ -121,6 +121,9 @@ from_binary({Modules, Binary}) when is_map(Modules) andalso is_binary(Binary) ->
 from_binary(Binary) when is_binary(Binary) ->
 	from_binary({#{}, Binary}).
 
+from_binary(Key, {Modules, Encrypted = << ${, _/binary >>}) when is_map(Modules) andalso is_binary(Encrypted) ->
+	EncrypedMap = jsx:decode(Encrypted, [return_maps]),
+	from_map(Key, {Modules, EncrypedMap});
 from_binary(Key, {Modules, Encrypted}) when is_map(Modules) andalso is_binary(Encrypted) ->
 	{JWKBinary, JWE=#jose_jwe{}} = jose_jwe:block_decrypt(Key, {Modules, Encrypted}),
 	{JWE, from_binary({Modules, JWKBinary})};

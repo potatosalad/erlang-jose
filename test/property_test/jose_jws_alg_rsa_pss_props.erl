@@ -20,7 +20,7 @@ alg() ->
 		<<"PS512">>
 	]).
 
-modulus_size()  -> int(1024, 2048). % int(256, 8192) | pos_integer().
+modulus_size()  -> int(2048, 4096). % int(256, 8192) | pos_integer().
 exponent_size() -> return(65537).   % pos_integer().
 
 rsa_keypair(ModulusSize) ->
