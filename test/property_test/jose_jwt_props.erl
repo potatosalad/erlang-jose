@@ -92,7 +92,7 @@ jwk_jwt() ->
 		{JWK, jose_jwt:from_map(JWTMap)}).
 
 prop_from_map_and_to_map() ->
-	?FORALL({JWK, JWTMap},
+	?FORALL({_JWK, JWTMap},
 		{jwk(), binary_map()},
 		begin
 			JWT = jose_jwt:from_map(JWTMap),

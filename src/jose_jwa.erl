@@ -11,11 +11,58 @@
 -module(jose_jwa).
 
 %% API
+-export([block_cipher/1]).
+-export([block_decrypt/3]).
+-export([block_encrypt/3]).
+-export([block_decrypt/4]).
+-export([block_encrypt/4]).
+-export([ciphers/0]).
 -export([constant_time_compare/2]).
+-export([ec_key_mode/0]).
+-export([supports/0]).
+
+-define(TAB, ?MODULE).
 
 %%====================================================================
 %% API functions
 %%====================================================================
+
+block_cipher(Cipher) ->
+	ets:lookup_element(?TAB, {cipher, Cipher}, 2).
+
+block_decrypt(Cipher, Key, CipherText)
+		when is_binary(CipherText) ->
+	{Module, BlockCipher} = block_cipher(Cipher),
+	Module:block_decrypt(BlockCipher, Key, CipherText).
+
+block_encrypt(Cipher, Key, PlainText)
+		when is_binary(PlainText) ->
+	{Module, BlockCipher} = block_cipher(Cipher),
+	Module:block_encrypt(BlockCipher, Key, PlainText).
+
+block_decrypt(Cipher, Key, IV, CipherText)
+		when is_binary(CipherText) ->
+	{Module, BlockCipher} = block_cipher(Cipher),
+	Module:block_decrypt(BlockCipher, Key, IV, CipherText);
+block_decrypt(Cipher, Key, IV, {AAD, CipherText, CipherTag})
+		when is_binary(AAD)
+		andalso is_binary(CipherText)
+		andalso is_binary(CipherTag) ->
+	{Module, BlockCipher} = block_cipher(Cipher),
+	Module:block_decrypt(BlockCipher, Key, IV, {AAD, CipherText, CipherTag}).
+
+block_encrypt(Cipher, Key, IV, PlainText)
+		when is_binary(PlainText) ->
+	{Module, BlockCipher} = block_cipher(Cipher),
+	Module:block_encrypt(BlockCipher, Key, IV, PlainText);
+block_encrypt(Cipher, Key, IV, {AAD, PlainText})
+		when is_binary(AAD)
+		andalso is_binary(PlainText) ->
+	{Module, BlockCipher} = block_cipher(Cipher),
+	Module:block_encrypt(BlockCipher, Key, IV, {AAD, PlainText}).
+
+ciphers() ->
+	ets:select(?TAB, [{{{cipher, '$1'}, {'$2', '_'}}, [{is_atom, '$1'}], [{{'$1', '$2'}}]}]).
 
 constant_time_compare(<<>>, _) ->
 	false;
@@ -29,6 +76,18 @@ constant_time_compare(A, B)
 		when is_binary(A) andalso is_binary(B)
 		andalso (byte_size(A) =:= byte_size(B)) ->
 	constant_time_compare(A, B, 0).
+
+ec_key_mode() ->
+	ets:lookup_element(?TAB, ec_key_mode, 2).
+
+supports() ->
+	Supports = crypto:supports(),
+	RecommendedHashs = [md5, sha, sha256, sha384, sha512],
+	Hashs = RecommendedHashs -- (RecommendedHashs -- proplists:get_value(hashs, Supports)),
+	Ciphers = ets:select(?TAB, [{{{cipher, '$1'}, '_'}, [{is_atom, '$1'}], ['$1']}]),
+	RecommendedPublicKeys = [ec_gf2m, ecdh, ecdsa, rsa],
+	PublicKeys = RecommendedPublicKeys -- (RecommendedPublicKeys -- proplists:get_value(public_keys, Supports)),
+	[{ciphers, Ciphers}, {hashs, Hashs}, {public_keys, PublicKeys}].
 
 %%%-------------------------------------------------------------------
 %%% Internal functions

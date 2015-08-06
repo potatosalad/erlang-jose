@@ -85,7 +85,7 @@ key_decrypt(DerivedKey, {_ENCModule, _ENC, EncryptedKey}, #jose_jwe_alg_aes_kw{b
 		andalso bit_size(DerivedKey) =:= Bits
 		andalso is_binary(IV)
 		andalso is_binary(TAG) ->
-	crypto:block_decrypt(aes_gcm, DerivedKey, IV, {<<>>, EncryptedKey, TAG});
+	jose_jwa:block_decrypt({aes_gcm, Bits}, DerivedKey, IV, {<<>>, EncryptedKey, TAG});
 key_decrypt(#jose_jwk{kty={KTYModule, KTY}}, EncryptedKey, JWEAESKW=#jose_jwe_alg_aes_kw{}) ->
 	key_decrypt(KTYModule:derive_key(KTY), EncryptedKey, JWEAESKW).
 
@@ -97,7 +97,7 @@ key_encrypt(DerivedKey, DecryptedKey, JWEAESKW=#jose_jwe_alg_aes_kw{bits=Bits, g
 		when is_binary(DerivedKey)
 		andalso bit_size(DerivedKey) =:= Bits
 		andalso is_binary(IV) ->
-	{CipherText, CipherTag} = crypto:block_encrypt(aes_gcm, DerivedKey, IV, {<<>>, DecryptedKey}),
+	{CipherText, CipherTag} = jose_jwa:block_encrypt({aes_gcm, Bits}, DerivedKey, IV, {<<>>, DecryptedKey}),
 	{CipherText, JWEAESKW#jose_jwe_alg_aes_kw{ tag = CipherTag }};
 key_encrypt(DerivedKey, DecryptedKey, JWEAESKW=#jose_jwe_alg_aes_kw{gcm=true, iv=undefined}) ->
 	key_encrypt(DerivedKey, DecryptedKey, JWEAESKW#jose_jwe_alg_aes_kw{ iv = crypto:rand_bytes(12) });

@@ -57,18 +57,6 @@ unwrap(CipherText, KEK, IV)
 %%%-------------------------------------------------------------------
 
 %% @private
-block_decrypt(KEK, Data) when bit_size(KEK) =:= 192 ->
-	jose_jwa_aes:block_decrypt(192, KEK, Data);
-block_decrypt(KEK, Data) ->
-	crypto:block_decrypt(aes_ecb, KEK, Data).
-
-%% @private
-block_encrypt(KEK, Data) when bit_size(KEK) =:= 192 ->
-	jose_jwa_aes:block_encrypt(192, KEK, Data);
-block_encrypt(KEK, Data) ->
-	crypto:block_encrypt(aes_ecb, KEK, Data).
-
-%% @private
 do_wrap(Buffer, 6, _BlockCount, _KEK) ->
 	Buffer;
 do_wrap(Buffer, J, BlockCount, KEK) ->
@@ -82,7 +70,7 @@ do_wrap(<< A0:8/binary, Rest/binary >>, J, I, BlockCount, KEK) ->
 	<< Head:HeadSize/binary, B0:8/binary, Tail/binary >> = Rest,
 	Round = (BlockCount * J) + I,
 	Data = << A0/binary, B0/binary >>,
-	<< A1:?MSB64, B1/binary >> = block_encrypt(KEK, Data),
+	<< A1:?MSB64, B1/binary >> = jose_jwa:block_encrypt({aes_ecb, bit_size(KEK)}, KEK, Data),
 	A2 = A1 bxor Round,
 	do_wrap(<< A2:?MSB64, Head/binary, B1/binary, Tail/binary >>, J, I + 1, BlockCount, KEK).
 
@@ -101,5 +89,5 @@ do_unwrap(<< A0:?MSB64, Rest/binary >>, J, I, BlockCount, KEK) ->
 	Round = (BlockCount * J) + I,
 	A1 = A0 bxor Round,
 	Data = << A1:?MSB64, B0/binary >>,
-	<< A2:8/binary, B1/binary >> = block_decrypt(KEK, Data),
+	<< A2:8/binary, B1/binary >> = jose_jwa:block_decrypt({aes_ecb, bit_size(KEK)}, KEK, Data),
 	do_unwrap(<< A2/binary, Head/binary, B1/binary, Tail/binary >>, J, I - 1, BlockCount, KEK).

@@ -12,6 +12,7 @@
 
 -include_lib("public_key/include/public_key.hrl").
 
+-ifdef(public_key_binaries).
 -callback block_encryptor(KTY, Fields, PlainText) -> JWEMap
 	when
 		KTY       :: any(),
@@ -73,6 +74,14 @@
 -optional_callbacks([sign/3]).
 -optional_callbacks([signer/3]).
 -optional_callbacks([verify/4]).
+-else.
+-callback sign(Message, Options, KTY) -> Signature
+	when
+		Message   :: iodata(),
+		Options   :: any(),
+		KTY       :: any(),
+		Signature :: iodata().
+-endif.
 
 %% API
 -export([from_key/1]).

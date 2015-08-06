@@ -4,6 +4,7 @@
 	{description, "JSON Object Signing and Encryption"},
 	{vsn, "1.0.1"},
 	{id, "git"},
+	{mod, {'jose_app', []}},
 	{registered, []},
 	{applications, [
 		kernel,

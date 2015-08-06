@@ -16,11 +16,14 @@
 
 %% Tests.
 -export([aes_cbc_block_encrypt_and_cbc_block_decrypt/1]).
--export([aes_cbc_block_encrypt_and_crypto_block_decrypt/1]).
--export([aes_crypto_block_encrypt_and_cbc_block_decrypt/1]).
--export([aes_crypto_block_encrypt_and_ecb_block_decrypt/1]).
+-export([aes_cbc_block_encrypt_and_jwa_block_decrypt/1]).
+-export([aes_jwa_block_encrypt_and_cbc_block_decrypt/1]).
+-export([aes_jwa_block_encrypt_and_ecb_block_decrypt/1]).
+-export([aes_jwa_block_encrypt_and_gcm_block_decrypt/1]).
 -export([aes_ecb_block_encrypt_and_ecb_block_decrypt/1]).
--export([aes_ecb_block_encrypt_and_crypto_block_decrypt/1]).
+-export([aes_ecb_block_encrypt_and_jwa_block_decrypt/1]).
+-export([aes_gcm_block_encrypt_and_gcm_block_decrypt/1]).
+-export([aes_gcm_block_encrypt_and_jwa_block_decrypt/1]).
 -export([aes_kw_128_128/1]).
 -export([aes_kw_128_192/1]).
 -export([aes_kw_128_256/1]).
@@ -57,11 +60,14 @@ groups() ->
 	[
 		{jose_jwa_aes, [parallel], [
 			aes_cbc_block_encrypt_and_cbc_block_decrypt,
-			aes_cbc_block_encrypt_and_crypto_block_decrypt,
-			aes_crypto_block_encrypt_and_cbc_block_decrypt,
-			aes_crypto_block_encrypt_and_ecb_block_decrypt,
+			aes_cbc_block_encrypt_and_jwa_block_decrypt,
+			aes_jwa_block_encrypt_and_cbc_block_decrypt,
+			aes_jwa_block_encrypt_and_ecb_block_decrypt,
+			aes_jwa_block_encrypt_and_gcm_block_decrypt,
 			aes_ecb_block_encrypt_and_ecb_block_decrypt,
-			aes_ecb_block_encrypt_and_crypto_block_decrypt
+			aes_ecb_block_encrypt_and_jwa_block_decrypt,
+			aes_gcm_block_encrypt_and_gcm_block_decrypt,
+			aes_gcm_block_encrypt_and_jwa_block_decrypt
 		]},
 		{jose_jwa_aes_kw, [parallel], [
 			aes_kw_128_128,
@@ -118,19 +124,24 @@ aes_cbc_block_encrypt_and_cbc_block_decrypt(Config) ->
 		jose_jwa_aes_props:prop_cbc_block_encrypt_and_cbc_block_decrypt(),
 		Config).
 
-aes_cbc_block_encrypt_and_crypto_block_decrypt(Config) ->
+aes_cbc_block_encrypt_and_jwa_block_decrypt(Config) ->
 	ct_property_test:quickcheck(
-		jose_jwa_aes_props:prop_cbc_block_encrypt_and_crypto_block_decrypt(),
+		jose_jwa_aes_props:prop_cbc_block_encrypt_and_jwa_block_decrypt(),
 		Config).
 
-aes_crypto_block_encrypt_and_cbc_block_decrypt(Config) ->
+aes_jwa_block_encrypt_and_cbc_block_decrypt(Config) ->
 	ct_property_test:quickcheck(
-		jose_jwa_aes_props:prop_crypto_block_encrypt_and_cbc_block_decrypt(),
+		jose_jwa_aes_props:prop_jwa_block_encrypt_and_cbc_block_decrypt(),
 		Config).
 
-aes_crypto_block_encrypt_and_ecb_block_decrypt(Config) ->
+aes_jwa_block_encrypt_and_ecb_block_decrypt(Config) ->
 	ct_property_test:quickcheck(
-		jose_jwa_aes_props:prop_crypto_block_encrypt_and_ecb_block_decrypt(),
+		jose_jwa_aes_props:prop_jwa_block_encrypt_and_ecb_block_decrypt(),
+		Config).
+
+aes_jwa_block_encrypt_and_gcm_block_decrypt(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwa_aes_props:prop_jwa_block_encrypt_and_gcm_block_decrypt(),
 		Config).
 
 aes_ecb_block_encrypt_and_ecb_block_decrypt(Config) ->
@@ -138,9 +149,19 @@ aes_ecb_block_encrypt_and_ecb_block_decrypt(Config) ->
 		jose_jwa_aes_props:prop_ecb_block_encrypt_and_ecb_block_decrypt(),
 		Config).
 
-aes_ecb_block_encrypt_and_crypto_block_decrypt(Config) ->
+aes_ecb_block_encrypt_and_jwa_block_decrypt(Config) ->
 	ct_property_test:quickcheck(
-		jose_jwa_aes_props:prop_ecb_block_encrypt_and_crypto_block_decrypt(),
+		jose_jwa_aes_props:prop_ecb_block_encrypt_and_jwa_block_decrypt(),
+		Config).
+
+aes_gcm_block_encrypt_and_gcm_block_decrypt(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwa_aes_props:prop_gcm_block_encrypt_and_gcm_block_decrypt(),
+		Config).
+
+aes_gcm_block_encrypt_and_jwa_block_decrypt(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwa_aes_props:prop_gcm_block_encrypt_and_jwa_block_decrypt(),
 		Config).
 
 %% See [https://tools.ietf.org/html/rfc3394#section-4.1]

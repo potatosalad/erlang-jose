@@ -3,10 +3,12 @@
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <andrew@pixid.com>
 %%% @copyright 2014-2015, Andrew Bennett
-%%% @doc Advanced Encryption Standard (AES), as defined in NIST.800-38A
-%%% Cipher Block Chaining (CBC)
-%%% Electronic Codebook (ECB)
+%%% @doc Advanced Encryption Standard (AES)
+%%% Cipher Block Chaining (CBC), as defined in NIST.800-38A
+%%% Electronic Codebook (ECB), as defined in NIST.800-38A
+%%% Galois/Counter Mode (GCM) and GMAC, as defined in NIST.800-38D
 %%% See NIST.800-38A: http://csrc.nist.gov/publications/nistpubs/800-38a/sp800-38a.pdf
+%%% See NIST.800-38D: http://csrc.nist.gov/publications/nistpubs/800-38D/SP-800-38D.pdf
 %%% @end
 %%% Created :  28 Jul 2015 by Andrew Bennett <andrew@pixid.com>
 %%%-------------------------------------------------------------------
@@ -22,43 +24,77 @@
 %% API functions
 %%====================================================================
 
-%% ECB
-block_decrypt(Bits, Key, CipherText)
+block_decrypt({aes_ecb, Bits}, Key, CipherText)
 		when (Bits =:= 128
 			orelse Bits =:= 192
 			orelse Bits =:= 256)
-		andalso bit_size(Key) =:= Bits ->
+		andalso bit_size(Key) =:= Bits
+		andalso is_binary(CipherText) ->
 	{St, RoundKey} = aes_key_expansion(Bits, Key),
 	ecb_block_decrypt(St, RoundKey, CipherText, <<>>).
 
-%% CBC
-block_decrypt(Bits, Key, IV, CipherText)
+block_decrypt({aes_cbc, Bits}, Key, IV, CipherText)
 		when (Bits =:= 128
 			orelse Bits =:= 192
 			orelse Bits =:= 256)
 		andalso bit_size(Key) =:= Bits
-		andalso bit_size(IV) =:= 128 ->
+		andalso bit_size(IV) =:= 128
+		andalso is_binary(CipherText) ->
 	{St, RoundKey} = aes_key_expansion(Bits, Key),
-	cbc_block_decrypt(St, RoundKey, IV, CipherText, <<>>).
-
-%% ECB
-block_encrypt(Bits, Key, PlainText)
+	cbc_block_decrypt(St, RoundKey, IV, CipherText, <<>>);
+block_decrypt({aes_gcm, Bits}, Key, IV, {AAD, CipherText, CipherTag})
 		when (Bits =:= 128
 			orelse Bits =:= 192
 			orelse Bits =:= 256)
-		andalso bit_size(Key) =:= Bits ->
+		andalso bit_size(Key) =:= Bits
+		andalso bit_size(IV) =:= 96
+		andalso is_binary(AAD)
+		andalso is_binary(CipherText)
+		andalso is_binary(CipherTag) ->
+	MasterKey = block_encrypt({aes_ecb, Bits}, Key, << 0:128 >>),
+	GHash = gcm_ghash(MasterKey, AAD, CipherText),
+	CipherTagValid = crypto:exor(GHash, block_encrypt({aes_ecb, Bits}, Key, << ((crypto:bytes_to_integer(IV) bsl 32) bor 1):128/unsigned-big-integer-unit:1 >>)),
+	case jose_jwa:constant_time_compare(CipherTag, CipherTagValid) of
+		false ->
+			error;
+		true ->
+			Stream = crypto:stream_init(aes_ctr, Key, << IV/binary, 2:1/unsigned-big-integer-unit:32 >>),
+			{_NewStream, PlainText} = crypto:stream_decrypt(Stream, CipherText),
+			PlainText
+	end.
+
+block_encrypt({aes_ecb, Bits}, Key, PlainText)
+		when (Bits =:= 128
+			orelse Bits =:= 192
+			orelse Bits =:= 256)
+		andalso bit_size(Key) =:= Bits
+		andalso is_binary(PlainText) ->
 	{St, RoundKey} = aes_key_expansion(Bits, Key),
 	ecb_block_encrypt(St, RoundKey, PlainText, <<>>).
 
-%% CBC
-block_encrypt(Bits, Key, IV, PlainText)
+block_encrypt({aes_cbc, Bits}, Key, IV, PlainText)
 		when (Bits =:= 128
 			orelse Bits =:= 192
 			orelse Bits =:= 256)
 		andalso bit_size(Key) =:= Bits
-		andalso bit_size(IV) =:= 128 ->
+		andalso bit_size(IV) =:= 128
+		andalso is_binary(PlainText) ->
 	{St, RoundKey} = aes_key_expansion(Bits, Key),
-	cbc_block_encrypt(St, RoundKey, IV, PlainText, <<>>).
+	cbc_block_encrypt(St, RoundKey, IV, PlainText, <<>>);
+block_encrypt({aes_gcm, Bits}, Key, IV, {AAD, PlainText})
+		when (Bits =:= 128
+			orelse Bits =:= 192
+			orelse Bits =:= 256)
+		andalso bit_size(Key) =:= Bits
+		andalso bit_size(IV) =:= 96
+		andalso is_binary(AAD)
+		andalso is_binary(PlainText) ->
+	Stream = crypto:stream_init(aes_ctr, Key, << IV/binary, 2:1/unsigned-big-integer-unit:32 >>),
+	{_NewStream, CipherText} = crypto:stream_encrypt(Stream, PlainText),
+	MasterKey = block_encrypt({aes_ecb, Bits}, Key, << 0:128 >>),
+	GHash = gcm_ghash(MasterKey, AAD, CipherText),
+	CipherTag = crypto:exor(GHash, block_encrypt({aes_ecb, Bits}, Key, << ((crypto:bytes_to_integer(IV) bsl 32) bor 1):128/unsigned-big-integer-unit:1 >>)),
+	{CipherText, CipherTag}.
 
 %%%-------------------------------------------------------------------
 %%% Internal AES functions
@@ -335,6 +371,70 @@ cbc_block_encrypt(_St, _RoundKey, _IV, <<>>, CipherText) ->
 cbc_block_encrypt(St, RoundKey, IV, << Block:128/bitstring, PlainText/bitstring >>, CipherText) ->
 	Encrypted = aes_cipher(St, RoundKey, crypto:exor(Block, IV)),
 	cbc_block_encrypt(St, RoundKey, Encrypted, PlainText, << CipherText/binary, Encrypted/binary >>).
+
+%%%-------------------------------------------------------------------
+%%% Internal GCM functions
+%%%-------------------------------------------------------------------
+
+%% @private
+gcm_ghash(Key, AAD, CipherText) ->
+	Data = << (gcm_pad(AAD))/binary, (gcm_pad(CipherText))/binary >>,
+	Table = gf_table(Key),
+	gcm_ghash_block(Table, AAD, CipherText, Data, << 0:128/unsigned-big-integer-unit:1 >>).
+
+%% @private
+gcm_ghash_block(Table, AAD, CipherText, <<>>, GHash) ->
+	AADBits = bit_size(AAD),
+	CipherTextBits = bit_size(CipherText),
+	GHashMask = << ((AADBits bsl 64) bor CipherTextBits):128/unsigned-big-integer-unit:1 >>,
+	gcm_ghash_multiply(crypto:exor(GHash, GHashMask), Table);
+gcm_ghash_block(Table, AAD, CipherText, << Block:128/bitstring, Data/bitstring >>, GHash) ->
+	gcm_ghash_block(Table, AAD, CipherText, Data, gcm_ghash_multiply(crypto:exor(GHash, Block), Table)).
+
+%% @private
+gcm_ghash_multiply(GHash, Table) ->
+	gcm_ghash_multiply(0, Table, crypto:bytes_to_integer(GHash), 0).
+
+%% @private
+gcm_ghash_multiply(16, _Table, _GHash, Result) ->
+	<< Result:128/unsigned-big-integer-unit:1 >>;
+gcm_ghash_multiply(I, Table, GHash, Result) ->
+	gcm_ghash_multiply(I + 1, Table, GHash bsr 8, Result bxor element((GHash band 16#FF) + 1, element(I + 1, Table))).
+
+%% @private
+gcm_pad(Binary) when (byte_size(Binary) rem 16) =/= 0 ->
+	PadBits = (16 - (byte_size(Binary) rem 16)) * 8,
+	<< Binary/binary, 0:PadBits >>;
+gcm_pad(Binary) ->
+	Binary.
+
+%% @private
+gf_table(Key) ->
+	gf_table(0, crypto:bytes_to_integer(Key), []).
+
+%% @private
+gf_table(16, _K, Rows) ->
+	list_to_tuple(lists:reverse(Rows));
+gf_table(I, K, Rows) ->
+	gf_table(I + 1, K, [gf_table(I, 0, K, []) | Rows]).
+
+%% @private
+gf_table(_I, 256, _K, Row) ->
+	list_to_tuple(lists:reverse(Row));
+gf_table(I, J, K, Row) ->
+	gf_table(I, J + 1, K, [gf_2_128_mul(K, J bsl (I * 8)) | Row]).
+
+%% @private
+gf_2_128_mul(X, Y) ->
+	gf_2_128_mul(127, X, Y, 0).
+
+%% @private
+gf_2_128_mul(-1, _X, _Y, R) ->
+	R;
+gf_2_128_mul(I, X0, Y, R0) ->
+	R1 = (R0 bxor (X0 * ((Y bsr I) band 1))),
+	X1 = (X0 bsr 1) bxor ((X0 band 1) * 16#E1000000000000000000000000000000),
+	gf_2_128_mul(I - 1, X1, Y, R1).
 
 %%%-------------------------------------------------------------------
 %%% Internal ECB decrypt functions

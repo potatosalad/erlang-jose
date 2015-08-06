@@ -8,6 +8,7 @@
 
 block_size() -> oneof([128, 192, 256]).
 cbc_iv()     -> binary(16).
+gcm_iv()     -> binary(12).
 
 cbc_block_encryptor_gen() ->
 	?LET({Bits, IV, PlainText},
@@ -19,62 +20,85 @@ ecb_block_encryptor_gen() ->
 		{block_size(), binary()},
 		{Bits, binary(Bits div 8), jose_jwa_pkcs7:pad(PlainText)}).
 
+gcm_block_encryptor_gen() ->
+	?LET({Bits, IV, AAD, PlainText},
+		{block_size(), gcm_iv(), binary(), binary()},
+		{Bits, binary(Bits div 8), IV, AAD, jose_jwa_pkcs7:pad(PlainText)}).
+
 prop_cbc_block_encrypt_and_cbc_block_decrypt() ->
 	?FORALL({Bits, Key, IV, PlainText},
 		cbc_block_encryptor_gen(),
 		begin
-			CipherText = jose_jwa_aes:block_encrypt(Bits, Key, IV, PlainText),
-			PlainText =:= jose_jwa_aes:block_decrypt(Bits, Key, IV, CipherText)
+			CipherText = jose_jwa_aes:block_encrypt({aes_cbc, Bits}, Key, IV, PlainText),
+			PlainText =:= jose_jwa_aes:block_decrypt({aes_cbc, Bits}, Key, IV, CipherText)
 		end).
 
-prop_cbc_block_encrypt_and_crypto_block_decrypt() ->
+prop_cbc_block_encrypt_and_jwa_block_decrypt() ->
 	?FORALL({Bits, Key, IV, PlainText},
-		?SUCHTHAT({Bits, _Key, _IV, _PlainText},
-			cbc_block_encryptor_gen(),
-			Bits =/= 192),
+		cbc_block_encryptor_gen(),
 		begin
-			CipherText = jose_jwa_aes:block_encrypt(Bits, Key, IV, PlainText),
+			CipherText = jose_jwa_aes:block_encrypt({aes_cbc, Bits}, Key, IV, PlainText),
 			Cipher = list_to_atom("aes_cbc" ++ integer_to_list(Bits)),
-			PlainText =:= crypto:block_decrypt(Cipher, Key, IV, CipherText)
+			PlainText =:= jose_jwa:block_decrypt(Cipher, Key, IV, CipherText)
 		end).
 
-prop_crypto_block_encrypt_and_cbc_block_decrypt() ->
+prop_jwa_block_encrypt_and_cbc_block_decrypt() ->
 	?FORALL({Bits, Key, IV, PlainText},
-		?SUCHTHAT({Bits, _Key, _IV, _PlainText},
-			cbc_block_encryptor_gen(),
-			Bits =/= 192),
+		cbc_block_encryptor_gen(),
 		begin
 			Cipher = list_to_atom("aes_cbc" ++ integer_to_list(Bits)),
-			CipherText = crypto:block_encrypt(Cipher, Key, IV, PlainText),
-			PlainText =:= jose_jwa_aes:block_decrypt(Bits, Key, IV, CipherText)
+			CipherText = jose_jwa:block_encrypt(Cipher, Key, IV, PlainText),
+			PlainText =:= jose_jwa_aes:block_decrypt({aes_cbc, Bits}, Key, IV, CipherText)
 		end).
 
-prop_crypto_block_encrypt_and_ecb_block_decrypt() ->
+prop_jwa_block_encrypt_and_ecb_block_decrypt() ->
 	?FORALL({Bits, Key, PlainText},
-		?SUCHTHAT({Bits, _Key, _PlainText},
-			ecb_block_encryptor_gen(),
-			Bits =/= 192),
+		ecb_block_encryptor_gen(),
 		begin
 			Cipher = aes_ecb,
-			CipherText = << << (crypto:block_encrypt(Cipher, Key, Block))/binary >> || << Block:16/binary >> <= PlainText >>,
-			PlainText =:= jose_jwa_aes:block_decrypt(Bits, Key, CipherText)
+			CipherText = << << (jose_jwa:block_encrypt({Cipher, Bits}, Key, Block))/binary >> || << Block:16/binary >> <= PlainText >>,
+			PlainText =:= jose_jwa_aes:block_decrypt({aes_ecb, Bits}, Key, CipherText)
+		end).
+
+prop_jwa_block_encrypt_and_gcm_block_decrypt() ->
+	?FORALL({Bits, Key, IV, AAD, PlainText},
+		gcm_block_encryptor_gen(),
+		begin
+			Cipher = aes_gcm,
+			{CipherText, CipherTag} = jose_jwa:block_encrypt({Cipher, Bits}, Key, IV, {AAD, PlainText}),
+			PlainText =:= jose_jwa_aes:block_decrypt({aes_gcm, Bits}, Key, IV, {AAD, CipherText, CipherTag})
 		end).
 
 prop_ecb_block_encrypt_and_ecb_block_decrypt() ->
 	?FORALL({Bits, Key, PlainText},
 		ecb_block_encryptor_gen(),
 		begin
-			CipherText = jose_jwa_aes:block_encrypt(Bits, Key, PlainText),
-			PlainText =:= jose_jwa_aes:block_decrypt(Bits, Key, CipherText)
+			CipherText = jose_jwa_aes:block_encrypt({aes_ecb, Bits}, Key, PlainText),
+			PlainText =:= jose_jwa_aes:block_decrypt({aes_ecb, Bits}, Key, CipherText)
 		end).
 
-prop_ecb_block_encrypt_and_crypto_block_decrypt() ->
+prop_ecb_block_encrypt_and_jwa_block_decrypt() ->
 	?FORALL({Bits, Key, PlainText},
-		?SUCHTHAT({Bits, _Key, _PlainText},
-			ecb_block_encryptor_gen(),
-			Bits =/= 192),
+		ecb_block_encryptor_gen(),
 		begin
-			CipherText = jose_jwa_aes:block_encrypt(Bits, Key, PlainText),
+			CipherText = jose_jwa_aes:block_encrypt({aes_ecb, Bits}, Key, PlainText),
 			Cipher = aes_ecb,
-			PlainText =:= << << (crypto:block_decrypt(Cipher, Key, Block))/binary >> || << Block:16/binary >> <= CipherText >>
+			PlainText =:= << << (jose_jwa:block_decrypt({Cipher, Bits}, Key, Block))/binary >> || << Block:16/binary >> <= CipherText >>
+		end).
+
+prop_gcm_block_encrypt_and_gcm_block_decrypt() ->
+	?FORALL({Bits, Key, IV, AAD, PlainText},
+		gcm_block_encryptor_gen(),
+		begin
+			{CipherText, CipherTag} = jose_jwa_aes:block_encrypt({aes_gcm, Bits}, Key, IV, {AAD, PlainText}),
+			PlainText =:= jose_jwa_aes:block_decrypt({aes_gcm, Bits}, Key, IV, {AAD, CipherText, CipherTag})
+		end).
+
+prop_gcm_block_encrypt_and_jwa_block_decrypt() ->
+	?FORALL({Bits, Key, IV, AAD, PlainText},
+		gcm_block_encryptor_gen(),
+		begin
+			{CipherText, CipherTag} = jose_jwa_aes:block_encrypt({aes_gcm, Bits}, Key, IV, {AAD, PlainText}),
+			Cipher = aes_gcm,
+			PlainText =:= jose_jwa:block_decrypt({Cipher, Bits}, Key, IV, {AAD, CipherText, CipherTag})
 		end).

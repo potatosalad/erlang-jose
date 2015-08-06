@@ -44,7 +44,7 @@
 %%====================================================================
 
 from_map(F = #{ <<"kty">> := <<"EC">>, <<"d">> := _ }) ->
-	from_map_ec_private_key(maps:remove(<<"kty">>, F), #'ECPrivateKey'{ version = 1 });
+	from_map_ec_private_key(jose_jwa:ec_key_mode(), maps:remove(<<"kty">>, F), #'ECPrivateKey'{ version = 1 });
 from_map(F = #{ <<"kty">> := <<"EC">> }) ->
 	from_map_ec_public_key(maps:remove(<<"kty">>, F), {#'ECPoint'{}, undefined}).
 
@@ -57,7 +57,7 @@ to_map(#'ECPrivateKey'{
 		version = 1,
 		privateKey = D,
 		parameters = {namedCurve, Parameters},
-		publicKey = PublicKey}, Fields) ->
+		publicKey = PublicKey}, Fields) when is_binary(D) andalso is_binary(PublicKey) ->
 	{X, Y} = public_key_to_x_y(PublicKey),
 	Fields#{
 		<<"d">> => base64url:encode(D),
@@ -75,7 +75,16 @@ to_map({#'ECPoint'{
 		<<"kty">> => <<"EC">>,
 		<<"x">> => base64url:encode(X),
 		<<"y">> => base64url:encode(Y)
-	}.
+	};
+to_map(ECPrivateKey0=#'ECPrivateKey'{
+		version = 1,
+		privateKey = D,
+		parameters = {namedCurve, _Parameters},
+		publicKey = {_, PublicKey}}, Fields) when is_list(D) andalso is_binary(PublicKey) ->
+	ECPrivateKey = ECPrivateKey0#'ECPrivateKey'{
+		privateKey = list_to_binary(D),
+		publicKey = PublicKey},
+	to_map(ECPrivateKey, Fields).
 
 to_public_map(K=#'ECPrivateKey'{}, F) ->
 	maps:without([<<"d">>], to_map(K, F));
@@ -97,13 +106,7 @@ block_encryptor(_KTY, _Fields, _PlainText) ->
 
 derive_key({ECPoint=#'ECPoint'{}, _}, ECPrivateKey=#'ECPrivateKey'{}) ->
 	public_key:compute_key(ECPoint, ECPrivateKey);
-derive_key(#'ECPrivateKey'{parameters=ECParameters, publicKey=Octets0}, ECPrivateKey=#'ECPrivateKey'{}) ->
-	Octets = case Octets0 of
-		{_, Octets1} ->
-			Octets1;
-		_ ->
-			Octets0
-	end,
+derive_key(#'ECPrivateKey'{parameters=ECParameters, publicKey=Octets}, ECPrivateKey=#'ECPrivateKey'{}) ->
 	ECPoint = #'ECPoint'{point=Octets},
 	ECPublicKey = {ECPoint, ECParameters},
 	derive_key(ECPublicKey, ECPrivateKey).
@@ -188,17 +191,21 @@ to_pem(Password, ECPublicKey={#'ECPoint'{}, _ECParameters}) ->
 %%%-------------------------------------------------------------------
 
 %% @private
-from_map_ec_private_key(F = #{ <<"d">> := D }, Key) ->
-	from_map_ec_private_key(maps:remove(<<"d">>, F), Key#'ECPrivateKey'{ privateKey = base64url:decode(D) });
-from_map_ec_private_key(F = #{ <<"crv">> := <<"P-256">> }, Key) ->
-	from_map_ec_private_key(maps:remove(<<"crv">>, F), Key#'ECPrivateKey'{ parameters = {namedCurve, pubkey_cert_records:namedCurves(secp256r1)} });
-from_map_ec_private_key(F = #{ <<"crv">> := <<"P-384">> }, Key) ->
-	from_map_ec_private_key(maps:remove(<<"crv">>, F), Key#'ECPrivateKey'{ parameters = {namedCurve, pubkey_cert_records:namedCurves(secp384r1)} });
-from_map_ec_private_key(F = #{ <<"crv">> := <<"P-521">> }, Key) ->
-	from_map_ec_private_key(maps:remove(<<"crv">>, F), Key#'ECPrivateKey'{ parameters = {namedCurve, pubkey_cert_records:namedCurves(secp521r1)} });
-from_map_ec_private_key(F = #{ <<"x">> := X, <<"y">> := Y }, Key) ->
-	from_map_ec_private_key(maps:without([<<"x">>, <<"y">>], F), Key#'ECPrivateKey'{ publicKey = << 16#04, (base64url:decode(X))/binary, (base64url:decode(Y))/binary >>});
-from_map_ec_private_key(F, Key) ->
+from_map_ec_private_key(binary, F = #{ <<"d">> := D }, Key) ->
+	from_map_ec_private_key(binary, maps:remove(<<"d">>, F), Key#'ECPrivateKey'{ privateKey = base64url:decode(D) });
+from_map_ec_private_key(list, F = #{ <<"d">> := D }, Key) ->
+	from_map_ec_private_key(list, maps:remove(<<"d">>, F), Key#'ECPrivateKey'{ privateKey = binary_to_list(base64url:decode(D)) });
+from_map_ec_private_key(ECMode, F = #{ <<"crv">> := <<"P-256">> }, Key) ->
+	from_map_ec_private_key(ECMode, maps:remove(<<"crv">>, F), Key#'ECPrivateKey'{ parameters = {namedCurve, pubkey_cert_records:namedCurves(secp256r1)} });
+from_map_ec_private_key(ECMode, F = #{ <<"crv">> := <<"P-384">> }, Key) ->
+	from_map_ec_private_key(ECMode, maps:remove(<<"crv">>, F), Key#'ECPrivateKey'{ parameters = {namedCurve, pubkey_cert_records:namedCurves(secp384r1)} });
+from_map_ec_private_key(ECMode, F = #{ <<"crv">> := <<"P-521">> }, Key) ->
+	from_map_ec_private_key(ECMode, maps:remove(<<"crv">>, F), Key#'ECPrivateKey'{ parameters = {namedCurve, pubkey_cert_records:namedCurves(secp521r1)} });
+from_map_ec_private_key(binary, F = #{ <<"x">> := X, <<"y">> := Y }, Key) ->
+	from_map_ec_private_key(binary, maps:without([<<"x">>, <<"y">>], F), Key#'ECPrivateKey'{ publicKey = << 16#04, (base64url:decode(X))/binary, (base64url:decode(Y))/binary >> });
+from_map_ec_private_key(list, F = #{ <<"x">> := X, <<"y">> := Y }, Key) ->
+	from_map_ec_private_key(list, maps:without([<<"x">>, <<"y">>], F), Key#'ECPrivateKey'{ publicKey = {0, << 16#04, (base64url:decode(X))/binary, (base64url:decode(Y))/binary >>} });
+from_map_ec_private_key(_ECMode, F, Key) ->
 	{Key, F}.
 
 %% @private
