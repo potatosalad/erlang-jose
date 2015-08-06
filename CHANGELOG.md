@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.1.0 (2015-08-06)
+
+* Enhancements
+  * Detect supported `crypto` AES ciphers and use fallbacks when necessary.
+  * Detect EC key mode (to support OTP 17.5).
+  * Mostly pure Erlang implementation of AES GCM and GHASH functions.
+  * Add `JOSE.JWA` module for Elixir.
+
+* Fixes
+  * All tests now pass on OTP 17.5 and OTP 18.
+  * Fallback to non-native crypto implementations for OTP 17.5.
+
 ## 1.0.1 (2015-08-05)
 
 * Dependencies

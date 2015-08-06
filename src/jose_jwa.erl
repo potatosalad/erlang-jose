@@ -32,13 +32,21 @@ block_cipher(Cipher) ->
 
 block_decrypt(Cipher, Key, CipherText)
 		when is_binary(CipherText) ->
-	{Module, BlockCipher} = block_cipher(Cipher),
-	Module:block_decrypt(BlockCipher, Key, CipherText).
+	case block_cipher(Cipher) of
+		{crypto, aes_ecb} ->
+			<< << (crypto:block_decrypt(aes_ecb, Key, Block))/binary >> || << Block:128/bitstring >> <= CipherText >>;
+		{Module, BlockCipher} ->
+			Module:block_decrypt(BlockCipher, Key, CipherText)
+	end.
 
 block_encrypt(Cipher, Key, PlainText)
 		when is_binary(PlainText) ->
-	{Module, BlockCipher} = block_cipher(Cipher),
-	Module:block_encrypt(BlockCipher, Key, PlainText).
+	case block_cipher(Cipher) of
+		{crypto, aes_ecb} ->
+			<< << (crypto:block_encrypt(aes_ecb, Key, Block))/binary >> || << Block:128/bitstring >> <= PlainText >>;
+		{Module, BlockCipher} ->
+			Module:block_encrypt(BlockCipher, Key, PlainText)
+	end.
 
 block_decrypt(Cipher, Key, IV, CipherText)
 		when is_binary(CipherText) ->
