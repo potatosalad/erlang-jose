@@ -157,7 +157,7 @@ verify(Other, SignedBinary) when is_binary(SignedBinary) ->
 verify(Other, SignedMap) when is_map(SignedMap) ->
 	verify(Other, {#{}, SignedMap});
 verify(Other, Signed) ->
-	verify(from(Other), Signed).
+	verify(jose_jwk:from(Other), Signed).
 
 %%%-------------------------------------------------------------------
 %%% Internal functions

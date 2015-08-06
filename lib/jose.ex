@@ -1,0 +1,2 @@
+defmodule JOSE do
+end

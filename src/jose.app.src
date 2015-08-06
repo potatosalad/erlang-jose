@@ -11,6 +11,7 @@
 		crypto,
 		asn1,
 		public_key,
+		base64url,
 		jsx
 	]},
 	{modules, []},

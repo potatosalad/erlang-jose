@@ -62,8 +62,8 @@ from({Modules, Map}) when is_map(Modules) andalso is_map(Map) ->
 	from_map({Modules, Map});
 from({Modules, Binary}) when is_map(Modules) andalso is_binary(Binary) ->
 	from_binary({Modules, Binary});
-from(JWK=#jose_jwk{}) ->
-	JWK;
+from(JWE=#jose_jwe{}) ->
+	JWE;
 from(Other) when is_map(Other) orelse is_binary(Other) ->
 	from({#{}, Other}).
 
