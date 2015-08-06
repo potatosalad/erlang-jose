@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.1 (2015-08-05)
+
+* Dependencies
+  * Use [`base64url`](https://hex.pm/packages/base64url) package from hex.pm
+
 ## 1.0.0 (2015-08-05)
 
 * Initial Release

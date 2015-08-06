@@ -3,7 +3,7 @@ defmodule JOSE.Mixfile do
 
   def project do
     [app: :jose,
-     version: "1.0.0",
+     version: "1.0.1",
      elixir: "~> 1.0",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -23,7 +23,7 @@ defmodule JOSE.Mixfile do
   end
 
   defp deps do
-    [{:base64url, github: "dvv/base64url"},
+    [{:base64url, "~> 0.0.1"},
      {:jsx, "~> 2.0"}]
   end
 
