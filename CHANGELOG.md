@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.1.1 (2015-08-06)
+
+* Fixes
+  * Fix bit sizes for A128CBC-HS256, A192CBC-HS384, and A256CBC-HS512 algorithms.
+  * Don't precompute the GHASH table (speeds up AES GCM fallback on OTP 17).
+  * Use case statement instead of map pattern matching for block_decrypt (fixes map pattern matching bug on OTP 17).
+  * Allow mostly empty EC keys to be converted back to JSON.
+  * Add jose_jwk_props property test for full algorithm range of encryption and decryption.
+
 ## 1.1.0 (2015-08-06)
 
 * Enhancements
