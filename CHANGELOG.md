@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.1 (2015-08-06)
+## 1.1.1 (2015-08-07)
 
 * Fixes
   * Fix bit sizes for A128CBC-HS256, A192CBC-HS384, and A256CBC-HS512 algorithms.
