@@ -15,6 +15,7 @@
 -export([end_per_group/2]).
 
 %% Tests.
+-export([encrypt_and_decrypt/1]).
 -export([kty_ec_from_map_and_to_map/1]).
 -export([kty_ec_from_pem_and_to_pem/1]).
 -export([kty_ec_box_encrypt_and_box_decrypt/1]).
@@ -30,6 +31,7 @@
 
 all() ->
 	[
+		{group, jose_jwk},
 		{group, jose_jwk_kty_ec},
 		{group, jose_jwk_kty_hmac},
 		{group, jose_jwk_kty_rsa},
@@ -38,6 +40,9 @@ all() ->
 
 groups() ->
 	[
+		{jose_jwk, [parallel], [
+			encrypt_and_decrypt
+		]},
 		{jose_jwk_kty_ec, [parallel], [
 			kty_ec_from_map_and_to_map,
 			kty_ec_from_pem_and_to_pem,
@@ -78,6 +83,11 @@ end_per_group(_Group, _Config) ->
 %%====================================================================
 %% Tests
 %%====================================================================
+
+encrypt_and_decrypt(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwk_props:prop_encrypt_and_decrypt(),
+		Config).
 
 kty_ec_from_map_and_to_map(Config) ->
 	ct_property_test:quickcheck(

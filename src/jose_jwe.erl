@@ -152,36 +152,34 @@ block_decrypt(Key, EncryptedBinary) when is_binary(EncryptedBinary) ->
 	block_decrypt(Key, expand(EncryptedBinary));
 block_decrypt(Key, {Modules, EncryptedBinary}) when is_binary(EncryptedBinary) ->
 	block_decrypt(Key, expand({Modules, EncryptedBinary}));
-block_decrypt(Key, {Modules, #{
-		<<"protected">> := Protected,
-		<<"encrypted_key">> := EncodedEncryptedKey,
-		<<"iv">> := EncodedIV,
-		<<"ciphertext">> := EncodedCipherText,
-		<<"tag">> := EncodedCipherTag,
-		<<"aad">> := EncodedAAD}}) ->
-	ConcatAAD = << Protected/binary, $., EncodedAAD/binary >>,
-	JWE = #jose_jwe{enc={ENCModule, ENC}} = from_binary({Modules, base64url:decode(Protected)}),
-	EncryptedKey = base64url:decode(EncodedEncryptedKey),
-	IV = base64url:decode(EncodedIV),
-	CipherText = base64url:decode(EncodedCipherText),
-	CipherTag = base64url:decode(EncodedCipherTag),
-	CEK = key_decrypt(Key, EncryptedKey, JWE),
-	PlainText = uncompress(ENCModule:block_decrypt({ConcatAAD, CipherText, CipherTag}, CEK, IV, ENC), JWE),
-	{PlainText, JWE};
-block_decrypt(Key, {Modules, #{
+block_decrypt(Key, {Modules, EncryptedMap=#{
 		<<"protected">> := Protected,
 		<<"encrypted_key">> := EncodedEncryptedKey,
 		<<"iv">> := EncodedIV,
 		<<"ciphertext">> := EncodedCipherText,
 		<<"tag">> := EncodedCipherTag}}) ->
-	JWE = #jose_jwe{enc={ENCModule, ENC}} = from_binary({Modules, base64url:decode(Protected)}),
-	EncryptedKey = base64url:decode(EncodedEncryptedKey),
-	IV = base64url:decode(EncodedIV),
-	CipherText = base64url:decode(EncodedCipherText),
-	CipherTag = base64url:decode(EncodedCipherTag),
-	CEK = key_decrypt(Key, EncryptedKey, JWE),
-	PlainText = uncompress(ENCModule:block_decrypt({Protected, CipherText, CipherTag}, CEK, IV, ENC), JWE),
-	{PlainText, JWE}.
+	case maps:is_key(<<"aad">>, EncryptedMap) of
+		false ->
+			JWE = #jose_jwe{enc={ENCModule, ENC}} = from_binary({Modules, base64url:decode(Protected)}),
+			EncryptedKey = base64url:decode(EncodedEncryptedKey),
+			IV = base64url:decode(EncodedIV),
+			CipherText = base64url:decode(EncodedCipherText),
+			CipherTag = base64url:decode(EncodedCipherTag),
+			CEK = key_decrypt(Key, EncryptedKey, JWE),
+			PlainText = uncompress(ENCModule:block_decrypt({Protected, CipherText, CipherTag}, CEK, IV, ENC), JWE),
+			{PlainText, JWE};
+		true ->
+			EncodedAAD = maps:get(<<"aad">>, EncryptedMap),
+			ConcatAAD = << Protected/binary, $., EncodedAAD/binary >>,
+			JWE = #jose_jwe{enc={ENCModule, ENC}} = from_binary({Modules, base64url:decode(Protected)}),
+			EncryptedKey = base64url:decode(EncodedEncryptedKey),
+			IV = base64url:decode(EncodedIV),
+			CipherText = base64url:decode(EncodedCipherText),
+			CipherTag = base64url:decode(EncodedCipherTag),
+			CEK = key_decrypt(Key, EncryptedKey, JWE),
+			PlainText = uncompress(ENCModule:block_decrypt({ConcatAAD, CipherText, CipherTag}, CEK, IV, ENC), JWE),
+			{PlainText, JWE}
+	end.
 
 block_encrypt(Key, Block, JWE=#jose_jwe{}) ->
 	CEK = next_cek(Key, JWE),
@@ -228,21 +226,24 @@ block_encrypt(Key, {AAD0, PlainText}, CEK, IV, JWE0=#jose_jwe{enc={ENCModule, EN
 block_encrypt(Key, Block, CEK, IV, Other) ->
 	block_encrypt(Key, Block, CEK, IV, from(Other)).
 
-compact(BadArg={_, #{ <<"aad">> := _ }}) ->
-	erlang:error({badarg, [BadArg]});
-compact({Modules, #{
+compact({Modules, EncryptedMap=#{
 		<<"protected">> := Protected,
 		<<"encrypted_key">> := EncryptedKey,
 		<<"iv">> := InitializationVector,
 		<<"ciphertext">> := CipherText,
 		<<"tag">> := AuthenticationTag}}) ->
-	{Modules, <<
-		Protected/binary, $.,
-		EncryptedKey/binary, $.,
-		InitializationVector/binary, $.,
-		CipherText/binary, $.,
-		AuthenticationTag/binary
-	>>};
+	case maps:is_key(<<"aad">>, EncryptedMap) of
+		false ->
+			{Modules, <<
+				Protected/binary, $.,
+				EncryptedKey/binary, $.,
+				InitializationVector/binary, $.,
+				CipherText/binary, $.,
+				AuthenticationTag/binary
+			>>};
+		true ->
+			erlang:error({badarg, [{Modules, EncryptedMap}]})
+	end;
 compact(Map) when is_map(Map) ->
 	compact({#{}, Map}).
 

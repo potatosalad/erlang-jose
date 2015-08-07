@@ -44,7 +44,7 @@
 
 -define(AES_128_CBC_HMAC_SHA_256, #jose_jwe_enc_aes{
 	cipher  = aes_cbc128,
-	bits    = 128,
+	bits    = 256,
 	cek_len = 32,
 	iv_len  = 16,
 	enc_len = 16,
@@ -55,7 +55,7 @@
 
 -define(AES_192_CBC_HMAC_SHA_384, #jose_jwe_enc_aes{
 	cipher  = aes_cbc192,
-	bits    = 192,
+	bits    = 384,
 	cek_len = 48,
 	iv_len  = 16,
 	enc_len = 24,
@@ -66,7 +66,7 @@
 
 -define(AES_256_CBC_HMAC_SHA_512, #jose_jwe_enc_aes{
 	cipher  = aes_cbc256,
-	bits    = 256,
+	bits    = 512,
 	cek_len = 64,
 	iv_len  = 16,
 	enc_len = 32,

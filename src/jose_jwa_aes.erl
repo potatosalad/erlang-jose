@@ -379,27 +379,29 @@ cbc_block_encrypt(St, RoundKey, IV, << Block:128/bitstring, PlainText/bitstring 
 %% @private
 gcm_ghash(Key, AAD, CipherText) ->
 	Data = << (gcm_pad(AAD))/binary, (gcm_pad(CipherText))/binary >>,
-	Table = gf_table(Key),
-	gcm_ghash_block(Table, AAD, CipherText, Data, << 0:128/unsigned-big-integer-unit:1 >>).
+	K = crypto:bytes_to_integer(Key),
+	gcm_ghash_block(K, AAD, CipherText, Data, << 0:128/unsigned-big-integer-unit:1 >>).
 
 %% @private
-gcm_ghash_block(Table, AAD, CipherText, <<>>, GHash) ->
+gcm_ghash_block(K, AAD, CipherText, <<>>, GHash) ->
 	AADBits = bit_size(AAD),
 	CipherTextBits = bit_size(CipherText),
 	GHashMask = << ((AADBits bsl 64) bor CipherTextBits):128/unsigned-big-integer-unit:1 >>,
-	gcm_ghash_multiply(crypto:exor(GHash, GHashMask), Table);
-gcm_ghash_block(Table, AAD, CipherText, << Block:128/bitstring, Data/bitstring >>, GHash) ->
-	gcm_ghash_block(Table, AAD, CipherText, Data, gcm_ghash_multiply(crypto:exor(GHash, Block), Table)).
+	gcm_ghash_multiply(crypto:exor(GHash, GHashMask), K);
+gcm_ghash_block(K, AAD, CipherText, << Block:128/bitstring, Data/bitstring >>, GHash) ->
+	gcm_ghash_block(K, AAD, CipherText, Data, gcm_ghash_multiply(crypto:exor(GHash, Block), K)).
 
 %% @private
-gcm_ghash_multiply(GHash, Table) ->
-	gcm_ghash_multiply(0, Table, crypto:bytes_to_integer(GHash), 0).
+gcm_ghash_multiply(GHash, K) ->
+	gcm_ghash_multiply(0, K, crypto:bytes_to_integer(GHash), 0).
 
 %% @private
-gcm_ghash_multiply(16, _Table, _GHash, Result) ->
+gcm_ghash_multiply(16, _K, _GHash, Result) ->
 	<< Result:128/unsigned-big-integer-unit:1 >>;
-gcm_ghash_multiply(I, Table, GHash, Result) ->
-	gcm_ghash_multiply(I + 1, Table, GHash bsr 8, Result bxor element((GHash band 16#FF) + 1, element(I + 1, Table))).
+gcm_ghash_multiply(I, K, GHash, Result) ->
+	J = (GHash band 16#FF),
+	Val = gf_2_128_mul(K, (J bsl (I * 8))),
+	gcm_ghash_multiply(I + 1, K, GHash bsr 8, Result bxor Val).
 
 %% @private
 gcm_pad(Binary) when (byte_size(Binary) rem 16) =/= 0 ->
@@ -407,22 +409,6 @@ gcm_pad(Binary) when (byte_size(Binary) rem 16) =/= 0 ->
 	<< Binary/binary, 0:PadBits >>;
 gcm_pad(Binary) ->
 	Binary.
-
-%% @private
-gf_table(Key) ->
-	gf_table(0, crypto:bytes_to_integer(Key), []).
-
-%% @private
-gf_table(16, _K, Rows) ->
-	list_to_tuple(lists:reverse(Rows));
-gf_table(I, K, Rows) ->
-	gf_table(I + 1, K, [gf_table(I, 0, K, []) | Rows]).
-
-%% @private
-gf_table(_I, 256, _K, Row) ->
-	list_to_tuple(lists:reverse(Row));
-gf_table(I, J, K, Row) ->
-	gf_table(I, J + 1, K, [gf_2_128_mul(K, J bsl (I * 8)) | Row]).
 
 %% @private
 gf_2_128_mul(X, Y) ->

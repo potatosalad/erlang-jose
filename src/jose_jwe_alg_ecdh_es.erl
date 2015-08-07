@@ -164,9 +164,11 @@ from_map_ecdh_es(F, H) ->
 	{H, F}.
 
 %% @private
-to_map_ecdh_es(F, #jose_jwe_alg_ecdh_es{ epk = {EPK, EPKFields}, apu = APU, apv = APV }) ->
-	F#{
-		<<"epk">> => jose_jwk_kty_ec:to_map(EPK, EPKFields),
-		<<"apu">> => base64url:encode(APU),
-		<<"apv">> => base64url:encode(APV)
-	}.
+to_map_ecdh_es(F, H=#jose_jwe_alg_ecdh_es{ epk = {EPK, EPKFields} }) ->
+	to_map_ecdh_es(F#{ <<"epk">> => jose_jwk_kty_ec:to_map(EPK, EPKFields) }, H#jose_jwe_alg_ecdh_es{ epk = undefined });
+to_map_ecdh_es(F, H=#jose_jwe_alg_ecdh_es{ apu = APU }) when is_binary(APU) ->
+	to_map_ecdh_es(F#{ <<"apu">> => base64url:encode(APU) }, H#jose_jwe_alg_ecdh_es{ apu = undefined });
+to_map_ecdh_es(F, H=#jose_jwe_alg_ecdh_es{ apv = APV }) when is_binary(APV) ->
+	to_map_ecdh_es(F#{ <<"apv">> => base64url:encode(APV) }, H#jose_jwe_alg_ecdh_es{ apv = undefined });
+to_map_ecdh_es(F, _) ->
+	F.
