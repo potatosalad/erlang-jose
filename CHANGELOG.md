@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.3 (2015-08-10)
+
+* Fixes
+  * Missed a case where jose was not starting automatically (see 1.1.2).
+
+## 1.1.2 (2015-08-10)
+
+* Enhancements
+  * Automatically start jose if one of the fallback algorithms is required.
+
 ## 1.1.1 (2015-08-07)
 
 * Fixes

@@ -36,7 +36,7 @@ end).
 %%====================================================================
 
 block_cipher(Cipher) ->
-	ets:lookup_element(?TAB, {cipher, Cipher}, 2).
+	?MAYBE_START_JOSE(ets:lookup_element(?TAB, {cipher, Cipher}, 2)).
 
 block_decrypt(Cipher, Key, CipherText)
 		when is_binary(CipherText) ->
