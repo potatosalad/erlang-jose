@@ -23,6 +23,14 @@
 
 -define(TAB, ?MODULE).
 
+-define(MAYBE_START_JOSE(F), try
+	F
+catch
+	_:_ ->
+		_ = jose:start(),
+		F
+end).
+
 %%====================================================================
 %% API functions
 %%====================================================================
@@ -70,7 +78,7 @@ block_encrypt(Cipher, Key, IV, {AAD, PlainText})
 	Module:block_encrypt(BlockCipher, Key, IV, {AAD, PlainText}).
 
 ciphers() ->
-	ets:select(?TAB, [{{{cipher, '$1'}, {'$2', '_'}}, [{is_atom, '$1'}], [{{'$1', '$2'}}]}]).
+	?MAYBE_START_JOSE(ets:select(?TAB, [{{{cipher, '$1'}, {'$2', '_'}}, [{is_atom, '$1'}], [{{'$1', '$2'}}]}])).
 
 constant_time_compare(<<>>, _) ->
 	false;
@@ -86,13 +94,13 @@ constant_time_compare(A, B)
 	constant_time_compare(A, B, 0).
 
 ec_key_mode() ->
-	ets:lookup_element(?TAB, ec_key_mode, 2).
+	?MAYBE_START_JOSE(ets:lookup_element(?TAB, ec_key_mode, 2)).
 
 supports() ->
+	Ciphers = ?MAYBE_START_JOSE(ets:select(?TAB, [{{{cipher, '$1'}, '_'}, [{is_atom, '$1'}], ['$1']}])),
 	Supports = crypto:supports(),
 	RecommendedHashs = [md5, sha, sha256, sha384, sha512],
 	Hashs = RecommendedHashs -- (RecommendedHashs -- proplists:get_value(hashs, Supports)),
-	Ciphers = ets:select(?TAB, [{{{cipher, '$1'}, '_'}, [{is_atom, '$1'}], ['$1']}]),
 	RecommendedPublicKeys = [ec_gf2m, ecdh, ecdsa, rsa],
 	PublicKeys = RecommendedPublicKeys -- (RecommendedPublicKeys -- proplists:get_value(public_keys, Supports)),
 	[{ciphers, Ciphers}, {hashs, Hashs}, {public_keys, PublicKeys}].
