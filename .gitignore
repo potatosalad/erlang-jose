@@ -23,4 +23,11 @@ logs
 test/ct.cover.spec
 /_build
 /cover
+/test/cavp_SUITE_data/*.zip
+/test/cavp_SUITE_data/186-3rsatestvectors
+/test/cavp_SUITE_data/aesmmt
+/test/cavp_SUITE_data/gcmtestvectors
+/test/cavp_SUITE_data/KAT_AES
+/test/cavp_SUITE_data/pkcs-1v2-1-vec
+/tmp
 *.ez

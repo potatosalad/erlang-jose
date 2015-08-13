@@ -1,6 +1,12 @@
 defmodule JOSETest do
   use ExUnit.Case
 
+  setup_all do
+    :application.set_env(:jose, :crypto_fallback, true)
+    :jose.start()
+    :ok
+  end
+
   test "JOSE.JWA 128-bit encrypt and decrypt" do
     key = << 0 :: 128 >>
     cbc_iv = << 0 :: 128 >>

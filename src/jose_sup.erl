@@ -25,6 +25,9 @@
 %% Helper macro for declaring children of supervisor
 -define(CHILD(I, Type), {I, {I, start_link, []}, permanent, 5000, Type, [I]}).
 
+-define(MAYBE_FALLBACK(N),
+	application:get_env(jose, N, application:get_env(jose, crypto_fallback, false))).
+
 %%%===================================================================
 %%% API functions
 %%%===================================================================
@@ -46,6 +49,8 @@ init([]) ->
 	]),
 	true = ets:insert(jose_jwa, determine_ec_key_mode()),
 	true = ets:insert(jose_jwa, determine_supported_ciphers()),
+	true = ets:insert(jose_jwa, determine_supported_rsa_padding()),
+	true = ets:insert(jose_jwa, determine_supported_signers()),
 	ChildSpecs = [],
 	Restart = {one_for_one, 10, 10},
 	{ok, {Restart, ChildSpecs}}.
@@ -78,6 +83,19 @@ determine_ec_key_mode() ->
 
 %% @private
 determine_supported_ciphers() ->
+	determine_supported_ciphers(?MAYBE_FALLBACK(crypto_aes_fallback)).
+
+%% @private
+determine_supported_ciphers(false) ->
+	[begin
+		case Module of
+			crypto ->
+				{{cipher, Cipher}, {Module, Type}};
+			_ ->
+				{{cipher, Cipher}, {jose_jwa_unsupported, Type}}
+		end
+	end || {{cipher, Cipher}, {Module, Type}} <- determine_supported_ciphers(true)];
+determine_supported_ciphers(true) ->
 	SpecificBlockCiphers = [
 		aes_cbc128,
 		aes_cbc192,
@@ -136,6 +154,30 @@ determine_supported_ciphers() ->
 		]
 	end || Cipher <- PureBlockCiphers, Bits <- BlockCipherBits],
 	lists:flatten([C0, C1, C2, C3]).
+
+%% @private
+determine_supported_rsa_padding() ->
+	[begin
+		{{rsa_padding, RSAPadding}}
+	end || RSAPadding <- determine_supported_rsa_padding(?MAYBE_FALLBACK(crypto_rsa_fallback))].
+
+%% @private
+determine_supported_rsa_padding(false) ->
+	[rsa_pkcs1_padding, rsa_pkcs1_oaep_padding];
+determine_supported_rsa_padding(true) ->
+	[rsa_pkcs1_padding, rsa_pkcs1_oaep_padding, rsa_pkcs1_oaep256_padding].
+
+%% @private
+determine_supported_signers() ->
+	[begin
+		{{signer, Signer}}
+	end || Signer <- determine_supported_signers(?MAYBE_FALLBACK(crypto_rsa_fallback))].
+
+%% @private
+determine_supported_signers(false) ->
+	[ecdsa, hmac, none, rsa_pkcs1_v1_5];
+determine_supported_signers(true) ->
+	[ecdsa, hmac, none, rsa_pkcs1_v1_5, rsa_pss].
 
 %% @private
 is_cipher_supported(Bits, aes_ecb) ->

@@ -101,7 +101,10 @@ to_thumbprint_map(K, F) ->
 block_encryptor(_KTY, _Fields, _PlainText) ->
 	#{
 		<<"alg">> => <<"ECDH-ES">>,
-		<<"enc">> => <<"A128GCM">>
+		<<"enc">> => case jose_jwa:is_native_cipher(aes_gcm128) of
+			false -> <<"A128CBC-HS256">>;
+			true  -> <<"A128GCM">>
+		end
 	}.
 
 derive_key({ECPoint=#'ECPoint'{}, _}, ECPrivateKey=#'ECPrivateKey'{}) ->

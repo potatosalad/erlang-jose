@@ -55,6 +55,7 @@ groups() ->
 	].
 
 init_per_suite(Config) ->
+	application:set_env(jose, crypto_fallback, true),
 	_ = application:ensure_all_started(jose),
 	Config.
 
