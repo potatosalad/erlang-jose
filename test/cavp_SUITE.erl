@@ -24,13 +24,16 @@
 -export([end_per_group/2]).
 
 %% Tests.
+-export([concatenation_kdf/1]).
 -export([emc_rsa_oaep_encrypt_and_decrypt/1]).
 -export([emc_rsa_pss_sign_and_verify/1]).
 -export([fips_aes_encrypt_and_decrypt/1]).
 -export([fips_aes_gcm_encrypt_and_decrypt/1]).
 -export([fips_rsa_pss_sign/1]).
 -export([fips_rsa_pss_verify/1]).
+-export([pbkdf1/1]).
 -export([pbkdf2/1]).
+-export([pkcs7_pad_and_unpad/1]).
 
 all() ->
 	[
@@ -38,31 +41,40 @@ all() ->
 		{group, 'aesmmt'},
 		{group, 'gcmtestvectors'},
 		{group, 'KAT_AES'},
+		{group, 'nist-800-56A'},
 		{group, 'pkcs-1v2-1-vec'},
-		{group, 'pkcs-5'}
+		{group, 'pkcs-5'},
+		{group, 'pkcs-7'}
 	].
 
 groups() ->
 	[
-		{'186-3rsatestvectors', [], [
+		{'186-3rsatestvectors', [parallel], [
 			fips_rsa_pss_sign,
 			fips_rsa_pss_verify
 		]},
-		{'aesmmt', [], [
+		{'aesmmt', [parallel], [
 			fips_aes_encrypt_and_decrypt
 		]},
-		{'gcmtestvectors', [], [
+		{'gcmtestvectors', [parallel], [
 			fips_aes_gcm_encrypt_and_decrypt
 		]},
-		{'KAT_AES', [], [
+		{'KAT_AES', [parallel], [
 			fips_aes_encrypt_and_decrypt
 		]},
-		{'pkcs-1v2-1-vec', [], [
+		{'nist-800-56A', [parallel], [
+			concatenation_kdf
+		]},
+		{'pkcs-1v2-1-vec', [parallel], [
 			emc_rsa_oaep_encrypt_and_decrypt,
 			emc_rsa_pss_sign_and_verify
 		]},
-		{'pkcs-5', [], [
+		{'pkcs-5', [parallel], [
+			pbkdf1,
 			pbkdf2
+		]},
+		{'pkcs-7', [parallel], [
+			pkcs7_pad_and_unpad
 		]}
 	].
 
@@ -94,12 +106,77 @@ init_per_group('KAT_AES', Config) ->
 	{ok, Entries} = file:list_dir(Folder),
 	Files = [filename:join([Folder, Entry]) || Entry <- Entries],
 	[{aes_files, Files} | Config];
+init_per_group('nist-800-56A', Config) ->
+	Vectors = [
+		%% See [https://tools.ietf.org/html/rfc7518#appendix-C]
+		{sha256,
+			<<158,86,217,29,129,113,53,211,114,131,66,131,191,132,38,156,251,49,110,163,218,128,106,72,246,218,167,121,140,254,144,196>>,
+			{<<"A128GCM">>,
+				<<"Alice">>,
+				<<"Bob">>,
+				<< 0, 0, 0, 128 >>,
+				<<>>},
+			128,
+			<<86,170,141,234,248,35,109,32,92,34,40,205,113,167,16,26>>},
+		%% See [https://bitbucket.org/b_c/jose4j/src/cb968fdb10bdef6ecedf279b030f9b3af59f5e8e/src/test/java/org/jose4j/jwe/kdf/ConcatKeyDerivationFunctionTest.java]
+		{sha256,
+			base64url:decode(<<"Sq8rGLm4rEtzScmnSsY5r1n-AqBl_iBU8FxN80Uc0S0">>),
+			{<<"A256CBC-HS512">>,
+				<<>>,
+				<<>>,
+				<< 0, 0, 2, 0 >>,
+				<<>>},
+			512,
+			base64url:decode(<<"pgs50IOZ6BxfqvTSie4t9OjWxGr4whiHo1v9Dti93CRiJE2PP60FojLatVVrcjg3BxpuFjnlQxL97GOwAfcwLA">>)},
+		{sha256,
+			base64url:decode(<<"LfkHot2nGTVlmfxbgxQfMg">>),
+			{<<"A128CBC-HS256">>,
+				<<>>,
+				<<>>,
+				<< 0, 0, 1, 0 >>,
+				<<>>},
+			256,
+			base64url:decode(<<"vphyobtvExGXF7TaOvAkx6CCjHQNYamP2ET8xkhTu-0">>)},
+		{sha256,
+			base64url:decode(<<"KSDnQpf2iurUsAbcuI4YH-FKfk2gecN6cWHTYlBzrd8">>),
+			{<<"meh">>,
+				<<"Alice">>,
+				<<"Bob">>,
+				<< 0, 0, 4, 0 >>,
+				<<>>},
+			1024,
+			base64url:decode(<<"yRbmmZJpxv3H1aq3FgzESa453frljIaeMz6pt5rQZ4Q5Hs-4RYoFRXFh_qBsbTjlsj8JxIYTWj-cp5LKtgi1fBRsf_5yTEcLDv4pKH2fNxjbEOKuVVDWA1_Qv2IkEC0_QSi3lSSELcJaNX-hDG8occ7oQv-w8lg6lLJjg58kOes">>)},
+		{sha256,
+			base64url:decode(<<"zp9Hot2noTVlmfxbkXqfn1">>),
+			{<<"A192CBC-HS384">>,
+				<<>>,
+				<<>>,
+				<< 0, 0, 1, 128 >>,
+				<<>>},
+			384,
+			base64url:decode(<<"SNOvl6h5iSYWJ_EhlnvK8o6om9iyR8HkKMQtQYGkYKkVY0HFMleoUm-H6-kLz8sW">>)}
+	],
+	[{vectors, Vectors} | Config];
 init_per_group('pkcs-1v2-1-vec', Config) ->
 	OAEPVectFile = data_file("pkcs-1v2-1-vec/oaep-vect.txt", Config),
 	PSSVectFile = data_file("pkcs-1v2-1-vec/pss-vect.txt", Config),
 	[{oaep_vect_file, OAEPVectFile}, {pss_vect_file, PSSVectFile} | Config];
 init_per_group('pkcs-5', Config) ->
-	Vectors = [
+	PBKDF1Vectors = [
+		%% See [https://github.com/erlang/otp/blob/OTP-18.0/lib/public_key/test/pbe_SUITE.erl]
+		{sha,
+			<<"password">>,
+			<<16#78,16#57,16#8E,16#5A,16#5D,16#63,16#CB,16#06>>,
+			1000,
+			16,
+			<<
+				16#DC, 16#19, 16#84, 16#7E,
+				16#05, 16#C6, 16#4D, 16#2F,
+				16#AF, 16#10, 16#EB, 16#FB,
+				16#4A, 16#3D, 16#2A, 16#20
+			>>}
+	],
+	PBKDF2Vectors = [
 		%% See [https://tools.ietf.org/html/rfc6070]
 		{sha,
 			<<"password">>,
@@ -175,6 +252,29 @@ init_per_group('pkcs-5', Config) ->
 			16,
 			hex:hex_to_bin(<<"89b69d0516f829893c696226650a8687">>)}
 	],
+	[{pbkdf1_vectors, PBKDF1Vectors}, {pbkdf2_vectors, PBKDF2Vectors} | Config];
+init_per_group('pkcs-7', Config) ->
+	Vectors = [begin
+		{hex:hex_to_bin(K), hex:hex_to_bin(V)}
+	end || {K, V} <- [
+		{<<                                  >>, <<"10101010101010101010101010101010">>},
+		{<<"00"                              >>, <<"000f0f0f0f0f0f0f0f0f0f0f0f0f0f0f">>},
+		{<<"0000"                            >>, <<"00000e0e0e0e0e0e0e0e0e0e0e0e0e0e">>},
+		{<<"000000"                          >>, <<"0000000d0d0d0d0d0d0d0d0d0d0d0d0d">>},
+		{<<"00000000"                        >>, <<"000000000c0c0c0c0c0c0c0c0c0c0c0c">>},
+		{<<"0000000000"                      >>, <<"00000000000b0b0b0b0b0b0b0b0b0b0b">>},
+		{<<"000000000000"                    >>, <<"0000000000000a0a0a0a0a0a0a0a0a0a">>},
+		{<<"00000000000000"                  >>, <<"00000000000000090909090909090909">>},
+		{<<"0000000000000000"                >>, <<"00000000000000000808080808080808">>},
+		{<<"000000000000000000"              >>, <<"00000000000000000007070707070707">>},
+		{<<"00000000000000000000"            >>, <<"00000000000000000000060606060606">>},
+		{<<"0000000000000000000000"          >>, <<"00000000000000000000000505050505">>},
+		{<<"000000000000000000000000"        >>, <<"00000000000000000000000004040404">>},
+		{<<"00000000000000000000000000"      >>, <<"00000000000000000000000000030303">>},
+		{<<"0000000000000000000000000000"    >>, <<"00000000000000000000000000000202">>},
+		{<<"000000000000000000000000000000"  >>, <<"00000000000000000000000000000001">>},
+		{<<"00000000000000000000000000000000">>, <<"0000000000000000000000000000000010101010101010101010101010101010">>}
+	]],
 	[{vectors, Vectors} | Config].
 
 end_per_group(_Group, _Config) ->
@@ -183,6 +283,10 @@ end_per_group(_Group, _Config) ->
 %%====================================================================
 %% Tests
 %%====================================================================
+
+concatenation_kdf(Config) ->
+	Vectors = ?config(vectors, Config),
+	concatenation_kdf(Vectors, Config).
 
 emc_rsa_oaep_encrypt_and_decrypt(Config) ->
 	Vectors = emc_testvector:from_file(?config(oaep_vect_file, Config)),
@@ -208,13 +312,32 @@ fips_rsa_pss_verify(Config) ->
 	Vectors = fips_testvector:from_file(?config(sig_ver_file, Config)),
 	fips_rsa_pss_verify(Vectors, Config).
 
+pbkdf1(Config) ->
+	Vectors = ?config(pbkdf1_vectors, Config),
+	pbkdf1(Vectors, Config).
+
 pbkdf2(Config) ->
-	Vectors = ?config(vectors, Config),
+	Vectors = ?config(pbkdf2_vectors, Config),
 	pbkdf2(Vectors, Config).
+
+pkcs7_pad_and_unpad(Config) ->
+	Vectors = ?config(vectors, Config),
+	pkcs7_pad_and_unpad(Vectors, Config).
 
 %%%-------------------------------------------------------------------
 %%% Internal functions
 %%%-------------------------------------------------------------------
+
+%% @private
+concatenation_kdf([{Hash, Z, OtherInfo, KeyDataLen, DerivedKey} | Vectors], Config) ->
+	case jose_jwa_concat_kdf:kdf(Hash, Z, OtherInfo, KeyDataLen) of
+		DerivedKey ->
+			concatenation_kdf(Vectors, Config);
+		Other ->
+			ct:fail({{jose_jwa_concat_kdf, kdf, [Hash, Z, OtherInfo, KeyDataLen]}, {expected, DerivedKey}, {got, Other}})
+	end;
+concatenation_kdf([], _Config) ->
+	ok.
 
 %% @private
 data_file(File, Config) ->
@@ -836,6 +959,17 @@ fips_rsa_pss_verify(Vectors, ModulusSize, _RSAPrivateKey, Config) ->
 	fips_rsa_pss_verify(Vectors, ModulusSize, Config).
 
 %% @private
+pbkdf1([{Hash, Password, Salt, Iterations, DerivedKeyLen, DerivedKey} | Vectors], Config) ->
+	case jose_jwa_pkcs5:pbkdf1(Hash, Password, Salt, Iterations, DerivedKeyLen) of
+		{ok, DerivedKey} ->
+			pbkdf1(Vectors, Config);
+		Other ->
+			ct:fail({{jose_jwa_pkcs5, pbkdf1, [Hash, Password, Salt, Iterations, DerivedKeyLen]}, {expected, {ok, DerivedKey}}, {got, Other}})
+	end;
+pbkdf1([], _Config) ->
+	ok.
+
+%% @private
 pbkdf2([{Mac, Password, Salt, Iterations, DerivedKeyLen, DerivedKey} | Vectors], Config) ->
 	case jose_jwa_pkcs5:pbkdf2(Mac, Password, Salt, Iterations, DerivedKeyLen) of
 		{ok, DerivedKey} ->
@@ -844,6 +978,23 @@ pbkdf2([{Mac, Password, Salt, Iterations, DerivedKeyLen, DerivedKey} | Vectors],
 			ct:fail({{jose_jwa_pkcs5, pbkdf2, [Mac, Password, Salt, Iterations, DerivedKeyLen]}, {expected, {ok, DerivedKey}}, {got, Other}})
 	end;
 pbkdf2([], _Config) ->
+	ok.
+
+%% @private
+pkcs7_pad_and_unpad([{Unpadded, Padded} | Vectors], Config) ->
+	case jose_jwa_pkcs7:pad(Unpadded) of
+		Padded ->
+			ok;
+		PadOther ->
+			ct:fail({{jose_jwa_pkcs7, pad, [Unpadded]}, {expected, Padded}, {got, PadOther}})
+	end,
+	case jose_jwa_pkcs7:unpad(Padded) of
+		Unpadded ->
+			pkcs7_pad_and_unpad(Vectors, Config);
+		UnpadOther ->
+			ct:fail({{jose_jwa_pkcs7, unpad, [Padded]}, {expected, Unpadded}, {got, UnpadOther}})
+	end;
+pkcs7_pad_and_unpad([], _Config) ->
 	ok.
 
 %% @private
