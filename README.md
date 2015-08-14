@@ -11,7 +11,7 @@ Add `jose` to your project's dependencies in `mix.exs`
 ```elixir
 defp deps do
   [
-    {:jose, "~> 1.0"}
+    {:jose, "~> 1.2"}
   ]
 end
 ```
@@ -22,6 +22,83 @@ Add `jose` to your project's dependencies in your `Makefile` for [`erlang.mk`](h
 {deps, [
   {jose, ".*", {git, "git://github.com/potatosalad/erlang-jose.git", {branch, "master"}}}
 ]}.
+```
+
+#### JSON Encoder/Decoder
+
+You will also need to specify either [jsx](https://github.com/talentdeficit/jsx) or [Poison](https://github.com/devinus/poison) as a dependency.
+
+For example, with Elixir and `mix.exs`
+
+```elixir
+defp deps do
+  [
+    {:jose, "~> 1.2"},
+    {:poison, "~> 1.4"}
+  ]
+end
+```
+
+Or with Erlang and `rebar.config`
+
+```erlang
+{deps, [
+  {jose, ".*", {git, "git://github.com/potatosalad/erlang-jose.git", {branch, "master"}}},
+  {jsx, ".*", {git, "git://github.com/talentdeficit/jsx.git", {branch, "master"}}}
+]}.
+```
+
+`jose` will attempt to find a suitable JSON encoder/decoder and will default to Poison on Elixir and jsx on Erlang.  If both are present, it will default to Poison.
+
+You may also specify a different `json_module` as an application environment variable to `jose` or by using `jose:json_module/1` or `JOSE.json_module/1`.
+
+#### Cryptographic Algorithm Fallback
+
+`jose` strives to support [all](#algorithm-support) of the cryptographic algorithms specified in the [JOSE RFCs](https://tools.ietf.org/wg/jose/).
+
+However, not all of the required algorithms are supported natively by Erlang/Elixir.  For algorithms unsupported by the native [`crypto`](http://www.erlang.org/doc/man/crypto.html) and [`public_key`](http://www.erlang.org/doc/man/public_key.html), `jose` has a pure Erlang implementation that may be used as a fallback.
+
+See [ALGORITHMS.md](https://github.com/potatosalad/erlang-jose/blob/master/ALGORITHMS.md) for more information about algorithm support for specific OTP versions.
+
+By default, the algorithm fallback is disabled, but can be enabled by setting the `crypto_fallback` application environment variable for `jose` to `true` or by calling `jose_jwa:crypto_fallback/1` or `JOSE.JWA.crypto_fallback/1` with `true`.
+
+You may also review which algorithms are currently supported with the `jose_jwa:supports/0` or `JOSE.JWA.supports/0` functions.  For example, on Elixir 1.0.5 and OTP 18:
+
+```elixir
+# crypto_fallback defaults to false
+JOSE.JWA.supports
+
+[{:jwe,
+  {:alg,
+   ["A128GCMKW", "A128KW", "A192GCMKW", "A256GCMKW", "A256KW", "ECDH-ES",
+    "ECDH-ES+A128KW", "ECDH-ES+A192KW", "ECDH-ES+A256KW", "PBES2-HS256+A128KW",
+    "PBES2-HS512+A256KW", "RSA-OAEP", "RSA1_5", "dir"]},
+  {:enc, ["A128CBC-HS256", "A128GCM", "A192GCM", "A256CBC-HS512", "A256GCM"]},
+  {:zip, ["DEF"]}}, {:jwk, {:kty, ["EC", "RSA", "oct"]}},
+ {:jws,
+  {:alg,
+   ["ES256", "ES384", "ES512", "HS256", "HS384", "HS512", "RS256", "RS384",
+    "RS512"]}}]
+
+# setting crypto_fallback to true
+JOSE.JWA.crypto_fallback(true)
+
+# additional algorithms are now available for use
+JOSE.JWA.supports
+
+[{:jwe,
+  {:alg,
+   ["A128GCMKW", "A128KW", "A192GCMKW", "A192KW", "A256GCMKW", "A256KW",
+    "ECDH-ES", "ECDH-ES+A128KW", "ECDH-ES+A192KW", "ECDH-ES+A256KW",
+    "PBES2-HS256+A128KW", "PBES2-HS384+A192KW", "PBES2-HS512+A256KW",
+    "RSA-OAEP", "RSA-OAEP-256", "RSA1_5", "dir"]},
+  {:enc,
+   ["A128CBC-HS256", "A128GCM", "A192CBC-HS384", "A192GCM", "A256CBC-HS512",
+    "A256GCM"]}, {:zip, ["DEF"]}}, {:jwk, {:kty, ["EC", "RSA", "oct"]}},
+ {:jws,
+  {:alg,
+   ["ES256", "ES384", "ES512", "HS256", "HS384", "HS512", "PS256", "PS384",
+    "PS512", "RS256", "RS384", "RS512"]}}]
 ```
 
 ## Usage
@@ -228,30 +305,30 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 
 - [X] `RSA1_5`
 - [X] `RSA-OAEP`
-- [X] `RSA-OAEP-256` <sup>[1](#footnote-1)</sup>
-- [X] `A128KW` <sup>[4](#footnote-4)</sup>
-- [X] `A192KW` <sup>[2](#footnote-2), [4](#footnote-4)</sup>
-- [X] `A256KW` <sup>[4](#footnote-4)</sup>
+- [X] `RSA-OAEP-256` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18)</sup>
+- [X] `A128KW` <sup>[OTP-17](#footnote-otp-17)</sup>
+- [X] `A192KW` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18)</sup>
+- [X] `A256KW` <sup>[OTP-17](#footnote-otp-17)</sup>
 - [X] `dir`
 - [X] `ECDH-ES`
-- [X] `ECDH-ES+A128KW` <sup>[4](#footnote-4)</sup>
-- [X] `ECDH-ES+A192KW` <sup>[2](#footnote-2), [4](#footnote-4)</sup>
-- [X] `ECDH-ES+A256KW` <sup>[4](#footnote-4)</sup>
-- [X] `A128GCMKW` <sup>[4](#footnote-4)</sup>
-- [X] `A192GCMKW` <sup>[4](#footnote-4)</sup>
-- [X] `A256GCMKW` <sup>[4](#footnote-4)</sup>
-- [X] `PBES2-HS256+A128KW` <sup>[4](#footnote-4)</sup>
-- [X] `PBES2-HS384+A192KW` <sup>[2](#footnote-2), [4](#footnote-4)</sup>
-- [X] `PBES2-HS512+A256KW` <sup>[4](#footnote-4)</sup>
+- [X] `ECDH-ES+A128KW`
+- [X] `ECDH-ES+A192KW`
+- [X] `ECDH-ES+A256KW`
+- [X] `A128GCMKW` <sup>[OTP-17](#footnote-otp-17)</sup>
+- [X] `A192GCMKW` <sup>[OTP-17](#footnote-otp-17)</sup>
+- [X] `A256GCMKW` <sup>[OTP-17](#footnote-otp-17)</sup>
+- [X] `PBES2-HS256+A128KW` <sup>[OTP-17](#footnote-otp-17)</sup>
+- [X] `PBES2-HS384+A192KW` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18)</sup>
+- [X] `PBES2-HS512+A256KW` <sup>[OTP-17](#footnote-otp-17)</sup>
 
 #### `"enc"` [RFC 7518 Section 5](https://tools.ietf.org/html/rfc7518#section-5)
 
 - [X] `A128CBC-HS256`
-- [X] `A192CBC-HS384` <sup>[2](#footnote-2)</sup>
+- [X] `A192CBC-HS384` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18)</sup>
 - [X] `A256CBC-HS512`
-- [X] `A128GCM` <sup>[4](#footnote-4)</sup>
-- [X] `A192GCM` <sup>[4](#footnote-4)</sup>
-- [X] `A256GCM` <sup>[4](#footnote-4)</sup>
+- [X] `A128GCM` <sup>[OTP-17](#footnote-otp-17)</sup>
+- [X] `A192GCM` <sup>[OTP-17](#footnote-otp-17)</sup>
+- [X] `A256GCM` <sup>[OTP-17](#footnote-otp-17)</sup>
 
 #### `"zip"` [RFC 7518 Section 7.3](https://tools.ietf.org/html/rfc7518#section-7.3)
 
@@ -278,15 +355,11 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 - [X] `ES256`
 - [X] `ES384`
 - [X] `ES512`
-- [X] `PS256` <sup>[3](#footnote-3)</sup>
-- [X] `PS384` <sup>[3](#footnote-3)</sup>
-- [X] `PS512` <sup>[3](#footnote-3)</sup>
+- [X] `PS256` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18)</sup>
+- [X] `PS384` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18)</sup>
+- [X] `PS512` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18)</sup>
 - [X] `none`
 
-<sup><a name="footnote-1">1</a></sup> Implemented mostly in pure Erlang.  May be less performant than other supported encryption algorithms.  See [`jose_jwa_pkcs1.erl`](https://github.com/potatosalad/erlang-jose/blob/master/src/jose_jwa_pkcs1.erl) for implementation details.
+<sup><a name="footnote-otp-17">OTP-17</a></sup> Native algorithm not supported by OTP-17.  Use the [`crypto_fallback`](#cryptographic-algorithm-fallback) setting to enable the non-native implementation.  See [ALGORITHMS.md](https://github.com/potatosalad/erlang-jose/blob/master/ALGORITHMS.md) for more information about algorithm support for specific OTP versions.
 
-<sup><a name="footnote-2">2</a></sup> Implemented in pure Erlang.  May be less performant than other supported encryption algorithms.  See [`jose_jwa_aes.erl`](https://github.com/potatosalad/erlang-jose/blob/master/src/jose_jwa_aes.erl) for implementation details.
-
-<sup><a name="footnote-3">3</a></sup> Implemented mostly in pure Erlang.  May be less performant than other supported signature algorithms.  See [`jose_jwa_pkcs1.erl`](https://github.com/potatosalad/erlang-jose/blob/master/src/jose_jwa_pkcs1.erl) for implementation details.
-
-<sup><a name="footnote-4">4</a></sup> On OTP 17 and older, uses a pure Erlang fallback for `aes_ecb` and `aes_gcm` which is much less performant than the native implementations in OTP 18 and newer.
+<sup><a name="footnote-otp-18">OTP-18</a></sup> Native algorithm not supported by OTP-18.  Use the [`crypto_fallback`](#cryptographic-algorithm-fallback) setting to enable the non-native implementation.  See [ALGORITHMS.md](https://github.com/potatosalad/erlang-jose/blob/master/ALGORITHMS.md) for more information about algorithm support for specific OTP versions.

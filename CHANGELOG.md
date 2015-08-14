@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.2.0 (2015-08-14)
+
+* Enhancements
+  * Add RSA PKCS-1 algorithms to support detection.
+  * Add support for `crypto_fallback` option to enable/disable non-native cryptographic algorithms.
+  * Add support for `json_module` option for encoding/decoding of JSON.
+
+* Fixes
+  * Fix AES GCM algorithm for non 96-bit IV values.
+  * Allow RSA OAEP to specify Seed on encrypt.
+
+* Tests
+  * NIST and EMC test vectors for AES, PKCS-1, and PKCS-5.
+  * Concat KDF, PBKDF1, and PKCS-7 Padding informal verification.
+  * AES Key Wrap informal verification with NIST test vectors.
+
 ## 1.1.3 (2015-08-10)
 
 * Fixes
