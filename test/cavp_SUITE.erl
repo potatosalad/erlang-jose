@@ -29,6 +29,8 @@
 -export([emc_rsa_pss_sign_and_verify/1]).
 -export([fips_aes_encrypt_and_decrypt/1]).
 -export([fips_aes_gcm_encrypt_and_decrypt/1]).
+-export([fips_aeskw_unwrap/1]).
+-export([fips_aeskw_wrap/1]).
 -export([fips_rsa_pss_sign/1]).
 -export([fips_rsa_pss_verify/1]).
 -export([pbkdf1/1]).
@@ -41,6 +43,7 @@ all() ->
 		{group, 'aesmmt'},
 		{group, 'gcmtestvectors'},
 		{group, 'KAT_AES'},
+		{group, 'kwtestvectors'},
 		{group, 'nist-800-56A'},
 		{group, 'pkcs-1v2-1-vec'},
 		{group, 'pkcs-5'},
@@ -53,16 +56,20 @@ groups() ->
 			fips_rsa_pss_sign,
 			fips_rsa_pss_verify
 		]},
-		{'aesmmt', [parallel], [
+		{'aesmmt', [], [
 			fips_aes_encrypt_and_decrypt
 		]},
-		{'gcmtestvectors', [parallel], [
+		{'gcmtestvectors', [], [
 			fips_aes_gcm_encrypt_and_decrypt
 		]},
-		{'KAT_AES', [parallel], [
+		{'KAT_AES', [], [
 			fips_aes_encrypt_and_decrypt
 		]},
-		{'nist-800-56A', [parallel], [
+		{'kwtestvectors', [parallel], [
+			fips_aeskw_unwrap,
+			fips_aeskw_wrap
+		]},
+		{'nist-800-56A', [], [
 			concatenation_kdf
 		]},
 		{'pkcs-1v2-1-vec', [parallel], [
@@ -73,7 +80,7 @@ groups() ->
 			pbkdf1,
 			pbkdf2
 		]},
-		{'pkcs-7', [parallel], [
+		{'pkcs-7', [], [
 			pkcs7_pad_and_unpad
 		]}
 	].
@@ -106,6 +113,11 @@ init_per_group('KAT_AES', Config) ->
 	{ok, Entries} = file:list_dir(Folder),
 	Files = [filename:join([Folder, Entry]) || Entry <- Entries],
 	[{aes_files, Files} | Config];
+init_per_group('kwtestvectors', Config) ->
+	Folder = data_file("kwtestvectors", Config),
+	{ok, Entries} = file:list_dir(Folder),
+	Files = [filename:join([Folder, Entry]) || Entry <- Entries],
+	[{aeskw_files, Files} | Config];
 init_per_group('nist-800-56A', Config) ->
 	Vectors = [
 		%% See [https://tools.ietf.org/html/rfc7518#appendix-C]
@@ -304,6 +316,30 @@ fips_aes_gcm_encrypt_and_decrypt(Config) ->
 	Files = ?config(aes_gcm_files, Config),
 	lists:foldl(fun fips_aes_gcm_encrypt_and_decrypt/2, Config, Files).
 
+fips_aeskw_unwrap(Config) ->
+	Filter = fun(File) ->
+		case filename:basename(File) of
+			"KW_AD_" ++ _ ->
+				true;
+			_ ->
+				false
+		end
+	end,
+	Files = [File || File <- ?config(aeskw_files, Config), Filter(File)],
+	lists:foldl(fun fips_aeskw_unwrap/2, Config, Files).
+
+fips_aeskw_wrap(Config) ->
+	Filter = fun(File) ->
+		case filename:basename(File) of
+			"KW_AE_" ++ _ ->
+				true;
+			_ ->
+				false
+		end
+	end,
+	Files = [File || File <- ?config(aeskw_files, Config), Filter(File)],
+	lists:foldl(fun fips_aeskw_wrap/2, Config, Files).
+
 fips_rsa_pss_sign(Config) ->
 	Vectors = fips_testvector:from_file(?config(sig_gen_file, Config)),
 	fips_rsa_pss_sign(Vectors, Config).
@@ -352,6 +388,7 @@ data_setup(Config) ->
 		"aesmmt.zip",
 		"gcmtestvectors.zip",
 		"KAT_AES.zip",
+		"kwtestvectors.zip",
 		"pkcs-1v2-1-vec.zip"
 	]).
 
@@ -418,6 +455,24 @@ data_setup(F = "KAT_AES.zip", Config) ->
 			false
 	end,
 	ok = data_setup(Zip, Dir, "CBCGFSbox128.rsp", Filter),
+	Config;
+data_setup(F = "kwtestvectors.zip", Config) ->
+	Zip = data_file(F, Config),
+	Dir = data_file("kwtestvectors", Config),
+	URL = "http://csrc.nist.gov/groups/STM/cavp/documents/mac/kwtestvectors.zip",
+	ok = data_setup(Zip, Dir, URL),
+	Filter = fun
+		(#zip_file{name = "KW_" ++ Name}) ->
+			case lists:reverse(Name) of
+				"txt.vni_" ++ _ ->
+					false;
+				_ ->
+					true
+			end;
+		(_) ->
+			false
+	end,
+	ok = data_setup(Zip, Dir, "KW_AD_128.txt", Filter),
 	Config;
 data_setup(F = "pkcs-1v2-1-vec.zip", Config) ->
 	Zip = data_file(F, Config),
@@ -806,6 +861,89 @@ fips_aes_gcm_encrypt_and_decrypt(Vectors, {Cipher, Mode, {_Keylen, _IVlen, _PTle
 	fips_aes_gcm_encrypt_and_decrypt(Vectors, {Cipher, Mode, undefined}, Config);
 fips_aes_gcm_encrypt_and_decrypt([], _Cipher, Config) ->
 	Config.
+
+%% @private
+fips_aeskw_unwrap(File, Config) ->
+	<< "KW_AD_", BitsBin:3/binary, _/binary >> = iolist_to_binary(filename:basename(File)),
+	Bits = binary_to_integer(BitsBin),
+	Vectors = fips_testvector:from_file(File),
+	io:format("~s", [filename:basename(File)]),
+	fips_aeskw_unwrap(Vectors, {Bits, undefined}, Config).
+
+%% @private
+fips_aeskw_unwrap([
+			{vector, {<<"COUNT">>, Count}, _},
+			{vector, {<<"K">>, K}, _},
+			{vector, {<<"C">>, C}, _},
+			{vector, {<<"P">>, P}, _}
+			| Vectors
+		], {Bits, Len}, Config)
+			when is_integer(Len)
+			andalso bit_size(K) =:= Bits
+			andalso bit_size(P) =:= Len ->
+	case jose_jwa_aes_kw:unwrap(C, K) of
+		P ->
+			fips_aeskw_unwrap(Vectors, {Bits, Len}, Config);
+		Other ->
+			io:format("\t\tCOUNT = ~w", [Count]),
+			ct:fail({{jose_jwa_aes_kw, unwrap, [C, K]}, {expected, P}, {got, Other}})
+	end;
+fips_aeskw_unwrap([
+			{vector, {<<"COUNT">>, Count}, _},
+			{vector, {<<"K">>, K}, _},
+			{vector, {<<"C">>, C}, _},
+			{token, <<"FAIL">>}
+			| Vectors
+		], {Bits, Len}, Config)
+			when is_integer(Len)
+			andalso bit_size(K) =:= Bits ->
+	try jose_jwa_aes_kw:unwrap(C, K) of
+		Other ->
+			io:format("\t\tCOUNT = ~w", [Count]),
+			ct:fail({{jose_jwa_aes_kw, unwrap, [C, K]}, {expected, badarg}, {got, Other}})
+	catch
+		_:_ ->
+			fips_aeskw_unwrap(Vectors, {Bits, Len}, Config)
+	end;
+fips_aeskw_unwrap([{option, {<<"PLAINTEXTLENGTH">>, LenBin}} | Vectors], {Bits, _}, Config) ->
+	Len = binary_to_integer(LenBin),
+	io:format("\tPLAINTEXTLENGTH = ~w", [Len]),
+	fips_aeskw_unwrap(Vectors, {Bits, Len}, Config);
+fips_aeskw_unwrap([], _, _Config) ->
+	ok.
+
+%% @private
+fips_aeskw_wrap(File, Config) ->
+	<< "KW_AE_", BitsBin:3/binary, _/binary >> = iolist_to_binary(filename:basename(File)),
+	Bits = binary_to_integer(BitsBin),
+	Vectors = fips_testvector:from_file(File),
+	io:format("~s", [filename:basename(File)]),
+	fips_aeskw_wrap(Vectors, {Bits, undefined}, Config).
+
+%% @private
+fips_aeskw_wrap([
+			{vector, {<<"COUNT">>, Count}, _},
+			{vector, {<<"K">>, K}, _},
+			{vector, {<<"P">>, P}, _},
+			{vector, {<<"C">>, C}, _}
+			| Vectors
+		], {Bits, Len}, Config)
+			when is_integer(Len)
+			andalso bit_size(K) =:= Bits
+			andalso bit_size(P) =:= Len ->
+	case jose_jwa_aes_kw:wrap(P, K) of
+		C ->
+			fips_aeskw_wrap(Vectors, {Bits, Len}, Config);
+		Other ->
+			io:format("\t\tCOUNT = ~w", [Count]),
+			ct:fail({{jose_jwa_aes_kw, wrap, [P, K]}, {expected, C}, {got, Other}})
+	end;
+fips_aeskw_wrap([{option, {<<"PLAINTEXTLENGTH">>, LenBin}} | Vectors], {Bits, _}, Config) ->
+	Len = binary_to_integer(LenBin),
+	io:format("\tPLAINTEXTLENGTH = ~w", [Len]),
+	fips_aeskw_wrap(Vectors, {Bits, Len}, Config);
+fips_aeskw_wrap([], _, _Config) ->
+	ok.
 
 %% @private
 fips_rsa_pss_sign([

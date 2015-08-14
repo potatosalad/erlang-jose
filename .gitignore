@@ -28,6 +28,7 @@ test/ct.cover.spec
 /test/cavp_SUITE_data/aesmmt
 /test/cavp_SUITE_data/gcmtestvectors
 /test/cavp_SUITE_data/KAT_AES
+/test/cavp_SUITE_data/kwtestvectors
 /test/cavp_SUITE_data/pkcs-1v2-1-vec
 /tmp
 *.ez
