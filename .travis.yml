@@ -1,6 +1,9 @@
-language: erlang
+language: elixir
 
 sudo: false
+
+elixir:
+  - 1.0.5
 
 otp_release:
   - 17.5
@@ -9,5 +12,6 @@ otp_release:
 notifications:
   email: false
 
-script:
+after_script:
+  - "rm -rf _build deps ebin"
   - "make tests"
