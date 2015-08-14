@@ -18,6 +18,7 @@
 %% API
 -export([start_link/0]).
 -export([config_change/0]).
+-export([json_module/1]).
 
 %% gen_server callbacks
 -export([init/1]).
@@ -31,6 +32,16 @@
 
 -define(TAB, jose_jwa).
 
+-define(POISON_MAP, #{
+	<<"a">> => 1,
+	<<"b">> => 2,
+	<<"c">> => #{
+		<<"d">> => 3,
+		<<"e">> => 4
+	}
+}).
+-define(POISON_BIN, <<"{\"a\":1,\"b\":2,\"c\":{\"d\":3,\"e\":4}}">>).
+
 %% Types
 -record(state, {}).
 
@@ -43,6 +54,9 @@ start_link() ->
 
 config_change() ->
 	gen_server:call(?SERVER, config_change).
+
+json_module(JSONModule) when is_atom(JSONModule) ->
+	gen_server:call(?SERVER, {json_module, JSONModule}).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -62,6 +76,10 @@ init([]) ->
 %% @private
 handle_call(config_change, _From, State) ->
 	{reply, support_check(), State};
+handle_call({json_module, M}, _From, State) ->
+	JSONModule = determine_json_module(M),
+	true = ets:insert(?TAB, {json_module, JSONModule}),
+	{reply, ok, State};
 handle_call(_Request, _From, State) ->
 	{reply, ignore, State}.
 
@@ -89,6 +107,7 @@ code_change(_OldVsn, State, _Extra) ->
 support_check() ->
 	Entries = lists:flatten([
 		determine_ec_key_mode(),
+		determine_json_module(),
 		determine_supported_ciphers(),
 		determine_supported_rsa_padding(),
 		determine_supported_signers()
@@ -122,6 +141,88 @@ determine_ec_key_mode() ->
 		#'ECPrivateKey'{ privateKey = PrivateKey, publicKey = PublicKey } when is_binary(PrivateKey) andalso is_binary(PublicKey) ->
 			[{ec_key_mode, binary}]
 	end.
+
+%% @private
+determine_json_module() ->
+	JSONModule = case ets:lookup(?TAB, json_module) of
+		[{json_module, M}] when is_atom(M) ->
+			M;
+		[] ->
+			case application:get_env(jose, json_module, undefined) of
+				undefined ->
+					case code:ensure_loaded(elixir) of
+						{module, elixir} ->
+							case code:ensure_loaded('Elixir.Poison') of
+								{module, 'Elixir.Poison'} ->
+									_ = application:ensure_all_started(poison),
+									determine_json_module('Elixir.Poison');
+								_ ->
+									case code:ensure_loaded(jsx) of
+										{module, jsx} ->
+											_ = application:ensure_all_started(jsx),
+											determine_json_module(jsx);
+										_ ->
+											jose_json_unsupported
+									end
+							end;
+						_ ->
+							case code:ensure_loaded(jsx) of
+								{module, jsx} ->
+									_ = application:ensure_all_started(jsx),
+									determine_json_module(jsx);
+								_ ->
+									jose_json_unsupported
+							end
+					end;
+				M when is_atom(M) ->
+					determine_json_module(M)
+			end
+	end,
+	[{json_module, JSONModule}].
+
+%% @private
+determine_json_module(jsx) ->
+	jose_json_jsx;
+determine_json_module('Elixir.Poison') ->
+	Map = ?POISON_MAP,
+	Bin = ?POISON_BIN,
+	case jose_json_poison:encode(Map) of
+		Bin ->
+			jose_json_poison;
+		_ ->
+			determine_json_module('Elixir.JOSE.Poison')
+	end;
+determine_json_module('Elixir.JOSE.Poison') ->
+	Map = ?POISON_MAP,
+	Bin = ?POISON_BIN,
+	case code:ensure_loaded('Elixir.JOSE.Poison') of
+		{module, 'Elixir.JOSE.Poison'} ->
+			try jose_json_poison_ord_encoder:encode(Map) of
+				Bin ->
+					jose_json_poison_ord_encoder;
+				_ ->
+					determine_json_module(jose_json_poison_compat_encoder)
+			catch
+				_:_ ->
+					determine_json_module(jose_json_poison_compat_encoder)
+			end;
+		_ ->
+			determine_json_module(jose_json_poison_compat_encoder)
+	end;
+determine_json_module(jose_json_poison_compat_encoder) ->
+	Map = ?POISON_MAP,
+	Bin = ?POISON_BIN,
+	try jose_json_poison_compat_encoder:encode(Map) of
+		Bin ->
+			jose_json_poison_compat_encoder;
+		_ ->
+			jose_json_poison
+	catch
+		_:_ ->
+			jose_json_poison
+	end;
+determine_json_module(Module) when is_atom(Module) ->
+	Module.
 
 %% @private
 determine_supported_ciphers() ->

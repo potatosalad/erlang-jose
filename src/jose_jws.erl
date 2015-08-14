@@ -62,7 +62,7 @@ from(Other) when is_map(Other) orelse is_binary(Other) ->
 	from({#{}, Other}).
 
 from_binary({Modules, Binary}) when is_map(Modules) andalso is_binary(Binary) ->
-	from_map({Modules, jsx:decode(Binary, [return_maps])});
+	from_map({Modules, jose:decode(Binary)});
 from_binary(Binary) when is_binary(Binary) ->
 	from_binary({#{}, Binary}).
 
@@ -108,7 +108,7 @@ from_map({JWS, _Modules, Fields}) ->
 
 to_binary(JWS=#jose_jws{}) ->
 	{Modules, Map} = to_map(JWS),
-	{Modules, jsx:encode(Map)};
+	{Modules, jose:encode(Map)};
 to_binary(Other) ->
 	to_binary(from(Other)).
 

@@ -20,12 +20,13 @@ defmodule JOSE.Mixfile do
 
   def application do
     [mod: {:jose_app, []},
-     applications: [:crypto, :asn1, :public_key, :base64url, :jsx]]
+     applications: [:crypto, :asn1, :public_key, :base64url]]
   end
 
   defp deps do
     [{:base64url, "~> 0.0.1"},
-     {:jsx, "~> 2.0"}]
+     {:jsx, "~> 2.0", only: [:dev, :test]},
+     {:poison, "~> 1.4", only: [:dev, :test]}]
   end
 
   defp description do

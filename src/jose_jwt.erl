@@ -46,7 +46,7 @@ from(Other) when is_map(Other) orelse is_binary(Other) ->
 	from({#{}, Other}).
 
 from_binary({Modules, Binary}) when is_map(Modules) andalso is_binary(Binary) ->
-	from_map({Modules, jsx:decode(Binary, [return_maps])});
+	from_map({Modules, jose:decode(Binary)});
 from_binary(Binary) when is_binary(Binary) ->
 	from_binary({#{}, Binary}).
 
@@ -73,7 +73,7 @@ from_map({JWT, _Modules, Fields}) ->
 
 to_binary(JWT=#jose_jwt{}) ->
 	{Modules, Map} = to_map(JWT),
-	{Modules, jsx:encode(Map)};
+	{Modules, jose:encode(Map)};
 to_binary(Other) ->
 	to_binary(from(Other)).
 
@@ -101,7 +101,7 @@ decrypt(Key, {Modules, Encrypted}) when is_map(Modules) andalso is_map(Encrypted
 	{JWTBinary, JWE=#jose_jwe{}} = jose_jwe:block_decrypt(Key, {Modules, Encrypted}),
 	{JWE, from_binary({Modules, JWTBinary})};
 decrypt(Key, {Modules, Encrypted = << ${, _/binary >>}) when is_map(Modules) ->
-	EncryptedMap = jsx:decode(Encrypted, [return_maps]),
+	EncryptedMap = jose:decode(Encrypted),
 	decrypt(Key, {Modules, EncryptedMap});
 decrypt(Key, {Modules, Encrypted}) when is_map(Modules) andalso is_binary(Encrypted) ->
 	{JWTBinary, JWE=#jose_jwe{}} = jose_jwe:block_decrypt(Key, {Modules, Encrypted}),

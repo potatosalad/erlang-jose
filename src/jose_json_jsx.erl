@@ -6,52 +6,24 @@
 %%% @doc
 %%%
 %%% @end
-%%% Created :  20 Jul 2015 by Andrew Bennett <andrew@pixid.com>
+%%% Created :  14 Aug 2015 by Andrew Bennett <andrew@pixid.com>
 %%%-------------------------------------------------------------------
--module(jose).
+-module(jose_json_jsx).
+-behaviour(jose_json).
 
-%% API
+%% jose_json callbacks
 -export([decode/1]).
 -export([encode/1]).
--export([json_module/0]).
--export([json_module/1]).
--export([start/0]).
-
--define(TAB, jose_jwa).
-
--define(MAYBE_START_JOSE(F), try
-	F
-catch
-	_:_ ->
-		_ = jose:start(),
-		F
-end).
 
 %%====================================================================
-%% API functions
+%% jose_json callbacks
 %%====================================================================
 
 decode(Binary) ->
-	JSONModule = json_module(),
-	JSONModule:decode(Binary).
+	jsx:decode(Binary, [return_maps]).
 
 encode(Term) ->
-	JSONModule = json_module(),
-	JSONModule:encode(Term).
-
-json_module() ->
-	?MAYBE_START_JOSE(ets:lookup_element(?TAB, json_module, 2)).
-
-json_module(JSONModule) when is_atom(JSONModule) ->
-	?MAYBE_START_JOSE(jose_server:json_module(JSONModule)).
-
-start() ->
-	case application:ensure_all_started(?MODULE) of
-		{ok, _} ->
-			ok;
-		StartError ->
-			StartError
-	end.
+	jsx:encode(Term).
 
 %%%-------------------------------------------------------------------
 %%% Internal functions
