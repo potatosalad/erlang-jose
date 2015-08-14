@@ -2,8 +2,7 @@ defmodule JOSETest do
   use ExUnit.Case
 
   setup_all do
-    :application.set_env(:jose, :crypto_fallback, true)
-    :jose.start()
+    JOSE.JWA.crypto_fallback(true)
     :ok
   end
 

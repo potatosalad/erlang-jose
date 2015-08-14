@@ -16,11 +16,15 @@
 -export([block_encrypt/3]).
 -export([block_decrypt/4]).
 -export([block_encrypt/4]).
--export([crypto_supports/0]).
 -export([crypto_ciphers/0]).
+-export([crypto_fallback/0]).
+-export([crypto_fallback/1]).
+-export([crypto_supports/0]).
 -export([constant_time_compare/2]).
 -export([ec_key_mode/0]).
 -export([is_native_cipher/1]).
+-export([is_rsa_padding_supported/1]).
+-export([is_signer_supported/1]).
 -export([supports/0]).
 
 -define(TAB, ?MODULE).
@@ -88,6 +92,13 @@ crypto_ciphers() ->
 		[{{'$1', '$2'}}]
 	}])).
 
+crypto_fallback() ->
+	application:get_env(jose, crypto_fallback, false).
+
+crypto_fallback(Boolean) when is_boolean(Boolean) ->
+	application:set_env(jose, crypto_fallback, Boolean),
+	?MAYBE_START_JOSE(jose_server:config_change()).
+
 crypto_supports() ->
 	Ciphers = ?MAYBE_START_JOSE(ets:select(?TAB, [{
 		{{cipher, '$1'}, {'$2', '_'}},
@@ -146,6 +157,12 @@ is_native_cipher(Cipher) ->
 			false
 	end.
 
+is_rsa_padding_supported(RSAPadding) ->
+	?MAYBE_START_JOSE(ets:member(?TAB, {rsa_padding, RSAPadding})).
+
+is_signer_supported(Signer) ->
+	?MAYBE_START_JOSE(ets:member(?TAB, {signer, Signer})).
+
 supports() ->
 	Supports = crypto_supports(),
 	JWEALG = support_check([
@@ -175,6 +192,14 @@ supports() ->
 		{<<"A192GCM">>, ciphers, aes_gcm192},
 		{<<"A256GCM">>, ciphers, aes_gcm256}
 	], Supports, []),
+	JWEZIP = support_check([
+		<<"DEF">>
+	], Supports, []),
+	JWKKTY = support_check([
+		<<"EC">>,
+		<<"oct">>,
+		<<"RSA">>
+	], Supports, []),
 	JWSALG = support_check([
 		{<<"ES256">>, signers, ecdsa},
 		{<<"ES384">>, signers, ecdsa},
@@ -192,7 +217,10 @@ supports() ->
 	[
 		{jwe,
 			{alg, JWEALG},
-			{enc, JWEENC}},
+			{enc, JWEENC},
+			{zip, JWEZIP}},
+		{jwk,
+			{kty, JWKKTY}},
 		{jws,
 			{alg, JWSALG}}
 	].

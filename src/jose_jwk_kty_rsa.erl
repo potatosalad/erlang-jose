@@ -142,18 +142,28 @@ key_encryptor(KTY, Fields, Key) ->
 	jose_jwk_kty:key_encryptor(KTY, Fields, Key).
 
 private_decrypt(CipherText, [{rsa_pad, rsa_pkcs1_oaep256_padding}], RSAPrivateKey=#'RSAPrivateKey'{}) ->
-	jose_jwa_pkcs1:rsaes_oaep_decrypt(sha256, CipherText, RSAPrivateKey);
+	case jose_jwa:is_rsa_padding_supported(rsa_pkcs1_oaep256_padding) of
+		false ->
+			erlang:error({rsa_padding_unsupported, [rsa_pkcs1_oaep256_padding]});
+		true ->
+			jose_jwa_pkcs1:rsaes_oaep_decrypt(sha256, CipherText, RSAPrivateKey)
+	end;
 private_decrypt(CipherText, Options, RSAPrivateKey=#'RSAPrivateKey'{}) ->
 	public_key:decrypt_private(CipherText, RSAPrivateKey, Options);
 private_decrypt(_CipherText, _Options, #'RSAPublicKey'{}) ->
 	erlang:error(not_supported).
 
 public_encrypt(PlainText, [{rsa_pad, rsa_pkcs1_oaep256_padding}], RSAPublicKey=#'RSAPublicKey'{}) ->
-	case jose_jwa_pkcs1:rsaes_oaep_encrypt(sha256, PlainText, RSAPublicKey) of
-		{ok, CipherText} ->
-			CipherText;
-		{error, Reason} ->
-			erlang:error(Reason)
+	case jose_jwa:is_rsa_padding_supported(rsa_pkcs1_oaep256_padding) of
+		false ->
+			erlang:error({rsa_padding_unsupported, [rsa_pkcs1_oaep256_padding]});
+		true ->
+			case jose_jwa_pkcs1:rsaes_oaep_encrypt(sha256, PlainText, RSAPublicKey) of
+				{ok, CipherText} ->
+					CipherText;
+				{error, Reason} ->
+					erlang:error(Reason)
+			end
 	end;
 public_encrypt(PlainText, Options, RSAPublicKey=#'RSAPublicKey'{}) ->
 	public_key:encrypt_public(PlainText, RSAPublicKey, Options);
@@ -164,11 +174,16 @@ public_encrypt(PlainText, Options, #'RSAPrivateKey'{modulus=Modulus, publicExpon
 sign(Message, {rsa_pkcs1_v1_5, DigestType}, RSAPrivateKey=#'RSAPrivateKey'{}) ->
 	public_key:sign(Message, DigestType, RSAPrivateKey);
 sign(Message, {rsa_pss, DigestType}, RSAPrivateKey=#'RSAPrivateKey'{}) ->
-	case jose_jwa_pkcs1:rsassa_pss_sign(DigestType, Message, RSAPrivateKey) of
-		{ok, Signature} ->
-			Signature;
-		{error, Reason} ->
-			erlang:error(Reason)
+	case jose_jwa:is_signer_supported(rsa_pss) of
+		false ->
+			erlang:error({signer_unsupported, [rsa_pss]});
+		true ->
+			case jose_jwa_pkcs1:rsassa_pss_sign(DigestType, Message, RSAPrivateKey) of
+				{ok, Signature} ->
+					Signature;
+				{error, Reason} ->
+					erlang:error(Reason)
+			end
 	end;
 sign(Message, DigestType, RSAPrivateKey=#'RSAPrivateKey'{}) ->
 	sign(Message, {rsa_pkcs1_v1_5, DigestType}, RSAPrivateKey);
@@ -183,7 +198,12 @@ signer(_Key, _Fields, _PlainText) ->
 verify(Message, {rsa_pkcs1_v1_5, DigestType}, Signature, RSAPublicKey=#'RSAPublicKey'{}) ->
 	public_key:verify(Message, DigestType, Signature, RSAPublicKey);
 verify(Message, {rsa_pss, DigestType}, Signature, RSAPublicKey=#'RSAPublicKey'{}) ->
-	jose_jwa_pkcs1:rsassa_pss_verify(DigestType, Message, Signature, RSAPublicKey);
+	case jose_jwa:is_signer_supported(rsa_pss) of
+		false ->
+			erlang:error({signer_unsupported, [rsa_pss]});
+		true ->
+			jose_jwa_pkcs1:rsassa_pss_verify(DigestType, Message, Signature, RSAPublicKey)
+	end;
 verify(Message, DigestType, Signature, #'RSAPrivateKey'{modulus=Modulus, publicExponent=PublicExponent}) ->
 	RSAPublicKey = #'RSAPublicKey'{modulus=Modulus, publicExponent=PublicExponent},
 	verify(Message, DigestType, Signature, RSAPublicKey);
