@@ -1,5 +1,10 @@
 defmodule JOSETest do
-  use ExUnit.Case
+  use ExUnit.Case, async: false
+
+  setup_all do
+    JOSE.JWA.crypto_fallback(true)
+    :ok
+  end
 
   test "JOSE.JWA 128-bit encrypt and decrypt" do
     key = << 0 :: 128 >>
@@ -66,6 +71,20 @@ defmodule JOSETest do
     assert binary == :erlang.element(2, JOSE.JWE.to_binary(jwe))
     assert jwe == JOSE.JWE.from_binary(binary)
     assert jwe == JOSE.JWE.from(jwe)
+    # JSX
+    JOSE.json_module(:jsx)
+    assert :jose_json_jsx == JOSE.json_module()
+    assert map == :erlang.element(2, JOSE.JWE.to_map(jwe))
+    assert binary == :erlang.element(2, JOSE.JWE.to_binary(jwe))
+    assert jwe == JOSE.JWE.from_binary(binary)
+    assert jwe == JOSE.JWE.from(jwe)
+    # Poison
+    JOSE.json_module(Poison)
+    assert :lists.member(JOSE.json_module(), [:jose_json_poison, :jose_json_poison_compat_encoder, :jose_json_poison_ord_encoder])
+    assert map == :erlang.element(2, JOSE.JWE.to_map(jwe))
+    assert binary == :erlang.element(2, JOSE.JWE.to_binary(jwe))
+    assert jwe == JOSE.JWE.from_binary(binary)
+    assert jwe == JOSE.JWE.from(jwe)
   end
 
   test "JOSE.JWK decode and encode" do
@@ -85,6 +104,28 @@ defmodule JOSETest do
     assert jwk == :erlang.element(2, JOSE.JWK.from_binary(password, JOSE.JWK.to_binary(password, jwk)))
     assert jwk == :erlang.element(2, JOSE.JWK.from_map(password, JOSE.JWK.to_map(password, jwk)))
     assert jwk == JOSE.JWK.from_pem(password, JOSE.JWK.to_pem(password, jwk))
+    # JSX
+    JOSE.json_module(:jsx)
+    assert :jose_json_jsx == JOSE.json_module()
+    assert map == :erlang.element(2, JOSE.JWK.to_map(jwk))
+    assert binary == :erlang.element(2, JOSE.JWK.to_binary(jwk))
+    assert jwk == JOSE.JWK.from_binary(binary)
+    assert jwk == JOSE.JWK.from(jwk)
+    assert jwk == JOSE.JWK.from_pem(JOSE.JWK.to_pem(jwk))
+    assert jwk == :erlang.element(2, JOSE.JWK.from_binary(password, JOSE.JWK.to_binary(password, jwk)))
+    assert jwk == :erlang.element(2, JOSE.JWK.from_map(password, JOSE.JWK.to_map(password, jwk)))
+    assert jwk == JOSE.JWK.from_pem(password, JOSE.JWK.to_pem(password, jwk))
+    # Poison
+    JOSE.json_module(Poison)
+    assert :lists.member(JOSE.json_module(), [:jose_json_poison, :jose_json_poison_compat_encoder, :jose_json_poison_ord_encoder])
+    assert map == :erlang.element(2, JOSE.JWK.to_map(jwk))
+    assert binary == :erlang.element(2, JOSE.JWK.to_binary(jwk))
+    assert jwk == JOSE.JWK.from_binary(binary)
+    assert jwk == JOSE.JWK.from(jwk)
+    assert jwk == JOSE.JWK.from_pem(JOSE.JWK.to_pem(jwk))
+    assert jwk == :erlang.element(2, JOSE.JWK.from_binary(password, JOSE.JWK.to_binary(password, jwk)))
+    assert jwk == :erlang.element(2, JOSE.JWK.from_map(password, JOSE.JWK.to_map(password, jwk)))
+    assert jwk == JOSE.JWK.from_pem(password, JOSE.JWK.to_pem(password, jwk))
   end
 
   test "JOSE.JWS decode and encode" do
@@ -95,12 +136,40 @@ defmodule JOSETest do
     assert binary == :erlang.element(2, JOSE.JWS.to_binary(jws))
     assert jws == JOSE.JWS.from_binary(binary)
     assert jws == JOSE.JWS.from(jws)
+    # JSX
+    JOSE.json_module(:jsx)
+    assert :jose_json_jsx == JOSE.json_module()
+    assert map == :erlang.element(2, JOSE.JWS.to_map(jws))
+    assert binary == :erlang.element(2, JOSE.JWS.to_binary(jws))
+    assert jws == JOSE.JWS.from_binary(binary)
+    assert jws == JOSE.JWS.from(jws)
+    # Poison
+    JOSE.json_module(Poison)
+    assert :lists.member(JOSE.json_module(), [:jose_json_poison, :jose_json_poison_compat_encoder, :jose_json_poison_ord_encoder])
+    assert map == :erlang.element(2, JOSE.JWS.to_map(jws))
+    assert binary == :erlang.element(2, JOSE.JWS.to_binary(jws))
+    assert jws == JOSE.JWS.from_binary(binary)
+    assert jws == JOSE.JWS.from(jws)
   end
 
   test "JOSE.JWT decode and encode" do
     map = %{ "test" => true }
     binary = :jsx.encode(map)
     jwt = JOSE.JWT.from_map(map)
+    assert map == :erlang.element(2, JOSE.JWT.to_map(jwt))
+    assert binary == :erlang.element(2, JOSE.JWT.to_binary(jwt))
+    assert jwt == JOSE.JWT.from_binary(binary)
+    assert jwt == JOSE.JWT.from(jwt)
+    # JSX
+    JOSE.json_module(:jsx)
+    assert :jose_json_jsx == JOSE.json_module()
+    assert map == :erlang.element(2, JOSE.JWT.to_map(jwt))
+    assert binary == :erlang.element(2, JOSE.JWT.to_binary(jwt))
+    assert jwt == JOSE.JWT.from_binary(binary)
+    assert jwt == JOSE.JWT.from(jwt)
+    # Poison
+    JOSE.json_module(Poison)
+    assert :lists.member(JOSE.json_module(), [:jose_json_poison, :jose_json_poison_compat_encoder, :jose_json_poison_ord_encoder])
     assert map == :erlang.element(2, JOSE.JWT.to_map(jwt))
     assert binary == :erlang.element(2, JOSE.JWT.to_binary(jwt))
     assert jwt == JOSE.JWT.from_binary(binary)

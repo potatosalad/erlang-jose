@@ -12,8 +12,7 @@
 		crypto,
 		asn1,
 		public_key,
-		base64url,
-		jsx
+		base64url
 	]},
 	{modules, []},
 	{contributors, ["Andrew Bennett"]},

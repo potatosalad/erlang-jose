@@ -117,12 +117,12 @@ from(Key, Other) when is_map(Other) orelse is_binary(Other) ->
 	from(Key, {#{}, Other}).
 
 from_binary({Modules, Binary}) when is_map(Modules) andalso is_binary(Binary) ->
-	from_map({Modules, jsx:decode(Binary, [return_maps])});
+	from_map({Modules, jose:decode(Binary)});
 from_binary(Binary) when is_binary(Binary) ->
 	from_binary({#{}, Binary}).
 
 from_binary(Key, {Modules, Encrypted = << ${, _/binary >>}) when is_map(Modules) andalso is_binary(Encrypted) ->
-	EncrypedMap = jsx:decode(Encrypted, [return_maps]),
+	EncrypedMap = jose:decode(Encrypted),
 	from_map(Key, {Modules, EncrypedMap});
 from_binary(Key, {Modules, Encrypted}) when is_map(Modules) andalso is_binary(Encrypted) ->
 	{JWKBinary, JWE=#jose_jwe{}} = jose_jwe:block_decrypt(Key, {Modules, Encrypted}),
@@ -239,7 +239,7 @@ from_pem_file(Key, File) when is_binary(File) orelse is_list(File) ->
 
 to_binary(JWK=#jose_jwk{}) ->
 	{Modules, Map} = to_map(JWK),
-	{Modules, jsx:encode(Map)};
+	{Modules, jose:encode(Map)};
 to_binary(Other) ->
 	to_binary(from(Other)).
 
@@ -250,7 +250,7 @@ to_binary(Key, Other) ->
 
 to_binary(Key, JWE=#jose_jwe{}, JWK=#jose_jwk{}) ->
 	{Modules, EncryptedMap} = to_map(Key, JWE, JWK),
-	{Modules, jsx:encode(EncryptedMap)};
+	{Modules, jose:encode(EncryptedMap)};
 to_binary(Key, JWEOther, JWKOther) ->
 	to_binary(Key, jose_jwe:from(JWEOther), from(JWKOther)).
 
@@ -418,7 +418,7 @@ thumbprint(Other) ->
 
 thumbprint(DigestType, JWK=#jose_jwk{}) ->
 	{_, ThumbprintMap} = to_thumbprint_map(JWK),
-	ThumbprintBinary = jsx:encode(ThumbprintMap),
+	ThumbprintBinary = jose:encode(ThumbprintMap),
 	base64url:encode(crypto:hash(DigestType, ThumbprintBinary));
 thumbprint(DigestType, Other) ->
 	thumbprint(DigestType, from(Other)).

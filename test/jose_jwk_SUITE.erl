@@ -66,6 +66,7 @@ groups() ->
 	].
 
 init_per_suite(Config) ->
+	application:set_env(jose, crypto_fallback, true),
 	_ = application:ensure_all_started(jose),
 	_ = application:ensure_all_started(cutkey),
 	ct_property_test:init_per_suite(Config).

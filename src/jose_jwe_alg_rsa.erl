@@ -25,7 +25,7 @@
 
 %% Types
 -record(jose_jwe_alg_rsa, {
-	padding = undefined :: undefined | rsa_pkcs1_padding | rsa_pkcs1_oaep_padding
+	padding = undefined :: undefined | rsa_pkcs1_padding | rsa_pkcs1_oaep_padding | rsa_pkcs1_oaep256_padding
 }).
 
 -type alg() :: #jose_jwe_alg_rsa{}.

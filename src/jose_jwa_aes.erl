@@ -13,15 +13,16 @@
 %%% Created :  28 Jul 2015 by Andrew Bennett <andrew@pixid.com>
 %%%-------------------------------------------------------------------
 -module(jose_jwa_aes).
+-behaviour(jose_block_encryptor).
 
-%% API
+%% jose_block_encryptor callbacks
 -export([block_decrypt/3]).
 -export([block_decrypt/4]).
 -export([block_encrypt/3]).
 -export([block_encrypt/4]).
 
 %%====================================================================
-%% API functions
+%% jose_block_encryptor callbacks
 %%====================================================================
 
 block_decrypt({aes_ecb, Bits}, Key, CipherText)
@@ -47,21 +48,12 @@ block_decrypt({aes_gcm, Bits}, Key, IV, {AAD, CipherText, CipherTag})
 			orelse Bits =:= 192
 			orelse Bits =:= 256)
 		andalso bit_size(Key) =:= Bits
-		andalso bit_size(IV) =:= 96
+		andalso bit_size(IV) > 0
 		andalso is_binary(AAD)
 		andalso is_binary(CipherText)
 		andalso is_binary(CipherTag) ->
 	MasterKey = block_encrypt({aes_ecb, Bits}, Key, << 0:128 >>),
-	GHash = gcm_ghash(MasterKey, AAD, CipherText),
-	CipherTagValid = crypto:exor(GHash, block_encrypt({aes_ecb, Bits}, Key, << ((crypto:bytes_to_integer(IV) bsl 32) bor 1):128/unsigned-big-integer-unit:1 >>)),
-	case jose_jwa:constant_time_compare(CipherTag, CipherTagValid) of
-		false ->
-			error;
-		true ->
-			Stream = crypto:stream_init(aes_ctr, Key, << IV/binary, 2:1/unsigned-big-integer-unit:32 >>),
-			{_NewStream, PlainText} = crypto:stream_decrypt(Stream, CipherText),
-			PlainText
-	end.
+	gcm_block_decrypt(MasterKey, Key, IV, AAD, CipherText, CipherTag).
 
 block_encrypt({aes_ecb, Bits}, Key, PlainText)
 		when (Bits =:= 128
@@ -86,15 +78,11 @@ block_encrypt({aes_gcm, Bits}, Key, IV, {AAD, PlainText})
 			orelse Bits =:= 192
 			orelse Bits =:= 256)
 		andalso bit_size(Key) =:= Bits
-		andalso bit_size(IV) =:= 96
+		andalso bit_size(IV) > 0
 		andalso is_binary(AAD)
 		andalso is_binary(PlainText) ->
-	Stream = crypto:stream_init(aes_ctr, Key, << IV/binary, 2:1/unsigned-big-integer-unit:32 >>),
-	{_NewStream, CipherText} = crypto:stream_encrypt(Stream, PlainText),
 	MasterKey = block_encrypt({aes_ecb, Bits}, Key, << 0:128 >>),
-	GHash = gcm_ghash(MasterKey, AAD, CipherText),
-	CipherTag = crypto:exor(GHash, block_encrypt({aes_ecb, Bits}, Key, << ((crypto:bytes_to_integer(IV) bsl 32) bor 1):128/unsigned-big-integer-unit:1 >>)),
-	{CipherText, CipherTag}.
+	gcm_block_encrypt(MasterKey, Key, IV, AAD, PlainText).
 
 %%%-------------------------------------------------------------------
 %%% Internal AES functions
@@ -375,6 +363,55 @@ cbc_block_encrypt(St, RoundKey, IV, << Block:128/bitstring, PlainText/bitstring 
 %%%-------------------------------------------------------------------
 %%% Internal GCM functions
 %%%-------------------------------------------------------------------
+
+%% @private
+gcm_block_decrypt(H, K, IV, A, C, T) ->
+	Y0 = case bit_size(IV) of
+		96 ->
+			<< IV/binary, 1:32/unsigned-big-integer-unit:1 >>;
+		_ ->
+			gcm_ghash(H, <<>>, IV)
+	end,
+	S0 = crypto:stream_init(aes_ctr, K, Y0),
+	{S1 = {aes_ctr, {_, Y1, EKY0, _}}, _} = crypto:stream_encrypt(S0, Y0),
+	GHASH = gcm_ghash(H, A, C),
+	TBits = bit_size(T),
+	<< TPrime:TBits/bitstring, _/bitstring >> = crypto:exor(GHASH, EKY0),
+	case jose_jwa:constant_time_compare(T, TPrime) of
+		false ->
+			error;
+		true ->
+			P = gcm_exor(S1, Y1, C, <<>>),
+			P
+	end.
+
+%% @private
+gcm_block_encrypt(H, K, IV, A, P) ->
+	Y0 = case bit_size(IV) of
+		96 ->
+			<< IV/binary, 1:32/unsigned-big-integer-unit:1 >>;
+		_ ->
+			gcm_ghash(H, <<>>, IV)
+	end,
+	S0 = crypto:stream_init(aes_ctr, K, Y0),
+	{S1 = {aes_ctr, {_, Y1, EKY0, _}}, _} = crypto:stream_encrypt(S0, Y0),
+	C = gcm_exor(S1, Y1, P, <<>>),
+	GHASH = gcm_ghash(H, A, C),
+	T = crypto:exor(GHASH, EKY0),
+	{C, T}.
+
+%% @private
+gcm_exor(_S, _Y, <<>>, C) ->
+	C;
+gcm_exor(S0, Y0, << B:128/bitstring, P/bitstring >>, C0) ->
+	{S1 = {aes_ctr, {_, Y1, EKY0, _}}, _} = crypto:stream_encrypt(S0, Y0),
+	C1 = << C0/binary, (crypto:exor(B, EKY0))/binary >>,
+	gcm_exor(S1, Y1, P, C1);
+gcm_exor(S0, Y0, P, C0) ->
+	PBits = bit_size(P),
+	{{aes_ctr, {_, _, << EKY0:PBits/bitstring, _/bitstring >>, _}}, _} = crypto:stream_encrypt(S0, Y0),
+	C1 = << C0/binary, (crypto:exor(P, EKY0))/binary >>,
+	C1.
 
 %% @private
 gcm_ghash(Key, AAD, CipherText) ->

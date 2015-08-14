@@ -142,10 +142,9 @@ bits(#jose_jwe_enc_aes{bits=Bits}) -> Bits.
 block_decrypt({AAD, CipherText, CipherTag}, CEK, IV, #jose_jwe_enc_aes{
 		cipher=Cipher,
 		cek_len=CEKLen,
-		iv_len=IVLen,
 		hmac=undefined})
 			when byte_size(CEK) =:= CEKLen
-			andalso byte_size(IV) =:= IVLen ->
+			andalso bit_size(IV) > 0 ->
 	jose_jwa:block_decrypt(Cipher, CEK, IV, {AAD, CipherText, CipherTag});
 block_decrypt({AAD, CipherText, CipherTag}, CEK, IV, #jose_jwe_enc_aes{
 		cipher=Cipher,
@@ -171,10 +170,9 @@ block_decrypt({AAD, CipherText, CipherTag}, CEK, IV, #jose_jwe_enc_aes{
 block_encrypt({AAD, PlainText}, CEK, IV, #jose_jwe_enc_aes{
 		cipher=Cipher,
 		cek_len=CEKLen,
-		iv_len=IVLen,
 		hmac=undefined})
 			when byte_size(CEK) =:= CEKLen
-			andalso byte_size(IV) =:= IVLen ->
+			andalso bit_size(IV) > 0 ->
 	jose_jwa:block_encrypt(Cipher, CEK, IV, {AAD, PlainText});
 block_encrypt({AAD, PlainText}, CEK, IV, #jose_jwe_enc_aes{
 		cipher=Cipher,

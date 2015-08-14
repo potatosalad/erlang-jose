@@ -14,6 +14,7 @@
 %% Application callbacks
 -export([start/2]).
 -export([stop/1]).
+-export([config_change/3]).
 
 %%%===================================================================
 %%% Application callbacks
@@ -24,3 +25,6 @@ start(_Type, _Args) ->
 
 stop(_State) ->
 	ok.
+
+config_change(_Changed, _New, _Removed) ->
+	jose_server:config_change().

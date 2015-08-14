@@ -14,7 +14,7 @@
 
 %% API
 -export([eme_oaep_decode/4]).
--export([eme_oaep_encode/4]).
+-export([eme_oaep_encode/5]).
 -export([emsa_pss_encode/3]).
 -export([emsa_pss_encode/4]).
 -export([emsa_pss_verify/4]).
@@ -24,6 +24,7 @@
 -export([rsaes_oaep_decrypt/4]).
 -export([rsaes_oaep_encrypt/3]).
 -export([rsaes_oaep_encrypt/4]).
+-export([rsaes_oaep_encrypt/5]).
 -export([rsassa_pss_sign/3]).
 -export([rsassa_pss_sign/4]).
 -export([rsassa_pss_verify/4]).
@@ -92,18 +93,20 @@ eme_oaep_decode(Hash, EM, Label, K)
 	eme_oaep_decode(HashFun, EM, Label, K).
 
 %% See [https://tools.ietf.org/html/rfc3447#section-7.1.1]
--spec eme_oaep_encode(Hash, DM, Label, K) -> {ok, EM} | {error, Reason}
+-spec eme_oaep_encode(Hash, DM, Label, Seed, K) -> {ok, EM} | {error, Reason}
 	when
 		Hash   :: rsa_hash_fun(),
 		DM     :: binary(),
 		Label  :: binary(),
+		Seed   :: binary(),
 		K      :: integer(),
 		EM     :: binary(),
 		Reason :: term().
-eme_oaep_encode(Hash, DM, Label, K)
+eme_oaep_encode(Hash, DM, Label, Seed, K)
 		when is_function(Hash, 1)
 		andalso is_binary(DM)
 		andalso is_binary(Label)
+		andalso is_binary(Seed)
 		andalso is_integer(K) ->
 	HLen = byte_size(Hash(<<>>)),
 	MLen = byte_size(DM),
@@ -116,7 +119,6 @@ eme_oaep_encode(Hash, DM, Label, K)
 			<<>>
 	end,
 	DB = << LHash/binary, PS/binary, 16#01, DM/binary >>,
-	Seed = crypto:rand_bytes(HLen),
 	case mgf1(Hash, Seed, K - HLen - 1) of
 		{ok, DBMask} ->
 			MaskedDB = crypto:exor(DB, DBMask),
@@ -131,11 +133,11 @@ eme_oaep_encode(Hash, DM, Label, K)
 		MGF1Error ->
 			MGF1Error
 	end;
-eme_oaep_encode(Hash, DM, Label, K)
+eme_oaep_encode(Hash, DM, Label, Seed, K)
 		when is_tuple(Hash)
 		orelse is_atom(Hash) ->
 	HashFun = resolve_hash(Hash),
-	eme_oaep_encode(HashFun, DM, Label, K).
+	eme_oaep_encode(HashFun, DM, Label, Seed, K).
 
 %% See [https://tools.ietf.org/html/rfc3447#section-9.1.1]
 -spec emsa_pss_encode(Hash, Message, EMBits) -> {ok, EM} | {error, Reason}
@@ -262,7 +264,7 @@ emsa_pss_verify(Hash, Message, EM, SaltLen, EMBits) ->
 				_BadMaskedDB ->
 					false
 			end;
-		_ ->
+		_BadEMLen ->
 			false
 	end.
 
@@ -360,16 +362,39 @@ rsaes_oaep_encrypt(Hash, PlainText, RSAPublicKey)
 		Label        :: binary(),
 		RSAPublicKey :: rsa_public_key(),
 		CipherText   :: binary().
-rsaes_oaep_encrypt(Hash, PlainText, Label, RSAPublicKey=#'RSAPublicKey'{modulus=N})
+rsaes_oaep_encrypt(Hash, PlainText, Label, RSAPublicKey=#'RSAPublicKey'{})
 		when is_function(Hash, 1)
 		andalso is_binary(PlainText)
 		andalso is_binary(Label) ->
+	HLen = byte_size(Hash(<<>>)),
+	Seed = crypto:rand_bytes(HLen),
+	rsaes_oaep_encrypt(Hash, PlainText, Label, Seed, RSAPublicKey);
+rsaes_oaep_encrypt(Hash, PlainText, Label, RSAPublicKey)
+		when is_tuple(Hash)
+		orelse is_atom(Hash) ->
+	HashFun = resolve_hash(Hash),
+	rsaes_oaep_encrypt(HashFun, PlainText, Label, RSAPublicKey).
+
+%% See [https://tools.ietf.org/html/rfc3447#section-7.1.1]
+-spec rsaes_oaep_encrypt(Hash, PlainText, Label, Seed, RSAPublicKey) -> CipherText
+	when
+		Hash         :: rsa_hash_fun(),
+		PlainText    :: binary(),
+		Label        :: binary(),
+		Seed         :: binary(),
+		RSAPublicKey :: rsa_public_key(),
+		CipherText   :: binary().
+rsaes_oaep_encrypt(Hash, PlainText, Label, Seed, RSAPublicKey=#'RSAPublicKey'{modulus=N})
+		when is_function(Hash, 1)
+		andalso is_binary(PlainText)
+		andalso is_binary(Label)
+		andalso is_binary(Seed) ->
 	HLen = byte_size(Hash(<<>>)),
 	MLen = byte_size(PlainText),
 	K = int_to_byte_size(N),
 	case MLen > (K - (2 * HLen) - 2) of
 		false ->
-			case eme_oaep_encode(Hash, PlainText, Label, K) of
+			case eme_oaep_encode(Hash, PlainText, Label, Seed, K) of
 				{ok, EM} ->
 					C = pad_to_key_size(K, ep(EM, RSAPublicKey)),
 					{ok, C};
@@ -379,11 +404,11 @@ rsaes_oaep_encrypt(Hash, PlainText, Label, RSAPublicKey=#'RSAPublicKey'{modulus=
 		true ->
 			{error, message_too_long}
 	end;
-rsaes_oaep_encrypt(Hash, PlainText, Label, RSAPublicKey)
+rsaes_oaep_encrypt(Hash, PlainText, Label, Seed, RSAPublicKey)
 		when is_tuple(Hash)
 		orelse is_atom(Hash) ->
 	HashFun = resolve_hash(Hash),
-	rsaes_oaep_encrypt(HashFun, PlainText, Label, RSAPublicKey).
+	rsaes_oaep_encrypt(HashFun, PlainText, Label, Seed, RSAPublicKey).
 
 %% See [https://tools.ietf.org/html/rfc3447#section-8.1.1]
 -spec rsassa_pss_sign(Hash, Message, RSAPrivateKey) -> {ok, Signature} | {error, Reason}
