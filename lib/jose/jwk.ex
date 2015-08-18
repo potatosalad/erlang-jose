@@ -33,8 +33,13 @@ defmodule JOSE.JWK do
   def from_binary(password, binary), do: :jose_jwk.from_binary(password, binary) |> from_encrypted_record
   def from_file(file), do: :jose_jwk.from_file(file) |> from_record
   def from_file(password, file), do: :jose_jwk.from_file(password, file) |> from_encrypted_record
+  def from_key(key), do: :jose_jwk.from_key(key) |> from_record
   def from_map(map), do: :jose_jwk.from_map(map) |> from_record
   def from_map(password, map), do: :jose_jwk.from_map(password, map) |> from_encrypted_record
+  def from_oct(oct), do: :jose_jwk.from_oct(oct) |> from_record
+  def from_oct(password, pem), do: :jose_jwk.from_oct(password, pem) |> from_encrypted_record
+  def from_oct_file(file), do: :jose_jwk.from_oct_file(file) |> from_record
+  def from_oct_file(password, file), do: :jose_jwk.from_oct_file(password, file) |> from_encrypted_record
   def from_pem(pem), do: :jose_jwk.from_pem(pem) |> from_record
   def from_pem(password, pem), do: :jose_jwk.from_pem(password, pem) |> from_record
   def from_pem_file(file), do: :jose_jwk.from_pem_file(file) |> from_record
@@ -69,6 +74,20 @@ defmodule JOSE.JWK do
   def to_map(password, jwe=%JOSE.JWE{}, jwk), do: to_map(password, JOSE.JWE.to_record(jwe), jwk)
   def to_map(password, jwe, jwk=%JOSE.JWK{}), do: to_map(password, jwe, to_record(jwk))
   def to_map(password, jwe, jwk), do: :jose_jwk.to_map(password, jwe, jwk)
+  def to_oct(jwk=%JOSE.JWK{}), do: to_oct(to_record(jwk))
+  def to_oct(jwk), do: :jose_jwk.to_oct(jwk)
+  def to_oct(password, jwk=%JOSE.JWK{}), do: to_oct(password, to_record(jwk))
+  def to_oct(password, jwk), do: :jose_jwk.to_oct(password, jwk)
+  def to_oct(password, jwe=%JOSE.JWE{}, jwk), do: to_oct(password, JOSE.JWE.to_record(jwe), jwk)
+  def to_oct(password, jwe, jwk=%JOSE.JWK{}), do: to_oct(password, jwe, to_record(jwk))
+  def to_oct(password, jwe, jwk), do: :jose_jwk.to_oct(password, jwe, jwk)
+  def to_oct_file(file, jwk=%JOSE.JWK{}), do: to_oct_file(file, to_record(jwk))
+  def to_oct_file(file, jwk), do: :jose_jwk.to_oct_file(file, jwk)
+  def to_oct_file(password, file, jwk=%JOSE.JWK{}), do: to_oct_file(password, file, to_record(jwk))
+  def to_oct_file(password, file, jwk), do: :jose_jwk.to_oct_file(password, file, jwk)
+  def to_oct_file(password, file, jwe=%JOSE.JWE{}, jwk), do: to_oct_file(password, file, JOSE.JWE.to_record(jwe), jwk)
+  def to_oct_file(password, file, jwe, jwk=%JOSE.JWK{}), do: to_oct_file(password, file, jwe, to_record(jwk))
+  def to_oct_file(password, file, jwe, jwk), do: :jose_jwk.to_oct_file(password, file, jwe, jwk)
   def to_pem(jwk=%JOSE.JWK{}), do: to_pem(to_record(jwk))
   def to_pem(jwk), do: :jose_jwk.to_pem(jwk)
   def to_pem(password, jwk=%JOSE.JWK{}), do: to_pem(password, to_record(jwk))
@@ -79,6 +98,8 @@ defmodule JOSE.JWK do
   def to_pem_file(password, file, jwk), do: :jose_jwk.to_pem_file(password, file, jwk)
   def to_public(jwk=%JOSE.JWK{}), do: to_public(to_record(jwk))
   def to_public(jwk), do: :jose_jwk.to_public(jwk) |> from_record
+  def to_public_file(file, jwk=%JOSE.JWK{}), do: to_public_file(file, to_record(jwk))
+  def to_public_file(file, jwk), do: :jose_jwk.to_public_file(file, jwk)
   def to_public_key(jwk=%JOSE.JWK{}), do: to_public_key(to_record(jwk))
   def to_public_key(jwk), do: :jose_jwk.to_public_key(jwk)
   def to_public_map(jwk=%JOSE.JWK{}), do: to_public_map(to_record(jwk))

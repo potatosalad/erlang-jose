@@ -85,9 +85,11 @@
 
 %% API
 -export([from_key/1]).
+-export([from_oct/1]).
 -export([key_encryptor/3]).
 
 -define(KTY_EC_MODULE,  jose_jwk_kty_ec).
+-define(KTY_OCT_MODULE, jose_jwk_kty_oct).
 -define(KTY_RSA_MODULE, jose_jwk_kty_rsa).
 
 %%====================================================================
@@ -103,6 +105,11 @@ from_key(RSAPrivateKey=#'RSAPrivateKey'{}) ->
 from_key(RSAPublicKey=#'RSAPublicKey'{}) ->
 	{?KTY_RSA_MODULE, ?KTY_RSA_MODULE:from_key(RSAPublicKey)};
 from_key(UnknownKey) ->
+	{error, {unknown_key, UnknownKey}}.
+
+from_oct(OCTBinary) when is_binary(OCTBinary) ->
+	{?KTY_OCT_MODULE, ?KTY_OCT_MODULE:from_oct(OCTBinary)};
+from_oct(UnknownKey) ->
 	{error, {unknown_key, UnknownKey}}.
 
 key_encryptor(_KTY, _Fields, Key) when is_binary(Key) ->

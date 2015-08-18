@@ -8,7 +8,7 @@
 %%% @end
 %%% Created :  21 Jul 2015 by Andrew Bennett <andrew@pixid.com>
 %%%-------------------------------------------------------------------
--module(jose_jwk_kty_hmac).
+-module(jose_jwk_kty_oct).
 -behaviour(jose_jwk).
 -behaviour(jose_jwk_kty).
 
@@ -25,6 +25,9 @@
 -export([sign/3]).
 -export([signer/3]).
 -export([verify/4]).
+%% API
+-export([from_oct/1]).
+-export([to_oct/1]).
 
 %% Types
 -type key() :: binary().
@@ -79,6 +82,16 @@ signer(_Key, _Fields, _PlainText) ->
 
 verify(Message, DigestType, Signature, Key) ->
 	jose_jwa:constant_time_compare(Signature, sign(Message, DigestType, Key)).
+
+%%====================================================================
+%% API functions
+%%====================================================================
+
+from_oct(OCTBinary) when is_binary(OCTBinary) ->
+	{OCTBinary, #{}}.
+
+to_oct(OCTBinary) when is_binary(OCTBinary) ->
+	OCTBinary.
 
 %%%-------------------------------------------------------------------
 %%% Internal functions
