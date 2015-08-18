@@ -107,7 +107,7 @@ init_per_group('gcmtestvectors', Config) ->
 	Folder = data_file("gcmtestvectors", Config),
 	{ok, Entries} = file:list_dir(Folder),
 	Files = [filename:join([Folder, Entry]) || Entry <- Entries],
-	[{aes_gcm_files, Files} | Config];
+	[{aes_gcm_files, Files}, {one_in, 10} | Config];
 init_per_group('KAT_AES', Config) ->
 	Folder = data_file("KAT_AES", Config),
 	{ok, Entries} = file:list_dir(Folder),
@@ -117,7 +117,7 @@ init_per_group('kwtestvectors', Config) ->
 	Folder = data_file("kwtestvectors", Config),
 	{ok, Entries} = file:list_dir(Folder),
 	Files = [filename:join([Folder, Entry]) || Entry <- Entries],
-	[{aeskw_files, Files} | Config];
+	[{aeskw_files, Files}, {one_in, 5} | Config];
 init_per_group('nist-800-56A', Config) ->
 	Vectors = [
 		%% See [https://tools.ietf.org/html/rfc7518#appendix-C]
@@ -770,13 +770,17 @@ fips_aes_gcm_encrypt_and_decrypt([
 			andalso bit_size(CT) =:= PTlen
 			andalso bit_size(AAD) =:= AADlen
 			andalso bit_size(Tag) =:= Taglen ->
-	% io:format("\tDECRYPT = ~w", [Count]),
-	case jose_jwa_aes:block_decrypt(Cipher, Key, IV, {AAD, CT, Tag}) of
-		error ->
-			fips_aes_gcm_encrypt_and_decrypt(Vectors, {Cipher, decrypt, {Keylen, IVlen, PTlen, AADlen, Taglen, << Counts/binary, (integer_to_binary(Count))/binary, "..." >>}}, Config);
-		OtherDecrypt ->
-			io:format("\t\tCounts = ~s", [<< Counts/binary, (integer_to_binary(Count))/binary, "..." >>]),
-			ct:fail({{jose_jwa_aes, block_decrypt, [Cipher, Key, IV, {AAD, CT, Tag}]}, {expected, error}, {got, OtherDecrypt}})
+	case crypto:rand_uniform(0, ?config(one_in, Config)) of
+		0 ->
+			case jose_jwa_aes:block_decrypt(Cipher, Key, IV, {AAD, CT, Tag}) of
+				error ->
+					fips_aes_gcm_encrypt_and_decrypt(Vectors, {Cipher, decrypt, {Keylen, IVlen, PTlen, AADlen, Taglen, << Counts/binary, (integer_to_binary(Count))/binary, "..." >>}}, Config);
+				OtherDecrypt ->
+					io:format("\t\tCounts = ~s", [<< Counts/binary, (integer_to_binary(Count))/binary, "..." >>]),
+					ct:fail({{jose_jwa_aes, block_decrypt, [Cipher, Key, IV, {AAD, CT, Tag}]}, {expected, error}, {got, OtherDecrypt}})
+			end;
+		_ ->
+			fips_aes_gcm_encrypt_and_decrypt(Vectors, {Cipher, decrypt, {Keylen, IVlen, PTlen, AADlen, Taglen, << Counts/binary, (integer_to_binary(Count))/binary, "..." >>}}, Config)
 	end;
 fips_aes_gcm_encrypt_and_decrypt([
 			{vector, {<<"Count">>, Count}, _},
@@ -794,14 +798,18 @@ fips_aes_gcm_encrypt_and_decrypt([
 			andalso bit_size(AAD) =:= AADlen
 			andalso bit_size(Tag) =:= Taglen
 			andalso bit_size(PT) =:= PTlen ->
-	% io:format("\tDECRYPT = ~w", [Count]),
-	case jose_jwa_aes:block_decrypt(Cipher, Key, IV, {AAD, CT, Tag}) of
-		PT ->
-			fips_aes_gcm_encrypt_and_decrypt(Vectors, {Cipher, decrypt, {Keylen, IVlen, PTlen, AADlen, Taglen, << Counts/binary, (integer_to_binary(Count))/binary, "..." >>}}, Config);
-		OtherDecrypt ->
-			io:format("\t\tCounts = ~s", [<< Counts/binary, (integer_to_binary(Count))/binary, "..." >>]),
-			io:format("{Cipher, Key, IV, CT, AAD, Tag, PT} = ~w~n", [{Cipher, Key, IV, CT, AAD, Tag, PT}]),
-			ct:fail({{jose_jwa_aes, block_decrypt, [Cipher, Key, IV, {AAD, CT, Tag}]}, {expected, PT}, {got, OtherDecrypt}})
+	case crypto:rand_uniform(0, ?config(one_in, Config)) of
+		0 ->
+			case jose_jwa_aes:block_decrypt(Cipher, Key, IV, {AAD, CT, Tag}) of
+				PT ->
+					fips_aes_gcm_encrypt_and_decrypt(Vectors, {Cipher, decrypt, {Keylen, IVlen, PTlen, AADlen, Taglen, << Counts/binary, (integer_to_binary(Count))/binary, "..." >>}}, Config);
+				OtherDecrypt ->
+					io:format("\t\tCounts = ~s", [<< Counts/binary, (integer_to_binary(Count))/binary, "..." >>]),
+					io:format("{Cipher, Key, IV, CT, AAD, Tag, PT} = ~w~n", [{Cipher, Key, IV, CT, AAD, Tag, PT}]),
+					ct:fail({{jose_jwa_aes, block_decrypt, [Cipher, Key, IV, {AAD, CT, Tag}]}, {expected, PT}, {got, OtherDecrypt}})
+			end;
+		_ ->
+			fips_aes_gcm_encrypt_and_decrypt(Vectors, {Cipher, decrypt, {Keylen, IVlen, PTlen, AADlen, Taglen, << Counts/binary, (integer_to_binary(Count))/binary, "..." >>}}, Config)
 	end;
 fips_aes_gcm_encrypt_and_decrypt([
 			{vector, {<<"Count">>, Count}, _},
@@ -819,18 +827,18 @@ fips_aes_gcm_encrypt_and_decrypt([
 			andalso bit_size(AAD) =:= AADlen
 			andalso bit_size(CT) =:= PTlen
 			andalso bit_size(Tag) =:= Taglen ->
-	% io:format("\tENCRYPT = ~w", [Count]),
-	case jose_jwa_aes:block_encrypt(Cipher, Key, IV, {AAD, PT}) of
-		{CT, << Tag:Taglen/bitstring, _/bitstring >>} ->
-			fips_aes_gcm_encrypt_and_decrypt(Vectors, {Cipher, encrypt, {Keylen, IVlen, PTlen, AADlen, Taglen, << Counts/binary, (integer_to_binary(Count))/binary, "..." >>}}, Config);
-		OtherEncrypt ->
-			io:format("\t\tCounts = ~s", [<< Counts/binary, (integer_to_binary(Count))/binary, "..." >>]),
-			ct:fail({{jose_jwa_aes, block_encrypt, [Cipher, Key, IV, {AAD, PT}]}, {expected, {CT, Tag}}, {got, OtherEncrypt}})
+	case crypto:rand_uniform(0, ?config(one_in, Config)) of
+		0 ->
+			case jose_jwa_aes:block_encrypt(Cipher, Key, IV, {AAD, PT}) of
+				{CT, << Tag:Taglen/bitstring, _/bitstring >>} ->
+					fips_aes_gcm_encrypt_and_decrypt(Vectors, {Cipher, encrypt, {Keylen, IVlen, PTlen, AADlen, Taglen, << Counts/binary, (integer_to_binary(Count))/binary, "..." >>}}, Config);
+				OtherEncrypt ->
+					io:format("\t\tCounts = ~s", [<< Counts/binary, (integer_to_binary(Count))/binary, "..." >>]),
+					ct:fail({{jose_jwa_aes, block_encrypt, [Cipher, Key, IV, {AAD, PT}]}, {expected, {CT, Tag}}, {got, OtherEncrypt}})
+			end;
+		_ ->
+			fips_aes_gcm_encrypt_and_decrypt(Vectors, {Cipher, encrypt, {Keylen, IVlen, PTlen, AADlen, Taglen, << Counts/binary, (integer_to_binary(Count))/binary, "..." >>}}, Config)
 	end;
-% fips_aes_gcm_encrypt_and_decrypt([{flag, _Flag} | Vectors], Cipher, Config) ->
-% 	fips_aes_gcm_encrypt_and_decrypt(Vectors, Cipher, Config);
-% fips_aes_gcm_encrypt_and_decrypt([{option, _Option} | Vectors], Cipher, Config) ->
-% 	fips_aes_gcm_encrypt_and_decrypt(Vectors, Cipher, Config);
 fips_aes_gcm_encrypt_and_decrypt([
 			{option, {<<"Keylen">>, Keylen}},
 			{option, {<<"IVlen">>, IVlen}},
@@ -847,17 +855,8 @@ fips_aes_gcm_encrypt_and_decrypt([
 		binary_to_integer(Taglen),
 		<<>>
 	},
-	% io:format("\t[~w] Keylen = ~s, IVlen = ~s, PTlen = ~s, AADlen = ~s, Taglen = ~s", [
-	% 	Mode,
-	% 	Keylen,
-	% 	IVlen,
-	% 	PTlen,
-	% 	AADlen,
-	% 	Taglen
-	% ]),
 	fips_aes_gcm_encrypt_and_decrypt(Vectors, {Cipher, Mode, Options}, Config);
 fips_aes_gcm_encrypt_and_decrypt(Vectors, {Cipher, Mode, {_Keylen, _IVlen, _PTlen, _AADlen, _Taglen, _Counts}}, Config) ->
-	% io:format("\t\tCounts = ~s", [binary:part(Counts, 0, byte_size(Counts) - 3)]),
 	fips_aes_gcm_encrypt_and_decrypt(Vectors, {Cipher, Mode, undefined}, Config);
 fips_aes_gcm_encrypt_and_decrypt([], _Cipher, Config) ->
 	Config.
@@ -881,12 +880,17 @@ fips_aeskw_unwrap([
 			when is_integer(Len)
 			andalso bit_size(K) =:= Bits
 			andalso bit_size(P) =:= Len ->
-	case jose_jwa_aes_kw:unwrap(C, K) of
-		P ->
-			fips_aeskw_unwrap(Vectors, {Bits, Len}, Config);
-		Other ->
-			io:format("\t\tCOUNT = ~w", [Count]),
-			ct:fail({{jose_jwa_aes_kw, unwrap, [C, K]}, {expected, P}, {got, Other}})
+	case crypto:rand_uniform(0, ?config(one_in, Config)) of
+		0 ->
+			case jose_jwa_aes_kw:unwrap(C, K) of
+				P ->
+					fips_aeskw_unwrap(Vectors, {Bits, Len}, Config);
+				Other ->
+					io:format("\t\tCOUNT = ~w", [Count]),
+					ct:fail({{jose_jwa_aes_kw, unwrap, [C, K]}, {expected, P}, {got, Other}})
+			end;
+		_ ->
+			fips_aeskw_unwrap(Vectors, {Bits, Len}, Config)
 	end;
 fips_aeskw_unwrap([
 			{vector, {<<"COUNT">>, Count}, _},
@@ -897,20 +901,25 @@ fips_aeskw_unwrap([
 		], {Bits, Len}, Config)
 			when is_integer(Len)
 			andalso bit_size(K) =:= Bits ->
-	try jose_jwa_aes_kw:unwrap(C, K) of
-		Other ->
-			io:format("\t\tCOUNT = ~w", [Count]),
-			ct:fail({{jose_jwa_aes_kw, unwrap, [C, K]}, {expected, badarg}, {got, Other}})
-	catch
-		_:_ ->
+	case crypto:rand_uniform(0, ?config(one_in, Config)) of
+		0 ->
+			try jose_jwa_aes_kw:unwrap(C, K) of
+				Other ->
+					io:format("\t\tCOUNT = ~w", [Count]),
+					ct:fail({{jose_jwa_aes_kw, unwrap, [C, K]}, {expected, badarg}, {got, Other}})
+			catch
+				_:_ ->
+					fips_aeskw_unwrap(Vectors, {Bits, Len}, Config)
+			end;
+		_ ->
 			fips_aeskw_unwrap(Vectors, {Bits, Len}, Config)
 	end;
 fips_aeskw_unwrap([{option, {<<"PLAINTEXTLENGTH">>, LenBin}} | Vectors], {Bits, _}, Config) ->
 	Len = binary_to_integer(LenBin),
 	io:format("\tPLAINTEXTLENGTH = ~w", [Len]),
 	fips_aeskw_unwrap(Vectors, {Bits, Len}, Config);
-fips_aeskw_unwrap([], _, _Config) ->
-	ok.
+fips_aeskw_unwrap([], _, Config) ->
+	Config.
 
 %% @private
 fips_aeskw_wrap(File, Config) ->
@@ -931,19 +940,24 @@ fips_aeskw_wrap([
 			when is_integer(Len)
 			andalso bit_size(K) =:= Bits
 			andalso bit_size(P) =:= Len ->
-	case jose_jwa_aes_kw:wrap(P, K) of
-		C ->
-			fips_aeskw_wrap(Vectors, {Bits, Len}, Config);
-		Other ->
-			io:format("\t\tCOUNT = ~w", [Count]),
-			ct:fail({{jose_jwa_aes_kw, wrap, [P, K]}, {expected, C}, {got, Other}})
+	case crypto:rand_uniform(0, ?config(one_in, Config)) of
+		0 ->
+			case jose_jwa_aes_kw:wrap(P, K) of
+				C ->
+					fips_aeskw_wrap(Vectors, {Bits, Len}, Config);
+				Other ->
+					io:format("\t\tCOUNT = ~w", [Count]),
+					ct:fail({{jose_jwa_aes_kw, wrap, [P, K]}, {expected, C}, {got, Other}})
+			end;
+		_ ->
+			fips_aeskw_wrap(Vectors, {Bits, Len}, Config)
 	end;
 fips_aeskw_wrap([{option, {<<"PLAINTEXTLENGTH">>, LenBin}} | Vectors], {Bits, _}, Config) ->
 	Len = binary_to_integer(LenBin),
 	io:format("\tPLAINTEXTLENGTH = ~w", [Len]),
 	fips_aeskw_wrap(Vectors, {Bits, Len}, Config);
-fips_aeskw_wrap([], _, _Config) ->
-	ok.
+fips_aeskw_wrap([], _, Config) ->
+	Config.
 
 %% @private
 fips_rsa_pss_sign([
