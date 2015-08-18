@@ -12,7 +12,7 @@
 
 -include_lib("public_key/include/public_key.hrl").
 
--ifdef(public_key_binaries).
+-ifdef(optional_callbacks).
 -callback block_encryptor(KTY, Fields, PlainText) -> JWEMap
 	when
 		KTY       :: any(),

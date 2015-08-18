@@ -5,6 +5,7 @@ defmodule JOSE.Mixfile do
     [app: :jose,
      version: "1.2.0",
      elixir: "~> 1.0",
+     erlc_options: erlc_options,
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      deps: deps,
@@ -32,6 +33,21 @@ defmodule JOSE.Mixfile do
 
   defp description do
     "JSON Object Signing and Encryption (JOSE) for Erlang and Elixir."
+  end
+
+  def erlc_options do
+    extra_options = try do
+      case :erlang.list_to_integer(:erlang.system_info(:otp_release)) do
+        v when v >= 18 ->
+          [{:d, :optional_callbacks}]
+        _ ->
+          []
+      end
+    catch
+      _ ->
+        []
+    end
+    [:debug_info, :warnings_as_errors | extra_options]
   end
 
   defp package do
