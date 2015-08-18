@@ -89,6 +89,7 @@
 -export([box_decrypt/2]).
 -export([box_encrypt/3]).
 -export([box_encrypt/4]).
+-export([generate_key/1]).
 -export([sign/2]).
 -export([sign/3]).
 -export([thumbprint/1]).
@@ -498,6 +499,15 @@ box_encrypt(PlainText, JWEMap, OtherPublicJWK, MyPrivateJWK) when is_map(JWEMap)
 	box_encrypt(PlainText, {#{}, JWEMap}, OtherPublicJWK, MyPrivateJWK);
 box_encrypt(PlainText, JWE, JWKOtherPublic, JWKMyPrivate) ->
 	box_encrypt(PlainText, JWE, from(JWKOtherPublic), from(JWKMyPrivate)).
+
+generate_key(#jose_jwk{kty={Module, KTY}, fields=Fields}) ->
+	{NewKTY, NewFields} = Module:generate_key(KTY, Fields),
+	#jose_jwk{kty={Module, NewKTY}, fields=NewFields};
+generate_key({#{ kty := Module }, Parameters}) ->
+	{KTY, Fields} = Module:generate_key(Parameters),
+	#jose_jwk{kty={Module, KTY}, fields=Fields};
+generate_key(Parameters) ->
+	jose_jwk_kty:generate_key(Parameters).
 
 sign(PlainText, JWK=#jose_jwk{kty={Module, KTY}, fields=Fields}) ->
 	sign(PlainText, Module:signer(KTY, Fields, PlainText), JWK);

@@ -22,6 +22,8 @@
 -export([to_thumbprint_map/2]).
 %% jose_jwk_kty callbacks
 -export([block_encryptor/3]).
+-export([generate_key/1]).
+-export([generate_key/2]).
 -export([key_encryptor/3]).
 -export([public_encrypt/3]).
 -export([private_decrypt/3]).
@@ -137,6 +139,35 @@ block_encryptor(_KTY, _Fields, _PlainText) ->
 			true  -> <<"A128GCM">>
 		end
 	}.
+
+generate_key(#'RSAPrivateKey'{ modulus = N, publicExponent = E }) ->
+	generate_key({rsa, int_to_bit_size(N), E});
+generate_key(#'RSAPublicKey'{ modulus = N, publicExponent = E }) ->
+	generate_key({rsa, int_to_bit_size(N), E});
+generate_key({rsa, ModulusSize}) when is_integer(ModulusSize) ->
+	generate_key({rsa, ModulusSize, 65537});
+generate_key({rsa, ModulusSize, ExponentSize})
+		when is_integer(ModulusSize)
+		andalso is_integer(ExponentSize) ->
+	case code:ensure_loaded(cutkey) of
+		{module, cutkey} ->
+			_ = application:ensure_all_started(cutkey),
+			try cutkey:rsa(ModulusSize, ExponentSize, [{return, key}]) of
+				{ok, Key=#'RSAPrivateKey'{}} ->
+					{Key, #{}};
+				{error, Reason} ->
+					erlang:error({cutkey_error, Reason})
+			catch
+				Class:Reason ->
+					erlang:error({cutkey_error, {Class, Reason}})
+			end;
+		Error ->
+			erlang:error({cutkey_missing, Error})
+	end.
+
+generate_key(KTY, Fields) ->
+	{NewKTY, OtherFields} = generate_key(KTY),
+	{NewKTY, maps:merge(maps:remove(<<"kid">>, Fields), OtherFields)}.
 
 key_encryptor(KTY, Fields, Key) ->
 	jose_jwk_kty:key_encryptor(KTY, Fields, Key).
@@ -302,3 +333,13 @@ int_to_bin_neg(-1, Ds=[MSB|_]) when MSB >= 16#80 ->
 	list_to_binary(Ds);
 int_to_bin_neg(X,Ds) ->
 	int_to_bin_neg(X bsr 8, [(X band 255)|Ds]).
+
+%% @private
+int_to_bit_size(I) ->
+	int_to_bit_size(I, 0).
+
+%% @private
+int_to_bit_size(0, B) ->
+	B;
+int_to_bit_size(I, B) ->
+	int_to_bit_size(I bsr 1, B + 1).

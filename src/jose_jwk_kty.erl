@@ -28,6 +28,15 @@
 		OtherKTY   :: any(),
 		KTY        :: any(),
 		DerivedKey :: iodata().
+-callback generate_key(Parameters) -> KTY
+	when
+		Parameters :: any(),
+		KTY        :: any().
+-callback generate_key(KTY, Fields) -> NewKTY
+	when
+		KTY    :: any(),
+		Fields :: map(),
+		NewKTY :: any().
 -callback key_encryptor(KTY, Fields, Key) -> JWEMap
 	when
 		KTY    :: any(),
@@ -68,6 +77,8 @@
 -optional_callbacks([block_encryptor/3]).
 -optional_callbacks([derive_key/1]).
 -optional_callbacks([derive_key/2]).
+-optional_callbacks([generate_key/1]).
+-optional_callbacks([generate_key/2]).
 -optional_callbacks([key_encryptor/3]).
 -optional_callbacks([private_decrypt/3]).
 -optional_callbacks([public_encrypt/3]).
@@ -86,6 +97,7 @@
 %% API
 -export([from_key/1]).
 -export([from_oct/1]).
+-export([generate_key/1]).
 -export([key_encryptor/3]).
 
 -define(KTY_EC_MODULE,  jose_jwk_kty_ec).
@@ -111,6 +123,41 @@ from_oct(OCTBinary) when is_binary(OCTBinary) ->
 	{?KTY_OCT_MODULE, ?KTY_OCT_MODULE:from_oct(OCTBinary)};
 from_oct(UnknownKey) ->
 	{error, {unknown_key, UnknownKey}}.
+
+generate_key(P=#'ECParameters'{}) ->
+	jose_jwk:generate_key({#{ kty => ?KTY_EC_MODULE }, P});
+generate_key(P=#'ECPrivateKey'{}) ->
+	jose_jwk:generate_key({#{ kty => ?KTY_EC_MODULE }, P});
+generate_key(P={#'ECPoint'{}, _}) ->
+	jose_jwk:generate_key({#{ kty => ?KTY_EC_MODULE }, P});
+generate_key(P={namedCurve, _}) ->
+	jose_jwk:generate_key({#{ kty => ?KTY_EC_MODULE }, P});
+generate_key(P) when is_atom(P) ->
+	jose_jwk:generate_key({#{ kty => ?KTY_EC_MODULE }, P});
+generate_key(P=#'RSAPrivateKey'{}) ->
+	jose_jwk:generate_key({#{ kty => ?KTY_RSA_MODULE }, P});
+generate_key(P=#'RSAPublicKey'{}) ->
+	jose_jwk:generate_key({#{ kty => ?KTY_RSA_MODULE }, P});
+generate_key(P) when is_integer(P) ->
+	jose_jwk:generate_key({#{ kty => ?KTY_OCT_MODULE }, P});
+generate_key(P={ec, #'ECParameters'{}}) ->
+	jose_jwk:generate_key({#{ kty => ?KTY_EC_MODULE }, P});
+generate_key(P={ec, #'ECPrivateKey'{}}) ->
+	jose_jwk:generate_key({#{ kty => ?KTY_EC_MODULE }, P});
+generate_key(P={ec, {#'ECPoint'{}, _}}) ->
+	jose_jwk:generate_key({#{ kty => ?KTY_EC_MODULE }, P});
+generate_key(P={ec, {namedCurve, _}}) ->
+	jose_jwk:generate_key({#{ kty => ?KTY_EC_MODULE }, P});
+generate_key(P={ec, Atom}) when is_atom(Atom) ->
+	jose_jwk:generate_key({#{ kty => ?KTY_EC_MODULE }, P});
+generate_key(P={oct, Size}) when is_integer(Size) ->
+	jose_jwk:generate_key({#{ kty => ?KTY_OCT_MODULE }, P});
+generate_key(P={rsa, ModulusSize}) when is_integer(ModulusSize) ->
+	jose_jwk:generate_key({#{ kty => ?KTY_RSA_MODULE }, P});
+generate_key(P={rsa, ModulusSize, ExponentSize})
+		when is_integer(ModulusSize)
+		andalso is_integer(ExponentSize) ->
+	jose_jwk:generate_key({#{ kty => ?KTY_RSA_MODULE }, P}).
 
 key_encryptor(_KTY, _Fields, Key) when is_binary(Key) ->
 	#{

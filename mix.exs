@@ -25,6 +25,7 @@ defmodule JOSE.Mixfile do
 
   defp deps do
     [{:base64url, "~> 0.0.1"},
+     {:cutkey, github: "potatosalad/cutkey", only: [:dev, :test]},
      {:jsx, "~> 2.0", only: [:dev, :test]},
      {:poison, "~> 1.4", only: [:dev, :test]}]
   end

@@ -144,6 +144,9 @@ defmodule JOSE.JWK do
   def box_encrypt(plain_text, jwe, other_public_jwk, my_private_jwk=%JOSE.JWK{}), do: box_encrypt(plain_text, jwe, other_public_jwk, to_record(my_private_jwk))
   def box_encrypt(plain_text, jwe, other_public_jwk, my_private_jwk), do: :jose_jwk.box_encrypt(plain_text, jwe, other_public_jwk, my_private_jwk)
 
+  def generate_key(jwk=%JOSE.JWK{}), do: jwk |> to_record |> generate_key
+  def generate_key(parameters), do: :jose_jwk.generate_key(parameters) |> from_record
+
   def sign(plain_text, jwk=%JOSE.JWK{}), do: sign(plain_text, to_record(jwk))
   def sign(plain_text, jwk), do: :jose_jwk.sign(plain_text, jwk)
 
