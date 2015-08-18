@@ -87,6 +87,7 @@
 -export([block_encrypt/2]).
 -export([block_encrypt/3]).
 -export([box_decrypt/2]).
+-export([box_encrypt/2]).
 -export([box_encrypt/3]).
 -export([box_encrypt/4]).
 -export([generate_key/1]).
@@ -478,6 +479,13 @@ box_decrypt(Encrypted, MyPrivateJWK=#jose_jwk{}) ->
 	jose_jwe:block_decrypt(MyPrivateJWK, Encrypted);
 box_decrypt(Encrypted, Other) ->
 	box_decrypt(Encrypted, from(Other)).
+
+%% @doc Generates an ephemeral private key based on other public key curve.
+box_encrypt(PlainText, OtherPublicJWK=#jose_jwk{}) ->
+	MyPrivateJWK = generate_key(OtherPublicJWK),
+	{box_encrypt(PlainText, OtherPublicJWK, MyPrivateJWK), MyPrivateJWK};
+box_encrypt(PlainText, JWKOtherPublic) ->
+	box_encrypt(PlainText, from(JWKOtherPublic)).
 
 box_encrypt(PlainText, OtherPublicJWK=#jose_jwk{}, MyPrivateJWK=#jose_jwk{kty={Module, KTY}}) ->
 	{_, MyPublicMap} = to_public_map(MyPrivateJWK),
