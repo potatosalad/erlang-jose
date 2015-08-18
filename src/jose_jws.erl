@@ -85,8 +85,6 @@ from_map({JWS, Modules = #{ alg := Module }, Map=#{ <<"alg">> := _ }}) ->
 	from_map({JWS#jose_jws{ alg = {Module, ALG} }, maps:remove(alg, Modules), Fields});
 from_map({JWS, Modules, Map=#{ <<"b64">> := B64 }}) ->
 	from_map({JWS#jose_jws{ b64 = B64 }, Modules, maps:remove(<<"b64">>, Map)});
-from_map({JWS, Modules, Map=#{ <<"sph">> := SPH }}) ->
-	from_map({JWS#jose_jws{ sph = SPH }, Modules, maps:remove(<<"sph">>, Map)});
 from_map({JWS, Modules, Map=#{ <<"alg">> := << "ES", _/binary >> }}) ->
 	from_map({JWS, Modules#{ alg => ?ALG_ECDSA_MODULE }, Map});
 from_map({JWS, Modules, Map=#{ <<"alg">> := << "HS", _/binary >> }}) ->
@@ -202,24 +200,13 @@ signing_input(Payload, JWS=#jose_jws{}) ->
 signing_input(Payload, Other) ->
 	signing_input(Payload, from(Other)).
 
-signing_input(PlainText, Protected, #jose_jws{b64=B64, sph=SPH})
-		when (B64 =:= true
-			orelse B64 =:= undefined)
-		andalso (SPH =:= true
-			orelse SPH =:= undefined) ->
-	Payload = base64url:encode(PlainText),
-	<< Protected/binary, $., Payload/binary >>;
-signing_input(PlainText, _Protected, #jose_jws{b64=B64, sph=false})
+signing_input(PlainText, Protected, #jose_jws{b64=B64})
 		when (B64 =:= true
 			orelse B64 =:= undefined) ->
 	Payload = base64url:encode(PlainText),
-	<< Payload/binary >>;
-signing_input(Payload, Protected, #jose_jws{b64=false, sph=SPH})
-		when (SPH =:= true
-			orelse SPH =:= undefined) ->
 	<< Protected/binary, $., Payload/binary >>;
-signing_input(Payload, _Protected, #jose_jws{b64=false, sph=false}) ->
-	<< Payload/binary >>.
+signing_input(Payload, Protected, #jose_jws{b64=false}) ->
+	<< Protected/binary, $., Payload/binary >>.
 
 verify(Key, SignedMap) when is_map(SignedMap) ->
 	verify(Key, {#{}, SignedMap});
@@ -262,9 +249,6 @@ record_to_map(JWS=#jose_jws{alg={Module, ALG}}, Modules, Fields0) ->
 record_to_map(JWS=#jose_jws{b64=B64}, Modules, Fields0) when is_boolean(B64) ->
 	Fields1 = Fields0#{ <<"b64">> => B64 },
 	record_to_map(JWS#jose_jws{b64=undefined}, Modules, Fields1);
-record_to_map(JWS=#jose_jws{sph=SPH}, Modules, Fields0) when is_boolean(SPH) ->
-	Fields1 = Fields0#{ <<"sph">> => SPH },
-	record_to_map(JWS#jose_jws{sph=undefined}, Modules, Fields1);
 record_to_map(_JWS, Modules, Fields) ->
 	{Modules, Fields}.
 
