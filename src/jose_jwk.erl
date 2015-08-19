@@ -48,6 +48,10 @@
 -export([from_key/1]).
 -export([from_map/1]).
 -export([from_map/2]).
+-export([from_oct/1]).
+-export([from_oct/2]).
+-export([from_oct_file/1]).
+-export([from_oct_file/2]).
 -export([from_pem/1]).
 -export([from_pem/2]).
 -export([from_pem_file/1]).
@@ -63,11 +67,18 @@
 -export([to_map/1]).
 -export([to_map/2]).
 -export([to_map/3]).
+-export([to_oct/1]).
+-export([to_oct/2]).
+-export([to_oct/3]).
+-export([to_oct_file/2]).
+-export([to_oct_file/3]).
+-export([to_oct_file/4]).
 -export([to_pem/1]).
 -export([to_pem/2]).
 -export([to_pem_file/2]).
 -export([to_pem_file/3]).
 -export([to_public/1]).
+-export([to_public_file/2]).
 -export([to_public_key/1]).
 -export([to_public_map/1]).
 -export([to_thumbprint_map/1]).
@@ -76,8 +87,10 @@
 -export([block_encrypt/2]).
 -export([block_encrypt/3]).
 -export([box_decrypt/2]).
+-export([box_encrypt/2]).
 -export([box_encrypt/3]).
 -export([box_encrypt/4]).
+-export([generate_key/1]).
 -export([sign/2]).
 -export([sign/3]).
 -export([thumbprint/1]).
@@ -89,10 +102,10 @@
 
 -export_type([key/0]).
 
--define(KEYS_MODULE,     jose_jwk_set).
--define(KTY_EC_MODULE,   jose_jwk_kty_ec).
--define(KTY_HMAC_MODULE, jose_jwk_kty_hmac).
--define(KTY_RSA_MODULE,  jose_jwk_kty_rsa).
+-define(KEYS_MODULE,    jose_jwk_set).
+-define(KTY_EC_MODULE,  jose_jwk_kty_ec).
+-define(KTY_OCT_MODULE, jose_jwk_kty_oct).
+-define(KTY_RSA_MODULE, jose_jwk_kty_rsa).
 
 %%====================================================================
 %% Decode API functions
@@ -173,7 +186,7 @@ from_map({JWK, Modules, Map=#{ <<"keys">> := _ }}) ->
 from_map({JWK, Modules, Map=#{ <<"kty">> := <<"EC">> }}) ->
 	from_map({JWK, Modules#{ kty => ?KTY_EC_MODULE }, Map});
 from_map({JWK, Modules, Map=#{ <<"kty">> := <<"oct">> }}) ->
-	from_map({JWK, Modules#{ kty => ?KTY_HMAC_MODULE }, Map});
+	from_map({JWK, Modules#{ kty => ?KTY_OCT_MODULE }, Map});
 from_map({JWK, Modules, Map=#{ <<"kty">> := <<"RSA">> }}) ->
 	from_map({JWK, Modules#{ kty => ?KTY_RSA_MODULE }, Map});
 from_map({#jose_jwk{ keys = undefined, kty = undefined }, _Modules, _Map}) ->
@@ -186,6 +199,45 @@ from_map(Key, {Modules, Encrypted}) when is_map(Modules) andalso is_map(Encrypte
 	{JWE, from_binary({Modules, JWKBinary})};
 from_map(Key, Encrypted) when is_map(Encrypted) ->
 	from_map(Key, {#{}, Encrypted}).
+
+from_oct({#{ kty := Module }, Binary}) when is_binary(Binary) ->
+	{KTY, Fields} = Module:from_oct(Binary),
+	#jose_jwk{ kty = {Module, KTY}, fields = Fields };
+from_oct({#{}, Binary}) when is_binary(Binary) ->
+	case jose_jwk_oct:from_binary(Binary) of
+		{Module, {KTY, Fields}} when Module =/= error ->
+			#jose_jwk{ kty = {Module, KTY}, fields = Fields };
+		OCTError ->
+			OCTError
+	end;
+from_oct(Binary) when is_binary(Binary) ->
+	from_oct({#{}, Binary}).
+
+from_oct(Key, {Modules, Encrypted}) when is_map(Modules) andalso is_binary(Encrypted) ->
+	{OCTBinary, JWE=#jose_jwe{}} = jose_jwe:block_decrypt(Key, {Modules, Encrypted}),
+	{JWE, from_oct({Modules, OCTBinary})};
+from_oct(Key, Encrypted) when is_binary(Encrypted) ->
+	from_oct(Key, {#{}, Encrypted}).
+
+from_oct_file({Modules, File}) when is_map(Modules) andalso (is_binary(File) orelse is_list(File)) ->
+	case file:read_file(File) of
+		{ok, Binary} ->
+			from_oct({Modules, Binary});
+		ReadError ->
+			ReadError
+	end;
+from_oct_file(File) when is_binary(File) orelse is_list(File) ->
+	from_oct_file({#{}, File}).
+
+from_oct_file(Key, {Modules, File}) when is_map(Modules) andalso (is_binary(File) orelse is_list(File)) ->
+	case file:read_file(File) of
+		{ok, Binary} ->
+			from_oct(Key, {Modules, Binary});
+		ReadError ->
+			ReadError
+	end;
+from_oct_file(Key, File) when is_binary(File) orelse is_list(File) ->
+	from_oct_file(Key, {#{}, File}).
 
 from_pem({#{ kty := Module }, Binary}) when is_binary(Binary) ->
 	{KTY, Fields} = Module:from_pem(Binary),
@@ -303,6 +355,50 @@ to_map(Key, JWE=#jose_jwe{}, JWK=#jose_jwk{}) ->
 to_map(Key, JWEOther, JWKOther) ->
 	to_map(Key, jose_jwe:from(JWEOther), from(JWKOther)).
 
+to_oct(#jose_jwk{kty={Module, KTY}}) ->
+	{#{ kty => Module }, Module:to_oct(KTY)};
+to_oct(Other) ->
+	to_oct(from(Other)).
+
+to_oct(Key, JWK=#jose_jwk{kty={Module, KTY}, fields=Fields}) ->
+	to_oct(Key, Module:key_encryptor(KTY, Fields, Key), JWK);
+to_oct(Key, Other) ->
+	to_oct(Key, from(Other)).
+
+to_oct(Key, JWE=#jose_jwe{}, JWK=#jose_jwk{}) ->
+	{Modules0, OCTBinary} = to_oct(JWK),
+	{Modules1, EncryptedMap} = jose_jwe:block_encrypt(Key, OCTBinary, JWE),
+	jose_jwe:compact({maps:merge(Modules0, Modules1), EncryptedMap});
+to_oct(Key, JWEOther, JWKOther) ->
+	to_oct(Key, jose_jwe:from(JWEOther), from(JWKOther)).
+
+to_oct_file(File, JWK=#jose_jwk{}) when is_binary(File) orelse is_list(File) ->
+	{Modules, Binary} = to_oct(JWK),
+	case file:write_file(File, Binary) of
+		ok ->
+			{Modules, File};
+		WriteError ->
+			WriteError
+	end;
+to_oct_file(File, Other) when is_binary(File) orelse is_list(File) ->
+	to_oct_file(File, from(Other)).
+
+to_oct_file(Key, File, JWK=#jose_jwk{kty={Module, KTY}, fields=Fields}) when is_binary(File) orelse is_list(File) ->
+	to_oct_file(Key, File, Module:key_encryptor(KTY, Fields, Key), JWK);
+to_oct_file(Key, File, Other) when is_binary(File) orelse is_list(File) ->
+	to_oct_file(Key, File, from(Other)).
+
+to_oct_file(Key, File, JWE=#jose_jwe{}, JWK=#jose_jwk{}) when is_binary(File) orelse is_list(File) ->
+	{Modules, EncryptedBinary} = to_oct(Key, JWE, JWK),
+	case file:write_file(File, EncryptedBinary) of
+		ok ->
+			{Modules, File};
+		WriteError ->
+			WriteError
+	end;
+to_oct_file(Key, File, JWEOther, JWKOther) when is_binary(File) orelse is_list(File) ->
+	to_oct_file(Key, File, jose_jwe:from(JWEOther), from(JWKOther)).
+
 to_pem(#jose_jwk{kty={Module, KTY}}) ->
 	{#{ kty => Module }, Module:to_pem(KTY)};
 to_pem(Other) ->
@@ -339,6 +435,11 @@ to_public(JWK=#jose_jwk{}) ->
 	from_map(to_public_map(JWK));
 to_public(Other) ->
 	to_public(from(Other)).
+
+to_public_file(File, JWK=#jose_jwk{}) when is_binary(File) orelse is_list(File) ->
+	to_file(File, to_public(JWK));
+to_public_file(File, Other) when is_binary(File) orelse is_list(File) ->
+	to_public_file(File, from(Other)).
 
 to_public_key(JWT=#jose_jwk{}) ->
 	to_key(to_public(JWT));
@@ -379,6 +480,13 @@ box_decrypt(Encrypted, MyPrivateJWK=#jose_jwk{}) ->
 box_decrypt(Encrypted, Other) ->
 	box_decrypt(Encrypted, from(Other)).
 
+%% @doc Generates an ephemeral private key based on other public key curve.
+box_encrypt(PlainText, OtherPublicJWK=#jose_jwk{}) ->
+	MyPrivateJWK = generate_key(OtherPublicJWK),
+	{box_encrypt(PlainText, OtherPublicJWK, MyPrivateJWK), MyPrivateJWK};
+box_encrypt(PlainText, JWKOtherPublic) ->
+	box_encrypt(PlainText, from(JWKOtherPublic)).
+
 box_encrypt(PlainText, OtherPublicJWK=#jose_jwk{}, MyPrivateJWK=#jose_jwk{kty={Module, KTY}}) ->
 	{_, MyPublicMap} = to_public_map(MyPrivateJWK),
 	Fields = #{ <<"epk">> => MyPublicMap },
@@ -399,6 +507,15 @@ box_encrypt(PlainText, JWEMap, OtherPublicJWK, MyPrivateJWK) when is_map(JWEMap)
 	box_encrypt(PlainText, {#{}, JWEMap}, OtherPublicJWK, MyPrivateJWK);
 box_encrypt(PlainText, JWE, JWKOtherPublic, JWKMyPrivate) ->
 	box_encrypt(PlainText, JWE, from(JWKOtherPublic), from(JWKMyPrivate)).
+
+generate_key(#jose_jwk{kty={Module, KTY}, fields=Fields}) ->
+	{NewKTY, NewFields} = Module:generate_key(KTY, Fields),
+	#jose_jwk{kty={Module, NewKTY}, fields=NewFields};
+generate_key({#{ kty := Module }, Parameters}) ->
+	{KTY, Fields} = Module:generate_key(Parameters),
+	#jose_jwk{kty={Module, KTY}, fields=Fields};
+generate_key(Parameters) ->
+	jose_jwk_kty:generate_key(Parameters).
 
 sign(PlainText, JWK=#jose_jwk{kty={Module, KTY}, fields=Fields}) ->
 	sign(PlainText, Module:signer(KTY, Fields, PlainText), JWK);

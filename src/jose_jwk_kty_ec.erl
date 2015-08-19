@@ -23,6 +23,8 @@
 %% jose_jwk_kty callbacks
 -export([block_encryptor/3]).
 -export([derive_key/2]).
+-export([generate_key/1]).
+-export([generate_key/2]).
 -export([key_encryptor/3]).
 -export([sign/3]).
 -export([signer/3]).
@@ -113,6 +115,33 @@ derive_key(#'ECPrivateKey'{parameters=ECParameters, publicKey=Octets}, ECPrivate
 	ECPoint = #'ECPoint'{point=Octets},
 	ECPublicKey = {ECPoint, ECParameters},
 	derive_key(ECPublicKey, ECPrivateKey).
+
+generate_key(P=#'ECParameters'{}) ->
+	{public_key:generate_key(P), #{}};
+generate_key({namedCurve, P}) when is_atom(P) ->
+	generate_key({namedCurve, pubkey_cert_records:namedCurves(P)});
+generate_key(P={namedCurve, _}) ->
+	{public_key:generate_key(P), #{}};
+generate_key(#'ECPrivateKey'{ parameters = P }) ->
+	generate_key(P);
+generate_key({#'ECPoint'{}, P}) ->
+	generate_key(P);
+generate_key(P) when is_atom(P) ->
+	generate_key({namedCurve, P});
+generate_key({ec, P=#'ECParameters'{}}) ->
+	generate_key(P);
+generate_key({ec, P=#'ECPrivateKey'{}}) ->
+	generate_key(P);
+generate_key({ec, P={#'ECPoint'{}, _}}) ->
+	generate_key(P);
+generate_key({ec, P={namedCurve, _}}) ->
+	generate_key(P);
+generate_key({ec, P}) when is_atom(P) ->
+	generate_key(P).
+
+generate_key(KTY, Fields) ->
+	{NewKTY, OtherFields} = generate_key(KTY),
+	{NewKTY, maps:merge(maps:remove(<<"kid">>, Fields), OtherFields)}.
 
 key_encryptor(KTY, Fields, Key) ->
 	jose_jwk_kty:key_encryptor(KTY, Fields, Key).

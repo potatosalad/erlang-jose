@@ -14,7 +14,6 @@
 -record(jose_jws, {
 	alg    = undefined :: undefined | {module(), any()},
 	b64    = undefined :: undefined | boolean(),
-	sph    = undefined :: undefined | boolean(),
 	fields = #{}       :: map()
 }).
 

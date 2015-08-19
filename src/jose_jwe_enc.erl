@@ -10,6 +10,8 @@
 %%%-------------------------------------------------------------------
 -module(jose_jwe_enc).
 
+-ifdef(optional_callbacks).
+
 -callback algorithm(ENC) -> Algorithm
 	when
 		ENC       :: any(),
@@ -18,6 +20,12 @@
 	when
 		ENC  :: any(),
 		Bits :: non_neg_integer().
+
+-optional_callbacks([algorithm/1]).
+-optional_callbacks([bits/1]).
+
+-endif.
+
 -callback block_decrypt({AAD, CipherText, CipherTag}, CEK, IV, ENC) -> PlainText | error
 	when
 		AAD        :: iodata(),
@@ -44,6 +52,3 @@
 	when
 		ENC :: any(),
 		IV  :: iodata().
-
--optional_callbacks([algorithm/1]).
--optional_callbacks([bits/1]).

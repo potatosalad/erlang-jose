@@ -28,10 +28,8 @@ alg() ->
 opt_map() ->
 	oneof([
 		#{},
-		#{ <<"b64">> => true,  <<"sph">> => true  },
-		#{ <<"b64">> => true,  <<"sph">> => false },
-		#{ <<"b64">> => false, <<"sph">> => true  },
-		#{ <<"b64">> => false, <<"sph">> => false }
+		#{ <<"b64">> => true  },
+		#{ <<"b64">> => false }
 	]).
 
 ec_curve() ->
