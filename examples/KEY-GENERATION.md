@@ -63,7 +63,7 @@ The basic formula for generating a random octet sequence is `openssl rand -out F
 openssl rand -out oct-128-bit.bin 16
 ```
 
-The binary file can then be ready using `jose_jwk:from_oct_file/1` or `JOSE.JWK.from_oct_file/1`:
+The binary file can then be read using `jose_jwk:from_oct_file/1` or `JOSE.JWK.from_oct_file/1`:
 
 ```elixir
 jwk = JOSE.JWK.from_oct_file("oct-128-bit.bin")
