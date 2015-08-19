@@ -109,6 +109,8 @@ jwk = JOSE.JWK.from_pem_file("rsa-2048.pem")
 
 ### Method 2
 
+_Note:_ RSA key generation is dependent on [`cutkey`](https://github.com/potatosalad/cutkey), which must be included as a dependency.  An error will be thrown if `cutkey` is not found.
+
 The modulus bit size is the only required argument.  Optionally, you may specify the public exponent as the second argument (default is `65537`).
 
 ```elixir
