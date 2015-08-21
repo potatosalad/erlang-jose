@@ -97,7 +97,7 @@ jwe_a_1(Config) ->
 	A_1_TXT = ?config("a.1.txt", C),
 	% A.1.1
 	A_1_1_JWE_DATA = ?config("a.1.1.jwe+json", C),
-	A_1_1_JWE_MAP = jsx:decode(A_1_1_JWE_DATA, [return_maps]),
+	A_1_1_JWE_MAP = jose:decode(A_1_1_JWE_DATA),
 	A_1_1_JWE = jose_jwe:from_binary(A_1_1_JWE_DATA),
 	{_, A_1_1_JWE_MAP} = jose_jwe:to_map(A_1_1_JWE),
 	A_1_1_JWE_DATA_B64 = ?config("a.1.1.jwe+json.b64", C),
@@ -106,7 +106,7 @@ jwe_a_1(Config) ->
 	A_1_2_CEK = ?config("a.1.2.cek", C),
 	% A.1.3
 	A_1_3_JWK_DATA = ?config("a.1.3.jwk+json", C),
-	A_1_3_JWK_MAP = jsx:decode(A_1_3_JWK_DATA, [return_maps]),
+	A_1_3_JWK_MAP = jose:decode(A_1_3_JWK_DATA),
 	A_1_3_JWK = jose_jwk:from_binary(A_1_3_JWK_DATA),
 	{_, A_1_3_JWK_MAP} = jose_jwk:to_map(A_1_3_JWK),
 	A_1_3_CEK_ENCRYPTED = ?config("a.1.3.cek.encrypted", C),
@@ -143,7 +143,7 @@ jwe_a_2(Config) ->
 	A_2_TXT = ?config("a.2.txt", C),
 	% A.2.1
 	A_2_1_JWE_DATA = ?config("a.2.1.jwe+json", C),
-	A_2_1_JWE_MAP = jsx:decode(A_2_1_JWE_DATA, [return_maps]),
+	A_2_1_JWE_MAP = jose:decode(A_2_1_JWE_DATA),
 	A_2_1_JWE = jose_jwe:from_binary(A_2_1_JWE_DATA),
 	{_, A_2_1_JWE_MAP} = jose_jwe:to_map(A_2_1_JWE),
 	A_2_1_JWE_DATA_B64 = ?config("a.2.1.jwe+json.b64", C),
@@ -152,7 +152,7 @@ jwe_a_2(Config) ->
 	A_2_2_CEK = ?config("a.2.2.cek", C),
 	% A.2.3
 	A_2_3_JWK_DATA = ?config("a.2.3.jwk+json", C),
-	A_2_3_JWK_MAP = jsx:decode(A_2_3_JWK_DATA, [return_maps]),
+	A_2_3_JWK_MAP = jose:decode(A_2_3_JWK_DATA),
 	A_2_3_JWK = jose_jwk:from_binary(A_2_3_JWK_DATA),
 	{_, A_2_3_JWK_MAP} = jose_jwk:to_map(A_2_3_JWK),
 	A_2_3_CEK_ENCRYPTED = ?config("a.2.3.cek.encrypted", C),
@@ -189,7 +189,7 @@ jwe_a_3(Config) ->
 	A_3_TXT = ?config("a.3.txt", C),
 	% A.3.1
 	A_3_1_JWE_DATA = ?config("a.3.1.jwe+json", C),
-	A_3_1_JWE_MAP = jsx:decode(A_3_1_JWE_DATA, [return_maps]),
+	A_3_1_JWE_MAP = jose:decode(A_3_1_JWE_DATA),
 	A_3_1_JWE = jose_jwe:from_binary(A_3_1_JWE_DATA),
 	{_, A_3_1_JWE_MAP} = jose_jwe:to_map(A_3_1_JWE),
 	A_3_1_JWE_DATA_B64 = ?config("a.3.1.jwe+json.b64", C),
@@ -198,7 +198,7 @@ jwe_a_3(Config) ->
 	A_3_2_CEK = ?config("a.3.2.cek", C),
 	% A.3.3
 	A_3_3_JWK_DATA = ?config("a.3.3.jwk+json", C),
-	A_3_3_JWK_MAP = jsx:decode(A_3_3_JWK_DATA, [return_maps]),
+	A_3_3_JWK_MAP = jose:decode(A_3_3_JWK_DATA),
 	A_3_3_JWK = jose_jwk:from_binary(A_3_3_JWK_DATA),
 	{_, A_3_3_JWK_MAP} = jose_jwk:to_map(A_3_3_JWK),
 	A_3_3_CEK_ENCRYPTED = ?config("a.3.3.cek.encrypted", C),
@@ -233,12 +233,12 @@ jwk_c(Config) ->
 	C = ?config(jwk_c, Config),
 	% C.1
 	C_1_JSON_DATA = ?config("c.1.jwk+json", C),
-	C_1_JSON = jsx:decode(C_1_JSON_DATA, [return_maps]),
+	C_1_JSON = jose:decode(C_1_JSON_DATA),
 	C_1_JWK = jose_jwk:from_file(data_file("jwk/c.1.jwk+json", Config)),
 	{_, C_1_JSON} = jose_jwk:to_map(C_1_JWK),
 	% C.2
 	C_2_JSON_DATA = ?config("c.2.jwe+json", C),
-	C_2_JSON = jsx:decode(C_2_JSON_DATA, [return_maps]),
+	C_2_JSON = jose:decode(C_2_JSON_DATA),
 	C_2_JWE = jose_jwe:from_file(data_file("jwk/c.2.jwe+json", Config)),
 	{_, C_2_JSON} = jose_jwe:to_map(C_2_JWE),
 	C_2_B64_DATA = ?config("c.2.b64", C),
@@ -310,7 +310,7 @@ jws_a_1(Config) ->
 	C = ?config(jws_a_1, Config),
 	% A.1.1
 	A_1_1_JSON_DATA = ?config("a.1.1.jws+json", C),
-	A_1_1_JSON = jsx:decode(A_1_1_JSON_DATA, [return_maps]),
+	A_1_1_JSON = jose:decode(A_1_1_JSON_DATA),
 	A_1_1_JWS = jose_jws:from_file(data_file("jws/a.1.1.jws+json", Config)),
 	{_, A_1_1_JSON} = jose_jws:to_map(A_1_1_JWS),
 	A_1_1_B64_DATA = ?config("a.1.1.b64", C),
@@ -342,7 +342,7 @@ jws_a_2(Config) ->
 	C = ?config(jws_a_2, Config),
 	% A.2.1
 	A_2_1_JSON_DATA = ?config("a.2.1.jws+json", C),
-	A_2_1_JSON = jsx:decode(A_2_1_JSON_DATA, [return_maps]),
+	A_2_1_JSON = jose:decode(A_2_1_JSON_DATA),
 	A_2_1_JWS = jose_jws:from_file(data_file("jws/a.2.1.jws+json", Config)),
 	{_, A_2_1_JSON} = jose_jws:to_map(A_2_1_JWS),
 	A_2_1_B64_DATA = ?config("a.2.1.b64", C),
@@ -374,7 +374,7 @@ jws_a_3(Config) ->
 	C = ?config(jws_a_3, Config),
 	% A.3.1
 	A_3_1_JSON_DATA = ?config("a.3.1.jws+json", C),
-	A_3_1_JSON = jsx:decode(A_3_1_JSON_DATA, [return_maps]),
+	A_3_1_JSON = jose:decode(A_3_1_JSON_DATA),
 	A_3_1_JWS = jose_jws:from_file(data_file("jws/a.3.1.jws+json", Config)),
 	{_, A_3_1_JSON} = jose_jws:to_map(A_3_1_JWS),
 	A_3_1_B64_DATA = ?config("a.3.1.b64", C),
@@ -408,7 +408,7 @@ jws_a_4(Config) ->
 	C = ?config(jws_a_4, Config),
 	% A.4.1
 	A_4_1_JSON_DATA = ?config("a.4.1.jws+json", C),
-	A_4_1_JSON = jsx:decode(A_4_1_JSON_DATA, [return_maps]),
+	A_4_1_JSON = jose:decode(A_4_1_JSON_DATA),
 	A_4_1_JWS = jose_jws:from_file(data_file("jws/a.4.1.jws+json", Config)),
 	{_, A_4_1_JSON} = jose_jws:to_map(A_4_1_JWS),
 	A_4_1_B64_DATA = ?config("a.4.1.b64", C),
@@ -442,7 +442,7 @@ jws_a_5(Config) ->
 	C = ?config(jws_a_5, Config),
 	% A.5
 	A_5_JSON_DATA = ?config("a.5.jws+json", C),
-	A_5_JSON = jsx:decode(A_5_JSON_DATA, [return_maps]),
+	A_5_JSON = jose:decode(A_5_JSON_DATA),
 	A_5_JWS = jose_jws:from_file(data_file("jws/a.5.jws+json", Config)),
 	{_, A_5_JSON} = jose_jws:to_map(A_5_JWS),
 	A_5_B64_DATA = ?config("a.5.b64", C),

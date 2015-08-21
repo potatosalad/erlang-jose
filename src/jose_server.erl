@@ -152,27 +152,9 @@ determine_json_module() ->
 				undefined ->
 					case code:ensure_loaded(elixir) of
 						{module, elixir} ->
-							case code:ensure_loaded('Elixir.Poison') of
-								{module, 'Elixir.Poison'} ->
-									_ = application:ensure_all_started(poison),
-									determine_json_module('Elixir.Poison');
-								_ ->
-									case code:ensure_loaded(jsx) of
-										{module, jsx} ->
-											_ = application:ensure_all_started(jsx),
-											determine_json_module(jsx);
-										_ ->
-											jose_json_unsupported
-									end
-							end;
+							determine_json_modules(['Elixir.Poison', jiffy, jsone, jsx]);
 						_ ->
-							case code:ensure_loaded(jsx) of
-								{module, jsx} ->
-									_ = application:ensure_all_started(jsx),
-									determine_json_module(jsx);
-								_ ->
-									jose_json_unsupported
-							end
+							determine_json_modules([jiffy, jsone, jsx])
 					end;
 				M when is_atom(M) ->
 					determine_json_module(M)
@@ -181,8 +163,12 @@ determine_json_module() ->
 	[{json_module, JSONModule}].
 
 %% @private
+determine_json_module(jiffy) ->
+	jose_json_jiffy;
 determine_json_module(jsx) ->
 	jose_json_jsx;
+determine_json_module(jsone) ->
+	jose_json_jsone;
 determine_json_module('Elixir.Poison') ->
 	Map = ?POISON_MAP,
 	Bin = ?POISON_BIN,
@@ -223,6 +209,18 @@ determine_json_module(jose_json_poison_compat_encoder) ->
 	end;
 determine_json_module(Module) when is_atom(Module) ->
 	Module.
+
+%% @private
+determine_json_modules([Module | Modules]) ->
+	case code:ensure_loaded(Module) of
+		{module, Module} ->
+			_ = application:ensure_all_started(Module),
+			determine_json_module(Module);
+		_ ->
+			determine_json_modules(Modules)
+	end;
+determine_json_modules([]) ->
+	jose_json_unsupported.
 
 %% @private
 determine_supported_ciphers() ->
