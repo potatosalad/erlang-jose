@@ -1,6 +1,7 @@
 require Record
 
 defmodule JOSE.JWS do
+
   record = Record.extract(:jose_jws, from_lib: "jose/include/jose_jws.hrl")
   keys   = :lists.map(&elem(&1, 0), record)
   vals   = :lists.map(&{&1, [], nil}, keys)

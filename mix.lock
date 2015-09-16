@@ -1,0 +1,5 @@
+%{"base64url": {:hex, :base64url, "0.0.1"},
+  "earmark": {:hex, :earmark, "0.1.17"},
+  "ex_doc": {:hex, :ex_doc, "0.9.0"},
+  "jsx": {:hex, :jsx, "2.7.1"},
+  "poison": {:hex, :poison, "1.5.0"}}
