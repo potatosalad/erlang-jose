@@ -12,7 +12,7 @@ defmodule JOSE.Mixfile do
      source_url: "https://github.com/potatosalad/erlang-jose",
      docs: fn ->
        {ref, 0} = System.cmd("git", ["rev-parse", "--verify", "--quiet", "HEAD"])
-       [source_ref: ref, main: "README", readme: "README.md"]
+       [source_ref: ref, readme: "README.md"]
      end,
      description: description,
      package: package]
@@ -26,7 +26,9 @@ defmodule JOSE.Mixfile do
   defp deps do
     [{:base64url, "~> 0.0.1"},
      {:jsx, "~> 2.0", only: [:dev, :test]},
-     {:poison, "~> 1.4", only: [:dev, :test]}]
+     {:poison, "~> 1.4", only: [:dev, :test]},
+     {:ex_doc, "~> 0.9", only: :docs},
+     {:earmark, "~> 0.1", only: :docs}]
   end
 
   defp description do
@@ -47,6 +49,7 @@ defmodule JOSE.Mixfile do
        "src"
      ],
      licenses: ["Mozilla Public License Version 2.0"],
-     links: %{"Github" => "https://github.com/potatosalad/erlang-jose"}]
+     links: %{"Github" => "https://github.com/potatosalad/erlang-jose",
+             "Docs" => "https://hexdocs.pm/erlang-jose"}]
   end
 end
