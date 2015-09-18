@@ -19,6 +19,7 @@ _deps
 _plugins
 _tdeps
 deps
+doc
 logs
 test/ct.cover.spec
 /_build

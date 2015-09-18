@@ -1,6 +1,16 @@
 require Record
 
 defmodule JOSE.JWK do
+
+  @moduledoc """
+  JWK stands for Json Web Key. This module parses the record definition in 
+  `:jose_jwk` and eases the transition between Erlang/Elixir.
+
+  It provides several utilities for creating/decoding key structs from files, 
+  pem representation, binary and etc. It also provides mechanisms for signing 
+  and verifying data.
+  """
+
   record = Record.extract(:jose_jwk, from_lib: "jose/include/jose_jwk.hrl")
   keys   = :lists.map(&elem(&1, 0), record)
   vals   = :lists.map(&{&1, [], nil}, keys)
@@ -40,9 +50,25 @@ defmodule JOSE.JWK do
   def from_oct(password, pem), do: :jose_jwk.from_oct(password, pem) |> from_encrypted_record
   def from_oct_file(file), do: :jose_jwk.from_oct_file(file) |> from_record
   def from_oct_file(password, file), do: :jose_jwk.from_oct_file(password, file) |> from_encrypted_record
+
+  @doc """
+  Generates a key from a pem representation (Privacy Enhanced Email) in binary.
+  """
   def from_pem(pem), do: :jose_jwk.from_pem(pem) |> from_record
+
+  @doc """
+  Same as `from_pem/1` but with a password used to unlock it. 
+  """
   def from_pem(password, pem), do: :jose_jwk.from_pem(password, pem) |> from_record
+
+  @doc """
+  Generates a key from reading a pem representation from a file.
+  """
   def from_pem_file(file), do: :jose_jwk.from_pem_file(file) |> from_record
+
+  @doc """
+  Same as `from_pem_file/1` but with a password to unlock it.
+  """
   def from_pem_file(password, file), do: :jose_jwk.from_pem_file(password, file) |> from_record
 
   defp from_encrypted_record({jwe, jwk}) when is_tuple(jwe) and is_tuple(jwk) do
