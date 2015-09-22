@@ -36,6 +36,7 @@
 %% API
 -export([compact/1]).
 -export([expand/1]).
+-export([peek/1]).
 -export([sign/3]).
 -export([sign/4]).
 -export([signing_input/2]).
@@ -157,6 +158,13 @@ expand({Modules, Binary}) when is_binary(Binary) ->
 	end;
 expand(Binary) when is_binary(Binary) ->
 	expand({#{}, Binary}).
+
+peek({_Modules, Signed}) when is_binary(Signed) or is_map(Signed) ->
+	peek(Signed);
+peek(SignedBinary) when is_binary(SignedBinary) ->
+	peek(expand(SignedBinary));
+peek(#{ <<"payload">> := Payload }) ->
+	base64url:decode(Payload).
 
 sign(Key, PlainText, JWS=#jose_jws{}) ->
 	sign(Key, PlainText, #{}, JWS);

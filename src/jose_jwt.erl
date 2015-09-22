@@ -28,6 +28,7 @@
 -export([decrypt/2]).
 -export([encrypt/2]).
 -export([encrypt/3]).
+-export([peek/1]).
 -export([sign/2]).
 -export([sign/3]).
 -export([verify/2]).
@@ -128,6 +129,9 @@ encrypt(JWKOther, JWEMap, JWTOther) when is_map(JWEMap) ->
 	encrypt(JWKOther, {#{}, JWEMap}, JWTOther);
 encrypt(JWKOther, JWEOther, JWTOther) ->
 	encrypt(jose_jwk:from(JWKOther), jose_jwe:from(JWEOther), from(JWTOther)).
+
+peek(Signed) ->
+	from(jose_jws:peek(Signed)).
 
 sign(JWK=#jose_jwk{kty={Module, KTY}, fields=Fields}, JWT=#jose_jwt{}) ->
 	sign(JWK, Module:signer(KTY, Fields, JWT), JWT);

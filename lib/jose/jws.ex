@@ -45,6 +45,8 @@ defmodule JOSE.JWS do
 
   def expand(signed), do: :jose_jws.expand(signed)
 
+  def peek(signed), do: :jose_jws.peek(signed)
+
   def sign(jwk=%JOSE.JWK{}, plain_text, jws), do: sign(JOSE.JWK.to_record(jwk), plain_text, jws)
   def sign(jwk, plain_text, jws=%JOSE.JWS{}), do: sign(jwk, plain_text, to_record(jws))
   def sign(jwk, plain_text, jws), do: :jose_jws.sign(jwk, plain_text, jws)

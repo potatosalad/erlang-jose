@@ -59,6 +59,8 @@ defmodule JOSE.JWT do
   def encrypt(jwk, jwe, jwt=%JOSE.JWT{}), do: encrypt(jwk, jwe, to_record(jwt))
   def encrypt(jwk, jwe, jwt), do: :jose_jwt.encrypt(jwk, jwe, jwt)
 
+  def peek(signed), do: from_record(:jose_jwt.peek(signed))
+
   def sign(jwk=%JOSE.JWK{}, jwt), do: sign(JOSE.JWK.to_record(jwk), jwt)
   def sign(jwk, jwt=%JOSE.JWT{}), do: sign(jwk, to_record(jwt))
   def sign(jwk, jwt), do: :jose_jwt.sign(jwk, jwt)
