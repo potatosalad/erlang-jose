@@ -27,8 +27,11 @@
 -export([hmac_supported/0]).
 
 %% Types
+-type cipher()   :: aes_cbc | aes_gcm.
+-type key_size() :: 128 | 192 | 256.
+
 -record(jose_jwe_enc_aes, {
-	cipher  = undefined :: undefined | aes_cbc128 | aes_cbc192 | aes_cbc256 | aes_gcm,
+	cipher  = undefined :: undefined | {cipher(), key_size()},
 	bits    = undefined :: undefined | pos_integer(),
 	cek_len = undefined :: undefined | pos_integer(),
 	iv_len  = undefined :: undefined | pos_integer(),
@@ -43,7 +46,7 @@
 -export_type([enc/0]).
 
 -define(AES_128_CBC_HMAC_SHA_256, #jose_jwe_enc_aes{
-	cipher  = aes_cbc128,
+	cipher  = {aes_cbc, 128},
 	bits    = 256,
 	cek_len = 32,
 	iv_len  = 16,
@@ -54,7 +57,7 @@
 }).
 
 -define(AES_192_CBC_HMAC_SHA_384, #jose_jwe_enc_aes{
-	cipher  = aes_cbc192,
+	cipher  = {aes_cbc, 192},
 	bits    = 384,
 	cek_len = 48,
 	iv_len  = 16,
@@ -65,7 +68,7 @@
 }).
 
 -define(AES_256_CBC_HMAC_SHA_512, #jose_jwe_enc_aes{
-	cipher  = aes_cbc256,
+	cipher  = {aes_cbc, 256},
 	bits    = 512,
 	cek_len = 64,
 	iv_len  = 16,
@@ -76,21 +79,21 @@
 }).
 
 -define(AES_128_GCM, #jose_jwe_enc_aes{
-	cipher  = aes_gcm128,
+	cipher  = {aes_gcm, 128},
 	bits    = 128,
 	cek_len = 16,
 	iv_len  = 12
 }).
 
 -define(AES_192_GCM, #jose_jwe_enc_aes{
-	cipher  = aes_gcm192,
+	cipher  = {aes_gcm, 192},
 	bits    = 192,
 	cek_len = 24,
 	iv_len  = 12
 }).
 
 -define(AES_256_GCM, #jose_jwe_enc_aes{
-	cipher  = aes_gcm256,
+	cipher  = {aes_gcm, 256},
 	bits    = 256,
 	cek_len = 32,
 	iv_len  = 12
@@ -202,7 +205,7 @@ next_iv(#jose_jwe_enc_aes{iv_len=IVLen}) ->
 %%====================================================================
 
 cipher_supported() ->
-	[aes_cbc128, aes_cbc192, aes_cbc256, aes_gcm128, aes_gcm192, aes_gcm256].
+	[aes_cbc, aes_gcm].
 
 hmac_supported() ->
 	[sha256, sha384, sha512].

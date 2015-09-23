@@ -59,13 +59,29 @@ to_thumbprint_map(K, F) ->
 %% jose_jwk_kty callbacks
 %%====================================================================
 
-block_encryptor(_KTY, _Fields, _PlainText) ->
+block_encryptor(KTY, Fields, PlainText) ->
+	ENC = case bit_size(KTY) of
+		128 ->
+			<<"A128GCM">>;
+		192 ->
+			<<"A192GCM">>;
+		256 ->
+			case jose_jwa:is_block_cipher_supported({aes_gcm, 256}) of
+				false ->
+					<<"A128CBC-HS256">>;
+				true ->
+					<<"A256GCM">>
+			end;
+		384 ->
+			<<"A192CBC-HS384">>;
+		512 ->
+			<<"A256CBC-HS512">>;
+		_ ->
+			erlang:error({badarg, [KTY, Fields, PlainText]})
+	end,
 	#{
 		<<"alg">> => <<"dir">>,
-		<<"enc">> => case jose_jwa:is_native_cipher(aes_gcm128) of
-			false -> <<"A128CBC-HS256">>;
-			true  -> <<"A128GCM">>
-		end
+		<<"enc">> => ENC
 	}.
 
 derive_key(Key) ->

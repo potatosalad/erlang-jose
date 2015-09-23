@@ -77,7 +77,7 @@ init([]) ->
 handle_call(config_change, _From, State) ->
 	{reply, support_check(), State};
 handle_call({json_module, M}, _From, State) ->
-	JSONModule = determine_json_module(M),
+	JSONModule = check_json_module(M),
 	true = ets:insert(?TAB, {json_module, JSONModule}),
 	{reply, ok, State};
 handle_call(_Request, _From, State) ->
@@ -105,23 +105,25 @@ code_change(_OldVsn, State, _Extra) ->
 
 %% @private
 support_check() ->
-	Entries = lists:flatten([
-		determine_ec_key_mode(),
-		determine_json_module(),
-		determine_supported_ciphers(),
-		determine_supported_rsa_padding(),
-		determine_supported_signers()
-	]),
+	Fallback = ?CRYPTO_FALLBACK,
+	Entries = lists:flatten(lists:foldl(fun(Check, Acc) ->
+		Check(Fallback, Acc)
+	end, [], [
+		fun check_ec_key_mode/2,
+		fun check_json/2,
+		fun check_crypto/2,
+		fun check_public_key/2
+	])),
 	true = ets:delete_all_objects(?TAB),
 	true = ets:insert(?TAB, Entries),
 	ok.
 
 %%%-------------------------------------------------------------------
-%%% Internal determine functions
+%%% Internal check functions
 %%%-------------------------------------------------------------------
 
 %% @private
-determine_ec_key_mode() ->
+check_ec_key_mode(_Fallback, Entries) ->
 	ECPEMEntry = {
 		'ECPrivateKey',
 		<<
@@ -137,13 +139,13 @@ determine_ec_key_mode() ->
 	},
 	case public_key:pem_entry_decode(ECPEMEntry) of
 		#'ECPrivateKey'{ privateKey = PrivateKey, publicKey = PublicKey } when is_list(PrivateKey) andalso is_tuple(PublicKey) ->
-			[{ec_key_mode, list}];
+			[{ec_key_mode, list} | Entries];
 		#'ECPrivateKey'{ privateKey = PrivateKey, publicKey = PublicKey } when is_binary(PrivateKey) andalso is_binary(PublicKey) ->
-			[{ec_key_mode, binary}]
+			[{ec_key_mode, binary} | Entries]
 	end.
 
 %% @private
-determine_json_module() ->
+check_json(_Fallback, Entries) ->
 	JSONModule = case ets:lookup(?TAB, json_module) of
 		[{json_module, M}] when is_atom(M) ->
 			M;
@@ -152,33 +154,33 @@ determine_json_module() ->
 				undefined ->
 					case code:ensure_loaded(elixir) of
 						{module, elixir} ->
-							determine_json_modules(['Elixir.Poison', jiffy, jsone, jsx]);
+							check_json_modules(['Elixir.Poison', jiffy, jsone, jsx]);
 						_ ->
-							determine_json_modules([jiffy, jsone, jsx])
+							check_json_modules([jiffy, jsone, jsx])
 					end;
 				M when is_atom(M) ->
-					determine_json_module(M)
+					check_json_module(M)
 			end
 	end,
-	[{json_module, JSONModule}].
+	[{json_module, JSONModule} | Entries].
 
 %% @private
-determine_json_module(jiffy) ->
+check_json_module(jiffy) ->
 	jose_json_jiffy;
-determine_json_module(jsx) ->
+check_json_module(jsx) ->
 	jose_json_jsx;
-determine_json_module(jsone) ->
+check_json_module(jsone) ->
 	jose_json_jsone;
-determine_json_module('Elixir.Poison') ->
+check_json_module('Elixir.Poison') ->
 	Map = ?POISON_MAP,
 	Bin = ?POISON_BIN,
 	case jose_json_poison:encode(Map) of
 		Bin ->
 			jose_json_poison;
 		_ ->
-			determine_json_module('Elixir.JOSE.Poison')
+			check_json_module('Elixir.JOSE.Poison')
 	end;
-determine_json_module('Elixir.JOSE.Poison') ->
+check_json_module('Elixir.JOSE.Poison') ->
 	Map = ?POISON_MAP,
 	Bin = ?POISON_BIN,
 	case code:ensure_loaded('Elixir.JOSE.Poison') of
@@ -187,15 +189,15 @@ determine_json_module('Elixir.JOSE.Poison') ->
 				Bin ->
 					jose_json_poison_ord_encoder;
 				_ ->
-					determine_json_module(jose_json_poison_compat_encoder)
+					check_json_module(jose_json_poison_compat_encoder)
 			catch
 				_:_ ->
-					determine_json_module(jose_json_poison_compat_encoder)
+					check_json_module(jose_json_poison_compat_encoder)
 			end;
 		_ ->
-			determine_json_module(jose_json_poison_compat_encoder)
+			check_json_module(jose_json_poison_compat_encoder)
 	end;
-determine_json_module(jose_json_poison_compat_encoder) ->
+check_json_module(jose_json_poison_compat_encoder) ->
 	Map = ?POISON_MAP,
 	Bin = ?POISON_BIN,
 	try jose_json_poison_compat_encoder:encode(Map) of
@@ -207,159 +209,270 @@ determine_json_module(jose_json_poison_compat_encoder) ->
 		_:_ ->
 			jose_json_poison
 	end;
-determine_json_module(Module) when is_atom(Module) ->
+check_json_module(Module) when is_atom(Module) ->
 	Module.
 
 %% @private
-determine_json_modules([Module | Modules]) ->
+check_json_modules([Module | Modules]) ->
 	case code:ensure_loaded(Module) of
 		{module, Module} ->
 			_ = application:ensure_all_started(Module),
-			determine_json_module(Module);
+			check_json_module(Module);
 		_ ->
-			determine_json_modules(Modules)
+			check_json_modules(Modules)
 	end;
-determine_json_modules([]) ->
+check_json_modules([]) ->
 	jose_json_unsupported.
 
 %% @private
-determine_supported_ciphers() ->
-	determine_supported_ciphers(?CRYPTO_FALLBACK).
-
-%% @private
-determine_supported_ciphers(false) ->
-	[begin
-		case Module of
-			crypto ->
-				{{cipher, Cipher}, {Module, Type}};
-			_ ->
-				{{cipher, Cipher}, {jose_jwa_unsupported, Type}}
-		end
-	end || {{cipher, Cipher}, {Module, Type}} <- determine_supported_ciphers(true)];
-determine_supported_ciphers(true) ->
-	SpecificBlockCiphers = [
-		aes_cbc128,
-		aes_cbc192,
-		aes_cbc256
-	],
-	BlockCiphers = [
+check_crypto(false, Entries) ->
+	check_crypto(jose_jwa_unsupported, Entries);
+check_crypto(true, Entries) ->
+	check_crypto(jose_jwa_aes, Entries);
+check_crypto(Fallback, Entries) ->
+	Ciphers = [
+		aes_cbc,
 		aes_ecb,
 		aes_gcm
 	],
-	BlockCipherBits = [
+	KeySizes = [
 		128,
 		192,
 		256
 	],
-	NativeCiphers = proplists:get_value(ciphers, crypto:supports()),
-	PureSpecificBlockCiphers = SpecificBlockCiphers -- NativeCiphers,
-	NativeSpecificBlockCiphers = SpecificBlockCiphers -- PureSpecificBlockCiphers,
-	PureBlockCiphers = BlockCiphers -- NativeCiphers,
-	NativeBlockCiphers = BlockCiphers -- PureBlockCiphers,
-	C0 = [begin
-		"aes_cbc" ++ BitsList = atom_to_list(Cipher),
-		Bits = list_to_integer(BitsList),
-		[
-			{{cipher, Cipher}, {crypto, Cipher}},
-			{{cipher, {aes_cbc, Bits}}, {crypto, Cipher}}
-		]
-	end || Cipher <- NativeSpecificBlockCiphers],
-	C1 = [begin
-		"aes_cbc" ++ BitsList = atom_to_list(Cipher),
-		Bits = list_to_integer(BitsList),
-		[
-			{{cipher, Cipher}, {jose_jwa_aes, {aes_cbc, Bits}}},
-			{{cipher, {aes_cbc, Bits}}, {jose_jwa_aes, {aes_cbc, Bits}}}
-		]
-	end || Cipher <- PureSpecificBlockCiphers],
-	C2 = [begin
-		CipherName = list_to_atom(atom_to_list(Cipher) ++ integer_to_list(Bits)),
-		case is_cipher_supported(Bits, Cipher) of
+	CipherEntries = [begin
+		case has_cipher(Cipher, KeySize) of
 			false ->
-				[
-					{{cipher, CipherName}, {jose_jwa_aes, {Cipher, Bits}}},
-					{{cipher, {Cipher, Bits}}, {jose_jwa_aes, {Cipher, Bits}}}
-				];
-			true ->
-				[
-					{{cipher, CipherName}, {crypto, Cipher}},
-					{{cipher, {Cipher, Bits}}, {crypto, Cipher}}
-				]
+				{{cipher, {Cipher, KeySize}}, {Fallback, {Cipher, KeySize}}};
+			{true, CryptoCipher} ->
+				{{cipher, {Cipher, KeySize}}, {crypto, CryptoCipher}}
 		end
-	end || Cipher <- NativeBlockCiphers, Bits <- BlockCipherBits],
-	C3 = [begin
-		CipherName = list_to_atom(atom_to_list(Cipher) ++ integer_to_list(Bits)),
-		[
-			{{cipher, CipherName}, {jose_jwa_aes, {Cipher, Bits}}},
-			{{cipher, {Cipher, Bits}}, {jose_jwa_aes, {Cipher, Bits}}}
-		]
-	end || Cipher <- PureBlockCiphers, Bits <- BlockCipherBits],
-	lists:flatten([C0, C1, C2, C3]).
+	end || Cipher <- Ciphers, KeySize <- KeySizes],
+	[CipherEntries | Entries].
 
 %% @private
-determine_supported_rsa_padding() ->
-	[begin
-		{{rsa_padding, RSAPadding}}
-	end || RSAPadding <- determine_supported_rsa_padding(?CRYPTO_FALLBACK)].
+check_public_key(Fallback, Entries) ->
+	RSACrypt = check_rsa_crypt(Fallback),
+	RSASign = check_rsa_sign(Fallback),
+	[RSACrypt, RSASign | Entries].
 
 %% @private
-determine_supported_rsa_padding(false) ->
-	[rsa_pkcs1_padding, rsa_pkcs1_oaep_padding];
-determine_supported_rsa_padding(true) ->
-	[rsa_pkcs1_padding, rsa_pkcs1_oaep_padding, rsa_pkcs1_oaep256_padding].
+check_rsa_crypt(false) ->
+	check_rsa_crypt(jose_jwa_unsupported);
+check_rsa_crypt(true) ->
+	check_rsa_crypt(jose_jwa_pkcs1);
+check_rsa_crypt(Fallback) ->
+	Algorithms = [
+		%% Algorithm,    LegacyOptions,                       FutureOptions
+		{rsa1_5,       [{rsa_pad, rsa_pkcs1_padding}],      [{rsa_padding, rsa_pkcs1_padding}]},
+		{rsa_oaep,     [{rsa_pad, rsa_pkcs1_oaep_padding}], [{rsa_padding, rsa_pkcs1_oaep_padding}]},
+		{rsa_oaep_256, notsup,                              [{rsa_padding, rsa_pkcs1_oaep_padding}, {rsa_oaep_md, sha256}]}
+	],
+	_ = code:ensure_loaded(public_key),
+	_ = application:ensure_all_started(public_key),
+	Legacy = case erlang:function_exported(public_key, sign, 4) of
+		false ->
+			legacy;
+		true ->
+			future
+	end,
+	CryptEntries = [begin
+		case has_rsa_crypt(Algorithm, Legacy, LegacyOptions, FutureOptions) of
+			false ->
+				{{rsa_crypt, Algorithm}, {Fallback, FutureOptions}};
+			{true, Module, Options} ->
+				{{rsa_crypt, Algorithm}, {Module, Options}}
+		end
+	end || {Algorithm, LegacyOptions, FutureOptions} <- Algorithms],
+	CryptEntries.
 
 %% @private
-determine_supported_signers() ->
-	[begin
-		{{signer, Signer}}
-	end || Signer <- determine_supported_signers(?CRYPTO_FALLBACK)].
+check_rsa_sign(false) ->
+	check_rsa_sign(jose_jwa_unsupported);
+check_rsa_sign(true) ->
+	check_rsa_sign(jose_jwa_pkcs1);
+check_rsa_sign(Fallback) ->
+	Paddings = [
+		rsa_pkcs1_padding,
+		rsa_pkcs1_pss_padding
+	],
+	_ = code:ensure_loaded(public_key),
+	_ = application:ensure_all_started(public_key),
+	Legacy = case erlang:function_exported(public_key, sign, 4) of
+		false ->
+			legacy;
+		true ->
+			future
+	end,
+	SignEntries = [begin
+		case has_rsa_sign(Padding, Legacy, sha) of
+			false ->
+				{{rsa_sign, Padding}, {Fallback, [{rsa_padding, Padding}]}};
+			{true, Module} ->
+				{{rsa_sign, Padding}, {Module, undefined}};
+			{true, Module, Options} ->
+				{{rsa_sign, Padding}, {Module, Options}}
+		end
+	end || Padding <- Paddings],
+	SignEntries.
 
 %% @private
-determine_supported_signers(false) ->
-	[ecdsa, hmac, none, rsa_pkcs1_v1_5];
-determine_supported_signers(true) ->
-	[ecdsa, hmac, none, rsa_pkcs1_v1_5, rsa_pss].
-
-%% @private
-is_cipher_supported(Bits, aes_ecb) ->
-	Key = << 0:Bits >>,
+has_cipher(aes_cbc, KeySize) ->
+	Key = << 0:KeySize >>,
+	IV = << 0:128 >>,
 	PlainText = jose_jwa_pkcs7:pad(<<>>),
-	try crypto:block_encrypt(aes_ecb, Key, PlainText) of
-		CipherText when is_binary(CipherText) ->
-			try crypto:block_decrypt(aes_ecb, Key, CipherText) of
-				PlainText ->
-					true;
-				_ ->
-					false
-			catch
-				_:_ ->
-					false
-			end;
-		_ ->
-			false
-	catch
-		_:_ ->
-			false
+	case has_block_cipher(aes_cbc, {Key, IV, PlainText}) of
+		false ->
+			Cipher = list_to_atom("aes_cbc" ++ integer_to_list(KeySize)),
+			has_block_cipher(Cipher, {Key, IV, PlainText});
+		Other ->
+			Other
 	end;
-is_cipher_supported(Bits, aes_gcm) ->
-	Key = << 0:Bits >>,
+has_cipher(aes_ecb, KeySize) ->
+	Key = << 0:KeySize >>,
+	PlainText = jose_jwa_pkcs7:pad(<<>>),
+	has_block_cipher(aes_ecb, {Key, PlainText});
+has_cipher(aes_gcm, KeySize) ->
+	Key = << 0:KeySize >>,
 	IV = << 0:96 >>,
 	AAD = <<>>,
 	PlainText = jose_jwa_pkcs7:pad(<<>>),
-	try crypto:block_encrypt(aes_gcm, Key, IV, {AAD, PlainText}) of
-		{CipherText, CipherTag} when is_binary(CipherText) andalso is_binary(CipherTag) ->
-			try crypto:block_decrypt(aes_gcm, Key, IV, {AAD, CipherText, CipherTag}) of
+	has_block_cipher(aes_gcm, {Key, IV, AAD, PlainText}).
+
+%% @private
+has_block_cipher(Cipher, {Key, PlainText}) ->
+	case catch crypto:block_encrypt(Cipher, Key, PlainText) of
+		CipherText when is_binary(CipherText) ->
+			case catch crypto:block_decrypt(Cipher, Key, CipherText) of
 				PlainText ->
-					true;
+					{true, Cipher};
 				_ ->
-					false
-			catch
-				_:_ ->
 					false
 			end;
 		_ ->
 			false
-	catch
-		_:_ ->
+	end;
+has_block_cipher(Cipher, {Key, IV, PlainText}) ->
+	case catch crypto:block_encrypt(Cipher, Key, IV, PlainText) of
+		CipherText when is_binary(CipherText) ->
+			case catch crypto:block_decrypt(Cipher, Key, IV, CipherText) of
+				PlainText ->
+					{true, Cipher};
+				_ ->
+					false
+			end;
+		_ ->
+			false
+	end;
+has_block_cipher(Cipher, {Key, IV, AAD, PlainText}) ->
+	case catch crypto:block_encrypt(Cipher, Key, IV, {AAD, PlainText}) of
+		{CipherText, CipherTag} when is_binary(CipherText) andalso is_binary(CipherTag) ->
+			case catch crypto:block_decrypt(Cipher, Key, IV, {AAD, CipherText, CipherTag}) of
+				PlainText ->
+					{true, Cipher};
+				_ ->
+					false
+			end;
+		_ ->
 			false
 	end.
+
+%% @private
+has_rsa_crypt(_Algorithm, future, _LegacyOptions, FutureOptions) ->
+	PlainText = << 0:8 >>,
+	PublicKey = rsa_public_key(),
+	case catch public_key:encrypt_public(PlainText, PublicKey, FutureOptions) of
+		CipherText when is_binary(CipherText) ->
+			PrivateKey = rsa_private_key(),
+			case catch public_key:decrypt_private(CipherText, PrivateKey, FutureOptions) of
+				PlainText ->
+					{true, public_key, FutureOptions};
+				_ ->
+					false
+			end;
+		_ ->
+			false
+	end;
+has_rsa_crypt(_Algorithm, legacy, notsup, _FutureOptions) ->
+	false;
+has_rsa_crypt(_Algorithm, legacy, LegacyOptions, _FutureOptions) ->
+	PlainText = << 0:8 >>,
+	PublicKey = rsa_public_key(),
+	case catch public_key:encrypt_public(PlainText, PublicKey, LegacyOptions) of
+		CipherText when is_binary(CipherText) ->
+			PrivateKey = rsa_private_key(),
+			case catch public_key:decrypt_private(CipherText, PrivateKey, LegacyOptions) of
+				PlainText ->
+					{true, public_key, LegacyOptions};
+				_ ->
+					false
+			end;
+		_ ->
+			false
+	end.
+
+%% @private
+has_rsa_sign(Padding, future, DigestType) ->
+	Message = << 0:8 >>,
+	PrivateKey = rsa_private_key(),
+	Options = [{rsa_padding, Padding}],
+	case catch public_key:sign(Message, DigestType, PrivateKey, Options) of
+		Signature when is_binary(Signature) ->
+			PublicKey = rsa_public_key(),
+			case catch public_key:verify(Message, DigestType, Signature, PublicKey, Options) of
+				true ->
+					{true, public_key, Options};
+				_ ->
+					false
+			end;
+		_ ->
+			false
+	end;
+has_rsa_sign(rsa_pkcs1_padding, legacy, DigestType) ->
+	Message = << 0:8 >>,
+	PrivateKey = rsa_private_key(),
+	case catch public_key:sign(Message, DigestType, PrivateKey) of
+		Signature when is_binary(Signature) ->
+			PublicKey = rsa_public_key(),
+			case catch public_key:verify(Message, DigestType, Signature, PublicKey) of
+				true ->
+					{true, public_key};
+				_ ->
+					false
+			end;
+		_ ->
+			false
+	end;
+has_rsa_sign(_Padding, legacy, _DigestType) ->
+	false.
+
+%% @private
+read_pem_key(PEM) ->
+	public_key:pem_entry_decode(hd(public_key:pem_decode(PEM))).
+
+%% @private
+rsa_public_key() ->
+	read_pem_key(<<
+		"-----BEGIN PUBLIC KEY-----\n"
+		"MHwwDQYJKoZIhvcNAQEBBQADawAwaAJhAL/f1xISwDSm4m6sYHm6WD4WK2egfyfZ\n"
+		"hd0w4iVeZvHjUurZVRVQojs7hZC7DKBfjShl6M7BT9j7gkaYOXlJHLhK6/J+Zr0C\n"
+		"g6PMkkbejQltgr4fUzbG8zUBo7BMs4Xm0wIDAQAB\n"
+		"-----END PUBLIC KEY-----\n"
+	>>).
+
+%% @private
+rsa_private_key() ->
+	read_pem_key(<<
+		"-----BEGIN RSA PRIVATE KEY-----\n"
+		"MIIBzAIBAAJhAL/f1xISwDSm4m6sYHm6WD4WK2egfyfZhd0w4iVeZvHjUurZVRVQ\n"
+		"ojs7hZC7DKBfjShl6M7BT9j7gkaYOXlJHLhK6/J+Zr0Cg6PMkkbejQltgr4fUzbG\n"
+		"8zUBo7BMs4Xm0wIDAQABAmEAiisNO7WG9SNLoPi+TEn061iZjvjTOAX60Io3/0LY\n"
+		"jMzu07EHBN9Yw6CcENmxQPcsdIRlSKLlt+UeUdBES6Zoccek5fJl+gnqExeX2Av1\n"
+		"v0Y8vIP2yejV7Pw+SrNxpY5ZAjEA+WMEZEgFrK8cPJmZLR9Kj3jvN5P+AmIKzg00\n"
+		"VMW93rS+sdHmYQUStqBuu2XRw5SlAjEAxPZlLCZ83GrqdStcmChCFpflzCRyU/wC\n"
+		"qVVP8QYfct49Cca3TyC8lCywwXI5s5wXAjA1JQK0lByRdiegSmM4GGj9NhpUT7db\n"
+		"rqT60BmMzy7tHLtejYp4tmoMfRfb25DeCvkCMQCO+usQ9NOZUsfmzNaH4lmvew8n\n"
+		"daHFE+F+uV6x8ibsRSZ8LVQuze33hsW9eEUo/HsCMQDKkImE3DSqHgwfKPjtecFH\n"
+		"oftdsGQ4u+MUGkST94Hh8479oNYaNveCRDOTJ4GJjUE=\n"
+		"-----END RSA PRIVATE KEY-----\n"
+	>>).

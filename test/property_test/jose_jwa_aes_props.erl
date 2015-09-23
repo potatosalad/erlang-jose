@@ -37,18 +37,18 @@ prop_cbc_block_encrypt_and_jwa_block_decrypt() ->
 	?FORALL({Bits, Key, IV, PlainText},
 		cbc_block_encryptor_gen(),
 		begin
-			CipherText = jose_jwa_aes:block_encrypt({aes_cbc, Bits}, Key, IV, PlainText),
-			Cipher = list_to_atom("aes_cbc" ++ integer_to_list(Bits)),
-			PlainText =:= jose_jwa:block_decrypt(Cipher, Key, IV, CipherText)
+			Cipher = aes_cbc,
+			CipherText = jose_jwa_aes:block_encrypt({Cipher, Bits}, Key, IV, PlainText),
+			PlainText =:= jose_jwa:block_decrypt({Cipher, Bits}, Key, IV, CipherText)
 		end).
 
 prop_jwa_block_encrypt_and_cbc_block_decrypt() ->
 	?FORALL({Bits, Key, IV, PlainText},
 		cbc_block_encryptor_gen(),
 		begin
-			Cipher = list_to_atom("aes_cbc" ++ integer_to_list(Bits)),
-			CipherText = jose_jwa:block_encrypt(Cipher, Key, IV, PlainText),
-			PlainText =:= jose_jwa_aes:block_decrypt({aes_cbc, Bits}, Key, IV, CipherText)
+			Cipher = aes_cbc,
+			CipherText = jose_jwa:block_encrypt({Cipher, Bits}, Key, IV, PlainText),
+			PlainText =:= jose_jwa_aes:block_decrypt({Cipher, Bits}, Key, IV, CipherText)
 		end).
 
 prop_jwa_block_encrypt_and_ecb_block_decrypt() ->

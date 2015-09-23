@@ -19,6 +19,12 @@
 		Fields    :: map(),
 		PlainText :: iodata(),
 		JWEMap    :: map().
+-callback decrypt_private(CipherText, Options, KTY) -> PlainText
+	when
+		CipherText :: iodata(),
+		Options    :: any(),
+		KTY        :: any(),
+		PlainText  :: iodata().
 -callback derive_key(KTY) -> DerivedKey
 	when
 		KTY        :: any(),
@@ -28,6 +34,12 @@
 		OtherKTY   :: any(),
 		KTY        :: any(),
 		DerivedKey :: iodata().
+-callback encrypt_public(PlainText, Options, KTY) -> CipherText
+	when
+		PlainText  :: iodata(),
+		Options    :: any(),
+		KTY        :: any(),
+		CipherText :: iodata().
 -callback generate_key(Parameters) -> KTY
 	when
 		Parameters :: any(),
@@ -43,18 +55,6 @@
 		Fields :: map(),
 		Key    :: any(),
 		JWEMap :: map().
--callback private_decrypt(CipherText, Options, KTY) -> PlainText
-	when
-		CipherText :: iodata(),
-		Options    :: any(),
-		KTY        :: any(),
-		PlainText  :: iodata().
--callback public_encrypt(PlainText, Options, KTY) -> CipherText
-	when
-		PlainText  :: iodata(),
-		Options    :: any(),
-		KTY        :: any(),
-		CipherText :: iodata().
 -callback sign(Message, Options, KTY) -> Signature
 	when
 		Message   :: iodata(),
@@ -75,13 +75,13 @@
 		KTY       :: any().
 
 -optional_callbacks([block_encryptor/3]).
+-optional_callbacks([decrypt_private/3]).
 -optional_callbacks([derive_key/1]).
 -optional_callbacks([derive_key/2]).
+-optional_callbacks([encrypt_public/3]).
 -optional_callbacks([generate_key/1]).
 -optional_callbacks([generate_key/2]).
 -optional_callbacks([key_encryptor/3]).
--optional_callbacks([private_decrypt/3]).
--optional_callbacks([public_encrypt/3]).
 -optional_callbacks([sign/3]).
 -optional_callbacks([signer/3]).
 -optional_callbacks([verify/4]).
@@ -163,7 +163,10 @@ key_encryptor(_KTY, _Fields, Key) when is_binary(Key) ->
 	#{
 		<<"alg">> => <<"PBES2-HS256+A128KW">>,
 		<<"cty">> => <<"jwk+json">>,
-		<<"enc">> => <<"A128CBC-HS256">>,
+		<<"enc">> => case jose_jwa:is_block_cipher_supported({aes_gcm, 128}) of
+			false -> <<"A128CBC-HS256">>;
+			true  -> <<"A128GCM">>
+		end,
 		<<"p2c">> => 4096,
 		<<"p2s">> => base64url:encode(crypto:rand_bytes(16))
 	}.

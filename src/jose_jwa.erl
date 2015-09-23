@@ -10,21 +10,29 @@
 %%%-------------------------------------------------------------------
 -module(jose_jwa).
 
-%% API
--export([block_cipher/1]).
+-include_lib("public_key/include/public_key.hrl").
+
+%% Crypto API
 -export([block_decrypt/3]).
 -export([block_encrypt/3]).
 -export([block_decrypt/4]).
 -export([block_encrypt/4]).
+%% Public Key API
+-export([decrypt_private/3]).
+-export([encrypt_public/3]).
+-export([sign/4]).
+-export([verify/5]).
+%% API
+-export([block_cipher/1]).
 -export([crypto_ciphers/0]).
 -export([crypto_fallback/0]).
 -export([crypto_fallback/1]).
 -export([crypto_supports/0]).
 -export([constant_time_compare/2]).
 -export([ec_key_mode/0]).
--export([is_native_cipher/1]).
--export([is_rsa_padding_supported/1]).
--export([is_signer_supported/1]).
+-export([is_block_cipher_supported/1]).
+-export([is_rsa_crypt_supported/1]).
+-export([is_rsa_sign_supported/1]).
 -export([supports/0]).
 
 -define(TAB, ?MODULE).
@@ -38,11 +46,8 @@ catch
 end).
 
 %%====================================================================
-%% API functions
+%% Crypto API functions
 %%====================================================================
-
-block_cipher(Cipher) ->
-	?MAYBE_START_JOSE(ets:lookup_element(?TAB, {cipher, Cipher}, 2)).
 
 block_decrypt(Cipher, Key, CipherText)
 		when is_binary(CipherText) ->
@@ -83,12 +88,57 @@ block_encrypt(Cipher, Key, IV, {AAD, PlainText})
 	{Module, BlockCipher} = block_cipher(Cipher),
 	Module:block_encrypt(BlockCipher, Key, IV, {AAD, PlainText}).
 
+%%====================================================================
+%% Public Key API functions
+%%====================================================================
+
+decrypt_private(CipherText, RSAPrivateKey=#'RSAPrivateKey'{}, Algorithm)
+		when is_atom(Algorithm) ->
+	{Module, Options} = rsa_crypt(Algorithm),
+	Module:decrypt_private(CipherText, RSAPrivateKey, Options);
+decrypt_private(CipherText, PrivateKey, Options) ->
+	public_key:decrypt_private(CipherText, PrivateKey, Options).
+
+encrypt_public(PlainText, RSAPublicKey=#'RSAPublicKey'{}, Algorithm)
+		when is_atom(Algorithm) ->
+	{Module, Options} = rsa_crypt(Algorithm),
+	Module:encrypt_public(PlainText, RSAPublicKey, Options);
+encrypt_public(PlainText, PublicKey, Options) ->
+	public_key:encrypt_public(PlainText, PublicKey, Options).
+
+sign(Message, DigestType, RSAPrivateKey=#'RSAPrivateKey'{}, Padding)
+		when is_atom(Padding) ->
+	case rsa_sign(Padding) of
+		{Module, undefined} ->
+			Module:sign(Message, DigestType, RSAPrivateKey);
+		{Module, Options} ->
+			Module:sign(Message, DigestType, RSAPrivateKey, Options)
+	end;
+sign(Message, DigestType, PrivateKey, _Options) ->
+	public_key:sign(Message, DigestType, PrivateKey).
+
+verify(Message, DigestType, Signature, RSAPublicKey=#'RSAPublicKey'{}, Padding)
+		when is_atom(Padding) ->
+	case rsa_sign(Padding) of
+		{Module, undefined} ->
+			Module:verify(Message, DigestType, Signature, RSAPublicKey);
+		{Module, Options} ->
+			Module:verify(Message, DigestType, Signature, RSAPublicKey, Options)
+	end;
+verify(Message, DigestType, Signature, PublicKey, _Options) ->
+	public_key:verify(Message, DigestType, Signature, PublicKey).
+
+%%====================================================================
+%% API functions
+%%====================================================================
+
+block_cipher(Cipher) ->
+	?MAYBE_START_JOSE(ets:lookup_element(?TAB, {cipher, Cipher}, 2)).
+
 crypto_ciphers() ->
 	?MAYBE_START_JOSE(ets:select(?TAB, [{
 		{{cipher, '$1'}, {'$2', '_'}},
-		[{'andalso',
-			{is_atom, '$1'},
-			{'=/=', '$2', 'jose_jwa_unsupported'}}],
+		[{'=/=', '$2', 'jose_jwa_unsupported'}],
 		[{{'$1', '$2'}}]
 	}])).
 
@@ -102,19 +152,17 @@ crypto_fallback(Boolean) when is_boolean(Boolean) ->
 crypto_supports() ->
 	Ciphers = ?MAYBE_START_JOSE(ets:select(?TAB, [{
 		{{cipher, '$1'}, {'$2', '_'}},
-		[{'andalso',
-			{is_atom, '$1'},
-			{'=/=', '$2', 'jose_jwa_unsupported'}}],
+		[{'=/=', '$2', 'jose_jwa_unsupported'}],
 		['$1']
 	}])),
-	RSAPadding = ?MAYBE_START_JOSE(ets:select(?TAB, [{
-		{{rsa_padding, '$1'}},
-		[],
+	RSACrypt = ?MAYBE_START_JOSE(ets:select(?TAB, [{
+		{{rsa_crypt, '$1'}, {'$2', '_'}},
+		[{'=/=', '$2', 'jose_jwa_unsupported'}],
 		['$1']
 	}])),
-	Signers = ?MAYBE_START_JOSE(ets:select(?TAB, [{
-		{{signer, '$1'}},
-		[],
+	RSASign = ?MAYBE_START_JOSE(ets:select(?TAB, [{
+		{{rsa_sign, '$1'}, {'$2', '_'}},
+		[{'=/=', '$2', 'jose_jwa_unsupported'}],
 		['$1']
 	}])),
 	Supports = crypto:supports(),
@@ -126,8 +174,8 @@ crypto_supports() ->
 		{ciphers, Ciphers},
 		{hashs, Hashs},
 		{public_keys, PublicKeys},
-		{rsa_paddings, RSAPadding},
-		{signers, Signers}
+		{rsa_crypt, RSACrypt},
+		{rsa_sign, RSASign}
 	].
 
 constant_time_compare(<<>>, _) ->
@@ -146,51 +194,64 @@ constant_time_compare(A, B)
 ec_key_mode() ->
 	?MAYBE_START_JOSE(ets:lookup_element(?TAB, ec_key_mode, 2)).
 
-is_native_cipher(Cipher) ->
-	try block_cipher(Cipher) of
-		crypto ->
+is_block_cipher_supported(Cipher) ->
+	case catch block_cipher(Cipher) of
+		{crypto, _} ->
 			true;
 		_ ->
 			false
-	catch
-		_:_ ->
+	end.
+
+is_rsa_crypt_supported(Padding) ->
+	case catch rsa_crypt(Padding) of
+		{public_key, _} ->
+			true;
+		_ ->
 			false
 	end.
 
-is_rsa_padding_supported(RSAPadding) ->
-	?MAYBE_START_JOSE(ets:member(?TAB, {rsa_padding, RSAPadding})).
+is_rsa_sign_supported(Padding) ->
+	case catch rsa_sign(Padding) of
+		{public_key, _} ->
+			true;
+		_ ->
+			false
+	end.
 
-is_signer_supported(Signer) ->
-	?MAYBE_START_JOSE(ets:member(?TAB, {signer, Signer})).
+rsa_crypt(Algorithm) ->
+	?MAYBE_START_JOSE(ets:lookup_element(?TAB, {rsa_crypt, Algorithm}, 2)).
+
+rsa_sign(Padding) ->
+	?MAYBE_START_JOSE(ets:lookup_element(?TAB, {rsa_sign, Padding}, 2)).
 
 supports() ->
 	Supports = crypto_supports(),
 	JWEALG = support_check([
-		{<<"A128GCMKW">>, ciphers, aes_gcm128},
-		{<<"A192GCMKW">>, ciphers, aes_gcm192},
-		{<<"A256GCMKW">>, ciphers, aes_gcm256},
-		{<<"A128KW">>, ciphers, aes_ecb128},
-		{<<"A192KW">>, ciphers, aes_ecb192},
-		{<<"A256KW">>, ciphers, aes_ecb256},
+		{<<"A128GCMKW">>, ciphers, {aes_gcm, 128}},
+		{<<"A192GCMKW">>, ciphers, {aes_gcm, 192}},
+		{<<"A256GCMKW">>, ciphers, {aes_gcm, 256}},
+		{<<"A128KW">>, ciphers, {aes_ecb, 128}},
+		{<<"A192KW">>, ciphers, {aes_ecb, 192}},
+		{<<"A256KW">>, ciphers, {aes_ecb, 256}},
 		<<"ECDH-ES">>,
 		<<"ECDH-ES+A128KW">>,
 		<<"ECDH-ES+A192KW">>,
 		<<"ECDH-ES+A256KW">>,
-		{<<"PBES2-HS256+A128KW">>, ciphers, aes_ecb128},
-		{<<"PBES2-HS384+A192KW">>, ciphers, aes_ecb192},
-		{<<"PBES2-HS512+A256KW">>, ciphers, aes_ecb256},
-		{<<"RSA1_5">>, rsa_paddings, rsa_pkcs1_padding},
-		{<<"RSA-OAEP">>, rsa_paddings, rsa_pkcs1_oaep_padding},
-		{<<"RSA-OAEP-256">>, rsa_paddings, rsa_pkcs1_oaep256_padding},
+		{<<"PBES2-HS256+A128KW">>, ciphers, {aes_ecb, 128}},
+		{<<"PBES2-HS384+A192KW">>, ciphers, {aes_ecb, 192}},
+		{<<"PBES2-HS512+A256KW">>, ciphers, {aes_ecb, 256}},
+		{<<"RSA1_5">>, rsa_crypt, rsa1_5},
+		{<<"RSA-OAEP">>, rsa_crypt, rsa_oaep},
+		{<<"RSA-OAEP-256">>, rsa_crypt, rsa_oaep_256},
 		<<"dir">>
 	], Supports, []),
 	JWEENC = support_check([
-		{<<"A128CBC-HS256">>, ciphers, aes_cbc128},
-		{<<"A192CBC-HS384">>, ciphers, aes_cbc192},
-		{<<"A256CBC-HS512">>, ciphers, aes_cbc256},
-		{<<"A128GCM">>, ciphers, aes_gcm128},
-		{<<"A192GCM">>, ciphers, aes_gcm192},
-		{<<"A256GCM">>, ciphers, aes_gcm256}
+		{<<"A128CBC-HS256">>, ciphers, {aes_cbc, 128}},
+		{<<"A192CBC-HS384">>, ciphers, {aes_cbc, 192}},
+		{<<"A256CBC-HS512">>, ciphers, {aes_cbc, 256}},
+		{<<"A128GCM">>, ciphers, {aes_gcm, 128}},
+		{<<"A192GCM">>, ciphers, {aes_gcm, 192}},
+		{<<"A256GCM">>, ciphers, {aes_gcm, 256}}
 	], Supports, []),
 	JWEZIP = support_check([
 		<<"DEF">>
@@ -201,18 +262,18 @@ supports() ->
 		<<"RSA">>
 	], Supports, []),
 	JWSALG = support_check([
-		{<<"ES256">>, signers, ecdsa},
-		{<<"ES384">>, signers, ecdsa},
-		{<<"ES512">>, signers, ecdsa},
-		{<<"HS256">>, signers, hmac},
-		{<<"HS384">>, signers, hmac},
-		{<<"HS512">>, signers, hmac},
-		{<<"PS256">>, signers, rsa_pss},
-		{<<"PS384">>, signers, rsa_pss},
-		{<<"PS512">>, signers, rsa_pss},
-		{<<"RS256">>, signers, rsa_pkcs1_v1_5},
-		{<<"RS384">>, signers, rsa_pkcs1_v1_5},
-		{<<"RS512">>, signers, rsa_pkcs1_v1_5}
+		{<<"ES256">>, public_keys, ecdsa},
+		{<<"ES384">>, public_keys, ecdsa},
+		{<<"ES512">>, public_keys, ecdsa},
+		<<"HS256">>,
+		<<"HS384">>,
+		<<"HS512">>,
+		{<<"PS256">>, rsa_sign, rsa_pkcs1_pss_padding},
+		{<<"PS384">>, rsa_sign, rsa_pkcs1_pss_padding},
+		{<<"PS512">>, rsa_sign, rsa_pkcs1_pss_padding},
+		{<<"RS256">>, rsa_sign, rsa_pkcs1_padding},
+		{<<"RS384">>, rsa_sign, rsa_pkcs1_padding},
+		{<<"RS512">>, rsa_sign, rsa_pkcs1_padding}
 	], Supports, []),
 	[
 		{jwe,

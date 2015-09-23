@@ -103,7 +103,7 @@ to_thumbprint_map(K, F) ->
 block_encryptor(_KTY, _Fields, _PlainText) ->
 	#{
 		<<"alg">> => <<"ECDH-ES">>,
-		<<"enc">> => case jose_jwa:is_native_cipher(aes_gcm128) of
+		<<"enc">> => case jose_jwa:is_block_cipher_supported({aes_gcm, 128}) of
 			false -> <<"A128CBC-HS256">>;
 			true  -> <<"A128GCM">>
 		end

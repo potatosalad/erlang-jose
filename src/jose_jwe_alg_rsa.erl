@@ -25,16 +25,16 @@
 
 %% Types
 -record(jose_jwe_alg_rsa, {
-	padding = undefined :: undefined | rsa_pkcs1_padding | rsa_pkcs1_oaep_padding | rsa_pkcs1_oaep256_padding
+	algorithm = undefined :: undefined | rsa1_5 | rsa_oaep | rsa_oaep_256
 }).
 
 -type alg() :: #jose_jwe_alg_rsa{}.
 
 -export_type([alg/0]).
 
--define(RSA1_5,       #jose_jwe_alg_rsa{padding=rsa_pkcs1_padding}).
--define(RSA_OAEP,     #jose_jwe_alg_rsa{padding=rsa_pkcs1_oaep_padding}).
--define(RSA_OAEP_256, #jose_jwe_alg_rsa{padding=rsa_pkcs1_oaep256_padding}).
+-define(RSA1_5,       #jose_jwe_alg_rsa{algorithm=rsa1_5}).
+-define(RSA_OAEP,     #jose_jwe_alg_rsa{algorithm=rsa_oaep}).
+-define(RSA_OAEP_256, #jose_jwe_alg_rsa{algorithm=rsa_oaep_256}).
 
 %%====================================================================
 %% jose_jwe callbacks
@@ -58,11 +58,11 @@ to_map(?RSA_OAEP_256, F) ->
 %% jose_jwe_alg callbacks
 %%====================================================================
 
-key_decrypt(#jose_jwk{kty={KTYModule, KTY}}, {_ENCModule, _ENC, EncryptedKey}, #jose_jwe_alg_rsa{padding=Padding}) ->
-	KTYModule:private_decrypt(EncryptedKey, [{rsa_pad, Padding}], KTY).
+key_decrypt(#jose_jwk{kty={KTYModule, KTY}}, {_ENCModule, _ENC, EncryptedKey}, #jose_jwe_alg_rsa{algorithm=Algorithm}) ->
+	KTYModule:decrypt_private(EncryptedKey, Algorithm, KTY).
 
-key_encrypt(#jose_jwk{kty={KTYModule, KTY}}, DecryptedKey, JWERSA=#jose_jwe_alg_rsa{padding=Padding}) ->
-	{KTYModule:public_encrypt(DecryptedKey, [{rsa_pad, Padding}], KTY), JWERSA}.
+key_encrypt(#jose_jwk{kty={KTYModule, KTY}}, DecryptedKey, JWERSA=#jose_jwe_alg_rsa{algorithm=Algorithm}) ->
+	{KTYModule:encrypt_public(DecryptedKey, Algorithm, KTY), JWERSA}.
 
 next_cek(_Key, ENCModule, ENC, #jose_jwe_alg_rsa{}) ->
 	ENCModule:next_cek(ENC).

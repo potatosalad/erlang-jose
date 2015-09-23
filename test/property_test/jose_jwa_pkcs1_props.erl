@@ -9,6 +9,7 @@
 -compile(export_all).
 
 digest_type()   -> oneof([md5, sha, sha224, sha256, sha384, sha512, {hmac, md5, <<>>}, {hmac, sha, <<>>}, {hmac, sha224, <<>>}, {hmac, sha256, <<>>}, {hmac, sha384, <<>>}, {hmac, sha512, <<>>}]).
+pkcs1_digest()  -> oneof([md5, sha, sha256, sha384, sha512]).
 salt_size()     -> non_neg_integer().
 modulus_size()  -> int(256, 2048). % int(256, 8192) | pos_integer().
 exponent_size() -> return(65537).  % pos_integer().
@@ -57,6 +58,44 @@ prop_rsaes_oaep_encrypt_and_decrypt_with_label() ->
 		begin
 			{ok, CipherText} = jose_jwa_pkcs1:rsaes_oaep_encrypt(DigestType, PlainText, Label, PublicKey),
 			PlainText =:= jose_jwa_pkcs1:rsaes_oaep_decrypt(DigestType, CipherText, Label, PrivateKey)
+		end).
+
+%%====================================================================
+%% RSAES-PKCS1-v1_5
+%%====================================================================
+
+rsaes_pkcs1_encryptor_gen() ->
+	?LET({ModulusSize, PlainText},
+		?SUCHTHAT({ModulusSize, PlainText},
+			{modulus_size(), binary()},
+			ModulusSize >= ((byte_size(PlainText) + 11) * 8)),
+		{rsa_keypair(ModulusSize), ModulusSize, PlainText}).
+
+prop_rsaes_pkcs1_encrypt_and_decrypt() ->
+	?FORALL({{PrivateKey, PublicKey}, _ModulusSize, PlainText},
+		rsaes_pkcs1_encryptor_gen(),
+		begin
+			{ok, CipherText} = jose_jwa_pkcs1:rsaes_pkcs1_encrypt(PlainText, PublicKey),
+			PlainText =:= jose_jwa_pkcs1:rsaes_pkcs1_decrypt(CipherText, PrivateKey)
+		end).
+
+%%====================================================================
+%% RSASSA-PKCS1-v1_5
+%%====================================================================
+
+rsassa_pkcs1_signer_gen() ->
+	?LET({DigestType, ModulusSize},
+		?SUCHTHAT({DigestType, ModulusSize},
+			{pkcs1_digest(), modulus_size()},
+			ModulusSize >= (bit_size(do_hash(DigestType, <<>>)) * 3 + 16)),
+		{rsa_keypair(ModulusSize), ModulusSize, DigestType, binary()}).
+
+prop_rsassa_pkcs1_sign_and_verify() ->
+	?FORALL({{PrivateKey, PublicKey}, _, DigestType, Message},
+		rsassa_pkcs1_signer_gen(),
+		begin
+			{ok, Signature} = jose_jwa_pkcs1:rsassa_pkcs1_sign(DigestType, Message, PrivateKey),
+			jose_jwa_pkcs1:rsassa_pkcs1_verify(DigestType, Message, Signature, PublicKey)
 		end).
 
 %%====================================================================

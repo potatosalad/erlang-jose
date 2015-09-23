@@ -502,8 +502,3 @@ maybe_compress(PlainText, #jose_jwe{zip={Module, ZIP}}) ->
 	Module:compress(PlainText, ZIP);
 maybe_compress(PlainText, _) ->
 	PlainText.
-
-% %% @private
-% read_file(File, Config) ->
-% 	{ok, Binary} = file:read_file(data_file(File, Config)),
-% 	Binary.

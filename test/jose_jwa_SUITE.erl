@@ -36,6 +36,8 @@
 -export([constant_time_compare/1]).
 -export([pkcs1_rsaes_oaep_encrypt_and_decrypt/1]).
 -export([pkcs1_rsaes_oaep_encrypt_and_decrypt_with_label/1]).
+-export([pkcs1_rsaes_pkcs1_encrypt_and_decrypt/1]).
+-export([pkcs1_rsassa_pkcs1_sign_and_verify/1]).
 -export([pkcs1_rsassa_pss_sign_and_verify/1]).
 -export([pkcs1_rsassa_pss_sign_and_verify_with_salt/1]).
 -export([pkcs5_pbkdf1/1]).
@@ -47,13 +49,13 @@
 
 all() ->
 	[
-		constant_time_compare,
-		{group, jose_jwa_aes},
-		{group, jose_jwa_aes_kw},
-		{group, jose_jwa_concat_kdf},
-		{group, jose_jwa_pkcs1},
-		{group, jose_jwa_pkcs5},
-		{group, jose_jwa_pkcs7}
+		% constant_time_compare,
+		% {group, jose_jwa_aes},
+		% {group, jose_jwa_aes_kw},
+		% {group, jose_jwa_concat_kdf},
+		{group, jose_jwa_pkcs1}%,
+		% {group, jose_jwa_pkcs5},
+		% {group, jose_jwa_pkcs7}
 	].
 
 groups() ->
@@ -85,6 +87,8 @@ groups() ->
 		{jose_jwa_pkcs1, [parallel], [
 			pkcs1_rsaes_oaep_encrypt_and_decrypt,
 			pkcs1_rsaes_oaep_encrypt_and_decrypt_with_label,
+			pkcs1_rsaes_pkcs1_encrypt_and_decrypt,
+			pkcs1_rsassa_pkcs1_sign_and_verify,
 			pkcs1_rsassa_pss_sign_and_verify,
 			pkcs1_rsassa_pss_sign_and_verify_with_salt
 		]},
@@ -247,6 +251,16 @@ pkcs1_rsaes_oaep_encrypt_and_decrypt(Config) ->
 pkcs1_rsaes_oaep_encrypt_and_decrypt_with_label(Config) ->
 	ct_property_test:quickcheck(
 		jose_jwa_pkcs1_props:prop_rsaes_oaep_encrypt_and_decrypt_with_label(),
+		Config).
+
+pkcs1_rsaes_pkcs1_encrypt_and_decrypt(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwa_pkcs1_props:prop_rsaes_pkcs1_encrypt_and_decrypt(),
+		Config).
+
+pkcs1_rsassa_pkcs1_sign_and_verify(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwa_pkcs1_props:prop_rsassa_pkcs1_sign_and_verify(),
 		Config).
 
 pkcs1_rsassa_pss_sign_and_verify(Config) ->

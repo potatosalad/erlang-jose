@@ -12,9 +12,17 @@
 
 -include_lib("public_key/include/public_key.hrl").
 
+%% Public Key API
+-export([decrypt_private/3]).
+-export([encrypt_public/3]).
+-export([sign/4]).
+-export([verify/5]).
 %% API
 -export([eme_oaep_decode/4]).
 -export([eme_oaep_encode/5]).
+-export([eme_pkcs1_decode/2]).
+-export([eme_pkcs1_encode/2]).
+-export([emsa_pkcs1_encode/4]).
 -export([emsa_pss_encode/3]).
 -export([emsa_pss_encode/4]).
 -export([emsa_pss_verify/4]).
@@ -25,6 +33,12 @@
 -export([rsaes_oaep_encrypt/3]).
 -export([rsaes_oaep_encrypt/4]).
 -export([rsaes_oaep_encrypt/5]).
+-export([rsaes_pkcs1_decrypt/2]).
+-export([rsaes_pkcs1_encrypt/2]).
+-export([rsassa_pkcs1_sign/3]).
+-export([rsassa_pkcs1_sign/4]).
+-export([rsassa_pkcs1_verify/4]).
+-export([rsassa_pkcs1_verify/5]).
 -export([rsassa_pss_sign/3]).
 -export([rsassa_pss_sign/4]).
 -export([rsassa_pss_verify/4]).
@@ -37,6 +51,80 @@
 -type rsa_private_key() :: #'RSAPrivateKey'{}.
 
 -define(PSS_TRAILER_FIELD, 16#BC).
+
+%%====================================================================
+%% Public Key API functions
+%%====================================================================
+
+decrypt_private(CipherText, RSAPrivateKey=#'RSAPrivateKey'{}, Options)
+		when is_list(Options) ->
+	case proplists:get_value(rsa_padding, Options) of
+		rsa_pkcs1_oaep_padding ->
+			Hash = proplists:get_value(rsa_oaep_md, Options, sha),
+			Label = proplists:get_value(rsa_oaep_label, Options, <<>>),
+			rsaes_oaep_decrypt(Hash, CipherText, Label, RSAPrivateKey);
+		rsa_pkcs1_padding ->
+			rsaes_pkcs1_decrypt(CipherText, RSAPrivateKey);
+		_ ->
+			erlang:error(notsup)
+	end;
+decrypt_private(CipherText, PrivateKey, Options) ->
+	erlang:error(badarg, [CipherText, PrivateKey, Options]).
+
+encrypt_public(PlainText, RSAPublicKey=#'RSAPublicKey'{}, Options)
+		when is_list(Options) ->
+	Res = case proplists:get_value(rsa_padding, Options) of
+		rsa_pkcs1_oaep_padding ->
+			Hash = proplists:get_value(rsa_oaep_md, Options, sha),
+			Label = proplists:get_value(rsa_oaep_label, Options, <<>>),
+			rsaes_oaep_encrypt(Hash, PlainText, Label, RSAPublicKey);
+		rsa_pkcs1_padding ->
+			rsaes_pkcs1_encrypt(PlainText, RSAPublicKey);
+		_ ->
+			erlang:error(notsup)
+	end,
+	case Res of
+		{ok, Signature} ->
+			Signature;
+		{error, Reason} ->
+			erlang:error(Reason)
+	end;
+encrypt_public(PlainText, PublicKey, Options) ->
+	erlang:error(badarg, [PlainText, PublicKey, Options]).
+
+sign(Message, DigestType, RSAPrivateKey=#'RSAPrivateKey'{}, Options)
+		when is_list(Options) ->
+	Res = case proplists:get_value(rsa_padding, Options) of
+		rsa_pkcs1_pss_padding ->
+			SaltLen = proplists:get_value(rsa_pss_saltlen, Options, -2),
+			rsassa_pss_sign(DigestType, Message, SaltLen, RSAPrivateKey);
+		rsa_pkcs1_padding ->
+			rsassa_pkcs1_sign(DigestType, Message, RSAPrivateKey);
+		_ ->
+			erlang:error(notsup)
+	end,
+	case Res of
+		{ok, Signature} ->
+			Signature;
+		{error, Reason} ->
+			erlang:error(Reason)
+	end;
+sign(Message, DigestType, PrivateKey, Options) ->
+	erlang:error(badarg, [Message, DigestType, PrivateKey, Options]).
+
+verify(Message, DigestType, Signature, RSAPublicKey=#'RSAPublicKey'{}, Options)
+		when is_list(Options) ->
+	case proplists:get_value(rsa_padding, Options) of
+		rsa_pkcs1_pss_padding ->
+			SaltLen = proplists:get_value(rsa_pss_saltlen, Options, -2),
+			rsassa_pss_verify(DigestType, Message, Signature, SaltLen, RSAPublicKey);
+		rsa_pkcs1_padding ->
+			rsassa_pkcs1_verify(DigestType, Message, Signature, RSAPublicKey);
+		_ ->
+			erlang:error(notsup)
+	end;
+verify(Message, DigestType, Signature, PublicKey, Options) ->
+	erlang:error(badarg, [Message, DigestType, Signature, PublicKey, Options]).
 
 %%====================================================================
 %% API functions
@@ -139,6 +227,116 @@ eme_oaep_encode(Hash, DM, Label, Seed, K)
 	HashFun = resolve_hash(Hash),
 	eme_oaep_encode(HashFun, DM, Label, Seed, K).
 
+%% See [https://tools.ietf.org/html/rfc3447#section-7.2.2]
+-spec eme_pkcs1_decode(EM, K) -> M | error
+	when
+		EM     :: binary(),
+		K      :: integer(),
+		M      :: binary().
+eme_pkcs1_decode(<< 16#00, 16#02, Rest/binary >>, K)
+		when is_integer(K) ->
+	case binary:split(Rest, << 16#00 >>) of
+		[PS, M] when byte_size(PS) >= 8 ->
+			M;
+		_ ->
+			error
+	end;
+eme_pkcs1_decode(EM, K)
+		when is_binary(EM)
+		andalso is_integer(K) ->
+	error.
+
+%% See [https://tools.ietf.org/html/rfc3447#section-7.2.1]
+-spec eme_pkcs1_encode(DM, K) -> {ok, EM} | {error, Reason}
+	when
+		DM     :: binary(),
+		K      :: integer(),
+		EM     :: binary(),
+		Reason :: term().
+eme_pkcs1_encode(DM, K)
+		when is_binary(DM)
+		andalso is_integer(K) ->
+	MLen = byte_size(DM),
+	PSLen = K - MLen - 3,
+	PS = <<
+		<< (case C of
+			0 ->
+				<< (crypto:rand_uniform(1, 256)) >>;
+			_ ->
+				<< C >>
+		end)/binary >> || << C >> <= crypto:rand_bytes(PSLen)
+	>>,
+	EM = << 16#00, 16#02, PS/binary, 16#00, DM/binary >>,
+	{ok, EM}.
+
+%% See [https://tools.ietf.org/html/rfc3447#section-9.2]
+-spec emsa_pkcs1_encode(Hash, Algorithm, Message, EMBits) -> {ok, EM} | {error, Reason}
+	when
+		Hash      :: rsa_hash_fun(),
+		Algorithm :: md5 | sha | sha1 | sha256 | sha384 | sha512 | binary(),
+		Message   :: binary(),
+		EMBits    :: integer(),
+		EM        :: binary(),
+		Reason    :: term().
+emsa_pkcs1_encode(Hash, Algorithm, Message, EMBits)
+		when is_function(Hash, 1)
+		andalso is_binary(Algorithm)
+		andalso is_binary(Message)
+		andalso is_integer(EMBits) ->
+	H = Hash(Message),
+	T = << Algorithm/binary, H/binary >>,
+	TLen = byte_size(T),
+	EMLen = ceiling(EMBits / 8),
+	case EMLen < (TLen + 11) of
+		false ->
+			PSLen = EMLen - TLen - 3,
+			PS = binary:copy(<< 16#FF >>, PSLen),
+			EM = << 16#00, 16#01, PS/binary, 16#00, T/binary >>,
+			{ok, EM};
+		true ->
+			{error, modulus_too_short}
+	end;
+emsa_pkcs1_encode(Hash, md5, Message, EMBits) ->
+	Algorithm = <<
+		16#30, 16#20, 16#30, 16#0c, 16#06, 16#08, 16#2a, 16#86,
+		16#48, 16#86, 16#f7, 16#0d, 16#02, 16#05, 16#05, 16#00,
+		16#04
+	>>,
+	emsa_pkcs1_encode(Hash, Algorithm, Message, EMBits);
+emsa_pkcs1_encode(Hash, sha, Message, EMBits) ->
+	emsa_pkcs1_encode(Hash, sha1, Message, EMBits);
+emsa_pkcs1_encode(Hash, sha1, Message, EMBits) ->
+	Algorithm = <<
+		16#30, 16#21, 16#30, 16#09, 16#06, 16#05, 16#2b, 16#0e,
+		16#03, 16#02, 16#1a, 16#05, 16#00, 16#04, 16#14
+	>>,
+	emsa_pkcs1_encode(Hash, Algorithm, Message, EMBits);
+emsa_pkcs1_encode(Hash, sha256, Message, EMBits) ->
+	Algorithm = <<
+		16#30, 16#31, 16#30, 16#0d, 16#06, 16#09, 16#60, 16#86,
+		16#48, 16#01, 16#65, 16#03, 16#04, 16#02, 16#01, 16#05,
+		16#00, 16#04, 16#20
+	>>,
+	emsa_pkcs1_encode(Hash, Algorithm, Message, EMBits);
+emsa_pkcs1_encode(Hash, sha384, Message, EMBits) ->
+	Algorithm = <<
+		16#30, 16#41, 16#30, 16#0d, 16#06, 16#09, 16#60, 16#86,
+		16#48, 16#01, 16#65, 16#03, 16#04, 16#02, 16#02, 16#05,
+		16#00, 16#04, 16#30
+	>>,
+	emsa_pkcs1_encode(Hash, Algorithm, Message, EMBits);
+emsa_pkcs1_encode(Hash, sha512, Message, EMBits) ->
+	Algorithm = <<
+		16#30, 16#51, 16#30, 16#0d, 16#06, 16#09, 16#60, 16#86,
+		16#48, 16#01, 16#65, 16#03, 16#04, 16#02, 16#03, 16#05,
+		16#00, 16#04, 16#40
+	>>,
+	emsa_pkcs1_encode(Hash, Algorithm, Message, EMBits);
+emsa_pkcs1_encode(Hash, Algorithm, Message, EMBits)
+		when is_atom(Hash) ->
+	HashFun = resolve_hash(Hash),
+	emsa_pkcs1_encode(HashFun, Algorithm, Message, EMBits).
+
 %% See [https://tools.ietf.org/html/rfc3447#section-9.1.1]
 -spec emsa_pss_encode(Hash, Message, EMBits) -> {ok, EM} | {error, Reason}
 	when
@@ -151,8 +349,7 @@ emsa_pss_encode(Hash, Message, EMBits)
 		when is_function(Hash, 1)
 		andalso is_binary(Message)
 		andalso is_integer(EMBits) ->
-	SaltLen = byte_size(Hash(<<>>)),
-	emsa_pss_encode(Hash, Message, SaltLen, EMBits);
+	emsa_pss_encode(Hash, Message, -2, EMBits);
 emsa_pss_encode(Hash, Message, EMBits)
 		when is_tuple(Hash)
 		orelse is_atom(Hash) ->
@@ -196,6 +393,23 @@ emsa_pss_encode(Hash, Message, Salt, EMBits)
 		true ->
 			{error, encoding_error}
 	end;
+emsa_pss_encode(Hash, Message, -2, EMBits)
+		when is_function(Hash, 1)
+		andalso is_integer(EMBits) ->
+	HashLen = byte_size(Hash(<<>>)),
+	EMLen = ceiling(EMBits / 8),
+	SaltLen = EMLen - HashLen - 2,
+	case SaltLen < 0 of
+		false ->
+			emsa_pss_encode(Hash, Message, SaltLen, EMBits);
+		true ->
+			{error, encoding_error}
+	end;
+emsa_pss_encode(Hash, Message, -1, EMBits)
+		when is_function(Hash, 1) ->
+	HashLen = byte_size(Hash(<<>>)),
+	SaltLen = HashLen,
+	emsa_pss_encode(Hash, Message, SaltLen, EMBits);
 emsa_pss_encode(Hash, Message, SaltLen, EMBits)
 		when is_integer(SaltLen)
 		andalso SaltLen >= 0 ->
@@ -219,8 +433,7 @@ emsa_pss_verify(Hash, Message, EM, EMBits)
 		andalso is_binary(Message)
 		andalso is_binary(EM)
 		andalso is_integer(EMBits) ->
-	SaltLen = byte_size(Hash(<<>>)),
-	emsa_pss_verify(Hash, Message, EM, SaltLen, EMBits);
+	emsa_pss_verify(Hash, Message, EM, -2, EMBits);
 emsa_pss_verify(Hash, Message, EM, EMBits)
 		when is_tuple(Hash)
 		orelse is_atom(Hash) ->
@@ -235,7 +448,12 @@ emsa_pss_verify(Hash, Message, EM, EMBits)
 		EM      :: binary(),
 		SaltLen :: integer(),
 		EMBits  :: integer().
-emsa_pss_verify(Hash, Message, EM, SaltLen, EMBits) ->
+emsa_pss_verify(Hash, Message, EM, SaltLen, EMBits)
+		when is_function(Hash, 1)
+		andalso is_binary(Message)
+		andalso is_integer(SaltLen)
+		andalso SaltLen >= 0
+		andalso is_integer(EMBits) ->
 	MHash = Hash(Message),
 	HashLen = byte_size(MHash),
 	EMLen = ceiling(EMBits / 8),
@@ -266,7 +484,24 @@ emsa_pss_verify(Hash, Message, EM, SaltLen, EMBits) ->
 			end;
 		_BadEMLen ->
 			false
-	end.
+	end;
+emsa_pss_verify(Hash, Message, EM, -2, EMBits)
+		when is_function(Hash, 1)
+		andalso is_integer(EMBits) ->
+	HashLen = byte_size(Hash(<<>>)),
+	EMLen = ceiling(EMBits / 8),
+	SaltLen = EMLen - HashLen - 2,
+	case SaltLen < 0 of
+		false ->
+			emsa_pss_verify(Hash, Message, EM, SaltLen, EMBits);
+		true ->
+			false
+	end;
+emsa_pss_verify(Hash, Message, EM, -1, EMBits)
+		when is_function(Hash, 1) ->
+	HashLen = byte_size(Hash(<<>>)),
+	SaltLen = HashLen,
+	emsa_pss_verify(Hash, Message, EM, SaltLen, EMBits).
 
 %% See [https://tools.ietf.org/html/rfc3447#appendix-B.2]
 -spec mgf1(Hash, Seed, MaskLen) -> {ok, binary()} | {error, mask_too_long}
@@ -409,6 +644,127 @@ rsaes_oaep_encrypt(Hash, PlainText, Label, Seed, RSAPublicKey)
 		orelse is_atom(Hash) ->
 	HashFun = resolve_hash(Hash),
 	rsaes_oaep_encrypt(HashFun, PlainText, Label, Seed, RSAPublicKey).
+
+%% See [https://tools.ietf.org/html/rfc3447#section-7.2.2]
+-spec rsaes_pkcs1_decrypt(CipherText, RSAPrivateKey) -> PlainText
+	when
+		CipherText    :: binary(),
+		RSAPrivateKey :: rsa_private_key(),
+		PlainText     :: binary().
+rsaes_pkcs1_decrypt(CipherText, RSAPrivateKey=#'RSAPrivateKey'{modulus=N})
+		when is_binary(CipherText) ->
+	K = int_to_byte_size(N),
+	case {byte_size(CipherText), K < 11} of
+		{K, false} ->
+			EM = pad_to_key_size(K, dp(CipherText, RSAPrivateKey)),
+			eme_pkcs1_decode(EM, K);
+		_BadSize ->
+			{error, {badsize, _BadSize}}
+	end.
+
+%% See [https://tools.ietf.org/html/rfc3447#section-7.2.1]
+-spec rsaes_pkcs1_encrypt(PlainText, RSAPublicKey) -> CipherText
+	when
+		PlainText    :: binary(),
+		RSAPublicKey :: rsa_public_key(),
+		CipherText   :: binary().
+rsaes_pkcs1_encrypt(PlainText, RSAPublicKey=#'RSAPublicKey'{modulus=N})
+		when is_binary(PlainText) ->
+	MLen = byte_size(PlainText),
+	K = int_to_byte_size(N),
+	case MLen > (K - 11) of
+		false ->
+			case eme_pkcs1_encode(PlainText, K) of
+				{ok, EM} ->
+					C = pad_to_key_size(K, ep(EM, RSAPublicKey)),
+					{ok, C};
+				EncodingError ->
+					EncodingError
+			end;
+		true ->
+			{error, message_too_long}
+	end.
+
+%% See [https://tools.ietf.org/html/rfc3447#section-8.1.1]
+-spec rsassa_pkcs1_sign(Hash, Message, RSAPrivateKey) -> {ok, Signature} | {error, Reason}
+	when
+		Hash          :: rsa_hash_fun(),
+		Message       :: binary(),
+		RSAPrivateKey :: rsa_private_key(),
+		Signature     :: binary(),
+		Reason        :: term().
+rsassa_pkcs1_sign(Hash, Message, RSAPrivateKey)
+		when is_atom(Hash) ->
+	rsassa_pkcs1_sign(Hash, Hash, Message, RSAPrivateKey).
+
+%% See [https://tools.ietf.org/html/rfc3447#section-8.1.1]
+-spec rsassa_pkcs1_sign(Hash, Algorithm, Message, RSAPrivateKey) -> {ok, Signature} | {error, Reason}
+	when
+		Hash          :: rsa_hash_fun(),
+		Algorithm     :: md5 | sha | sha1 | sha256 | sha384 | sha512 | binary(),
+		Message       :: binary(),
+		RSAPrivateKey :: rsa_private_key(),
+		Signature     :: binary(),
+		Reason        :: term().
+rsassa_pkcs1_sign(Hash, Algorithm, Message, RSAPrivateKey=#'RSAPrivateKey'{modulus=Modulus})
+		when is_function(Hash, 1)
+		andalso (is_atom(Algorithm) orelse is_binary(Algorithm))
+		andalso is_binary(Message) ->
+	ModBits = int_to_bit_size(Modulus),
+	case emsa_pkcs1_encode(Hash, Algorithm, Message, ModBits - 1) of
+		{ok, EM} ->
+			ModBytes = int_to_byte_size(Modulus),
+			S = pad_to_key_size(ModBytes, dp(EM, RSAPrivateKey)),
+			{ok, S};
+		EncodingError ->
+			EncodingError
+	end;
+rsassa_pkcs1_sign(Hash, Algorithm, Message, RSAPrivateKey=#'RSAPrivateKey'{})
+		when is_atom(Hash) ->
+	HashFun = resolve_hash(Hash),
+	rsassa_pkcs1_sign(HashFun, Algorithm, Message, RSAPrivateKey).
+
+%% See [https://tools.ietf.org/html/rfc3447#section-8.2.2]
+-spec rsassa_pkcs1_verify(Hash, Message, Signature, RSAPublicKey) -> boolean()
+	when
+		Hash         :: rsa_hash_fun(),
+		Message      :: binary(),
+		Signature    :: binary(),
+		RSAPublicKey :: rsa_public_key().
+rsassa_pkcs1_verify(Hash, Message, Signature, RSAPublicKey)
+		when is_atom(Hash) ->
+	rsassa_pkcs1_verify(Hash, Hash, Message, Signature, RSAPublicKey).
+
+%% See [https://tools.ietf.org/html/rfc3447#section-8.2.2]
+-spec rsassa_pkcs1_verify(Hash, Algorithm, Message, Signature, RSAPublicKey) -> boolean()
+	when
+		Hash         :: rsa_hash_fun(),
+		Algorithm    :: md5 | sha | sha1 | sha256 | sha384 | sha512 | binary(),
+		Message      :: binary(),
+		Signature    :: binary(),
+		RSAPublicKey :: rsa_public_key().
+rsassa_pkcs1_verify(Hash, Algorithm, Message, Signature, RSAPublicKey=#'RSAPublicKey'{modulus=Modulus})
+		when is_function(Hash, 1)
+		andalso is_binary(Message)
+		andalso is_binary(Signature) ->
+	ModBytes = int_to_byte_size(Modulus),
+	case byte_size(Signature) =:= ModBytes of
+		true ->
+			ModBits = int_to_bit_size(Modulus),
+			EM = pad_to_key_size(ceiling((ModBits - 1) / 8), ep(Signature, RSAPublicKey)),
+			case emsa_pkcs1_encode(Hash, Algorithm, Message, ModBits - 1) of
+				{ok, EMPrime} ->
+					jose_jwa:constant_time_compare(EM, EMPrime);
+				_ ->
+					false
+			end;
+		false ->
+			false
+	end;
+rsassa_pkcs1_verify(Hash, Algorithm, Message, Signature, RSAPublicKey=#'RSAPublicKey'{})
+		when is_atom(Hash) ->
+	HashFun = resolve_hash(Hash),
+	rsassa_pkcs1_verify(HashFun, Algorithm, Message, Signature, RSAPublicKey).
 
 %% See [https://tools.ietf.org/html/rfc3447#section-8.1.1]
 -spec rsassa_pss_sign(Hash, Message, RSAPrivateKey) -> {ok, Signature} | {error, Reason}

@@ -59,10 +59,10 @@ to_map(?RS512, F) ->
 %%====================================================================
 
 sign(#jose_jwk{kty={KTYModule, KTY}}, Message, #jose_jws_alg_rsa_pkcs1_v1_5{digest=DigestType}) ->
-	KTYModule:sign(Message, {rsa_pkcs1_v1_5, DigestType}, KTY).
+	KTYModule:sign(Message, {rsa_pkcs1_padding, DigestType}, KTY).
 
 verify(#jose_jwk{kty={KTYModule, KTY}}, Message, Signature, #jose_jws_alg_rsa_pkcs1_v1_5{digest=DigestType}) ->
-	KTYModule:verify(Message, {rsa_pkcs1_v1_5, DigestType}, Signature, KTY).
+	KTYModule:verify(Message, {rsa_pkcs1_padding, DigestType}, Signature, KTY).
 
 %%====================================================================
 %% API functions
