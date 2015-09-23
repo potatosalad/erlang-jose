@@ -3,7 +3,7 @@ defmodule JOSE.Mixfile do
 
   def project do
     [app: :jose,
-     version: "1.2.0",
+     version: "1.3.0",
      elixir: "~> 1.0",
      erlc_options: erlc_options,
      build_embedded: Mix.env == :prod,
@@ -30,7 +30,7 @@ defmodule JOSE.Mixfile do
      {:jiffy, github: "davisp/jiffy", only: [:dev, :test]},
      {:jsone, "~> 1.0", only: [:dev, :test]},
      {:jsx, "~> 2.0", only: [:dev, :test]},
-     {:poison, "~> 1.4", only: [:dev, :test]},
+     {:poison, "~> 1.5", only: [:dev, :test]},
      {:ex_doc, "~> 0.9", only: :docs},
      {:earmark, "~> 0.1", only: :docs}]
   end

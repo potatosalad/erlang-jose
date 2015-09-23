@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.3.0 (2015-09-22)
+
+* Enhancements
+  * `oct` key management (see `JOSE.JWK.from_oct/1,2`)
+  * Key generation functions for `EC`, `RSA`, and `oct` keys (see `JOSE.JWK.generate_key/1`)
+  * Add `JOSE.JWK.box_encrypt/2` which generates an ephemeral private key based on the given key curve.
+  * Add support for detecting OTP version 18 and up with optional_callbacks.
+  * Document key generation under `examples/KEY-GENERATION.md`
+  * jiffy and jsone JSON support
+  * Begin documenting the Elixir API (thanks to #8)
+  * Add support for `jose_jws:peek/1` and `jose_jwt:peek/1`
+  * Preparations for future upstream OTP crypto changes.
+    * Improved detection of AES CBC, ECB, and GCM support.
+    * Improved detection of RSAES-OAEP, RSAES-PKCS1-v1_5, RSASSA-PKCS1-v1_5, and RSASSA-PSS support.
+    * Implemented fallback RSAES-PKCS1-v1_5 and RSASSA-PKCS1-v1_5 algorithms.
+    * Improved selection of encryptor for oct keys.
+    * Improved algorithm support detection for jose_jwa.
+
+* Fixes
+  * Remove "sph" from jose_jws (removed from [JWS Unencoded Payload Option](https://tools.ietf.org/html/draft-ietf-jose-jws-signing-input-options-02)).
+
+* Tests
+  * Only run 1 in 10 for AES GCM and 1 in 5 for AES KW CAVP test vectors to speed up tests.
+  * Additional tests for RSAES-PKCS1-v1_5 and RSASSA-PKCS1-v1_5 algorithms.
+
 ## 1.2.0 (2015-08-14)
 
 * Enhancements

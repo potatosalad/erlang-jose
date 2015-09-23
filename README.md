@@ -11,7 +11,7 @@ Add `jose` to your project's dependencies in `mix.exs`
 ```elixir
 defp deps do
   [
-    {:jose, "~> 1.2"}
+    {:jose, "~> 1.3"}
   ]
 end
 ```
@@ -26,15 +26,15 @@ Add `jose` to your project's dependencies in your `Makefile` for [`erlang.mk`](h
 
 #### JSON Encoder/Decoder
 
-You will also need to specify either [jsx](https://github.com/talentdeficit/jsx) or [Poison](https://github.com/devinus/poison) as a dependency.
+You will also need to specify either [jiffy](https://github.com/davisp/jiffy), [jsone](https://github.com/sile/jsone), [jsx](https://github.com/talentdeficit/jsx), or [Poison](https://github.com/devinus/poison) as a dependency.
 
 For example, with Elixir and `mix.exs`
 
 ```elixir
 defp deps do
   [
-    {:jose, "~> 1.2"},
-    {:poison, "~> 1.4"}
+    {:jose, "~> 1.3"},
+    {:poison, "~> 1.5"}
   ]
 end
 ```
@@ -48,7 +48,7 @@ Or with Erlang and `rebar.config`
 ]}.
 ```
 
-`jose` will attempt to find a suitable JSON encoder/decoder and will default to Poison on Elixir and jsx on Erlang.  If both are present, it will default to Poison.
+`jose` will attempt to find a suitable JSON encoder/decoder and will default to Poison on Elixir and jiffy, jsone, or jsx on Erlang.  If more than one are present, it will default to Poison.
 
 You may also specify a different `json_module` as an application environment variable to `jose` or by using `jose:json_module/1` or `JOSE.json_module/1`.
 
