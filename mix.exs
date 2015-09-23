@@ -69,6 +69,6 @@ defmodule JOSE.Mixfile do
      ],
      licenses: ["Mozilla Public License Version 2.0"],
      links: %{"Github" => "https://github.com/potatosalad/erlang-jose",
-             "Docs" => "https://hexdocs.pm/erlang-jose"}]
+              "Docs" => "https://hexdocs.pm/jose"}]
   end
 end
