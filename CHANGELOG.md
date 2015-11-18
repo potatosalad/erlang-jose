@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.4.1 (2015-11-18)
+
+* Enhancements
+  * Added `JOSE.JWS.peek_signature/1` for inspecting the signature parts of a signed binary.
+  * `JOSE.JWS.compact/1` and `JOSE.JWS.expand/1` now work with signed lists.
+  * First pass at documenting all of the major `JOSE` modules. `JOSE.JWE` still needs more examples. Closes #7
+
+* Fixes
+  * Fix infinite loop on `JOSE.JWE.key_decrypt/3` when no `"enc"` has been specified.
+  * Fix various functions on `JOSE.JWE` that would fail due to `JOSE.JWE.from_record/1` on wrong terms.
+
 ## 1.4.0 (2015-11-17)
 
 * Enhancements

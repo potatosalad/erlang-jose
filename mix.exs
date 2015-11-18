@@ -3,7 +3,7 @@ defmodule JOSE.Mixfile do
 
   def project do
     [app: :jose,
-     version: "1.4.0",
+     version: "1.4.1",
      elixir: "~> 1.0",
      erlc_options: erlc_options,
      build_embedded: Mix.env == :prod,
@@ -13,7 +13,8 @@ defmodule JOSE.Mixfile do
      source_url: "https://github.com/potatosalad/erlang-jose",
      docs: fn ->
        {ref, 0} = System.cmd("git", ["rev-parse", "--verify", "--quiet", "HEAD"])
-       [source_ref: ref, main: "JOSE", extras: ["README.md", "CHANGELOG.md", "examples/KEY-GENERATION.md"]]
+       [source_ref: ref, main: "JOSE", extras: ["README.md", "CHANGELOG.md",
+        "examples/KEY-GENERATION.md", "ALGORITHMS.md"]]
      end,
      description: description,
      package: package]
@@ -55,7 +56,7 @@ defmodule JOSE.Mixfile do
   end
 
   defp package do
-    [contributors: ["Andrew Bennett"],
+    [maintainers: ["Andrew Bennett"],
      files: [
        "CHANGELOG*",
        "include",

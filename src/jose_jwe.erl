@@ -272,6 +272,8 @@ expand(Binary) when is_binary(Binary) ->
 
 key_decrypt(Key, EncryptedKey, #jose_jwe{alg={ALGModule, ALG}, enc={ENCModule, ENC}}) ->
 	ALGModule:key_decrypt(Key, {ENCModule, ENC, EncryptedKey}, ALG);
+key_decrypt(Key, EncryptedKey, JWE=#jose_jwe{}) ->
+	erlang:error({badarg, [Key, EncryptedKey, JWE]});
 key_decrypt(Key, EncryptedKey, Other) ->
 	key_decrypt(Key, EncryptedKey, from(Other)).
 

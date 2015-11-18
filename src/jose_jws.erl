@@ -39,6 +39,7 @@
 -export([peek/1]).
 -export([peek_payload/1]).
 -export([peek_protected/1]).
+-export([peek_signature/1]).
 -export([sign/3]).
 -export([sign/4]).
 -export([signing_input/2]).
@@ -135,32 +136,48 @@ to_map(Other) ->
 %%====================================================================
 
 compact({Modules, #{
-		<<"payload">> := Payload,
-		<<"protected">> := Protected,
-		<<"signature">> := Signature}}) ->
-	{Modules, <<
-		Protected/binary, $.,
-		Payload/binary, $.,
-		Signature/binary
-	>>};
+			<<"payload">> := Payload,
+			<<"signatures">> := Signatures }}) when is_list(Signatures) ->
+	{Modules, [do_compact(Map#{ <<"payload">> => Payload }) || Map <- Signatures]};
+compact({Modules, Map}) when is_map(Map) ->
+	{Modules, do_compact(Map)};
+compact({Modules, List}) when is_list(List) ->
+	{Modules, [do_compact(Map) || Map <- List]};
 compact(Map) when is_map(Map) ->
 	compact({#{}, Map});
+compact(List) when is_list(List) ->
+	compact({#{}, List});
 compact(BadArg) ->
 	erlang:error({badarg, [BadArg]}).
 
 expand({Modules, Binary}) when is_binary(Binary) ->
-	case binary:split(Binary, <<".">>, [global]) of
-		[Protected, Payload, Signature] ->
+	{Modules, do_expand(Binary)};
+expand({Modules, List}) when is_list(List) ->
+	Expanded = [do_expand(Binary) || Binary <- List],
+	Eligible = lists:foldl(fun
+		(_, false) ->
+			false;
+		(#{ <<"payload">> := Payload }, undefined) when is_binary(Payload) ->
+			Payload;
+		(#{ <<"payload">> := Payload }, Payload) when is_binary(Payload) ->
+			Payload;
+		(_, _) ->
+			false
+	end, undefined, Expanded),
+	case Eligible of
+		_ when Eligible =:= false orelse Eligible =:= undefined ->
+			{Modules, Expanded};
+		Payload ->
+			Signatures = [maps:remove(<<"payload">>, Map) || Map <- Expanded],
 			{Modules, #{
 				<<"payload">> => Payload,
-				<<"protected">> => Protected,
-				<<"signature">> => Signature
-			}};
-		_ ->
-			erlang:error({badarg, [{Modules, Binary}]})
+				<<"signatures">> => Signatures
+			}}
 	end;
 expand(Binary) when is_binary(Binary) ->
-	expand({#{}, Binary}).
+	expand({#{}, Binary});
+expand(List) when is_list(List) ->
+	expand({#{}, List}).
 
 peek(Signed) ->
 	peek_payload(Signed).
@@ -178,6 +195,13 @@ peek_protected(SignedBinary) when is_binary(SignedBinary) ->
 	peek_protected(expand(SignedBinary));
 peek_protected(#{ <<"protected">> := Protected }) ->
 	base64url:decode(Protected).
+
+peek_signature({_Modules, Signed}) when is_binary(Signed) or is_map(Signed) ->
+	peek_signature(Signed);
+peek_signature(SignedBinary) when is_binary(SignedBinary) ->
+	peek_signature(expand(SignedBinary));
+peek_signature(#{ <<"signature">> := Signature }) ->
+	base64url:decode(Signature).
 
 sign(Key, PlainText, JWS=#jose_jws{}) ->
 	sign(Key, PlainText, #{}, JWS);
@@ -303,6 +327,34 @@ verify_strict(Key, Allow, {Modules, #{
 %%%-------------------------------------------------------------------
 %%% Internal functions
 %%%-------------------------------------------------------------------
+
+%% @private
+do_compact(#{
+		<<"payload">> := Payload,
+		<<"protected">> := Protected,
+		<<"signature">> := Signature}) ->
+	<<
+		Protected/binary, $.,
+		Payload/binary, $.,
+		Signature/binary
+	>>;
+do_compact(BadArg) ->
+	erlang:error({badarg, [BadArg]}).
+
+%% @private
+do_expand(Binary) when is_binary(Binary) ->
+	case binary:split(Binary, <<".">>, [global]) of
+		[Protected, Payload, Signature] ->
+			#{
+				<<"payload">> => Payload,
+				<<"protected">> => Protected,
+				<<"signature">> => Signature
+			};
+		_ ->
+			erlang:error({badarg, [Binary]})
+	end;
+do_expand(BadArg) ->
+	erlang:error({badarg, [BadArg]}).
 
 %% @private
 record_to_map(JWS=#jose_jws{alg={Module, ALG}}, Modules, Fields0) ->

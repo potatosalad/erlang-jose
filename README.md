@@ -142,7 +142,7 @@ protected = JOSE.JWT.peek_protected(token)
 # {_, %{"alg" => "HS256", "typ" => "JWT"}}
 ```
 
-You may also enable the `"none"` algorithm as an application environment variable to `jose` or by using `jose:unsecured_signing/1` or `JOSE.unsecured_signing/1`.
+You may also enable the `"none"` algorithm as an application environment variable for `jose` or by using `jose:unsecured_signing/1` or `JOSE.unsecured_signing/1`.
 
 ```elixir
 # unsecured_signing defaults to false
