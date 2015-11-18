@@ -41,10 +41,20 @@ to_map(none, F) ->
 %%====================================================================
 
 sign(_Key, _Message, none) ->
-	<<>>.
+	case jose_jwa:unsecured_signing() of
+		true ->
+			<<>>;
+		_ ->
+			erlang:error(not_supported)
+	end.
 
 verify(_Key, _Message, <<>>, none) ->
-	true;
+	case jose_jwa:unsecured_signing() of
+		true ->
+			true;
+		_ ->
+			false
+	end;
 verify(_Key, _Message, _Signature, none) ->
 	false.
 

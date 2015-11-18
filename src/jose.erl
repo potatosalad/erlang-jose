@@ -11,10 +11,15 @@
 -module(jose).
 
 %% API
+-export([crypto_fallback/0]).
+-export([crypto_fallback/1]).
 -export([decode/1]).
 -export([encode/1]).
 -export([json_module/0]).
 -export([json_module/1]).
+-export([unsecured_signing/0]).
+-export([unsecured_signing/1]).
+%% Private API
 -export([start/0]).
 
 -define(TAB, jose_jwa).
@@ -31,6 +36,12 @@ end).
 %% API functions
 %%====================================================================
 
+crypto_fallback() ->
+	jose_jwa:crypto_fallback().
+
+crypto_fallback(Boolean) when is_boolean(Boolean) ->
+	jose_jwa:crypto_fallback(Boolean).
+
 decode(Binary) ->
 	JSONModule = json_module(),
 	JSONModule:decode(Binary).
@@ -44,6 +55,16 @@ json_module() ->
 
 json_module(JSONModule) when is_atom(JSONModule) ->
 	?MAYBE_START_JOSE(jose_server:json_module(JSONModule)).
+
+unsecured_signing() ->
+	jose_jwa:unsecured_signing().
+
+unsecured_signing(Boolean) when is_boolean(Boolean) ->
+	jose_jwa:unsecured_signing(Boolean).
+
+%%====================================================================
+%% Private API functions
+%%====================================================================
 
 start() ->
 	case application:ensure_all_started(?MODULE) of

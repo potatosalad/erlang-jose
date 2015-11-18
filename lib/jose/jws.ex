@@ -45,7 +45,9 @@ defmodule JOSE.JWS do
 
   def expand(signed), do: :jose_jws.expand(signed)
 
-  def peek(signed), do: :jose_jws.peek(signed)
+  defdelegate peek(signed), to: :jose_jws
+  defdelegate peek_payload(signed), to: :jose_jws
+  defdelegate peek_protected(signed), to: :jose_jws
 
   def sign(jwk=%JOSE.JWK{}, plain_text, jws), do: sign(JOSE.JWK.to_record(jwk), plain_text, jws)
   def sign(jwk, plain_text, jws=%JOSE.JWS{}), do: sign(jwk, plain_text, to_record(jws))
@@ -64,6 +66,16 @@ defmodule JOSE.JWS do
   def verify(jwk=%JOSE.JWK{}, signed), do: verify(JOSE.JWK.to_record(jwk), signed)
   def verify(key, signed) do
     case :jose_jws.verify(key, signed) do
+      {verified, payload, jws} when is_tuple(jws) ->
+        {verified, payload, from_record(jws)}
+      error ->
+        error
+    end
+  end
+
+  def verify_strict(jwk=%JOSE.JWK{}, allow, signed), do: verify_strict(JOSE.JWK.to_record(jwk), allow, signed)
+  def verify_strict(key, allow, signed) do
+    case :jose_jws.verify_strict(key, allow, signed) do
       {verified, payload, jws} when is_tuple(jws) ->
         {verified, payload, from_record(jws)}
       error ->

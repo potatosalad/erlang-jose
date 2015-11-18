@@ -5,7 +5,7 @@
 %%% @copyright 2014-2015, Andrew Bennett
 %%% @doc JSON Web Signature (JWS)
 %%% See RFC 7515: https://tools.ietf.org/html/rfc7515
-%%% See: https://tools.ietf.org/html/draft-ietf-jose-jws-signing-input-options-00
+%%% See: https://tools.ietf.org/html/draft-ietf-jose-jws-signing-input-options-04
 %%% @end
 %%% Created :  21 Jul 2015 by Andrew Bennett <andrew@pixid.com>
 %%%-------------------------------------------------------------------
@@ -37,11 +37,14 @@
 -export([compact/1]).
 -export([expand/1]).
 -export([peek/1]).
+-export([peek_payload/1]).
+-export([peek_protected/1]).
 -export([sign/3]).
 -export([sign/4]).
 -export([signing_input/2]).
 -export([signing_input/3]).
 -export([verify/2]).
+-export([verify_strict/3]).
 
 -define(ALG_ECDSA_MODULE,          jose_jws_alg_ecdsa).
 -define(ALG_HMAC_MODULE,           jose_jws_alg_hmac).
@@ -159,12 +162,22 @@ expand({Modules, Binary}) when is_binary(Binary) ->
 expand(Binary) when is_binary(Binary) ->
 	expand({#{}, Binary}).
 
-peek({_Modules, Signed}) when is_binary(Signed) or is_map(Signed) ->
-	peek(Signed);
-peek(SignedBinary) when is_binary(SignedBinary) ->
-	peek(expand(SignedBinary));
-peek(#{ <<"payload">> := Payload }) ->
+peek(Signed) ->
+	peek_payload(Signed).
+
+peek_payload({_Modules, Signed}) when is_binary(Signed) or is_map(Signed) ->
+	peek_payload(Signed);
+peek_payload(SignedBinary) when is_binary(SignedBinary) ->
+	peek_payload(expand(SignedBinary));
+peek_payload(#{ <<"payload">> := Payload }) ->
 	base64url:decode(Payload).
+
+peek_protected({_Modules, Signed}) when is_binary(Signed) or is_map(Signed) ->
+	peek_protected(Signed);
+peek_protected(SignedBinary) when is_binary(SignedBinary) ->
+	peek_protected(expand(SignedBinary));
+peek_protected(#{ <<"protected">> := Protected }) ->
+	base64url:decode(Protected).
 
 sign(Key, PlainText, JWS=#jose_jws{}) ->
 	sign(Key, PlainText, #{}, JWS);
@@ -200,7 +213,7 @@ sign(Key, PlainText, Header, JWS=#jose_jws{alg={ALGModule, ALG}})
 sign(Key, PlainText, Header, Other) ->
 	sign(Key, PlainText, Header, from(Other)).
 
-%% See https://tools.ietf.org/html/draft-ietf-jose-jws-signing-input-options-00
+%% See https://tools.ietf.org/html/draft-ietf-jose-jws-signing-input-options-04
 signing_input(Payload, JWS=#jose_jws{}) ->
 	{_, ProtectedBinary} = to_binary(JWS),
 	Protected = base64url:encode(ProtectedBinary),
@@ -244,6 +257,47 @@ verify(Key, {Modules, #{
 		when is_list(EncodedSignatures) ->
 	[begin
 		verify(Key, {Modules, maps:put(<<"payload">>, Payload, EncodedSignature)})
+	end || EncodedSignature <- EncodedSignatures].
+
+verify_strict(Key, Allow, SignedMap) when is_map(SignedMap) ->
+	verify_strict(Key, Allow, {#{}, SignedMap});
+verify_strict(Key, Allow, SignedBinary) when is_binary(SignedBinary) ->
+	verify_strict(Key, Allow, expand(SignedBinary));
+verify_strict(Key, Allow, {Modules, SignedBinary}) when is_binary(SignedBinary) ->
+	verify_strict(Key, Allow, expand({Modules, SignedBinary}));
+verify_strict(Key, Allow, {Modules, #{
+		<<"payload">> := Payload,
+		<<"protected">> := Protected,
+		<<"signature">> := EncodedSignature}}) ->
+	ProtectedMap = jose:decode(base64url:decode(Protected)),
+	Signature = base64url:decode(EncodedSignature),
+	PlainText = base64url:decode(Payload),
+	case ProtectedMap of
+		#{ <<"alg">> := Algorithm } ->
+			case lists:member(Algorithm, Allow) of
+				false ->
+					{false, PlainText, ProtectedMap};
+				true ->
+					JWS = #jose_jws{alg={ALGModule, ALG}} = from_map({Modules, ProtectedMap}),
+					SigningInput = signing_input(PlainText, Protected, JWS),
+					{ALGModule:verify(Key, SigningInput, Signature, ALG), PlainText, JWS}
+			end;
+		_ ->
+			{false, PlainText, ProtectedMap}
+	end;
+verify_strict(Keys = [_ | _], Allow, {Modules, Signed=#{
+		<<"payload">> := _Payload,
+		<<"signatures">> := EncodedSignatures}})
+		when is_list(EncodedSignatures) ->
+	[begin
+		{Key, verify_strict(Key, Allow, {Modules, Signed})}
+	end || Key <- Keys];
+verify_strict(Key, Allow, {Modules, #{
+		<<"payload">> := Payload,
+		<<"signatures">> := EncodedSignatures}})
+		when is_list(EncodedSignatures) ->
+	[begin
+		verify_strict(Key, Allow, {Modules, maps:put(<<"payload">>, Payload, EncodedSignature)})
 	end || EncodedSignature <- EncodedSignatures].
 
 %%%-------------------------------------------------------------------

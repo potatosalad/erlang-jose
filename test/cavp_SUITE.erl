@@ -87,6 +87,7 @@ groups() ->
 
 init_per_suite(Config) ->
 	application:set_env(jose, crypto_fallback, true),
+	application:set_env(jose, unsecured_signing, true),
 	_ = application:ensure_all_started(jose),
 	data_setup(Config).
 

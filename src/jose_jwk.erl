@@ -96,6 +96,7 @@
 -export([thumbprint/1]).
 -export([thumbprint/2]).
 -export([verify/2]).
+-export([verify_strict/3]).
 
 %% Types
 -type key() :: #jose_jwk{}.
@@ -527,7 +528,7 @@ sign(PlainText, JWS=#jose_jws{}, JWK=#jose_jwk{}) ->
 sign(PlainText, JWSOther, JWKOther) ->
 	sign(PlainText, jose_jws:from(JWSOther), from(JWKOther)).
 
-%% See https://tools.ietf.org/html/draft-ietf-jose-jwk-thumbprint
+%% See https://tools.ietf.org/html/rfc7638
 thumbprint(JWK=#jose_jwk{}) ->
 	thumbprint(sha256, JWK);
 thumbprint(Other) ->
@@ -544,6 +545,11 @@ verify(Signed, JWK=#jose_jwk{}) ->
 	jose_jws:verify(JWK, Signed);
 verify(Signed, Other) ->
 	verify(Signed, from(Other)).
+
+verify_strict(Signed, Allow, JWK=#jose_jwk{}) ->
+	jose_jws:verify_strict(JWK, Allow, Signed);
+verify_strict(Signed, Allow, Other) ->
+	verify_strict(Signed, Allow, from(Other)).
 
 %%%-------------------------------------------------------------------
 %%% Internal functions

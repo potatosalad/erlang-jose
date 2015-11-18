@@ -199,4 +199,14 @@ defmodule JOSE.JWK do
     end
   end
 
+  def verify_strict(signed, allow, jwk=%JOSE.JWK{}), do: verify_strict(signed, allow, to_record(jwk))
+  def verify_strict(signed, allow, jwk) do
+    case :jose_jwk.verify_strict(signed, allow, jwk) do
+      {verified, payload, jws} when is_tuple(jws) ->
+        {verified, payload, JOSE.JWS.from_record(jws)}
+      error ->
+        error
+    end
+  end
+
 end

@@ -2,7 +2,7 @@ defmodule JOSETest do
   use ExUnit.Case, async: false
 
   setup_all do
-    JOSE.JWA.crypto_fallback(true)
+    JOSE.crypto_fallback(true)
     :ok
   end
 
@@ -238,5 +238,35 @@ defmodule JOSETest do
     assert binary == :erlang.element(2, JOSE.JWT.to_binary(jwt))
     assert jwt == JOSE.JWT.from_binary(binary)
     assert jwt == JOSE.JWT.from(jwt)
+  end
+
+  test "unsecured signing/verifying" do
+    JOSE.unsecured_signing(true)
+    jwk = JOSE.JWK.generate_key(16)
+    jws = %{ "alg" => "HS256" }
+    jws_unsecure = %{ "alg" => "none" }
+    jwt = JOSE.JWT.from_map(%{ "test" => true })
+    {_, token} = JOSE.JWS.compact(JOSE.JWT.sign(jwk, jws, jwt))
+    {_, token_unsecure} = JOSE.JWS.compact(JOSE.JWT.sign(jwk, jws_unsecure, jwt))
+    assert :erlang.element(1, JOSE.JWT.verify(jwk, token)) == true
+    assert :erlang.element(1, JOSE.JWT.verify(jwk, token_unsecure)) == true
+    JOSE.unsecured_signing(false)
+    assert :erlang.element(1, JOSE.JWT.verify(jwk, token)) == true
+    assert :erlang.element(1, JOSE.JWT.verify(jwk, token_unsecure)) == false
+  end
+
+  test "verify strict" do
+    JOSE.unsecured_signing(true)
+    jwk = JOSE.JWK.generate_key(16)
+    jws = %{ "alg" => "HS256" }
+    jws_unsecure = %{ "alg" => "none" }
+    jwt = JOSE.JWT.from_map(%{ "test" => true })
+    {_, token} = JOSE.JWS.compact(JOSE.JWT.sign(jwk, jws, jwt))
+    {_, token_unsecure} = JOSE.JWS.compact(JOSE.JWT.sign(jwk, jws_unsecure, jwt))
+    assert :erlang.element(1, JOSE.JWT.verify_strict(jwk, ["HS256"], token)) == true
+    assert :erlang.element(1, JOSE.JWT.verify_strict(jwk, ["HS256"], token_unsecure)) == false
+    JOSE.unsecured_signing(false)
+    assert :erlang.element(1, JOSE.JWT.verify_strict(jwk, ["HS256"], token)) == true
+    assert :erlang.element(1, JOSE.JWT.verify_strict(jwk, ["HS256"], token_unsecure)) == false
   end
 end

@@ -60,6 +60,8 @@ defmodule JOSE.JWT do
   def encrypt(jwk, jwe, jwt), do: :jose_jwt.encrypt(jwk, jwe, jwt)
 
   def peek(signed), do: from_record(:jose_jwt.peek(signed))
+  def peek_payload(signed), do: from_record(:jose_jwt.peek_payload(signed))
+  def peek_protected(signed), do: JOSE.JWS.from_record(:jose_jwt.peek_protected(signed))
 
   def sign(jwk=%JOSE.JWK{}, jwt), do: sign(JOSE.JWK.to_record(jwk), jwt)
   def sign(jwk, jwt=%JOSE.JWT{}), do: sign(jwk, to_record(jwt))
@@ -73,6 +75,16 @@ defmodule JOSE.JWT do
   def verify(jwk=%JOSE.JWK{}, signed), do: verify(JOSE.JWK.to_record(jwk), signed)
   def verify(key, signed) do
     case :jose_jwt.verify(key, signed) do
+      {verified, jwt, jws} when is_tuple(jwt) and is_tuple(jws) ->
+        {verified, from_record(jwt), JOSE.JWS.from_record(jws)}
+      error ->
+        error
+    end
+  end
+
+  def verify_strict(jwk=%JOSE.JWK{}, allow, signed), do: verify_strict(JOSE.JWK.to_record(jwk), allow, signed)
+  def verify_strict(key, allow, signed) do
+    case :jose_jwt.verify_strict(key, allow, signed) do
       {verified, jwt, jws} when is_tuple(jwt) and is_tuple(jws) ->
         {verified, from_record(jwt), JOSE.JWS.from_record(jws)}
       error ->

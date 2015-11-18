@@ -1,26 +1,230 @@
 defmodule JOSE.JWA do
+  @moduledoc ~S"""
+  JWA stands for JSON Web Algorithms which is defined in [RFC 7518](https://tools.ietf.org/html/rfc7518).
 
-  # Crypto API
-  def block_decrypt(cipher, key, cipher_text), do: :jose_jwa.block_decrypt(cipher, key, cipher_text)
-  def block_decrypt(cipher, key, iv, cipher_text), do: :jose_jwa.block_decrypt(cipher, key, iv, cipher_text)
-  def block_encrypt(cipher, key, plain_text), do: :jose_jwa.block_encrypt(cipher, key, plain_text)
-  def block_encrypt(cipher, key, iv, plain_text), do: :jose_jwa.block_encrypt(cipher, key, iv, plain_text)
-  # Public Key API
-  def decrypt_private(cipher_text, private_key, options), do: :jose_jwa.decrypt_private(cipher_text, private_key, options)
-  def encrypt_public(plain_text, public_key, options), do: :jose_jwa.encrypt_public(plain_text, public_key, options)
-  def sign(message, digest_type, private_key, options), do: :jose_jwa.sign(message, digest_type, private_key, options)
-  def verify(message, digest_type, signature, public_key, options), do: :jose_jwa.verify(message, digest_type, signature, public_key, options)
-  # API
-  def block_cipher(cipher), do: :jose_jwa.block_cipher(cipher)
-  def crypto_ciphers(), do: :jose_jwa.crypto_ciphers()
-  def crypto_fallback(), do: :jose_jwa.crypto_fallback()
-  def crypto_fallback(boolean), do: :jose_jwa.crypto_fallback(boolean)
-  def crypto_supports(), do: :jose_jwa.crypto_supports()
-  def constant_time_compare(a, b), do: :jose_jwa.constant_time_compare(a, b)
-  def ec_key_mode(), do: :jose_jwa.ec_key_mode()
-  def is_block_cipher_supported(cipher), do: :jose_jwa.is_block_cipher_supported(cipher)
-  def is_rsa_crypt_supported(padding), do: :jose_jwa.is_rsa_crypt_supported(padding)
-  def is_rsa_sign_supported(padding), do: :jose_jwa.is_rsa_sign_supported(padding)
-  def supports(), do: :jose_jwa.supports()
+  ## Cryptographic Algorithm Fallback
+
+  Native implementations of all cryptographic and public key algorithms
+  required by the JWA specifications are not present in current versions
+  of Elixir and OTP.
+
+  JOSE will detect whether a specific algorithm is natively supported or not
+  and, by default, it will mark the algorithm as unsupported if a native
+  implementation is not found.
+
+  However, JOSE also has pure Erlang versions of many of the missing algorithms
+  which can be used as a fallback by calling `JOSE.crypto_fallback/1` and
+  passing `true`.
+  """
+
+  ## Crypto API
+
+  @doc """
+  Decrypts `cipher_text` according to `cipher` block cipher.
+
+  Currently supported block ciphers:
+
+    * `{:aes_ecb, 128}` - AES ECB with 128-bit `key` size
+    * `{:aes_ecb, 192}` - AES ECB with 192-bit `key` size
+    * `{:aes_ecb, 256}` - AES ECB with 256-bit `key` size
+  """
+  defdelegate block_decrypt(cipher, key, cipher_text), to: :jose_jwa
+
+  @doc """
+  Decrypts `cipher_text` according to `cipher` block cipher.
+
+  Currently supported block ciphers:
+
+    * `{:aes_cbc, 128}` - AES CBC with 128-bit `key` size and 128-bit `iv` size
+    * `{:aes_cbc, 192}` - AES CBC with 192-bit `key` size and 128-bit `iv` size
+    * `{:aes_cbc, 256}` - AES CBC with 256-bit `key` size and 128-bit `iv` size
+    * `{:aes_gcm, 128}` - AES GCM with 128-bit `key` size and variable `iv` size
+    * `{:aes_gcm, 192}` - AES GCM with 192-bit `key` size and variable `iv` size
+    * `{:aes_gcm, 256}` - AES GCM with 256-bit `key` size and variable `iv` size
+  """
+  defdelegate block_decrypt(cipher, key, iv, cipher_text), to: :jose_jwa
+
+  @doc """
+  Encrypts `plain_text` according to `cipher` block cipher.
+
+  Currently supported block ciphers:
+
+    * `{:aes_ecb, 128}` - AES ECB with 128-bit `key` size
+    * `{:aes_ecb, 192}` - AES ECB with 192-bit `key` size
+    * `{:aes_ecb, 256}` - AES ECB with 256-bit `key` size
+  """
+  defdelegate block_encrypt(cipher, key, plain_text), to: :jose_jwa
+
+  @doc """
+  Encrypts `plain_text` according to `cipher` block cipher.
+
+  Currently supported block ciphers:
+
+    * `{:aes_cbc, 128}` - AES CBC with 128-bit `key` size and 128-bit `iv` size
+    * `{:aes_cbc, 192}` - AES CBC with 192-bit `key` size and 128-bit `iv` size
+    * `{:aes_cbc, 256}` - AES CBC with 256-bit `key` size and 128-bit `iv` size
+    * `{:aes_gcm, 128}` - AES GCM with 128-bit `key` size and variable `iv` size
+    * `{:aes_gcm, 192}` - AES GCM with 192-bit `key` size and variable `iv` size
+    * `{:aes_gcm, 256}` - AES GCM with 256-bit `key` size and variable `iv` size
+  """
+  defdelegate block_encrypt(cipher, key, iv, plain_text), to: :jose_jwa
+
+  ## Public Key API
+
+  @doc """
+  Decrypts `cipher_text` using the `private_key`.
+
+  ## Options
+
+    * `:rsa_padding` - one of `:rsa_pkcs1_oaep_padding` or `:rsa_pkcs1_padding`
+    * `:rsa_oaep_md` - sets the hashing algorithm for `:rsa_pkcs1_oaep_padding`, defaults to `:sha`
+    * `:rsa_oaep_label` - sets the label for `:rsa_pkcs1_oaep_padding`, defaults to `<<>>`
+  """
+  defdelegate decrypt_private(cipher_text, private_key, options), to: :jose_jwa
+
+  @doc """
+  Encrypts `plain_text` using the `public_key`.
+
+  ## Options
+
+    * `:rsa_padding` - one of `:rsa_pkcs1_oaep_padding` or `:rsa_pkcs1_padding`
+    * `:rsa_oaep_md` - sets the hashing algorithm for `:rsa_pkcs1_oaep_padding`, defaults to `:sha`
+    * `:rsa_oaep_label` - sets the label for `:rsa_pkcs1_oaep_padding`, defaults to `<<>>`
+  """
+  defdelegate encrypt_public(plain_text, public_key, options), to: :jose_jwa
+
+  @doc """
+  Signs the digested `message` using the `digest_type` and `private_key`.
+
+  ## Options
+
+    * `:rsa_padding` - one of `:rsa_pkcs1_pss_padding` or `:rsa_pkcs1_padding`
+    * `:rsa_pss_saltlen` - sets the salt length for `:rsa_pkcs1_pss_padding`, defaults to `-2`
+      * `-2` - use maximum for salt length
+      * `-1` - use hash length for salt length
+      * any number higher than `-1` is used as the actual salt length
+  """
+  defdelegate sign(message, digest_type, private_key, options), to: :jose_jwa
+
+  @doc """
+  Verifies the `signature` with the digested `message` using the `digest_type` and `public_key`.
+
+  ## Options
+
+    * `:rsa_padding` - one of `:rsa_pkcs1_pss_padding` or `:rsa_pkcs1_padding`
+    * `:rsa_pss_saltlen` - sets the salt length for `:rsa_pkcs1_pss_padding`, defaults to `-2`
+      * `-2` - use maximum for salt length
+      * `-1` - use hash length for salt length
+      * any number higher than `-1` is used as the actual salt length
+  """
+  defdelegate verify(message, digest_type, signature, public_key, options), to: :jose_jwa
+
+  ## API
+
+  @doc """
+  Returns the current module and first argument for the specified `cipher`.
+
+      iex> JOSE.JWA.block_cipher({:aes_cbc, 128})
+      {:crypto, :aes_cbc128}
+      iex> JOSE.JWA.block_cipher({:aes_cbc, 192})
+      {:jose_jwa_unsupported, {:aes_cbc, 192}}
+      iex> JOSE.crypto_fallback(true)
+      :ok
+      iex> JOSE.JWA.block_cipher({:aes_cbc, 192})
+      {:jose_jwa_aes, {:aes_cbc, 192}}
+
+  """
+  defdelegate block_cipher(cipher), to: :jose_jwa
+
+  @doc """
+  Returns the current block ciphers and their associated modules.
+
+      iex> JOSE.JWA.crypto_ciphers()
+      [{{:aes_cbc, 128}, :crypto}, {{:aes_cbc, 192}, :jose_jwa_aes},
+       {{:aes_cbc, 256}, :crypto}, {{:aes_ecb, 128}, :crypto},
+       {{:aes_ecb, 192}, :jose_jwa_aes}, {{:aes_ecb, 256}, :crypto},
+       {{:aes_gcm, 128}, :crypto}, {{:aes_gcm, 192}, :crypto},
+       {{:aes_gcm, 256}, :crypto}]
+
+  """
+  defdelegate crypto_ciphers(), to: :jose_jwa
+
+  @doc """
+  See `JOSE.crypto_fallback/0`
+  """
+  defdelegate crypto_fallback(), to: :jose_jwa
+
+  @doc """
+  See `JOSE.crypto_fallback/1`
+  """
+  defdelegate crypto_fallback(boolean), to: :jose_jwa
+
+  @doc """
+  Returns the current listing of supported `:crypto` and `:public_key` algorithms.
+
+      iex> JOSE.JWA.crypto_supports()
+      [ciphers: [aes_cbc: 128, aes_cbc: 192, aes_cbc: 256, aes_ecb: 128, aes_ecb: 192,
+        aes_ecb: 256, aes_gcm: 128, aes_gcm: 192, aes_gcm: 256],
+       hashs: [:md5, :sha, :sha256, :sha384, :sha512],
+       public_keys: [:ec_gf2m, :ecdh, :ecdsa, :rsa],
+       rsa_crypt: [:rsa1_5, :rsa_oaep, :rsa_oaep_256],
+       rsa_sign: [:rsa_pkcs1_padding, :rsa_pkcs1_pss_padding]]
+
+  """
+  defdelegate crypto_supports(), to: :jose_jwa
+
+  @doc """
+  Performs a constant time comparison between two binaries to help avoid [timing attacks](https://en.wikipedia.org/wiki/Timing_attack).
+  """
+  defdelegate constant_time_compare(a, b), to: :jose_jwa
+
+  @doc """
+  Returns either `:binary` or `:list` depending on the detected runtime behavior for EC keys.
+  """
+  defdelegate ec_key_mode(), to: :jose_jwa
+
+  @doc """
+  Checks whether the `cipher` is natively supported by `:crypto` or not.
+  """
+  defdelegate is_block_cipher_supported(cipher), to: :jose_jwa
+
+  @doc """
+  Checks whether the `padding` is natively supported by `:public_key` or not.
+  """
+  defdelegate is_rsa_crypt_supported(padding), to: :jose_jwa
+
+  @doc """
+  Checks whether the `padding` is natively supported by `:public_key` or not.
+  """
+  defdelegate is_rsa_sign_supported(padding), to: :jose_jwa
+
+  @doc """
+  Returns the current listing of supported JOSE algorithms.
+
+      iex> JOSE.JWA.supports()
+      [{:jwe,
+        {:alg,
+         ["A128GCMKW", "A128KW", "A192GCMKW", "A256GCMKW", "A256KW", "ECDH-ES",
+          "ECDH-ES+A128KW", "ECDH-ES+A192KW", "ECDH-ES+A256KW", "PBES2-HS256+A128KW",
+          "PBES2-HS512+A256KW", "RSA-OAEP", "RSA1_5", "dir"]},
+        {:enc, ["A128CBC-HS256", "A128GCM", "A192GCM", "A256CBC-HS512", "A256GCM"]},
+        {:zip, ["DEF"]}}, {:jwk, {:kty, ["EC", "RSA", "oct"]}},
+       {:jws,
+        {:alg,
+         ["ES256", "ES384", "ES512", "HS256", "HS384", "HS512", "RS256", "RS384",
+          "RS512", "none"]}}]
+
+  """
+  defdelegate supports(), to: :jose_jwa
+
+  @doc """
+  See `JOSE.unsecured_signing/0`
+  """
+  defdelegate unsecured_signing(), to: :jose_jwa
+
+  @doc """
+  See `JOSE.unsecured_signing/1`
+  """
+  defdelegate unsecured_signing(boolean), to: :jose_jwa
 
 end

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.0 (2015-11-17)
+
+* Enhancements
+  * Added `JOSE.unsecured_signing/0` and `JOSE.unsecured_signing/1` for disabling the `"none"` algorithm due to the [unsecured signing vulnerability](https://auth0.com/blog/2015/03/31/critical-vulnerabilities-in-json-web-token-libraries/) and in relation to #10
+  * Added `JOSE.JWK.verify_strict/3`, `JOSE.JWS.verify_strict/3`, and `JOSE.JWT.verify_strict/3` for whitelisting which signing algorithms are allowed for verification.
+  * Added `JOSE.JWT.peek_payload/1` and `JOSE.JWT.peek_protected/1` for inspecting the payload and protected parts of a signature.
+
 ## 1.3.0 (2015-09-22)
 
 * Enhancements

@@ -29,9 +29,12 @@
 -export([encrypt/2]).
 -export([encrypt/3]).
 -export([peek/1]).
+-export([peek_payload/1]).
+-export([peek_protected/1]).
 -export([sign/2]).
 -export([sign/3]).
 -export([verify/2]).
+-export([verify_strict/3]).
 
 %%====================================================================
 %% Decode API functions
@@ -131,7 +134,13 @@ encrypt(JWKOther, JWEOther, JWTOther) ->
 	encrypt(jose_jwk:from(JWKOther), jose_jwe:from(JWEOther), from(JWTOther)).
 
 peek(Signed) ->
-	from(jose_jws:peek(Signed)).
+	peek_payload(Signed).
+
+peek_payload(Signed) ->
+	from(jose_jws:peek_payload(Signed)).
+
+peek_protected(Signed) ->
+	jose_jws:from(jose_jws:peek_protected(Signed)).
 
 sign(JWK=#jose_jwk{kty={Module, KTY}, fields=Fields}, JWT=#jose_jwt{}) ->
 	sign(JWK, Module:signer(KTY, Fields, JWT), JWT);
@@ -162,6 +171,16 @@ verify(Other, SignedMap) when is_map(SignedMap) ->
 	verify(Other, {#{}, SignedMap});
 verify(Other, Signed) ->
 	verify(jose_jwk:from(Other), Signed).
+
+verify_strict(JWK=#jose_jwk{}, Allow, {Modules, Signed}) ->
+	{Verified, JWTBinary, JWS} = jose_jwk:verify_strict({Modules, Signed}, Allow, JWK),
+	{Verified, from_binary({Modules, JWTBinary}), JWS};
+verify_strict(Other, Allow, SignedBinary) when is_binary(SignedBinary) ->
+	verify_strict(Other, Allow, {#{}, SignedBinary});
+verify_strict(Other, Allow, SignedMap) when is_map(SignedMap) ->
+	verify_strict(Other, Allow, {#{}, SignedMap});
+verify_strict(Other, Allow, Signed) ->
+	verify_strict(jose_jwk:from(Other), Allow, Signed).
 
 %%%-------------------------------------------------------------------
 %%% Internal functions

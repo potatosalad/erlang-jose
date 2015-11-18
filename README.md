@@ -11,7 +11,7 @@ Add `jose` to your project's dependencies in `mix.exs`
 ```elixir
 defp deps do
   [
-    {:jose, "~> 1.3"}
+    {:jose, "~> 1.4"}
   ]
 end
 ```
@@ -33,7 +33,7 @@ For example, with Elixir and `mix.exs`
 ```elixir
 defp deps do
   [
-    {:jose, "~> 1.3"},
+    {:jose, "~> 1.4"},
     {:poison, "~> 1.5"}
   ]
 end
@@ -60,7 +60,7 @@ However, not all of the required algorithms are supported natively by Erlang/Eli
 
 See [ALGORITHMS.md](https://github.com/potatosalad/erlang-jose/blob/master/ALGORITHMS.md) for more information about algorithm support for specific OTP versions.
 
-By default, the algorithm fallback is disabled, but can be enabled by setting the `crypto_fallback` application environment variable for `jose` to `true` or by calling `jose_jwa:crypto_fallback/1` or `JOSE.JWA.crypto_fallback/1` with `true`.
+By default, the algorithm fallback is disabled, but can be enabled by setting the `crypto_fallback` application environment variable for `jose` to `true` or by calling `jose:crypto_fallback/1` or `JOSE.crypto_fallback/1` with `true`.
 
 You may also review which algorithms are currently supported with the `jose_jwa:supports/0` or `JOSE.JWA.supports/0` functions.  For example, on Elixir 1.0.5 and OTP 18:
 
@@ -81,7 +81,7 @@ JOSE.JWA.supports
     "RS512"]}}]
 
 # setting crypto_fallback to true
-JOSE.JWA.crypto_fallback(true)
+JOSE.crypto_fallback(true)
 
 # additional algorithms are now available for use
 JOSE.JWA.supports
@@ -99,6 +99,68 @@ JOSE.JWA.supports
   {:alg,
    ["ES256", "ES384", "ES512", "HS256", "HS384", "HS512", "PS256", "PS384",
     "PS512", "RS256", "RS384", "RS512"]}}]
+```
+
+#### Unsecured Signing Vulnerability
+
+The [`"none"`](https://tools.ietf.org/html/rfc7515#appendix-A.5) signing algorithm is disabled by default to prevent accidental verification of empty signatures (read about the vulnerability [here](https://auth0.com/blog/2015/03/31/critical-vulnerabilities-in-json-web-token-libraries/)).
+
+If you want to further restrict the signature algorithms allowed for a token, use `JOSE.JWT.verify_strict/3`:
+
+```elixir
+# Signed Compact JSON Web Token (JWT) with HS256
+token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjEzMDA4MTkzODAsImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlLCJpc3MiOiJqb2UifQ.shLcxOl_HBBsOTvPnskfIlxHUibPN7Y9T4LhPB-iBwM"
+
+# JSON Web Key (JWK)
+jwk = %{
+  "kty" => "oct",
+  "k" => :base64url.encode("symmetric key")
+}
+
+{verified, _, _} = JOSE.JWT.verify_strict(jwk, ["HS256"], token)
+# {true, _, _}
+
+{verified, _, _} = JOSE.JWT.verify_strict(jwk, ["RS256"], token)
+# {false, _, _}
+```
+
+If you need to inspect the contents of a JSON Web token (JWT) prior to verifying it, use `JOSE.JWT.peek_payload/1` or `JOSE.JWT.peek_protected/1`:
+
+```elixir
+token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjEzMDA4MTkzODAsImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlLCJpc3MiOiJqb2UifQ.shLcxOl_HBBsOTvPnskfIlxHUibPN7Y9T4LhPB-iBwM"
+
+payload = JOSE.JWT.peek_payload(token)
+# %JOSE.JWT{fields: %{"exp" => 1300819380, "http://example.com/is_root" => true,
+#    "iss" => "joe"}}
+
+protected = JOSE.JWT.peek_protected(token)
+# %JOSE.JWS{alg: {:jose_jws_alg_hmac, {:jose_jws_alg_hmac, :sha256}},
+#  b64: :undefined, fields: %{"typ" => "JWT"}}
+
+# If you want to inspect the JSON, you can convert it back to a regular map:
+{_, protected_map} = JOSE.JWS.to_map(protected)
+# {_, %{"alg" => "HS256", "typ" => "JWT"}}
+```
+
+You may also enable the `"none"` algorithm as an application environment variable to `jose` or by using `jose:unsecured_signing/1` or `JOSE.unsecured_signing/1`.
+
+```elixir
+# unsecured_signing defaults to false
+JOSE.JWA.supports[:jws]
+
+{:alg,
+ ["ES256", "ES384", "ES512", "HS256", "HS384", "HS512", "RS256", "RS384",
+  "RS512"]}
+
+# setting unsecured_signing to true
+JOSE.unsecured_signing(true)
+
+# the "none" algorithm is now available for use
+JOSE.JWA.supports
+
+{:alg,
+ ["ES256", "ES384", "ES512", "HS256", "HS384", "HS512", "RS256", "RS384",
+  "RS512", "none"]}
 ```
 
 ## Usage
@@ -358,8 +420,15 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 - [X] `PS256` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18)</sup>
 - [X] `PS384` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18)</sup>
 - [X] `PS512` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18)</sup>
-- [X] `none`
+- [X] `none` <sup>[unsecured](#footnote-unsecured)</sup>
+
+### Additional Specifications
+
+- [X] JSON Web Key (JWK) Thumbprint [RFC 7638](https://tools.ietf.org/html/rfc7638)
+- [X] JWS Unencoded Payload Option [draft-ietf-jose-jws-signing-input-options-04](https://tools.ietf.org/html/draft-ietf-jose-jws-signing-input-options-04)
 
 <sup><a name="footnote-otp-17">OTP-17</a></sup> Native algorithm not supported by OTP-17.  Use the [`crypto_fallback`](#cryptographic-algorithm-fallback) setting to enable the non-native implementation.  See [ALGORITHMS.md](https://github.com/potatosalad/erlang-jose/blob/master/ALGORITHMS.md) for more information about algorithm support for specific OTP versions.
 
 <sup><a name="footnote-otp-18">OTP-18</a></sup> Native algorithm not supported by OTP-18.  Use the [`crypto_fallback`](#cryptographic-algorithm-fallback) setting to enable the non-native implementation.  See [ALGORITHMS.md](https://github.com/potatosalad/erlang-jose/blob/master/ALGORITHMS.md) for more information about algorithm support for specific OTP versions.
+
+<sup><a name="footnote-unsecured">unsecured</a></sup> This algorithm is disabled by default due to the unsecured signing vulnerability.  Use the [`unsecured_signing`](#unsecured-signing-vulnerability) setting to enable this algorithm.

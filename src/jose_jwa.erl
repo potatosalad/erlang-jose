@@ -34,6 +34,8 @@
 -export([is_rsa_crypt_supported/1]).
 -export([is_rsa_sign_supported/1]).
 -export([supports/0]).
+-export([unsecured_signing/0]).
+-export([unsecured_signing/1]).
 
 -define(TAB, ?MODULE).
 
@@ -218,12 +220,6 @@ is_rsa_sign_supported(Padding) ->
 			false
 	end.
 
-rsa_crypt(Algorithm) ->
-	?MAYBE_START_JOSE(ets:lookup_element(?TAB, {rsa_crypt, Algorithm}, 2)).
-
-rsa_sign(Padding) ->
-	?MAYBE_START_JOSE(ets:lookup_element(?TAB, {rsa_sign, Padding}, 2)).
-
 supports() ->
 	Supports = crypto_supports(),
 	JWEALG = support_check([
@@ -273,7 +269,8 @@ supports() ->
 		{<<"PS512">>, rsa_sign, rsa_pkcs1_pss_padding},
 		{<<"RS256">>, rsa_sign, rsa_pkcs1_padding},
 		{<<"RS384">>, rsa_sign, rsa_pkcs1_padding},
-		{<<"RS512">>, rsa_sign, rsa_pkcs1_padding}
+		{<<"RS512">>, rsa_sign, rsa_pkcs1_padding},
+		{<<"none">>, fun unsecured_signing/0}
 	], Supports, []),
 	[
 		{jwe,
@@ -286,6 +283,13 @@ supports() ->
 			{alg, JWSALG}}
 	].
 
+unsecured_signing() ->
+	application:get_env(jose, unsecured_signing, false).
+
+unsecured_signing(Boolean) when is_boolean(Boolean) ->
+	application:set_env(jose, unsecured_signing, Boolean),
+	?MAYBE_START_JOSE(jose_server:config_change()).
+
 %%%-------------------------------------------------------------------
 %%% Internal functions
 %%%-------------------------------------------------------------------
@@ -297,10 +301,25 @@ constant_time_compare(<<>>, <<>>, R) ->
 	R =:= 0.
 
 %% @private
+rsa_crypt(Algorithm) ->
+	?MAYBE_START_JOSE(ets:lookup_element(?TAB, {rsa_crypt, Algorithm}, 2)).
+
+%% @private
+rsa_sign(Padding) ->
+	?MAYBE_START_JOSE(ets:lookup_element(?TAB, {rsa_sign, Padding}, 2)).
+
+%% @private
 support_check([], _Supports, Acc) ->
 	lists:usort(Acc);
 support_check([{ALG, Key, Val} | Rest], Supports, Acc) ->
 	case lists:member(Val, proplists:get_value(Key, Supports)) of
+		false ->
+			support_check(Rest, Supports, Acc);
+		true ->
+			support_check(Rest, Supports, [ALG | Acc])
+	end;
+support_check([{ALG, Check} | Rest], Supports, Acc) when is_function(Check, 0) ->
+	case Check() of
 		false ->
 			support_check(Rest, Supports, Acc);
 		true ->
