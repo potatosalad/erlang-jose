@@ -234,7 +234,9 @@ sign(Key, PlainText, Header, JWS=#jose_jws{alg={ALGModule, ALG}})
 	Signature = base64url:encode(ALGModule:sign(Key, SigningInput, ALG)),
 	{Modules, maps:put(<<"payload">>, Payload,
 		signature_to_map(Protected, Header, Key, Signature))};
-sign(Key, PlainText, Header, Other) ->
+sign(Key, PlainText, Header, Other)
+		when is_binary(PlainText)
+		andalso is_map(Header) ->
 	sign(Key, PlainText, Header, from(Other)).
 
 %% See https://tools.ietf.org/html/draft-ietf-jose-jws-signing-input-options-04
