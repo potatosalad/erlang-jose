@@ -116,6 +116,10 @@ from_key(RSAPrivateKey=#'RSAPrivateKey'{}) ->
 	{?KTY_RSA_MODULE, ?KTY_RSA_MODULE:from_key(RSAPrivateKey)};
 from_key(RSAPublicKey=#'RSAPublicKey'{}) ->
 	{?KTY_RSA_MODULE, ?KTY_RSA_MODULE:from_key(RSAPublicKey)};
+from_key(#'PrivateKeyInfo'{privateKeyAlgorithm=#'PrivateKeyInfo_privateKeyAlgorithm'{algorithm=?rsaEncryption}, privateKey=PrivateKey}) ->
+	from_key(public_key:der_decode('RSAPrivateKey', PrivateKey));
+from_key(#'PrivateKeyInfo'{privateKeyAlgorithm=#'PrivateKeyInfo_privateKeyAlgorithm'{algorithm=?'id-ecPublicKey'}, privateKey=PrivateKey}) ->
+	from_key(public_key:der_decode('ECPrivateKey', PrivateKey));
 from_key(UnknownKey) ->
 	{error, {unknown_key, UnknownKey}}.
 
