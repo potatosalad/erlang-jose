@@ -223,7 +223,9 @@ block_encrypt(Key, {AAD0, PlainText}, CEK, IV, JWE0=#jose_jwe{enc={ENCModule, EN
 		<<"tag">> => base64url:encode(CipherTag),
 		<<"aad">> => AAD1
 	}};
-block_encrypt(Key, Block, CEK, IV, Other) ->
+block_encrypt(Key, Block, CEK, IV, Other)
+		when is_binary(Block)
+		orelse (is_tuple(Block) andalso tuple_size(Block) =:= 2) ->
 	block_encrypt(Key, Block, CEK, IV, from(Other)).
 
 compact({Modules, EncryptedMap=#{
