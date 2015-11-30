@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.4.2 (2015-11-30)
+
+* Enhancements
+  * Support [PKCS#8](https://www.openssl.org/docs/manmaster/apps/pkcs8.html) formatted private key PEM files. See #13
+
+* Fixes
+  * Add missing guards in `jose_jws:sign/4` #11
+  * Add missing guards in `jose_jwe:block_encrypt/5`
+
 ## 1.4.1 (2015-11-18)
 
 * Enhancements
