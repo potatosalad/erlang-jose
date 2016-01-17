@@ -167,11 +167,22 @@ crypto_supports() ->
 		[{'=/=', '$2', 'jose_jwa_unsupported'}],
 		['$1']
 	}])),
+	ExternalHashs = external_checks([
+		{shake256, fun() -> jose_sha3:shake256(<<>>, 0) end}
+	]),
+	ExternalPublicKeys = external_checks([
+		{ed25519, fun jose_curve25519:ed25519_keypair/0},
+		{ed25519ph, fun jose_curve25519:ed25519ph_keypair/0},
+		{ed448, fun jose_curve448:ed448_keypair/0},
+		{ed448ph, fun jose_curve448:ed448ph_keypair/0},
+		{x25519, fun jose_curve25519:x25519_keypair/0},
+		{x448, fun jose_curve448:x448_keypair/0}
+	]),
 	Supports = crypto:supports(),
-	RecommendedHashs = [md5, sha, sha256, sha384, sha512],
-	Hashs = RecommendedHashs -- (RecommendedHashs -- proplists:get_value(hashs, Supports)),
-	RecommendedPublicKeys = [ec_gf2m, ecdh, ecdsa, rsa],
-	PublicKeys = RecommendedPublicKeys -- (RecommendedPublicKeys -- proplists:get_value(public_keys, Supports)),
+	RecommendedHashs = [md5, sha, sha256, sha384, sha512, shake256],
+	Hashs = RecommendedHashs -- ((RecommendedHashs -- proplists:get_value(hashs, Supports)) -- ExternalHashs),
+	RecommendedPublicKeys = [ec_gf2m, ecdh, ecdsa, ed25519, ed25519ph, ed448, ed448ph, rsa, x25519, x448],
+	PublicKeys = RecommendedPublicKeys -- ((RecommendedPublicKeys -- proplists:get_value(public_keys, Supports)) -- ExternalPublicKeys),
 	[
 		{ciphers, Ciphers},
 		{hashs, Hashs},
@@ -255,9 +266,22 @@ supports() ->
 	JWKKTY = support_check([
 		<<"EC">>,
 		<<"oct">>,
+		<<"OKP">>,
 		<<"RSA">>
 	], Supports, []),
+	JWKKTYOKPcrv = support_check([
+		{<<"Ed25519">>, public_keys, ed25519},
+		{<<"Ed25519ph">>, public_keys, ed25519ph},
+		{<<"Ed448">>, public_keys, ed448},
+		{<<"Ed448ph">>, public_keys, ed448ph},
+		{<<"X25519">>, public_keys, x25519},
+		{<<"X448">>, public_keys, x448}
+	], Supports, []),
 	JWSALG = support_check([
+		{<<"Ed25519">>, public_keys, ed25519},
+		{<<"Ed25519ph">>, public_keys, ed25519ph},
+		{<<"Ed448">>, public_keys, ed448},
+		{<<"Ed448ph">>, public_keys, ed448ph},
 		{<<"ES256">>, public_keys, ecdsa},
 		{<<"ES384">>, public_keys, ecdsa},
 		{<<"ES512">>, public_keys, ecdsa},
@@ -278,7 +302,8 @@ supports() ->
 			{enc, JWEENC},
 			{zip, JWEZIP}},
 		{jwk,
-			{kty, JWKKTY}},
+			{kty, JWKKTY},
+			{kty_OKP_crv, JWKKTYOKPcrv}},
 		{jws,
 			{alg, JWSALG}}
 	].
@@ -299,6 +324,22 @@ constant_time_compare(<< AH, AT/binary >>, << BH, BT/binary >>, R) ->
 	constant_time_compare(AT, BT, R bor (BH bxor AH));
 constant_time_compare(<<>>, <<>>, R) ->
 	R =:= 0.
+
+%% @private
+external_checks(Checks) ->
+	external_checks(Checks, []).
+
+%% @private
+external_checks([{Key, Check} | Checks], Acc) ->
+	try
+		Check(),
+		external_checks(Checks, [Key | Acc])
+	catch
+		_:_ ->
+			external_checks(Checks, Acc)
+	end;
+external_checks([], Acc) ->
+	lists:reverse(Acc).
 
 %% @private
 rsa_crypt(Algorithm) ->

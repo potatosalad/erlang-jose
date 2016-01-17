@@ -71,21 +71,15 @@ to_map(A = ?ECDH_ES, F) ->
 %% jose_jwe_alg callbacks
 %%====================================================================
 
-key_decrypt({#jose_jwk{kty={OtherPublicKTYModule, OtherPublicKTY}}, MyPrivateJWK}, EncryptedKey, JWEECDHES=#jose_jwe_alg_ecdh_es{epk={EphemeralPublicKey, _}}) ->
-	case OtherPublicKTYModule:to_key(OtherPublicKTY) of
-		EphemeralPublicKey ->
+key_decrypt({OtherPublicJWK=#jose_jwk{}, MyPrivateJWK=#jose_jwk{}}, EncryptedKey, JWEECDHES=#jose_jwe_alg_ecdh_es{epk=EphemeralPublicJWK=#jose_jwk{}}) ->
+	case jose_jwk:thumbprint(OtherPublicJWK) =:= jose_jwk:thumbprint(EphemeralPublicJWK) of
+		true ->
 			key_decrypt(MyPrivateJWK, EncryptedKey, JWEECDHES);
-		_ ->
+		false ->
 			error
 	end;
-key_decrypt(#jose_jwk{kty={MyPrivateKTYModule, MyPrivateKTY}}, EncryptedKey, JWEECDHES=#jose_jwe_alg_ecdh_es{epk={EphemeralPublicKey, _}}) ->
-	_ = code:ensure_loaded(MyPrivateKTYModule),
-	DerivedKey = case erlang:function_exported(MyPrivateKTYModule, derive_key, 2) of
-		false ->
-			MyPrivateKTYModule:derive_key(EphemeralPublicKey);
-		true ->
-			MyPrivateKTYModule:derive_key(EphemeralPublicKey, MyPrivateKTY)
-	end,
+key_decrypt(MyPrivateJWK=#jose_jwk{}, EncryptedKey, JWEECDHES=#jose_jwe_alg_ecdh_es{epk=EphemeralPublicJWK=#jose_jwk{}}) ->
+	DerivedKey = jose_jwk:shared_secret(EphemeralPublicJWK, MyPrivateJWK),
 	key_decrypt(DerivedKey, EncryptedKey, JWEECDHES);
 key_decrypt(Z, {ENCModule, ENC, <<>>}, #jose_jwe_alg_ecdh_es{apu=APU, apv=APV, bits=undefined}) when is_binary(Z) ->
 	Algorithm = ENCModule:algorithm(ENC),
@@ -101,14 +95,8 @@ key_decrypt(Z, {_ENCModule, _ENC, EncryptedKey}, JWEECDHES=#jose_jwe_alg_ecdh_es
 
 key_encrypt(_Key, _DecryptedKey, JWEECDHES=#jose_jwe_alg_ecdh_es{bits=undefined}) ->
 	{<<>>, JWEECDHES};
-key_encrypt({#jose_jwk{kty={OtherPublicKTYModule, OtherPublicKTY}}, #jose_jwk{kty={_, MyPrivateKTY}}}, DecryptedKey, JWEECDHES) ->
-	_ = code:ensure_loaded(OtherPublicKTYModule),
-	DerivedKey = case erlang:function_exported(OtherPublicKTYModule, derive_key, 2) of
-		false ->
-			OtherPublicKTYModule:derive_key(OtherPublicKTY);
-		true ->
-			OtherPublicKTYModule:derive_key(OtherPublicKTY, MyPrivateKTY)
-	end,
+key_encrypt({OtherPublicJWK=#jose_jwk{}, MyPrivateJWK=#jose_jwk{}}, DecryptedKey, JWEECDHES) ->
+	DerivedKey = jose_jwk:shared_secret(OtherPublicJWK, MyPrivateJWK),
 	key_encrypt(DerivedKey, DecryptedKey, JWEECDHES);
 key_encrypt(#jose_jwk{kty={KTYModule, KTY}}, DecryptedKey, JWEECDHES) ->
 	DerivedKey = KTYModule:derive_key(KTY),
@@ -155,7 +143,7 @@ algorithm(?ECDH_ES)        -> <<"ECDH-ES">>.
 
 %% @private
 from_map_ecdh_es(F = #{ <<"epk">> := EPK }, H) ->
-	from_map_ecdh_es(maps:remove(<<"epk">>, F), H#jose_jwe_alg_ecdh_es{ epk = jose_jwk_kty_ec:from_map(EPK) });
+	from_map_ecdh_es(maps:remove(<<"epk">>, F), H#jose_jwe_alg_ecdh_es{ epk = jose_jwk:from_map(EPK) });
 from_map_ecdh_es(F = #{ <<"apu">> := APU }, H) ->
 	from_map_ecdh_es(maps:remove(<<"apu">>, F), H#jose_jwe_alg_ecdh_es{ apu = base64url:decode(APU) });
 from_map_ecdh_es(F = #{ <<"apv">> := APV }, H) ->
@@ -164,8 +152,8 @@ from_map_ecdh_es(F, H) ->
 	{H, F}.
 
 %% @private
-to_map_ecdh_es(F, H=#jose_jwe_alg_ecdh_es{ epk = {EPK, EPKFields} }) ->
-	to_map_ecdh_es(F#{ <<"epk">> => jose_jwk_kty_ec:to_map(EPK, EPKFields) }, H#jose_jwe_alg_ecdh_es{ epk = undefined });
+to_map_ecdh_es(F, H=#jose_jwe_alg_ecdh_es{ epk = EPK = #jose_jwk{} }) ->
+	to_map_ecdh_es(F#{ <<"epk">> => element(2, jose_jwk:to_map(EPK)) }, H#jose_jwe_alg_ecdh_es{ epk = undefined });
 to_map_ecdh_es(F, H=#jose_jwe_alg_ecdh_es{ apu = APU }) when is_binary(APU) ->
 	to_map_ecdh_es(F#{ <<"apu">> => base64url:encode(APU) }, H#jose_jwe_alg_ecdh_es{ apu = undefined });
 to_map_ecdh_es(F, H=#jose_jwe_alg_ecdh_es{ apv = APV }) when is_binary(APV) ->

@@ -18,7 +18,10 @@
 %% API
 -export([start_link/0]).
 -export([config_change/0]).
+-export([curve25519_module/1]).
+-export([curve448_module/1]).
 -export([json_module/1]).
+-export([sha3_module/1]).
 
 %% gen_server callbacks
 -export([init/1]).
@@ -55,8 +58,17 @@ start_link() ->
 config_change() ->
 	gen_server:call(?SERVER, config_change).
 
+curve25519_module(Curve25519Module) when is_atom(Curve25519Module) ->
+	gen_server:call(?SERVER, {curve25519_module, Curve25519Module}).
+
+curve448_module(Curve448Module) when is_atom(Curve448Module) ->
+	gen_server:call(?SERVER, {curve448_module, Curve448Module}).
+
 json_module(JSONModule) when is_atom(JSONModule) ->
 	gen_server:call(?SERVER, {json_module, JSONModule}).
+
+sha3_module(SHA3Module) when is_atom(SHA3Module) ->
+	gen_server:call(?SERVER, {sha3_module, SHA3Module}).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -76,9 +88,21 @@ init([]) ->
 %% @private
 handle_call(config_change, _From, State) ->
 	{reply, support_check(), State};
+handle_call({curve25519_module, M}, _From, State) ->
+	Curve25519Module = check_curve25519_module(M),
+	true = ets:insert(?TAB, {curve25519_module, Curve25519Module}),
+	{reply, ok, State};
+handle_call({curve448_module, M}, _From, State) ->
+	Curve448Module = check_curve448_module(M),
+	true = ets:insert(?TAB, {curve448_module, Curve448Module}),
+	{reply, ok, State};
 handle_call({json_module, M}, _From, State) ->
 	JSONModule = check_json_module(M),
 	true = ets:insert(?TAB, {json_module, JSONModule}),
+	{reply, ok, State};
+handle_call({sha3_module, M}, _From, State) ->
+	SHA3Module = check_sha3_module(M),
+	true = ets:insert(?TAB, {sha3_module, SHA3Module}),
 	{reply, ok, State};
 handle_call(_Request, _From, State) ->
 	{reply, ignore, State}.
@@ -110,7 +134,10 @@ support_check() ->
 		Check(Fallback, Acc)
 	end, [], [
 		fun check_ec_key_mode/2,
+		fun check_curve25519/2,
+		fun check_curve448/2,
 		fun check_json/2,
+		fun check_sha3/2,
 		fun check_crypto/2,
 		fun check_public_key/2
 	])),
@@ -143,6 +170,82 @@ check_ec_key_mode(_Fallback, Entries) ->
 		#'ECPrivateKey'{ privateKey = PrivateKey, publicKey = PublicKey } when is_binary(PrivateKey) andalso is_binary(PublicKey) ->
 			[{ec_key_mode, binary} | Entries]
 	end.
+
+%% @private
+check_curve25519(false, Entries) ->
+	check_curve25519(jose_curve25519_unsupported, Entries);
+check_curve25519(true, Entries) ->
+	check_curve25519(jose_jwa_curve25519, Entries);
+check_curve25519(Fallback, Entries) ->
+	true = ets:delete_object(?TAB, {curve25519_module, jose_jwa_curve25519}),
+	true = ets:delete_object(?TAB, {curve25519_module, jose_curve25519_unsupported}),
+	Curve25519Module = case ets:lookup(?TAB, curve25519_module) of
+		[{curve25519_module, M}] when is_atom(M) ->
+			M;
+		[] ->
+			case application:get_env(jose, curve25519_module, undefined) of
+				undefined ->
+					check_curve25519_modules(Fallback, [libsodium]);
+				M when is_atom(M) ->
+					check_curve25519_module(M)
+			end
+	end,
+	[{curve25519_module, Curve25519Module} | Entries].
+
+%% @private
+check_curve25519_module(libsodium) ->
+	jose_curve25519_libsodium;
+check_curve25519_module(Module) when is_atom(Module) ->
+	Module.
+
+%% @private
+check_curve25519_modules(Fallback, [Module | Modules]) ->
+	case code:ensure_loaded(Module) of
+		{module, Module} ->
+			_ = application:ensure_all_started(Module),
+			check_curve25519_module(Module);
+		_ ->
+			check_curve25519_modules(Fallback, Modules)
+	end;
+check_curve25519_modules(Fallback, []) ->
+	Fallback.
+
+%% @private
+check_curve448(false, Entries) ->
+	check_curve448(jose_curve448_unsupported, Entries);
+check_curve448(true, Entries) ->
+	check_curve448(jose_jwa_curve448, Entries);
+check_curve448(Fallback, Entries) ->
+	true = ets:delete_object(?TAB, {curve448_module, jose_jwa_curve448}),
+	true = ets:delete_object(?TAB, {curve448_module, jose_curve448_unsupported}),
+	Curve448Module = case ets:lookup(?TAB, curve448_module) of
+		[{curve448_module, M}] when is_atom(M) ->
+			M;
+		[] ->
+			case application:get_env(jose, curve448_module, undefined) of
+				undefined ->
+					check_curve448_modules(Fallback, []);
+				M when is_atom(M) ->
+					check_curve448_module(M)
+			end
+	end,
+	[{curve448_module, Curve448Module} | Entries].
+
+%% @private
+check_curve448_module(Module) when is_atom(Module) ->
+	Module.
+
+%% @private
+check_curve448_modules(Fallback, [Module | Modules]) ->
+	case code:ensure_loaded(Module) of
+		{module, Module} ->
+			_ = application:ensure_all_started(Module),
+			check_curve448_module(Module);
+		_ ->
+			check_curve448_modules(Fallback, Modules)
+	end;
+check_curve448_modules(Fallback, []) ->
+	Fallback.
 
 %% @private
 check_json(_Fallback, Entries) ->
@@ -223,6 +326,43 @@ check_json_modules([Module | Modules]) ->
 	end;
 check_json_modules([]) ->
 	jose_json_unsupported.
+
+%% @private
+check_sha3(false, Entries) ->
+	check_sha3(jose_sha3_unsupported, Entries);
+check_sha3(true, Entries) ->
+	check_sha3(jose_jwa_sha3, Entries);
+check_sha3(Fallback, Entries) ->
+	true = ets:delete_object(?TAB, {sha3_module, jose_jwa_sha3}),
+	true = ets:delete_object(?TAB, {sha3_module, jose_sha3_unsupported}),
+	SHA3Module = case ets:lookup(?TAB, sha3_module) of
+		[{sha3_module, M}] when is_atom(M) ->
+			M;
+		[] ->
+			case application:get_env(jose, sha3_module, undefined) of
+				undefined ->
+					check_sha3_modules(Fallback, []);
+				M when is_atom(M) ->
+					check_sha3_module(M)
+			end
+	end,
+	[{sha3_module, SHA3Module} | Entries].
+
+%% @private
+check_sha3_module(Module) when is_atom(Module) ->
+	Module.
+
+%% @private
+check_sha3_modules(Fallback, [Module | Modules]) ->
+	case code:ensure_loaded(Module) of
+		{module, Module} ->
+			_ = application:ensure_all_started(Module),
+			check_sha3_module(Module);
+		_ ->
+			check_sha3_modules(Fallback, Modules)
+	end;
+check_sha3_modules(Fallback, []) ->
+	Fallback.
 
 %% @private
 check_crypto(false, Entries) ->

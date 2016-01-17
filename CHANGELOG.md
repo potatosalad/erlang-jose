@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.5.0 (2016-01-16)
+
+* Enhancements
+  * Support [OKP](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves) key type with the following curves:
+    * `Ed25519` (external [libsodium](https://github.com/potatosalad/erlang-libsodium) or fallback supported)
+    * `Ed25519ph` (external [libsodium](https://github.com/potatosalad/erlang-libsodium) or fallback supported)
+    * `X25519` (external [libsodium](https://github.com/potatosalad/erlang-libsodium) or fallback supported)
+    * `Ed448` (no external, no fallback)
+    * `Ed448ph` (no external, no fallback)
+    * `X448` (no external, but fallback supported)
+  * Support [SHA-3](https://en.wikipedia.org/wiki/SHA-3) functions for future use with `Ed448` and `Ed448ph`.
+  * Add `jose_jwk:shared_secret/2` for computing the shared secret between two `EC` or `OKP` keys.
+
 ## 1.4.2 (2015-11-30)
 
 * Enhancements

@@ -13,10 +13,16 @@
 %% API
 -export([crypto_fallback/0]).
 -export([crypto_fallback/1]).
+-export([curve25519_module/0]).
+-export([curve25519_module/1]).
+-export([curve448_module/0]).
+-export([curve448_module/1]).
 -export([decode/1]).
 -export([encode/1]).
 -export([json_module/0]).
 -export([json_module/1]).
+-export([sha3_module/0]).
+-export([sha3_module/1]).
 -export([unsecured_signing/0]).
 -export([unsecured_signing/1]).
 %% Private API
@@ -42,6 +48,18 @@ crypto_fallback() ->
 crypto_fallback(Boolean) when is_boolean(Boolean) ->
 	jose_jwa:crypto_fallback(Boolean).
 
+curve25519_module() ->
+	?MAYBE_START_JOSE(ets:lookup_element(?TAB, curve25519_module, 2)).
+
+curve25519_module(Curve25519Module) when is_atom(Curve25519Module) ->
+	?MAYBE_START_JOSE(jose_server:curve25519_module(Curve25519Module)).
+
+curve448_module() ->
+	?MAYBE_START_JOSE(ets:lookup_element(?TAB, curve448_module, 2)).
+
+curve448_module(Curve448Module) when is_atom(Curve448Module) ->
+	?MAYBE_START_JOSE(jose_server:curve448_module(Curve448Module)).
+
 decode(Binary) ->
 	JSONModule = json_module(),
 	JSONModule:decode(Binary).
@@ -55,6 +73,12 @@ json_module() ->
 
 json_module(JSONModule) when is_atom(JSONModule) ->
 	?MAYBE_START_JOSE(jose_server:json_module(JSONModule)).
+
+sha3_module() ->
+	?MAYBE_START_JOSE(ets:lookup_element(?TAB, sha3_module, 2)).
+
+sha3_module(SHA3Module) when is_atom(SHA3Module) ->
+	?MAYBE_START_JOSE(jose_server:sha3_module(SHA3Module)).
 
 unsecured_signing() ->
 	jose_jwa:unsecured_signing().

@@ -104,6 +104,13 @@
 -define(KTY_OCT_MODULE, jose_jwk_kty_oct).
 -define(KTY_RSA_MODULE, jose_jwk_kty_rsa).
 
+-define(KTY_OKP_Ed25519_MODULE,   jose_jwk_kty_okp_ed25519).
+-define(KTY_OKP_Ed25519ph_MODULE, jose_jwk_kty_okp_ed25519ph).
+-define(KTY_OKP_X25519_MODULE,    jose_jwk_kty_okp_x25519).
+-define(KTY_OKP_Ed448_MODULE,     jose_jwk_kty_okp_ed448).
+-define(KTY_OKP_Ed448ph_MODULE,   jose_jwk_kty_okp_ed448ph).
+-define(KTY_OKP_X448_MODULE,      jose_jwk_kty_okp_x448).
+
 %%====================================================================
 %% API functions
 %%====================================================================
@@ -156,6 +163,30 @@ generate_key(P={ec, Atom}) when is_atom(Atom) ->
 	jose_jwk:generate_key({#{ kty => ?KTY_EC_MODULE }, P});
 generate_key(P={oct, Size}) when is_integer(Size) ->
 	jose_jwk:generate_key({#{ kty => ?KTY_OCT_MODULE }, P});
+generate_key(P={okp, 'Ed25519'}) ->
+	jose_jwk:generate_key({#{ kty => ?KTY_OKP_Ed25519_MODULE }, P});
+generate_key(P={okp, 'Ed25519ph'}) ->
+	jose_jwk:generate_key({#{ kty => ?KTY_OKP_Ed25519ph_MODULE }, P});
+generate_key(P={okp, 'X25519'}) ->
+	jose_jwk:generate_key({#{ kty => ?KTY_OKP_X25519_MODULE }, P});
+generate_key(P={okp, 'Ed25519', Seed}) when is_binary(Seed) ->
+	jose_jwk:generate_key({#{ kty => ?KTY_OKP_Ed25519_MODULE }, P});
+generate_key(P={okp, 'Ed25519ph', Seed}) when is_binary(Seed) ->
+	jose_jwk:generate_key({#{ kty => ?KTY_OKP_Ed25519ph_MODULE }, P});
+generate_key(P={okp, 'X25519', Seed}) when is_binary(Seed) ->
+	jose_jwk:generate_key({#{ kty => ?KTY_OKP_X25519_MODULE }, P});
+generate_key(P={okp, 'Ed448'}) ->
+	jose_jwk:generate_key({#{ kty => ?KTY_OKP_Ed448_MODULE }, P});
+generate_key(P={okp, 'Ed448ph'}) ->
+	jose_jwk:generate_key({#{ kty => ?KTY_OKP_Ed448ph_MODULE }, P});
+generate_key(P={okp, 'X448'}) ->
+	jose_jwk:generate_key({#{ kty => ?KTY_OKP_X448_MODULE }, P});
+generate_key(P={okp, 'Ed448', Seed}) when is_binary(Seed) ->
+	jose_jwk:generate_key({#{ kty => ?KTY_OKP_Ed448_MODULE }, P});
+generate_key(P={okp, 'Ed448ph', Seed}) when is_binary(Seed) ->
+	jose_jwk:generate_key({#{ kty => ?KTY_OKP_Ed448ph_MODULE }, P});
+generate_key(P={okp, 'X448', Seed}) when is_binary(Seed) ->
+	jose_jwk:generate_key({#{ kty => ?KTY_OKP_X448_MODULE }, P});
 generate_key(P={rsa, ModulusSize}) when is_integer(ModulusSize) ->
 	jose_jwk:generate_key({#{ kty => ?KTY_RSA_MODULE }, P});
 generate_key(P={rsa, ModulusSize, ExponentSize})

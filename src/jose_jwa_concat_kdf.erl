@@ -60,7 +60,17 @@ kdf(Hash, Z, {AlgorithmID, PartyUInfo, PartyVInfo, SuppPubInfo, SuppPrivInfo}, K
 		(byte_size(PartyVInfo)):1/unsigned-big-integer-unit:32, PartyVInfo/binary,
 		SuppPubInfo/binary,
 		SuppPrivInfo/binary
-	>>, KeyDataLen).
+	>>, KeyDataLen);
+kdf(Hash, Z, {undefined, PartyUInfo, PartyVInfo, SuppPubInfo, SuppPrivInfo}, KeyDataLen) ->
+	kdf(Hash, Z, {<<>>, PartyUInfo, PartyVInfo, SuppPubInfo, SuppPrivInfo}, KeyDataLen);
+kdf(Hash, Z, {AlgorithmID, undefined, PartyVInfo, SuppPubInfo, SuppPrivInfo}, KeyDataLen) ->
+	kdf(Hash, Z, {AlgorithmID, <<>>, PartyVInfo, SuppPubInfo, SuppPrivInfo}, KeyDataLen);
+kdf(Hash, Z, {AlgorithmID, PartyUInfo, undefined, SuppPubInfo, SuppPrivInfo}, KeyDataLen) ->
+	kdf(Hash, Z, {AlgorithmID, PartyUInfo, <<>>, SuppPubInfo, SuppPrivInfo}, KeyDataLen);
+kdf(Hash, Z, {AlgorithmID, PartyUInfo, PartyVInfo, undefined, SuppPrivInfo}, KeyDataLen) ->
+	kdf(Hash, Z, {AlgorithmID, PartyUInfo, PartyVInfo, <<>>, SuppPrivInfo}, KeyDataLen);
+kdf(Hash, Z, {AlgorithmID, PartyUInfo, PartyVInfo, SuppPubInfo, undefined}, KeyDataLen) ->
+	kdf(Hash, Z, {AlgorithmID, PartyUInfo, PartyVInfo, SuppPubInfo, <<>>}, KeyDataLen).
 
 %%%-------------------------------------------------------------------
 %%% Internal functions

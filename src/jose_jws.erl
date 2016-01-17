@@ -48,6 +48,7 @@
 -export([verify_strict/3]).
 
 -define(ALG_ECDSA_MODULE,          jose_jws_alg_ecdsa).
+-define(ALG_EDDSA_MODULE,          jose_jws_alg_eddsa).
 -define(ALG_HMAC_MODULE,           jose_jws_alg_hmac).
 -define(ALG_NONE_MODULE,           jose_jws_alg_none).
 -define(ALG_RSA_PKCS1_V1_5_MODULE, jose_jws_alg_rsa_pkcs1_v1_5).
@@ -90,6 +91,10 @@ from_map({JWS, Modules = #{ alg := Module }, Map=#{ <<"alg">> := _ }}) ->
 	from_map({JWS#jose_jws{ alg = {Module, ALG} }, maps:remove(alg, Modules), Fields});
 from_map({JWS, Modules, Map=#{ <<"b64">> := B64 }}) ->
 	from_map({JWS#jose_jws{ b64 = B64 }, Modules, maps:remove(<<"b64">>, Map)});
+from_map({JWS, Modules, Map=#{ <<"alg">> := << "Ed25519", _/binary >> }}) ->
+	from_map({JWS, Modules#{ alg => ?ALG_EDDSA_MODULE }, Map});
+from_map({JWS, Modules, Map=#{ <<"alg">> := << "Ed448", _/binary >> }}) ->
+	from_map({JWS, Modules#{ alg => ?ALG_EDDSA_MODULE }, Map});
 from_map({JWS, Modules, Map=#{ <<"alg">> := << "ES", _/binary >> }}) ->
 	from_map({JWS, Modules#{ alg => ?ALG_ECDSA_MODULE }, Map});
 from_map({JWS, Modules, Map=#{ <<"alg">> := << "HS", _/binary >> }}) ->

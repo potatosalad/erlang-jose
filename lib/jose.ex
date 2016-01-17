@@ -30,6 +30,39 @@ defmodule JOSE do
   defdelegate crypto_fallback(boolean), to: :jose
 
   @doc """
+  Gets the current Curve25519 module used by `jose_curve25519', see `curve25519_module/1` for default.
+  """
+  defdelegate curve25519_module(), to: :jose
+  
+  @doc """
+  Sets the current Curve25519 module used by `jose_curve25519'.
+
+  Currently supported Curve25519 modules (first found is used as default):
+
+    * [`libsodium`](https://github.com/potatosalad/erlang-libsodium)
+    * `jose_jwa_curve25519` - only supported when `crypto_fallback/0` is `true`
+
+  Additional modules that implement the `jose_curve25519` behavior may also be used.
+  """
+  defdelegate curve25519_module(module), to: :jose
+
+  @doc """
+  Gets the current Curve448 module used by `jose_curve448', see `curve448_module/1` for default.
+  """
+  defdelegate curve448_module(), to: :jose
+  
+  @doc """
+  Sets the current Curve448 module used by `jose_curve448'.
+
+  Currently supported Curve448 modules (first found is used as default):
+
+    * `jose_jwa_curve448` - only supported when `crypto_fallback/0` is `true` (NOTE: only X448 related functions are currently implemented)
+
+  Additional modules that implement the `jose_curve448` behavior may also be used.
+  """
+  defdelegate curve448_module(module), to: :jose
+
+  @doc """
   Decode JSON to a term using the module returned by `json_module/0`.
   """
   defdelegate decode(binary), to: :jose
@@ -43,7 +76,6 @@ defmodule JOSE do
   Gets the current JSON module used by `decode/1` and `encode/1`, see `json_module/1` for default.
   """
   defdelegate json_module(), to: :jose
-
   
   @doc """
   Sets the current JSON module used by `decode/1` and `encode/1`.
@@ -58,6 +90,22 @@ defmodule JOSE do
   Additional modules that implement the `jose_json` behavior may also be used.
   """
   defdelegate json_module(module), to: :jose
+
+  @doc """
+  Gets the current SHA3 module used by `jose_sha3', see `sha3_module/1` for default.
+  """
+  defdelegate sha3_module(), to: :jose
+  
+  @doc """
+  Sets the current SHA3 module used by `jose_sha3'.
+
+  Currently supported SHA3 modules (first found is used as default):
+
+    * `jose_jwa_sha3` - only supported when `crypto_fallback/0` is `true`
+
+  Additional modules that implement the `jose_sha3` behavior may also be used.
+  """
+  defdelegate sha3_module(module), to: :jose
 
   @doc """
   Gets the current Unsecured Signing state, defaults to `false`.

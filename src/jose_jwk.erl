@@ -52,6 +52,9 @@
 -export([from_oct/2]).
 -export([from_oct_file/1]).
 -export([from_oct_file/2]).
+-export([from_okp/1]).
+-export([from_openssh_key/1]).
+-export([from_openssh_key_file/1]).
 -export([from_pem/1]).
 -export([from_pem/2]).
 -export([from_pem_file/1]).
@@ -73,6 +76,9 @@
 -export([to_oct_file/2]).
 -export([to_oct_file/3]).
 -export([to_oct_file/4]).
+-export([to_okp/1]).
+-export([to_openssh_key/1]).
+-export([to_openssh_key_file/2]).
 -export([to_pem/1]).
 -export([to_pem/2]).
 -export([to_pem_file/2]).
@@ -91,6 +97,7 @@
 -export([box_encrypt/3]).
 -export([box_encrypt/4]).
 -export([generate_key/1]).
+-export([shared_secret/2]).
 -export([sign/2]).
 -export([sign/3]).
 -export([thumbprint/1]).
@@ -107,6 +114,13 @@
 -define(KTY_EC_MODULE,  jose_jwk_kty_ec).
 -define(KTY_OCT_MODULE, jose_jwk_kty_oct).
 -define(KTY_RSA_MODULE, jose_jwk_kty_rsa).
+
+-define(KTY_OKP_Ed25519_MODULE,   jose_jwk_kty_okp_ed25519).
+-define(KTY_OKP_Ed25519ph_MODULE, jose_jwk_kty_okp_ed25519ph).
+-define(KTY_OKP_X25519_MODULE,    jose_jwk_kty_okp_x25519).
+-define(KTY_OKP_Ed448_MODULE,     jose_jwk_kty_okp_ed448).
+-define(KTY_OKP_Ed448ph_MODULE,   jose_jwk_kty_okp_ed448ph).
+-define(KTY_OKP_X448_MODULE,      jose_jwk_kty_okp_x448).
 
 %%====================================================================
 %% Decode API functions
@@ -188,6 +202,18 @@ from_map({JWK, Modules, Map=#{ <<"kty">> := <<"EC">> }}) ->
 	from_map({JWK, Modules#{ kty => ?KTY_EC_MODULE }, Map});
 from_map({JWK, Modules, Map=#{ <<"kty">> := <<"oct">> }}) ->
 	from_map({JWK, Modules#{ kty => ?KTY_OCT_MODULE }, Map});
+from_map({JWK, Modules, Map=#{ <<"kty">> := <<"OKP">>, <<"crv">> := <<"Ed25519">> }}) ->
+	from_map({JWK, Modules#{ kty => ?KTY_OKP_Ed25519_MODULE }, Map});
+from_map({JWK, Modules, Map=#{ <<"kty">> := <<"OKP">>, <<"crv">> := <<"Ed25519ph">> }}) ->
+	from_map({JWK, Modules#{ kty => ?KTY_OKP_Ed25519ph_MODULE }, Map});
+from_map({JWK, Modules, Map=#{ <<"kty">> := <<"OKP">>, <<"crv">> := <<"X25519">> }}) ->
+	from_map({JWK, Modules#{ kty => ?KTY_OKP_X25519_MODULE }, Map});
+from_map({JWK, Modules, Map=#{ <<"kty">> := <<"OKP">>, <<"crv">> := <<"Ed448">> }}) ->
+	from_map({JWK, Modules#{ kty => ?KTY_OKP_Ed448_MODULE }, Map});
+from_map({JWK, Modules, Map=#{ <<"kty">> := <<"OKP">>, <<"crv">> := <<"Ed448ph">> }}) ->
+	from_map({JWK, Modules#{ kty => ?KTY_OKP_Ed448ph_MODULE }, Map});
+from_map({JWK, Modules, Map=#{ <<"kty">> := <<"OKP">>, <<"crv">> := <<"X448">> }}) ->
+	from_map({JWK, Modules#{ kty => ?KTY_OKP_X448_MODULE }, Map});
 from_map({JWK, Modules, Map=#{ <<"kty">> := <<"RSA">> }}) ->
 	from_map({JWK, Modules#{ kty => ?KTY_RSA_MODULE }, Map});
 from_map({#jose_jwk{ keys = undefined, kty = undefined }, _Modules, _Map}) ->
@@ -239,6 +265,67 @@ from_oct_file(Key, {Modules, File}) when is_map(Modules) andalso (is_binary(File
 	end;
 from_oct_file(Key, File) when is_binary(File) orelse is_list(File) ->
 	from_oct_file(Key, {#{}, File}).
+
+from_okp({#{ kty := Module }, OKP}) ->
+	{KTY, Fields} = Module:from_okp(OKP),
+	#jose_jwk{ kty = {Module, KTY}, fields = Fields };
+from_okp(P={'Ed25519', Binary}) when is_binary(Binary) ->
+	from_okp({#{ kty => ?KTY_OKP_Ed25519_MODULE }, P});
+from_okp(P={'Ed25519ph', Binary}) when is_binary(Binary) ->
+	from_okp({#{ kty => ?KTY_OKP_Ed25519ph_MODULE }, P});
+from_okp(P={'X25519', Binary}) when is_binary(Binary) ->
+	from_okp({#{ kty => ?KTY_OKP_X25519_MODULE }, P});
+from_okp(P={'Ed448', Binary}) when is_binary(Binary) ->
+	from_okp({#{ kty => ?KTY_OKP_Ed448_MODULE }, P});
+from_okp(P={'Ed448ph', Binary}) when is_binary(Binary) ->
+	from_okp({#{ kty => ?KTY_OKP_Ed448ph_MODULE }, P});
+from_okp(P={'X448', Binary}) when is_binary(Binary) ->
+	from_okp({#{ kty => ?KTY_OKP_X448_MODULE }, P}).
+
+from_openssh_key({#{ kty := Module }, Binary}) when is_binary(Binary) ->
+	{KTY, Fields} = Module:from_openssh_key(Binary),
+	#jose_jwk{ kty = {Module, KTY}, fields = Fields };
+from_openssh_key({#{}, Binary}) when is_binary(Binary) ->
+	case jose_jwk_openssh_key:from_binary(Binary) of
+		CurrentKey = [[{{Type, PK}, Key = {Type, PK, _SK, _Comment}} | _] | _] ->
+			Module = case Type of
+				<<"ssh-ed25519">> ->
+					?KTY_OKP_Ed25519_MODULE;
+				<<"ssh-ed25519ph">> ->
+					?KTY_OKP_Ed25519ph_MODULE;
+				<<"ssh-x25519">> ->
+					?KTY_OKP_X25519_MODULE;
+				<<"ssh-ed448">> ->
+					?KTY_OKP_Ed448_MODULE;
+				<<"ssh-ed448ph">> ->
+					?KTY_OKP_Ed448ph_MODULE;
+				<<"ssh-x448">> ->
+					?KTY_OKP_X448_MODULE;
+				_ ->
+					{error, {unknown_key, CurrentKey}}
+			end,
+			case is_atom(Module) of
+				true ->
+					{KTY, Fields} = Module:from_openssh_key(Key),
+					#jose_jwk{ kty = {Module, KTY}, fields = Fields };
+				false ->
+					Module
+			end;
+		UnknownKey ->
+			{error, {unknown_key, UnknownKey}}
+	end;
+from_openssh_key(Binary) when is_binary(Binary) ->
+	from_openssh_key({#{}, Binary}).
+
+from_openssh_key_file({Modules, File}) when is_map(Modules) andalso (is_binary(File) orelse is_list(File)) ->
+	case file:read_file(File) of
+		{ok, Binary} ->
+			from_openssh_key({Modules, Binary});
+		ReadError ->
+			ReadError
+	end;
+from_openssh_key_file(File) when is_binary(File) orelse is_list(File) ->
+	from_openssh_key_file({#{}, File}).
 
 from_pem({#{ kty := Module }, Binary}) when is_binary(Binary) ->
 	{KTY, Fields} = Module:from_pem(Binary),
@@ -400,6 +487,27 @@ to_oct_file(Key, File, JWE=#jose_jwe{}, JWK=#jose_jwk{}) when is_binary(File) or
 to_oct_file(Key, File, JWEOther, JWKOther) when is_binary(File) orelse is_list(File) ->
 	to_oct_file(Key, File, jose_jwe:from(JWEOther), from(JWKOther)).
 
+to_okp(#jose_jwk{kty={Module, KTY}}) ->
+	{#{ kty => Module }, Module:to_okp(KTY)};
+to_okp(Other) ->
+	to_okp(from(Other)).
+
+to_openssh_key(#jose_jwk{kty={Module, KTY}, fields=Fields}) ->
+	{#{ kty => Module }, Module:to_openssh_key(KTY, Fields)};
+to_openssh_key(Other) ->
+	to_openssh_key(from(Other)).
+
+to_openssh_key_file(File, JWK=#jose_jwk{}) when is_binary(File) orelse is_list(File) ->
+	{Modules, Binary} = to_openssh_key(JWK),
+	case file:write_file(File, Binary) of
+		ok ->
+			{Modules, File};
+		WriteError ->
+			WriteError
+	end;
+to_openssh_key_file(File, Other) when is_binary(File) orelse is_list(File) ->
+	to_openssh_key_file(File, from(Other)).
+
 to_pem(#jose_jwk{kty={Module, KTY}}) ->
 	{#{ kty => Module }, Module:to_pem(KTY)};
 to_pem(Other) ->
@@ -517,6 +625,11 @@ generate_key({#{ kty := Module }, Parameters}) ->
 	#jose_jwk{kty={Module, KTY}, fields=Fields};
 generate_key(Parameters) ->
 	jose_jwk_kty:generate_key(Parameters).
+
+shared_secret(#jose_jwk{kty={Module, YourKTY}}, #jose_jwk{kty={Module, MyKTY}}) ->
+	Module:derive_key(YourKTY, MyKTY);
+shared_secret(YourJWK, MyJWK) ->
+	shared_secret(from(YourJWK), from(MyJWK)).
 
 sign(PlainText, JWK=#jose_jwk{kty={Module, KTY}, fields=Fields}) ->
 	sign(PlainText, Module:signer(KTY, Fields, PlainText), JWK);

@@ -16,6 +16,13 @@
 -export([end_per_group/2]).
 
 %% Tests.
+-export([jose_cfrg_curves_a_1/1]).
+-export([jose_cfrg_curves_a_2/1]).
+-export([jose_cfrg_curves_a_3/1]).
+-export([jose_cfrg_curves_a_4/1]).
+-export([jose_cfrg_curves_a_5/1]).
+-export([jose_cfrg_curves_a_6/1]).
+-export([jose_cfrg_curves_a_7/1]).
 -export([jwe_a_1/1]).
 -export([jwe_a_2/1]).
 -export([jwe_a_3/1]).
@@ -27,8 +34,18 @@
 -export([jws_a_4/1]).
 -export([jws_a_5/1]).
 
+%% Macros.
+-define(tv_ok(T, M, F, A, E),
+	case erlang:apply(M, F, A) of
+		E ->
+			ok;
+		T ->
+			ct:fail({{M, F, A}, {expected, E}, {got, T}})
+	end).
+
 all() ->
 	[
+		{group, jose_cfrg_curves},
 		{group, jose_jwe},
 		{group, jose_jwk},
 		{group, jose_jws}
@@ -36,6 +53,15 @@ all() ->
 
 groups() ->
 	[
+		{jose_cfrg_curves, [parallel], [
+			jose_cfrg_curves_a_1,
+			jose_cfrg_curves_a_2,
+			jose_cfrg_curves_a_3,
+			jose_cfrg_curves_a_4,
+			jose_cfrg_curves_a_5,
+			jose_cfrg_curves_a_6,
+			jose_cfrg_curves_a_7
+		]},
 		{jose_jwe, [parallel], [
 			jwe_a_1,
 			jwe_a_2,
@@ -64,6 +90,16 @@ end_per_suite(_Config) ->
 	_ = application:stop(jose),
 	ok.
 
+init_per_group(jose_cfrg_curves, Config) ->
+	{ok, A1} = file:consult(data_file("jose_cfrg_curves/a.1.config", Config)),
+	{ok, A3} = file:consult(data_file("jose_cfrg_curves/a.3.config", Config)),
+	{ok, A4} = file:consult(data_file("jose_cfrg_curves/a.4.config", Config)),
+	{ok, A5} = file:consult(data_file("jose_cfrg_curves/a.5.config", Config)),
+	{ok, A6} = file:consult(data_file("jose_cfrg_curves/a.6.config", Config)),
+	{ok, A7} = file:consult(data_file("jose_cfrg_curves/a.7.config", Config)),
+	[{jose_cfrg_curves_a_1, A1}, {jose_cfrg_curves_a_3, A3},
+	 {jose_cfrg_curves_a_4, A4}, {jose_cfrg_curves_a_5, A5},
+	 {jose_cfrg_curves_a_6, A6}, {jose_cfrg_curves_a_7, A7} | Config];
 init_per_group(jose_jwe, Config) ->
 	{ok, A1} = file:consult(data_file("jwe/a.1.config", Config)),
 	{ok, A2} = file:consult(data_file("jwe/a.2.config", Config)),
@@ -88,6 +124,161 @@ end_per_group(_Group, _Config) ->
 %%====================================================================
 %% Tests
 %%====================================================================
+
+% CFRG ECDH and signatures in JOSE
+% A.1.  Ed25519 private key
+% [https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves-00#appendix-A.1]
+jose_cfrg_curves_a_1(Config) ->
+	C = ?config(jose_cfrg_curves_a_1, Config),
+	% A.1
+	A_1_JWK = jose_jwk:from_file(data_file("jose_cfrg_curves/a.1.jwk+json", Config)),
+	A_1_Secret = hex:hex_to_bin(?config("a.1.secret", C)),
+	A_1_PK = hex:hex_to_bin(?config("a.1.pk", C)),
+	A_1_SK = << A_1_Secret/binary, A_1_PK/binary >>,
+	{_, A_1_SK} = jose_jwk:to_key(A_1_JWK),
+	{_, A_1_PK} = jose_jwk:to_public_key(A_1_JWK),
+	ok.
+
+% CFRG ECDH and signatures in JOSE
+% A.2.  Ed25519 public key
+% [https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves-00#appendix-A.2]
+jose_cfrg_curves_a_2(Config) ->
+	% A.1
+	A_1_JWK = jose_jwk:from_file(data_file("jose_cfrg_curves/a.1.jwk+json", Config)),
+	% A.2
+	A_2_JWK = jose_jwk:from_file(data_file("jose_cfrg_curves/a.2.jwk+json", Config)),
+	A_2_JWK = jose_jwk:to_public(A_1_JWK),
+	ok.
+
+% CFRG ECDH and signatures in JOSE
+% A.3.  JWK thumbprint canonicalization
+% [https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves-00#appendix-A.3]
+jose_cfrg_curves_a_3(Config) ->
+	C = ?config(jose_cfrg_curves_a_3, Config),
+	% A.1
+	A_1_JWK = jose_jwk:from_file(data_file("jose_cfrg_curves/a.1.jwk+json", Config)),
+	% A.2
+	A_2_JWK = jose_jwk:from_file(data_file("jose_cfrg_curves/a.2.jwk+json", Config)),
+	% A.3
+	A_3_JWK = jose_jwk:from_binary(?config("a.3.jwk+json", C)),
+	A_3_THUMBPRINT = base64url:encode(hex:hex_to_bin(?config("a.3.thumbprint", C))),
+	A_3_THUMBPRINT = jose_jwk:thumbprint(A_1_JWK),
+	A_3_THUMBPRINT = jose_jwk:thumbprint(A_2_JWK),
+	A_3_THUMBPRINT = jose_jwk:thumbprint(A_3_JWK),
+	ok.
+
+% CFRG ECDH and signatures in JOSE
+% A.4.  Ed25519 Signing
+% [https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves-00#appendix-A.4]
+jose_cfrg_curves_a_4(Config) ->
+	C = ?config(jose_cfrg_curves_a_4, Config),
+	% A.1
+	A_1_JWK = jose_jwk:from_file(data_file("jose_cfrg_curves/a.1.jwk+json", Config)),
+	% A.4
+	A_4_PROTECTED = ?config("a.4.jws+json", C),
+	A_4_JWS = jose_jws:from_binary(A_4_PROTECTED),
+	A_4_JWS_B64 = ?config("a.4.jws+b64", C),
+	A_4_TXT = ?config("a.4.txt", C),
+	A_4_TXT_B64 = ?config("a.4.txt+b64", C),
+	A_4_SIGNINGINPUT = ?config("a.4.signing-input", C),
+	A_4_SIG = hex:hex_to_bin(?config("a.4.sig+hex", C)),
+	A_4_SIG_B64 = ?config("a.4.sig+b64", C),
+	A_4_SIG_COMPACT = ?config("a.4.sig+compact", C),
+	A_4_TXT_B64 = base64url:encode(A_4_TXT),
+	A_4_SIGNINGINPUT = << A_4_JWS_B64/binary, $., A_4_TXT_B64/binary >>,
+	A_4_SIGNINGINPUT = jose_jws:signing_input(A_4_TXT, A_4_JWS),
+	%% Forcing the Protected header to be A_4_PROTECTED
+	A_4_MAP=#{
+		<<"signature">> := A_4_SIG_B64
+	} = force_sign(A_1_JWK, A_4_TXT, A_4_PROTECTED, A_4_JWS),
+	A_4_SIG = base64url:decode(A_4_SIG_B64),
+	{_, A_4_SIG_COMPACT} = jose_jws:compact(A_4_MAP),
+	ok.
+
+% CFRG ECDH and signatures in JOSE
+% A.5.  Ed25519 Validation
+% [https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves-00#appendix-A.5]
+jose_cfrg_curves_a_5(Config) ->
+	C = ?config(jose_cfrg_curves_a_5, Config),
+	% A.1
+	A_1_JWK = jose_jwk:from_file(data_file("jose_cfrg_curves/a.1.jwk+json", Config)),
+	% A.2
+	A_2_JWK = jose_jwk:from_file(data_file("jose_cfrg_curves/a.2.jwk+json", Config)),
+	% A.4
+	A_5_SIG_COMPACT = ?config("a.5.sig+compact", C),
+	A_5_JWS = jose_jws:from_binary(?config("a.5.jws+json", C)),
+	A_5_PAYLOAD_DATA = ?config("a.5.txt", C),
+	{true, A_5_PAYLOAD_DATA, A_5_JWS} = jose_jws:verify(A_1_JWK, A_5_SIG_COMPACT),
+	{true, A_5_PAYLOAD_DATA, A_5_JWS} = jose_jws:verify(A_2_JWK, A_5_SIG_COMPACT),
+	ok.
+
+% CFRG ECDH and signatures in JOSE
+% A.6.  ECDH-ES with X25519
+% [https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves-00#appendix-A.6]
+jose_cfrg_curves_a_6(Config) ->
+	C = ?config(jose_cfrg_curves_a_6, Config),
+	% A.6
+	A_6_BOB_JWK = jose_jwk:from_binary(?config("a.6.bob-jwk+json", C)),
+	A_6_BOB_Secret = hex:hex_to_bin(?config("a.6.bob-secret+hex", C)),
+	A_6_BOB_PK = hex:hex_to_bin(?config("a.6.bob-pk+hex", C)),
+	A_6_EPK_Secret = hex:hex_to_bin(?config("a.6.epk-secret+hex", C)),
+	A_6_EPK_PK = hex:hex_to_bin(?config("a.6.epk-pk+hex", C)),
+	A_6_EPK_JWK = jose_jwk:from_binary(?config("a.6.epk-jwk+json", C)),
+	A_6_PROTECTED = ?config("a.6.jwe+json", C),
+	A_6_JWE = jose_jwe:from_binary(A_6_PROTECTED),
+	A_6_Z = hex:hex_to_bin(?config("a.6.z+hex", C)),
+	A_6_BOB_SK = << A_6_BOB_Secret/binary, A_6_BOB_PK/binary >>,
+	A_6_EPK_SK = << A_6_EPK_Secret/binary, A_6_EPK_PK/binary >>,
+	A_6_BOB_S_JWK = jose_jwk:from_okp({'X25519', A_6_BOB_SK}),
+	A_6_EPK_S_JWK = jose_jwk:from_okp({'X25519', A_6_EPK_SK}),
+	{_, A_6_BOB_SK} = jose_jwk:to_key(A_6_BOB_S_JWK),
+	{_, A_6_BOB_PK} = jose_jwk:to_public_key(A_6_BOB_S_JWK),
+	{_, A_6_BOB_PK} = jose_jwk:to_key(A_6_BOB_JWK),
+	{_, A_6_EPK_SK} = jose_jwk:to_key(A_6_EPK_S_JWK),
+	{_, A_6_EPK_PK} = jose_jwk:to_public_key(A_6_EPK_S_JWK),
+	{_, A_6_EPK_PK} = jose_jwk:to_key(A_6_EPK_JWK),
+	A_6_Z = jose_jwk:shared_secret(A_6_BOB_JWK, A_6_EPK_S_JWK),
+	A_6_Z = jose_jwk:shared_secret(A_6_EPK_JWK, A_6_BOB_S_JWK),
+	A_6_TEXT = <<"Example of X25519 encryption">>,
+	{_, A_6_ENC_MAP} = jose_jwe:block_encrypt({A_6_BOB_JWK, A_6_EPK_S_JWK}, A_6_TEXT, A_6_JWE),
+	{_, A_6_ENC_COMPACT} = jose_jwe:compact(A_6_ENC_MAP),
+	{A_6_TEXT, A_6_JWE} = jose_jwe:block_decrypt(A_6_BOB_S_JWK, A_6_ENC_MAP),
+	{A_6_TEXT, A_6_JWE} = jose_jwe:block_decrypt(A_6_BOB_S_JWK, A_6_ENC_COMPACT),
+	ok.
+
+% CFRG ECDH and signatures in JOSE
+% A.7.  ECDH-ES with X448
+% [https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves-00#appendix-A.7]
+jose_cfrg_curves_a_7(Config) ->
+	C = ?config(jose_cfrg_curves_a_7, Config),
+	% A.7
+	A_7_BOB_JWK = jose_jwk:from_binary(?config("a.7.bob-jwk+json", C)),
+	A_7_BOB_Secret = hex:hex_to_bin(?config("a.7.bob-secret+hex", C)),
+	A_7_BOB_PK = hex:hex_to_bin(?config("a.7.bob-pk+hex", C)),
+	A_7_EPK_Secret = hex:hex_to_bin(?config("a.7.epk-secret+hex", C)),
+	A_7_EPK_PK = hex:hex_to_bin(?config("a.7.epk-pk+hex", C)),
+	A_7_EPK_JWK = jose_jwk:from_binary(?config("a.7.epk-jwk+json", C)),
+	A_7_PROTECTED = ?config("a.7.jwe+json", C),
+	A_7_JWE = jose_jwe:from_binary(A_7_PROTECTED),
+	A_7_Z = hex:hex_to_bin(?config("a.7.z+hex", C)),
+	A_7_BOB_SK = << A_7_BOB_Secret/binary, A_7_BOB_PK/binary >>,
+	A_7_EPK_SK = << A_7_EPK_Secret/binary, A_7_EPK_PK/binary >>,
+	A_7_BOB_S_JWK = jose_jwk:from_okp({'X448', A_7_BOB_SK}),
+	A_7_EPK_S_JWK = jose_jwk:from_okp({'X448', A_7_EPK_SK}),
+	{_, A_7_BOB_SK} = jose_jwk:to_key(A_7_BOB_S_JWK),
+	{_, A_7_BOB_PK} = jose_jwk:to_public_key(A_7_BOB_S_JWK),
+	{_, A_7_BOB_PK} = jose_jwk:to_key(A_7_BOB_JWK),
+	{_, A_7_EPK_SK} = jose_jwk:to_key(A_7_EPK_S_JWK),
+	{_, A_7_EPK_PK} = jose_jwk:to_public_key(A_7_EPK_S_JWK),
+	{_, A_7_EPK_PK} = jose_jwk:to_key(A_7_EPK_JWK),
+	A_7_Z = jose_jwk:shared_secret(A_7_BOB_JWK, A_7_EPK_S_JWK),
+	A_7_Z = jose_jwk:shared_secret(A_7_EPK_JWK, A_7_BOB_S_JWK),
+	A_7_TEXT = <<"Example of X448 encryption">>,
+	{_, A_7_ENC_MAP} = jose_jwe:block_encrypt({A_7_BOB_JWK, A_7_EPK_S_JWK}, A_7_TEXT, A_7_JWE),
+	{_, A_7_ENC_COMPACT} = jose_jwe:compact(A_7_ENC_MAP),
+	{A_7_TEXT, A_7_JWE} = jose_jwe:block_decrypt(A_7_BOB_S_JWK, A_7_ENC_MAP),
+	{A_7_TEXT, A_7_JWE} = jose_jwe:block_decrypt(A_7_BOB_S_JWK, A_7_ENC_COMPACT),
+	ok.
 
 % JSON Web Encryption (JWE)
 % A.1.  Example JWE using RSAES-OAEP and AES GCM

@@ -11,7 +11,7 @@ Add `jose` to your project's dependencies in `mix.exs`
 ```elixir
 defp deps do
   [
-    {:jose, "~> 1.4"}
+    {:jose, "~> 1.5"}
   ]
 end
 ```
@@ -33,7 +33,7 @@ For example, with Elixir and `mix.exs`
 ```elixir
 defp deps do
   [
-    {:jose, "~> 1.4"},
+    {:jose, "~> 1.5"},
     {:poison, "~> 1.5"}
   ]
 end
@@ -51,6 +51,23 @@ Or with Erlang and `rebar.config`
 `jose` will attempt to find a suitable JSON encoder/decoder and will default to Poison on Elixir and jiffy, jsone, or jsx on Erlang.  If more than one are present, it will default to Poison.
 
 You may also specify a different `json_module` as an application environment variable to `jose` or by using `jose:json_module/1` or `JOSE.json_module/1`.
+
+#### Curve25519 and Curve448 Support
+
+Curve25519 and Curve448 and their associated signing/key exchange functions are experimentally supported while [CFRG ECDH and signatures in JOSE](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves) is still a draft.
+
+Fallback support for `Ed25519`, `Ed25519ph`, `X25519`, and `X448` is provided (`Ed448` and `Ed448ph` are not yet supported).  See [`crypto_fallback`](#cryptographic-algorithm-fallback) below.
+
+External support for `Ed25519`, `Ed25519ph`, and `X25519` is also provided by the [libsodium](https://github.com/potatosalad/erlang-libsodium) library.  If detected as being present, libsodium will be used by default.  Other modules which implement the `jose_curve25519` or `jose_curve448` behaviors may also be used as follows:
+
+```elixir
+# Curve25519
+JOSE.curve25519_module(:libsodium)           # uses a asynchronous port driver written in C
+JOSE.curve25519_module(:jose_jwa_curve25519) # uses the pure Erlang implementation (slow)
+
+# Curve448
+JOSE.curve448_module(:jose_jwa_curve448) # uses te purse Erlang implementation (slow)
+```
 
 #### Cryptographic Algorithm Fallback
 
@@ -74,11 +91,13 @@ JOSE.JWA.supports
     "ECDH-ES+A128KW", "ECDH-ES+A192KW", "ECDH-ES+A256KW", "PBES2-HS256+A128KW",
     "PBES2-HS512+A256KW", "RSA-OAEP", "RSA1_5", "dir"]},
   {:enc, ["A128CBC-HS256", "A128GCM", "A192GCM", "A256CBC-HS512", "A256GCM"]},
-  {:zip, ["DEF"]}}, {:jwk, {:kty, ["EC", "RSA", "oct"]}},
+  {:zip, ["DEF"]}},
+ {:jwk, {:kty, ["EC", "OKP", "RSA", "oct"]},
+  {:kty_OKP_crv, ["Ed25519", "Ed25519ph", "X25519"]}},
  {:jws,
   {:alg,
-   ["ES256", "ES384", "ES512", "HS256", "HS384", "HS512", "RS256", "RS384",
-    "RS512"]}}]
+   ["ES256", "ES384", "ES512", "Ed25519", "Ed25519ph", "HS256", "HS384",
+    "HS512", "RS256", "RS384", "RS512"]}}]
 
 # setting crypto_fallback to true
 JOSE.crypto_fallback(true)
@@ -94,11 +113,13 @@ JOSE.JWA.supports
     "RSA-OAEP", "RSA-OAEP-256", "RSA1_5", "dir"]},
   {:enc,
    ["A128CBC-HS256", "A128GCM", "A192CBC-HS384", "A192GCM", "A256CBC-HS512",
-    "A256GCM"]}, {:zip, ["DEF"]}}, {:jwk, {:kty, ["EC", "RSA", "oct"]}},
+    "A256GCM"]}, {:zip, ["DEF"]}},
+ {:jwk, {:kty, ["EC", "OKP", "RSA", "oct"]},
+  {:kty_OKP_crv, ["Ed25519", "Ed25519ph", "X25519", "X448"]}},
  {:jws,
   {:alg,
-   ["ES256", "ES384", "ES512", "HS256", "HS384", "HS512", "PS256", "PS384",
-    "PS512", "RS256", "RS384", "RS512"]}}]
+   ["ES256", "ES384", "ES512", "Ed25519", "Ed25519ph", "HS256", "HS384",
+    "HS512", "PS256", "PS384", "PS512", "RS256", "RS384", "RS512"]}}]
 ```
 
 #### Unsecured Signing Vulnerability
@@ -156,7 +177,7 @@ JOSE.JWA.supports[:jws]
 JOSE.unsecured_signing(true)
 
 # the "none" algorithm is now available for use
-JOSE.JWA.supports
+JOSE.JWA.supports[:jws]
 
 {:alg,
  ["ES256", "ES384", "ES512", "HS256", "HS384", "HS512", "RS256", "RS384",

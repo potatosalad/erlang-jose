@@ -122,6 +122,21 @@ defmodule JOSE.JWK do
   def from_oct_file(password, file), do: :jose_jwk.from_oct_file(password, file) |> from_encrypted_record
 
   @doc """
+  Converts an octet key pair into a `JOSE.JWK` with `"kty"` of `"OKP"`.
+  """
+  def from_okp(okp), do: :jose_jwk.from_okp(okp) |> from_record
+
+  @doc """
+  Converts an openssh key into a `JOSE.JWK` with `"kty"` of `"OKP"`.
+  """
+  def from_openssh_key(openssh_key), do: :jose_jwk.from_openssh_key(openssh_key) |> from_record
+
+  @doc """
+  Reads file and calls `from_openssh_key/1` to convert into a `JOSE.JWK`.
+  """
+  def from_openssh_key_file(file), do: :jose_jwk.from_openssh_key_file(file) |> from_record
+
+  @doc """
   Converts a PEM (Privacy Enhanced Email) binary into a `JOSE.JWK`.
   """
   def from_pem(pem), do: :jose_jwk.from_pem(pem) |> from_record
@@ -247,6 +262,24 @@ defmodule JOSE.JWK do
   def to_oct_file(password, file, jwe=%JOSE.JWE{}, jwk), do: to_oct_file(password, file, JOSE.JWE.to_record(jwe), jwk)
   def to_oct_file(password, file, jwe, jwk=%JOSE.JWK{}), do: to_oct_file(password, file, jwe, to_record(jwk))
   def to_oct_file(password, file, jwe, jwk), do: :jose_jwk.to_oct_file(password, file, jwe, jwk)
+
+  @doc """
+  Converts a `JOSE.JWK` into an octet key pair.
+  """
+  def to_okp(jwk=%JOSE.JWK{}), do: to_okp(to_record(jwk))
+  def to_okp(jwk), do: :jose_jwk.to_okp(jwk)
+
+  @doc """
+  Converts a `JOSE.JWK` into an OpenSSH key binary.
+  """
+  def to_openssh_key(jwk=%JOSE.JWK{}), do: to_openssh_key(to_record(jwk))
+  def to_openssh_key(jwk), do: :jose_jwk.to_openssh_key(jwk)
+
+  @doc """
+  Calls `to_openssh_key/1` on a `JOSE.JWK` and then writes the binary to file.
+  """
+  def to_openssh_key_file(file, jwk=%JOSE.JWK{}), do: to_openssh_key_file(file, to_record(jwk))
+  def to_openssh_key_file(file, jwk), do: :jose_jwk.to_openssh_key_file(file, jwk)
 
   @doc """
   Converts a `JOSE.JWK` into a PEM (Privacy Enhanced Email) binary.
@@ -454,6 +487,13 @@ defmodule JOSE.JWK do
   """
   def generate_key(jwk=%JOSE.JWK{}), do: jwk |> to_record |> generate_key
   def generate_key(parameters), do: :jose_jwk.generate_key(parameters) |> from_record
+
+  @doc """
+  Computes the shared secret between two keys.  Currently only works for `"EC"` keys and `"OKP"` keys with `"crv"` set to `"X25519"` or `"X448"`.
+  """
+  def shared_secret(your_jwk=%JOSE.JWK{}, my_jwk), do: shared_secret(to_record(your_jwk), my_jwk)
+  def shared_secret(your_jwk, my_jwk=%JOSE.JWK{}), do: shared_secret(your_jwk, to_record(my_jwk))
+  def shared_secret(your_jwk, my_jwk), do: :jose_jwk.shared_secret(your_jwk, my_jwk)
 
   @doc """
   Signs the `plain_text` using the `jwk` and the default signer algorithm `jws` for the key type.  See `sign/3`.

@@ -33,3 +33,4 @@ test/ct.cover.spec
 /test/cavp_SUITE_data/pkcs-1v2-1-vec
 /tmp
 *.ez
+jose.d
