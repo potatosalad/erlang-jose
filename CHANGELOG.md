@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.1 (2016-01-16)
+
+* Fixes
+  * Corrected formatting on some of the documentation.
+  * Fixed optional callbacks for `jose_jwk_kty:sign/3`
+
 ## 1.5.0 (2016-01-16)
 
 * Enhancements

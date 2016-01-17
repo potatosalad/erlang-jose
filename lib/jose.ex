@@ -30,12 +30,12 @@ defmodule JOSE do
   defdelegate crypto_fallback(boolean), to: :jose
 
   @doc """
-  Gets the current Curve25519 module used by `jose_curve25519', see `curve25519_module/1` for default.
+  Gets the current Curve25519 module used by `jose_curve25519`, see `curve25519_module/1` for default.
   """
   defdelegate curve25519_module(), to: :jose
   
   @doc """
-  Sets the current Curve25519 module used by `jose_curve25519'.
+  Sets the current Curve25519 module used by `jose_curve25519`.
 
   Currently supported Curve25519 modules (first found is used as default):
 
@@ -47,12 +47,12 @@ defmodule JOSE do
   defdelegate curve25519_module(module), to: :jose
 
   @doc """
-  Gets the current Curve448 module used by `jose_curve448', see `curve448_module/1` for default.
+  Gets the current Curve448 module used by `jose_curve448`, see `curve448_module/1` for default.
   """
   defdelegate curve448_module(), to: :jose
   
   @doc """
-  Sets the current Curve448 module used by `jose_curve448'.
+  Sets the current Curve448 module used by `jose_curve448`.
 
   Currently supported Curve448 modules (first found is used as default):
 
@@ -92,12 +92,12 @@ defmodule JOSE do
   defdelegate json_module(module), to: :jose
 
   @doc """
-  Gets the current SHA3 module used by `jose_sha3', see `sha3_module/1` for default.
+  Gets the current SHA3 module used by `jose_sha3`, see `sha3_module/1` for default.
   """
   defdelegate sha3_module(), to: :jose
   
   @doc """
-  Sets the current SHA3 module used by `jose_sha3'.
+  Sets the current SHA3 module used by `jose_sha3`.
 
   Currently supported SHA3 modules (first found is used as default):
 
