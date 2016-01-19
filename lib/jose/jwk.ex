@@ -361,6 +361,8 @@ defmodule JOSE.JWK do
   Decrypts the `encrypted` binary or map using the `jwk`.  See `JOSE.JWE.block_decrypt/2`.
   """
   def block_decrypt(encrypted, jwk=%JOSE.JWK{}), do: block_decrypt(encrypted, to_record(jwk))
+  def block_decrypt(encrypted, {your_public_jwk=%JOSE.JWK{}, my_private_jwk}), do: block_decrypt(encrypted, {to_record(your_public_jwk), my_private_jwk})
+  def block_decrypt(encrypted, {your_public_jwk, my_private_jwk=%JOSE.JWK{}}), do: block_decrypt(encrypted, {your_public_jwk, to_record(my_private_jwk)})
   def block_decrypt(encrypted, jwk) do
     case :jose_jwk.block_decrypt(encrypted, jwk) do
       {plain_text, jwe} when is_tuple(jwe) ->
@@ -374,6 +376,8 @@ defmodule JOSE.JWK do
   Encrypts the `plain_text` using the `jwk` and the default `jwe` based on the key type.  See `block_encrypt/3`.
   """
   def block_encrypt(plain_text, jwk=%JOSE.JWK{}), do: block_encrypt(plain_text, to_record(jwk))
+  def block_encrypt(plain_text, {your_public_jwk=%JOSE.JWK{}, my_private_jwk}), do: block_encrypt(plain_text, {to_record(your_public_jwk), my_private_jwk})
+  def block_encrypt(plain_text, {your_public_jwk, my_private_jwk=%JOSE.JWK{}}), do: block_encrypt(plain_text, {your_public_jwk, to_record(my_private_jwk)})
   def block_encrypt(plain_text, jwk), do: :jose_jwk.block_encrypt(plain_text, jwk)
 
   @doc """
@@ -381,12 +385,16 @@ defmodule JOSE.JWK do
   """
   def block_encrypt(plain_text, jwe=%JOSE.JWE{}, jwk), do: block_encrypt(plain_text, JOSE.JWE.to_record(jwe), jwk)
   def block_encrypt(plain_text, jwe, jwk=%JOSE.JWK{}), do: block_encrypt(plain_text, jwe, to_record(jwk))
+  def block_encrypt(plain_text, jwe, {your_public_jwk=%JOSE.JWK{}, my_private_jwk}), do: block_encrypt(plain_text, jwe, {to_record(your_public_jwk), my_private_jwk})
+  def block_encrypt(plain_text, jwe, {your_public_jwk, my_private_jwk=%JOSE.JWK{}}), do: block_encrypt(plain_text, jwe, {your_public_jwk, to_record(my_private_jwk)})
   def block_encrypt(plain_text, jwe, jwk), do: :jose_jwk.block_encrypt(plain_text, jwe, jwk)
 
   @doc """
   Key Agreement decryption of the `encrypted` binary or map using `my_private_jwk`.  See `box_encrypt/2` and `JOSE.JWE.block_decrypt/2`.
   """
   def box_decrypt(encrypted, my_private_jwk=%JOSE.JWK{}), do: box_decrypt(encrypted, to_record(my_private_jwk))
+  def box_decrypt(encrypted, {your_public_jwk=%JOSE.JWK{}, my_private_jwk}), do: box_decrypt(encrypted, {to_record(your_public_jwk), my_private_jwk})
+  def box_decrypt(encrypted, {your_public_jwk, my_private_jwk=%JOSE.JWK{}}), do: box_decrypt(encrypted, {your_public_jwk, to_record(my_private_jwk)})
   def box_decrypt(encrypted, my_private_jwk) do
     case :jose_jwk.box_decrypt(encrypted, my_private_jwk) do
       {plain_text, jwe} when is_tuple(jwe) ->

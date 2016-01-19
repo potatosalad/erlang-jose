@@ -25,10 +25,11 @@
 		ALG          :: any(),
 		EncryptedKey :: iodata(),
 		NewALG       :: any().
--callback next_cek(Key, ENCModule, ENC, ALG) -> DecryptedKey
+-callback next_cek(Key, {ENCModule, ENC}, ALG) -> {DecryptedKey, NewALG}
 	when
 		Key          :: any(),
 		ENCModule    :: module(),
 		ENC          :: any(),
 		ALG          :: any(),
-		DecryptedKey :: iodata().
+		DecryptedKey :: iodata(),
+		NewALG       :: any().

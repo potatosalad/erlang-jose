@@ -422,8 +422,15 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 #### `"alg"` [RFC 7518 Section 6](https://tools.ietf.org/html/rfc7518#section-6)
 
 - [X] `EC`
-- [X] `RSA`
 - [X] `oct`
+- [X] `OKP` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves)</sup>
+- [X] `OKP` with `{"crv":"Ed25519"}` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-eddsa](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.1)</sup>
+- [X] `OKP` with `{"crv":"Ed25519ph"}` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-eddsa](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.1)</sup>
+- [ ] `OKP` with `{"crv":"Ed448"}` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-eddsa](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.2)</sup>
+- [ ] `OKP` with `{"crv":"Ed448ph"}` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-eddsa](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.2)</sup>
+- [X] `OKP` with `{"crv":"X25519"}` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-curves](https://tools.ietf.org/html/draft-irtf-cfrg-curves#section-5)</sup>
+- [X] `OKP` with `{"crv":"X448"}` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-curves](https://tools.ietf.org/html/draft-irtf-cfrg-curves#section-5)</sup>
+- [X] `RSA`
 
 ### JSON Web Signature (JWS) [RFC 7515](https://tools.ietf.org/html/rfc7515)
 
@@ -435,6 +442,10 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 - [X] `RS256`
 - [X] `RS384`
 - [X] `RS512`
+- [X] `Ed25519` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-eddsa](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.1)</sup>
+- [X] `Ed25519ph` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-eddsa](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.1)</sup>
+- [ ] `Ed448` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-eddsa](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.2)</sup>
+- [ ] `Ed448ph` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-eddsa](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.2)</sup>
 - [X] `ES256`
 - [X] `ES384`
 - [X] `ES512`

@@ -129,6 +129,8 @@ defmodule JOSE.JWT do
   Encrypts a `JOSE.JWT` using the `jwk` and the default block encryptor algorithm `jwe` for the key type.  See `encrypt/3`.
   """
   def encrypt(jwk=%JOSE.JWK{}, jwt), do: encrypt(JOSE.JWK.to_record(jwk), jwt)
+  def encrypt({your_public_jwk=%JOSE.JWK{}, my_private_jwk}, jwt), do: encrypt({JOSE.JWK.to_record(your_public_jwk), my_private_jwk}, jwt)
+  def encrypt({your_public_jwk, my_private_jwk=%JOSE.JWK{}}, jwt), do: encrypt({your_public_jwk, JOSE.JWK.to_record(my_private_jwk)}, jwt)
   def encrypt(jwk, jwt=%JOSE.JWT{}), do: encrypt(jwk, to_record(jwt))
   def encrypt(jwk, jwt), do: :jose_jwt.encrypt(jwk, jwt)
 
@@ -138,6 +140,8 @@ defmodule JOSE.JWT do
   If `"typ"` is not specified in the `jwe`, `%{ "typ" => "JWT" }` will be added.
   """
   def encrypt(jwk=%JOSE.JWK{}, jwe, jwt), do: encrypt(JOSE.JWK.to_record(jwk), jwe, jwt)
+  def encrypt({your_public_jwk=%JOSE.JWK{}, my_private_jwk}, jwe, jwt), do: encrypt({JOSE.JWK.to_record(your_public_jwk), my_private_jwk}, jwe, jwt)
+  def encrypt({your_public_jwk, my_private_jwk=%JOSE.JWK{}}, jwe, jwt), do: encrypt({your_public_jwk, JOSE.JWK.to_record(my_private_jwk)}, jwe, jwt)
   def encrypt(jwk, jwe=%JOSE.JWE{}, jwt), do: encrypt(jwk, JOSE.JWE.to_record(jwe), jwt)
   def encrypt(jwk, jwe, jwt=%JOSE.JWT{}), do: encrypt(jwk, jwe, to_record(jwt))
   def encrypt(jwk, jwe, jwt), do: :jose_jwt.encrypt(jwk, jwe, jwt)

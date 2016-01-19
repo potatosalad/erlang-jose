@@ -20,7 +20,7 @@
 %% jose_jwe_alg callbacks
 -export([key_decrypt/3]).
 -export([key_encrypt/3]).
--export([next_cek/4]).
+-export([next_cek/3]).
 %% API
 -export([hmac_supported/0]).
 -export([wrap_supported/0]).
@@ -69,14 +69,23 @@ key_decrypt(Password, {_ENCModule, _ENC, EncryptedKey}, #jose_jwe_alg_pbes2{hmac
 key_decrypt(#jose_jwk{kty={KTYModule, KTY}}, EncryptedKey, JWEPBES2=#jose_jwe_alg_pbes2{}) ->
 	key_decrypt(KTYModule:derive_key(KTY), EncryptedKey, JWEPBES2).
 
-key_encrypt(Password, DecryptedKey, JWEPBES2=#jose_jwe_alg_pbes2{hmac=HMAC, bits=Bits, salt=Salt, iter=Iterations}) when is_binary(Password) ->
+key_encrypt(Password, DecryptedKey, ALG0=#jose_jwe_alg_pbes2{bits=Bits, salt=undefined}) ->
+	ALG1 = ALG0#jose_jwe_alg_pbes2{salt=wrap_salt(crypto:rand_bytes(Bits div 8), ALG0)},
+	key_encrypt(Password, DecryptedKey, ALG1);
+key_encrypt(Password, DecryptedKey, ALG0=#jose_jwe_alg_pbes2{bits=Bits, iter=undefined}) ->
+	ALG1 = ALG0#jose_jwe_alg_pbes2{iter=(Bits * 32)},
+	key_encrypt(Password, DecryptedKey, ALG1);
+key_encrypt(Password, DecryptedKey, JWEPBES2=#jose_jwe_alg_pbes2{hmac=HMAC, bits=Bits, salt=Salt, iter=Iterations})
+		when is_binary(Password)
+		andalso is_binary(Salt)
+		andalso is_integer(Iterations) ->
 	{ok, DerivedKey} = jose_jwa_pkcs5:pbkdf2({hmac, HMAC}, Password, Salt, Iterations, (Bits div 8) + (Bits rem 8)),
 	{jose_jwa_aes_kw:wrap(DecryptedKey, DerivedKey), JWEPBES2};
 key_encrypt(#jose_jwk{kty={KTYModule, KTY}}, DecryptedKey, JWEPBES2=#jose_jwe_alg_pbes2{}) ->
 	key_encrypt(KTYModule:derive_key(KTY), DecryptedKey, JWEPBES2).
 
-next_cek(_Key, ENCModule, ENC, #jose_jwe_alg_pbes2{}) ->
-	ENCModule:next_cek(ENC).
+next_cek(_Key, {ENCModule, ENC}, ALG=#jose_jwe_alg_pbes2{}) ->
+	{ENCModule:next_cek(ENC), ALG}.
 
 %%====================================================================
 %% API functions

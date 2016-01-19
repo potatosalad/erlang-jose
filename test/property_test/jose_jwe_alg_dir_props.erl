@@ -61,8 +61,8 @@ prop_key_decrypt() ->
 			jwk_jwe_gen(),
 			{Key, oneof([Key, JWK]), JWE}),
 		begin
-			CEK = jose_jwe:next_cek(JWK, JWE),
-			Key =:= jose_jwe:key_decrypt(JWK, CEK, JWE)
+			{DecKey, DecJWE} = jose_jwe:next_cek(JWK, JWE),
+			Key =:= jose_jwe:key_decrypt(JWK, DecKey, DecJWE)
 		end).
 
 prop_key_encrypt() ->
@@ -71,8 +71,8 @@ prop_key_encrypt() ->
 			jwk_jwe_gen(),
 			{Key, oneof([Key, JWK]), JWE}),
 		begin
-			CEK = jose_jwe:next_cek(JWK, JWE),
-			{<<>>, JWE} =:= jose_jwe:key_encrypt(JWK, CEK, JWE)
+			{DecKey, DecJWE} = jose_jwe:next_cek(JWK, JWE),
+			{<<>>, DecJWE} =:= jose_jwe:key_encrypt(JWK, DecKey, DecJWE)
 		end).
 
 prop_next_cek() ->
@@ -81,5 +81,6 @@ prop_next_cek() ->
 			jwk_jwe_gen(),
 			{Key, oneof([Key, JWK]), JWE}),
 		begin
-			Key =:= jose_jwe:next_cek(JWK, JWE)
+			{DecKey, DecJWE} = jose_jwe:next_cek(JWK, JWE),
+			Key =:= DecKey
 		end).

@@ -40,15 +40,6 @@
 		Options    :: any(),
 		KTY        :: any(),
 		CipherText :: iodata().
--callback generate_key(Parameters) -> KTY
-	when
-		Parameters :: any(),
-		KTY        :: any().
--callback generate_key(KTY, Fields) -> NewKTY
-	when
-		KTY    :: any(),
-		Fields :: map(),
-		NewKTY :: any().
 -callback key_encryptor(KTY, Fields, Key) -> JWEMap
 	when
 		KTY    :: any(),
@@ -79,13 +70,21 @@
 -optional_callbacks([derive_key/1]).
 -optional_callbacks([derive_key/2]).
 -optional_callbacks([encrypt_public/3]).
--optional_callbacks([generate_key/1]).
--optional_callbacks([generate_key/2]).
 -optional_callbacks([key_encryptor/3]).
 -optional_callbacks([sign/3]).
 -optional_callbacks([signer/3]).
 -optional_callbacks([verify/4]).
 -endif.
+
+-callback generate_key(Parameters) -> KTY
+	when
+		Parameters :: any(),
+		KTY        :: any().
+-callback generate_key(KTY, Fields) -> NewKTY
+	when
+		KTY    :: any(),
+		Fields :: map(),
+		NewKTY :: any().
 
 %% API
 -export([from_key/1]).

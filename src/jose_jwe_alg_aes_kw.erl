@@ -20,7 +20,7 @@
 %% jose_jwe_alg callbacks
 -export([key_decrypt/3]).
 -export([key_encrypt/3]).
--export([next_cek/4]).
+-export([next_cek/3]).
 %% API
 
 %% Types
@@ -104,8 +104,8 @@ key_encrypt(DerivedKey, DecryptedKey, JWEAESKW=#jose_jwe_alg_aes_kw{gcm=true, iv
 key_encrypt(#jose_jwk{kty={KTYModule, KTY}}, DecryptedKey, JWEAESKW=#jose_jwe_alg_aes_kw{}) ->
 	key_encrypt(KTYModule:derive_key(KTY), DecryptedKey, JWEAESKW).
 
-next_cek(_Key, ENCModule, ENC, #jose_jwe_alg_aes_kw{}) ->
-	ENCModule:next_cek(ENC).
+next_cek(_Key, {ENCModule, ENC}, ALG=#jose_jwe_alg_aes_kw{}) ->
+	{ENCModule:next_cek(ENC), ALG}.
 
 %%====================================================================
 %% API functions

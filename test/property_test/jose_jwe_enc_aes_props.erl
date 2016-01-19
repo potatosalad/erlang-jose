@@ -32,7 +32,7 @@ jwk_jwe_maps() ->
 		begin
 			FakeJWEMap = #{ <<"alg">> => <<"RSA1_5">>, <<"enc">> => ENC },
 			FakeJWE = jose_jwe:from_map(FakeJWEMap),
-			Key = jose_jwe:next_cek(undefined, FakeJWE),
+			{Key, _} = jose_jwe:next_cek(undefined, FakeJWE),
 			JWKMap = #{
 				<<"kty">> => <<"oct">>,
 				<<"k">> => base64url:encode(Key)

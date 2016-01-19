@@ -20,7 +20,7 @@
 %% jose_jwe_alg callbacks
 -export([key_decrypt/3]).
 -export([key_encrypt/3]).
--export([next_cek/4]).
+-export([next_cek/3]).
 %% API
 
 %% Types
@@ -50,10 +50,10 @@ key_decrypt(#jose_jwk{kty={KTYModule, KTY}}, _EncryptedKey, dir) ->
 key_encrypt(_Key, _DecryptedKey, dir) ->
 	{<<>>, dir}.
 
-next_cek(Key, _ENCModule, _ENC, dir) when is_binary(Key) ->
-	Key;
-next_cek(#jose_jwk{kty={KTYModule, KTY}}, ENCModule, ENC, dir) ->
-	next_cek(KTYModule:derive_key(KTY), ENCModule, ENC, dir).
+next_cek(Key, {_ENCModule, _ENC}, dir) when is_binary(Key) ->
+	{Key, dir};
+next_cek(#jose_jwk{kty={KTYModule, KTY}}, {ENCModule, ENC}, dir) ->
+	next_cek(KTYModule:derive_key(KTY), {ENCModule, ENC}, dir).
 
 %%====================================================================
 %% API functions

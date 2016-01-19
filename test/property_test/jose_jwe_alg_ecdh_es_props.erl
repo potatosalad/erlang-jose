@@ -118,7 +118,7 @@ prop_key_encrypt_and_key_decrypt() ->
 	?FORALL({{BobBox, AliceBox}, JWE},
 		jwk_jwe_gen(),
 		begin
-			CEK = jose_jwe:next_cek(AliceBox, JWE),
-			{EncKey, EncJWE} = jose_jwe:key_encrypt(AliceBox, CEK, JWE),
-			CEK =:= jose_jwe:key_decrypt(BobBox, EncKey, EncJWE)
+			{DecKey, DecJWE} = jose_jwe:next_cek(AliceBox, JWE),
+			{EncKey, EncJWE} = jose_jwe:key_encrypt(AliceBox, DecKey, DecJWE),
+			DecKey =:= jose_jwe:key_decrypt(BobBox, EncKey, EncJWE)
 		end).

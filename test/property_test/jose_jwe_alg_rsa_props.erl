@@ -81,7 +81,7 @@ prop_key_encrypt_and_key_decrypt() ->
 	?FORALL({{AlicePrivateJWK, AlicePublicJWK}, JWE},
 		jwk_jwe_gen(),
 		begin
-			CEK = jose_jwe:next_cek(AlicePublicJWK, JWE),
-			{EncKey, EncJWE} = jose_jwe:key_encrypt(AlicePublicJWK, CEK, JWE),
-			CEK =:= jose_jwe:key_decrypt(AlicePrivateJWK, EncKey, EncJWE)
+			{DecKey, DecJWE} = jose_jwe:next_cek(AlicePublicJWK, JWE),
+			{EncKey, EncJWE} = jose_jwe:key_encrypt(AlicePublicJWK, DecKey, DecJWE),
+			DecKey =:= jose_jwe:key_decrypt(AlicePrivateJWK, EncKey, EncJWE)
 		end).

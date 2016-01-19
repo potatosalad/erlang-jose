@@ -20,7 +20,7 @@
 %% jose_jwe_alg callbacks
 -export([key_decrypt/3]).
 -export([key_encrypt/3]).
--export([next_cek/4]).
+-export([next_cek/3]).
 %% API
 
 %% Types
@@ -64,8 +64,8 @@ key_decrypt(#jose_jwk{kty={KTYModule, KTY}}, {_ENCModule, _ENC, EncryptedKey}, #
 key_encrypt(#jose_jwk{kty={KTYModule, KTY}}, DecryptedKey, JWERSA=#jose_jwe_alg_rsa{algorithm=Algorithm}) ->
 	{KTYModule:encrypt_public(DecryptedKey, Algorithm, KTY), JWERSA}.
 
-next_cek(_Key, ENCModule, ENC, #jose_jwe_alg_rsa{}) ->
-	ENCModule:next_cek(ENC).
+next_cek(_Key, {ENCModule, ENC}, ALG=#jose_jwe_alg_rsa{}) ->
+	{ENCModule:next_cek(ENC), ALG}.
 
 %%====================================================================
 %% API functions

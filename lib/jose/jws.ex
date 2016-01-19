@@ -22,6 +22,8 @@ defmodule JOSE.JWS do
 
   The following algorithms are currently supported by `JOSE.JWS` (some may need the `JOSE.crypto_fallback/1` option to be enabled):
 
+    * `"Ed25519"`
+    * `"Ed25519ph"`
     * `"ES256"`
     * `"ES384"`
     * `"ES512"`
@@ -39,6 +41,24 @@ defmodule JOSE.JWS do
   ## Examples
 
   All of the example keys generated below can be found here: [https://gist.github.com/potatosalad/925a8b74d85835e285b9](https://gist.github.com/potatosalad/925a8b74d85835e285b9)
+
+  ### Ed25519 and Ed25519ph
+
+      # let's generate the 2 keys we'll use below
+      jwk_ed25519   = JOSE.JWK.generate_key({:okp, :Ed25519})
+      jwk_ed25519ph = JOSE.JWK.generate_key({:okp, :Ed25519ph})
+
+      # Ed25519
+      iex> signed_ed25519 = JOSE.JWS.sign(jwk_ed25519, "{}", %{ "alg" => "Ed25519" }) |> JOSE.JWS.compact |> elem(1)
+      "eyJhbGciOiJFZDI1NTE5In0.e30.xyg2LTblm75KbLFJtROZRhEgAFJdlqH9bhx8a9LO1yvLxNLhO9fLqnFuU3ojOdbObr8bsubPkPqUfZlPkGHXCQ"
+      iex> JOSE.JWS.verify(jwk_ed25519, signed_ed25519) |> elem(0)
+      true
+
+      # Ed25519ph
+      iex> signed_ed25519ph = JOSE.JWS.sign(jwk_ed25519ph, "{}", %{ "alg" => "Ed25519ph" }) |> JOSE.JWS.compact |> elem(1)
+      "eyJhbGciOiJFZDI1NTE5cGgifQ.e30.R3je4TTxQvoBOupIKkel_b8eW-G8KaWmXuC14NMGSCcHCTalURtMmVqX2KbcIpFBeI-OKP3BLHNIpt1keKveDg"
+      iex> JOSE.JWS.verify(jwk_ed25519ph, signed_ed25519ph) |> elem(0)
+      true
 
   ### ES256, ES384, and ES512
 

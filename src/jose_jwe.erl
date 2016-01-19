@@ -181,9 +181,9 @@ block_decrypt(Key, {Modules, EncryptedMap=#{
 			{PlainText, JWE}
 	end.
 
-block_encrypt(Key, Block, JWE=#jose_jwe{}) ->
-	CEK = next_cek(Key, JWE),
-	block_encrypt(Key, Block, CEK, JWE);
+block_encrypt(Key, Block, JWE0=#jose_jwe{}) ->
+	{CEK, JWE1} = next_cek(Key, JWE0),
+	block_encrypt(Key, Block, CEK, JWE1);
 block_encrypt(Key, PlainText, Other) ->
 	block_encrypt(Key, PlainText, from(Other)).
 
@@ -286,8 +286,10 @@ key_encrypt(Key, DecryptedKey, JWE0=#jose_jwe{alg={ALGModule, ALG0}}) ->
 key_encrypt(Key, EncryptedKey, Other) ->
 	key_encrypt(Key, EncryptedKey, from(Other)).
 
-next_cek(Key, #jose_jwe{alg={ALGModule, ALG}, enc={ENCModule, ENC}}) ->
-	ALGModule:next_cek(Key, ENCModule, ENC, ALG);
+next_cek(Key, JWE0=#jose_jwe{alg={ALGModule, ALG0}, enc={ENCModule, ENC}}) ->
+	{DecryptedKey, ALG1} = ALGModule:next_cek(Key, {ENCModule, ENC}, ALG0),
+	JWE1 = JWE0#jose_jwe{alg={ALGModule, ALG1}},
+	{DecryptedKey, JWE1};
 next_cek(Key, Other) ->
 	next_cek(Key, from(Other)).
 
