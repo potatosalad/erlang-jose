@@ -8,6 +8,7 @@ elixir:
 otp_release:
   - 17.5
   - 18.0
+  - 18.2
 
 notifications:
   email: false

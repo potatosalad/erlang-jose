@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.2 (2016-01-19)
+
+* Enhancements
+  * Documentation of the encryption algorithms, specifically [`JOSE.JWE`](https://hexdocs.pm/jose/JOSE.JWE.html).
+
+* Fixes
+  * Corrected optional callbacks issue for Elixir.
+  * More consistent behavior for ECDH related encryption and decryption.
+
 ## 1.5.1 (2016-01-16)
 
 * Fixes
