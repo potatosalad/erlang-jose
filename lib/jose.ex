@@ -56,7 +56,7 @@ defmodule JOSE do
 
   Currently supported Curve448 modules (first found is used as default):
 
-    * `jose_jwa_curve448` - only supported when `crypto_fallback/0` is `true` (NOTE: only X448 related functions are currently implemented)
+    * `jose_jwa_curve448` - only supported when `crypto_fallback/0` is `true` 
 
   Additional modules that implement the `jose_curve448` behavior may also be used.
   """
@@ -101,6 +101,7 @@ defmodule JOSE do
 
   Currently supported SHA3 modules (first found is used as default):
 
+    * [`keccakf1600`](https://github.com/potatosalad/erlang-keccakf1600)
     * `jose_jwa_sha3` - only supported when `crypto_fallback/0` is `true`
 
   Additional modules that implement the `jose_sha3` behavior may also be used.

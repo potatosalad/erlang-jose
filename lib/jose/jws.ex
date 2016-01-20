@@ -24,6 +24,8 @@ defmodule JOSE.JWS do
 
     * `"Ed25519"`
     * `"Ed25519ph"`
+    * `"Ed448"`
+    * `"Ed448ph"`
     * `"ES256"`
     * `"ES384"`
     * `"ES512"`
@@ -58,6 +60,24 @@ defmodule JOSE.JWS do
       iex> signed_ed25519ph = JOSE.JWS.sign(jwk_ed25519ph, "{}", %{ "alg" => "Ed25519ph" }) |> JOSE.JWS.compact |> elem(1)
       "eyJhbGciOiJFZDI1NTE5cGgifQ.e30.R3je4TTxQvoBOupIKkel_b8eW-G8KaWmXuC14NMGSCcHCTalURtMmVqX2KbcIpFBeI-OKP3BLHNIpt1keKveDg"
       iex> JOSE.JWS.verify(jwk_ed25519ph, signed_ed25519ph) |> elem(0)
+      true
+
+  ### Ed448 and Ed448ph
+
+      # let's generate the 2 keys we'll use below
+      jwk_ed448   = JOSE.JWK.generate_key({:okp, :Ed448})
+      jwk_ed448ph = JOSE.JWK.generate_key({:okp, :Ed448ph})
+
+      # Ed448
+      iex> signed_ed448 = JOSE.JWS.sign(jwk_ed448, "{}", %{ "alg" => "Ed448" }) |> JOSE.JWS.compact |> elem(1)
+      "eyJhbGciOiJFZDQ0OCJ9.e30.UlqTx962FvZP1G5pZOrScRXlAB0DJI5dtZkknNTm1E70AapkONi8vzpvKd355czflQdc7uyOzTeAz0-eLvffCKgWm_zebLly7L3DLBliynQk14qgJgz0si-60mBFYOIxRghk95kk5hCsFpxpVE45jRIA"
+      iex> JOSE.JWS.verify(jwk_ed448, signed_ed448) |> elem(0)
+      true
+
+      # Ed448ph
+      iex> signed_ed448ph = JOSE.JWS.sign(jwk_ed448ph, "{}", %{ "alg" => "Ed448ph" }) |> JOSE.JWS.compact |> elem(1)
+      "eyJhbGciOiJFZDQ0OHBoIn0.e30._7wxQF8Am-Fg3E-KgREXBv3Gr2vqLM6ja_7hs6kA5EakCrJVQ2QiAHrr4NriLABmiPbVd7F7IiaAApyR3Ud4ak3lGcHVxSyksjJjvBUbKnSB_xkT6v_QMmx27hV08JlxskUkfvjAG0-yKGC8BXoT9R0A"
+      iex> JOSE.JWS.verify(jwk_ed448ph, signed_ed448ph) |> elem(0)
       true
 
   ### ES256, ES384, and ES512

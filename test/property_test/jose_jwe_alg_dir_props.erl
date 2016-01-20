@@ -81,6 +81,6 @@ prop_next_cek() ->
 			jwk_jwe_gen(),
 			{Key, oneof([Key, JWK]), JWE}),
 		begin
-			{DecKey, DecJWE} = jose_jwe:next_cek(JWK, JWE),
+			{DecKey, _DecJWE} = jose_jwe:next_cek(JWK, JWE),
 			Key =:= DecKey
 		end).

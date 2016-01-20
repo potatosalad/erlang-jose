@@ -341,7 +341,7 @@ check_sha3(Fallback, Entries) ->
 		[] ->
 			case application:get_env(jose, sha3_module, undefined) of
 				undefined ->
-					check_sha3_modules(Fallback, []);
+					check_sha3_modules(Fallback, [keccakf1600]);
 				M when is_atom(M) ->
 					check_sha3_module(M)
 			end
@@ -349,6 +349,8 @@ check_sha3(Fallback, Entries) ->
 	[{sha3_module, SHA3Module} | Entries].
 
 %% @private
+check_sha3_module(keccakf1600) ->
+	check_sha3_module(jose_sha3_keccakf1600);
 check_sha3_module(Module) when is_atom(Module) ->
 	Module.
 

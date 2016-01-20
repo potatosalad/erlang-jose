@@ -104,7 +104,7 @@ curve448(N, Base) ->
 
 % 5. The X25519 and X448 functions - https://tools.ietf.org/html/draft-irtf-cfrg-curves#section-5
 
-clamp_scalar(K0) ->
+clamp_scalar(K0) when is_integer(K0) ->
 	K1 = K0 band (bnot 3),
 	K2 = K1 bor (128 bsl (?b - 8)),
 	K2.

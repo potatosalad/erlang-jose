@@ -182,6 +182,12 @@ parse_vector_val(<<>>, Key = << C, O, U, N, T >>, Bin, true)
 		andalso (T =:= $T orelse T =:= $t) ->
 	Val = binary_to_integer(Bin),
 	{vector, {Key, Val}, int};
+parse_vector_val(<<>>, Key = << L, E, N >>, Bin, true)
+		when (L =:= $L orelse L =:= $l)
+		andalso (E =:= $E orelse E =:= $e)
+		andalso (N =:= $N orelse N =:= $n) ->
+	Val = binary_to_integer(Bin),
+	{vector, {Key, Val}, int};
 parse_vector_val(<<>>, Key, Hex, true) ->
 	Val = hex:hex_to_bin(Hex),
 	{vector, {Key, Val}, hex};

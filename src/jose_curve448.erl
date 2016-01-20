@@ -13,13 +13,13 @@
 -callback ed448_keypair() -> {PublicKey::binary(), SecretKey::binary()}.
 -callback ed448_keypair(Seed::binary()) -> {PublicKey::binary(), SecretKey::binary()}.
 -callback ed448_secret_to_public(SecretKey::binary()) -> PublicKey::binary().
--callback ed448_sign(Message::binary(), SecretKey::binary()) -> Signature::binary().
--callback ed448_verify(Signature::binary(), Message::binary(), PublicKey::binary()) -> boolean().
+-callback ed448_sign(Message::binary()|{binary(),binary()}, SecretKey::binary()) -> Signature::binary().
+-callback ed448_verify(Signature::binary(), Message::binary()|{binary(),binary()}, PublicKey::binary()) -> boolean().
 -callback ed448ph_keypair() -> {PublicKey::binary(), SecretKey::binary()}.
 -callback ed448ph_keypair(Seed::binary()) -> {PublicKey::binary(), SecretKey::binary()}.
 -callback ed448ph_secret_to_public(SecretKey::binary()) -> PublicKey::binary().
--callback ed448ph_sign(Message::binary(), SecretKey::binary()) -> Signature::binary().
--callback ed448ph_verify(Signature::binary(), Message::binary(), PublicKey::binary()) -> boolean().
+-callback ed448ph_sign(Message::binary()|{binary(),binary()}, SecretKey::binary()) -> Signature::binary().
+-callback ed448ph_verify(Signature::binary(), Message::binary()|{binary(),binary()}, PublicKey::binary()) -> boolean().
 -callback x448_keypair() -> {PublicKey::binary(), SecretKey::binary()}.
 -callback x448_keypair(Seed::binary()) -> {PublicKey::binary(), SecretKey::binary()}.
 -callback x448_secret_to_public(SecretKey::binary()) -> PublicKey::binary().

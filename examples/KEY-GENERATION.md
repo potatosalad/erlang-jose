@@ -118,7 +118,6 @@ jwk_Ed25519ph = JOSE.JWK.generate_key({:okp, :Ed25519ph})
 jwk_X25519    = JOSE.JWK.generate_key({:okp, :X25519})
 
 % Curve448
-% NOTE: Ed448 and Ed448ph are not yet fully supported
 jwk_Ed448   = JOSE.JWK.generate_key({:okp, :Ed448})
 jwk_Ed448ph = JOSE.JWK.generate_key({:okp, :Ed448ph})
 jwk_X448    = JOSE.JWK.generate_key({:okp, :X448})

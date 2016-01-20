@@ -34,27 +34,43 @@
 
 % Ed448
 ed448_keypair() ->
-	jose_curve25519_unsupported:keypair().
+	jose_jwa_ed448:keypair().
 
 ed448_keypair(Seed)
 		when is_binary(Seed) ->
-	jose_curve25519_unsupported:keypair(Seed).
+	jose_jwa_ed448:keypair(Seed).
 
 ed448_secret_to_public(SecretKey)
 		when is_binary(SecretKey) ->
-	jose_curve25519_unsupported:sk_to_pk(SecretKey).
+	jose_jwa_ed448:secret_to_pk(SecretKey).
 
 ed448_sign(Message, SecretKey)
 		when is_binary(Message)
 		andalso is_binary(SecretKey) ->
-	jose_curve25519_unsupported:sign(Message, SecretKey).
+	jose_jwa_ed448:sign(Message, SecretKey);
+ed448_sign({Context, Message}, SecretKey)
+		when is_binary(Context)
+		andalso is_binary(Message)
+		andalso is_binary(SecretKey) ->
+	jose_jwa_ed448:sign(Context, Message, SecretKey).
 
 ed448_verify(Signature, Message, PublicKey)
 		when is_binary(Signature)
 		andalso is_binary(Message)
 		andalso is_binary(PublicKey) ->
 	try
-		jose_curve25519_unsupported:verify(Signature, Message, PublicKey)
+		jose_jwa_ed448:verify(Signature, Message, PublicKey)
+	catch
+		_:_ ->
+			false
+	end;
+ed448_verify(Signature, {Context, Message}, PublicKey)
+		when is_binary(Signature)
+		andalso is_binary(Context)
+		andalso is_binary(Message)
+		andalso is_binary(PublicKey) ->
+	try
+		jose_jwa_ed448:verify(Signature, Context, Message, PublicKey)
 	catch
 		_:_ ->
 			false
@@ -62,27 +78,43 @@ ed448_verify(Signature, Message, PublicKey)
 
 % Ed448ph
 ed448ph_keypair() ->
-	jose_curve25519_unsupported:keypair().
+	jose_jwa_ed448:keypair().
 
 ed448ph_keypair(Seed)
 		when is_binary(Seed) ->
-	jose_curve25519_unsupported:keypair(Seed).
+	jose_jwa_ed448:keypair(Seed).
 
 ed448ph_secret_to_public(SecretKey)
 		when is_binary(SecretKey) ->
-	jose_curve25519_unsupported:sk_to_pk(SecretKey).
+	jose_jwa_ed448:secret_to_pk(SecretKey).
 
 ed448ph_sign(Message, SecretKey)
 		when is_binary(Message)
 		andalso is_binary(SecretKey) ->
-	jose_curve25519_unsupported:sign(Message, SecretKey).
+	jose_jwa_ed448:sign_ph(Message, SecretKey);
+ed448ph_sign({Context, Message}, SecretKey)
+		when is_binary(Context)
+		andalso is_binary(Message)
+		andalso is_binary(SecretKey) ->
+	jose_jwa_ed448:sign_ph(Context, Message, SecretKey).
 
 ed448ph_verify(Signature, Message, PublicKey)
 		when is_binary(Signature)
 		andalso is_binary(Message)
 		andalso is_binary(PublicKey) ->
 	try
-		jose_curve25519_unsupported:verify(Signature, Message, PublicKey)
+		jose_jwa_ed448:verify_ph(Signature, Message, PublicKey)
+	catch
+		_:_ ->
+			false
+	end;
+ed448ph_verify(Signature, {Context, Message}, PublicKey)
+		when is_binary(Signature)
+		andalso is_binary(Context)
+		andalso is_binary(Message)
+		andalso is_binary(PublicKey) ->
+	try
+		jose_jwa_ed448:verify_ph(Signature, Context, Message, PublicKey)
 	catch
 		_:_ ->
 			false

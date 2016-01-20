@@ -42,7 +42,7 @@ ed25519_keypair(Seed)
 
 ed25519_secret_to_public(SecretKey)
 		when is_binary(SecretKey) ->
-	jose_jwa_ed25519:sk_to_pk(SecretKey).
+	jose_jwa_ed25519:secret_to_pk(SecretKey).
 
 ed25519_sign(Message, SecretKey)
 		when is_binary(Message)

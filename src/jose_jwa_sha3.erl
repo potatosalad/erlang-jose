@@ -32,14 +32,7 @@
 %%====================================================================
 
 rol64(A, N) ->
-	Z = ((A bsr (64 - (N rem 64))) + (A bsl (N rem 64))) rem (1 bsl 64),
-	% case get(poop) of
-	% 	true ->
-	% 		io:format("\ta=~w, n=~w, z=~w~n", [A, N, Z]);
-	% 	_ ->
-	% 		ok
-	% end,
-	Z.
+	((A bsr (64 - (N rem 64))) + (A bsl (N rem 64))) rem (1 bsl 64).
 
 keccak_f_1600_on_lanes(Lanes) ->
 	keccak_f_1600_on_lanes(Lanes, 1, 0).
@@ -50,25 +43,11 @@ keccak_f_1600_on_lanes(Lanes, R, Round) ->
 	% θ
 	Lanes0 = theta(Lanes),
 	% ρ and π
-	% put(round, Round),
 	Lanes1 = rho_and_pi(mget(Lanes0, 1, 0), Lanes0, 1, 0, 0),
-	% io:format("ρ and π L: (~w)~n~p~n", [Round, Lanes1]),
 	% χ
 	Lanes2 = chi(Lanes1, 0),
-	% case Round =:= 0 of
-	% 	true ->
-	% 		io:format("χ L: (~w)~n~p~n", [Round, Lanes2]);
-	% 	false ->
-	% 		ok
-	% end,
 	% ι
 	{Lanes3, Rn} = iota(Lanes2, R, 0),
-	% case Round =:= 0 of
-	% 	true ->
-	% 		io:format("ι L: (~w)~n~p~n", [Round, Lanes3]);
-	% 	false ->
-	% 		ok
-	% end,
 	keccak_f_1600_on_lanes(Lanes3, Rn, Round + 1).
 
 %% @private
@@ -77,17 +56,14 @@ theta(Lanes) ->
 		E = mget(Lanes, X),
 		mget(E, 0) bxor mget(E, 1) bxor mget(E, 2) bxor mget(E, 3) bxor mget(E, 4)
 	end || X <- lists:seq(0, 4)]),
-	% io:format("θ C: (~w)~n~p~n", [Round, C]),
 	D = list_to_tuple([begin
 		mget(C, (X + 4) rem 5) bxor rol64(mget(C, (X + 1) rem 5), 1)
 	end || X <- lists:seq(0, 4)]),
-	% io:format("θ D: (~w)~n~p~n", [Round, D]),
 	list_to_tuple([begin
 		list_to_tuple([begin
 			mget(Lanes, X, Y) bxor mget(D, X)
 		end || Y <- lists:seq(0, 4)])
 	end || X <- lists:seq(0, 4)]).
-	% io:format("θ L: (~w)~n~p~n", [Round, Lanes0]),
 
 %% @private
 rho_and_pi(_Current, Lanes, _X, _Y, 24) ->
@@ -95,11 +71,7 @@ rho_and_pi(_Current, Lanes, _X, _Y, 24) ->
 rho_and_pi(Current, Lanes, X, Y, T) ->
 	Xn = Y,
 	Yn = ((2 * X) + (3 * Y)) rem 5,
-	% io:format("ρ and π (x, y): (~w)~n~p~n", [get(round), {Xn, Yn}]),
-	% put(poop, true),
 	Zn = rol64(Current, ((T + 1) * (T + 2)) div 2),
-	% put(poop, undefined),
-	% io:format("ρ and π (c=~w, r=~w, t=~w, x=~w, y=~w, z=~w)~n", [Current, get(round), T, Xn, Yn, Zn]),
 	rho_and_pi(mget(Lanes, Xn, Yn), mput(Lanes, Xn, Yn, Zn), Xn, Yn, T + 1).
 
 %% @private
@@ -107,15 +79,12 @@ chi(Lanes, 5) ->
 	Lanes;
 chi(Lanes, Y) ->
 	T = list_to_tuple([mget(Lanes, X, Y) || X <- lists:seq(0, 4)]),
-	% io:format("χ T: (~w, ~w)~n~p~n", [get(round), Y, T]),
 	chi(Lanes, T, Y, 0).
 
 chi(Lanes, _T, Y, 5) ->
-	% io:format("χ L: (r=~w, y=~w)~n~p~n", [get(round), Y, Lanes]),
 	chi(Lanes, Y + 1);
 chi(Lanes, T, Y, X) ->
 	V = mget(T, X) bxor ((bnot mget(T, (X + 1) rem 5)) band mget(T, (X + 2) rem 5)),
-	% io:format("χ v: (r=~w, y=~w, x=~w)~n~p~n", [get(round), Y, X, V]),
 	chi(mput(Lanes, X, Y, V), T, Y, X + 1).
 
 %% @private
@@ -130,13 +99,6 @@ iota(Lanes, R, J) ->
 			Right = (1 bsl ((1 bsl J) - 1)),
 			Left = mget(Lanes, 0, 0),
 			Down = Left bxor Right,
-			% case get(round) =:= 0 of
-			% 	true ->
-			% 		io:format("ι R & 2: (r=~w, j=~w, right=~w, left=~w, down=~w)~n", [get(round), J, Right, Left, Down]);
-			% 	false ->
-			% 		ok
-			% end,
-			% V = mget(Lanes, 0, 0) bxor (1 bsl ((1 bsl J) - 1)),
 			V = Down,
 			iota(mput(Lanes, 0, 0, V), Rn, J + 1)
 	end.
@@ -149,9 +111,7 @@ store64(B) when is_integer(B) ->
 
 keccak_f_1600(State) ->
 	Lanes0 = load_lanes(State),
-	% io:format("(b) lanes:~n~p~n", [Lanes0]),
 	Lanes1 = keccak_f_1600_on_lanes(Lanes0),
-	% io:format("(a) lanes:~n~p~n", [Lanes1]),
 	store_lanes(Lanes1).
 
 load_lanes(State) ->
@@ -193,7 +153,7 @@ keccak(Rate, Capacity, InputBytes, DelimitedSuffix, OutputByteLen) ->
 % Absorb all the input blocks
 keccak_absorb(RateInBytes, InputBytes, StateBytes, DelimitedSuffix)
 		when is_integer(RateInBytes)
-		andalso byte_size(InputBytes) > RateInBytes ->
+		andalso byte_size(InputBytes) >= RateInBytes ->
 	<< InputHead:RateInBytes/binary, InputTail/binary >> = InputBytes,
 	<< StateHead:RateInBytes/binary, StateTail/binary >> = StateBytes,
 	State = << (crypto:exor(StateHead, InputHead))/binary, StateTail/binary >>,
@@ -202,28 +162,22 @@ keccak_absorb(RateInBytes, InputBytes, StateBytes, DelimitedSuffix) ->
 	BlockSize = byte_size(InputBytes),
 	<< StateHead:BlockSize/binary, StateTail/binary >> = StateBytes,
 	State = << (crypto:exor(StateHead, InputBytes))/binary, StateTail/binary >>,
-	% io:format("after abs:~n~p~n", [State]),
 	keccak_pad(RateInBytes, BlockSize, State, DelimitedSuffix).
 
 % Do the padding and switch to the squeezing phase
 keccak_pad(RateInBytes, BlockSize, StateBytes, DelimitedSuffix) ->
-	% io:format("block size: ~p~n", [BlockSize]),
 	<< StateHead:BlockSize/binary, S:8/integer, StateTail/binary >> = StateBytes,
 	State0 = << StateHead/binary, (S bxor DelimitedSuffix):8/integer, StateTail/binary >>,
-	% io:format("after del:~n~p~n", [State0]),
 	State1 = case (DelimitedSuffix band 16#80) =/= 0 andalso BlockSize =:= (RateInBytes - 1) of
 		false ->
 			State0;
 		true ->
 			keccak_f_1600(State0)
 	end,
-	% io:format("after st1:~n~p~n", [State1]),
 	RateInBytesSubOne = RateInBytes - 1,
 	<< XHead:RateInBytesSubOne/binary, X:8/integer, XTail/binary >> = State1,
 	State2 = << XHead/binary, (X bxor 16#80):8/integer, XTail/binary >>,
-	% io:format("after st2:~n~p~n", [State2]),
 	State3 = keccak_f_1600(State2),
-	% io:format("after pad:~n~p~n", [State3]),
 	{RateInBytes, State3}.
 
 % Squeeze out all the output blocks
@@ -255,16 +209,16 @@ shake256(InputBytes, OutputByteLen)
 	keccak(1088, 512, InputBytes, 16#1F, OutputByteLen).
 
 sha3_224(InputBytes) ->
-	keccak(1152, 448, InputBytes, 16#07, 224 div 8).
+	keccak(1152, 448, InputBytes, 16#06, 224 div 8).
 
 sha3_256(InputBytes) ->
-	keccak(1088, 512, InputBytes, 16#07, 256 div 8).
+	keccak(1088, 512, InputBytes, 16#06, 256 div 8).
 
 sha3_384(InputBytes) ->
-	keccak(832, 768, InputBytes, 16#07, 384 div 8).
+	keccak(832, 768, InputBytes, 16#06, 384 div 8).
 
 sha3_512(InputBytes) ->
-	keccak(576, 1024, InputBytes, 16#07, 512 div 8).
+	keccak(576, 1024, InputBytes, 16#06, 512 div 8).
 
 %%%-------------------------------------------------------------------
 %%% Internal functions

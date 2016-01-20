@@ -27,6 +27,10 @@
 -export([kty_okp_ed25519_sign_and_verify/1]).
 -export([kty_okp_ed25519ph_from_map_and_to_map/1]).
 -export([kty_okp_ed25519ph_sign_and_verify/1]).
+-export([kty_okp_ed448_from_map_and_to_map/1]).
+-export([kty_okp_ed448_sign_and_verify/1]).
+-export([kty_okp_ed448ph_from_map_and_to_map/1]).
+-export([kty_okp_ed448ph_sign_and_verify/1]).
 -export([kty_okp_x25519_from_map_and_to_map/1]).
 -export([kty_okp_x25519_box_encrypt_and_box_decrypt/1]).
 -export([kty_okp_x448_from_map_and_to_map/1]).
@@ -44,6 +48,8 @@ all() ->
 		{group, jose_jwk_kty_oct},
 		{group, jose_jwk_kty_okp_ed25519},
 		{group, jose_jwk_kty_okp_ed25519ph},
+		{group, jose_jwk_kty_okp_ed448},
+		{group, jose_jwk_kty_okp_ed448ph},
 		{group, jose_jwk_kty_okp_x25519},
 		{group, jose_jwk_kty_okp_x448},
 		{group, jose_jwk_kty_rsa},
@@ -73,6 +79,14 @@ groups() ->
 		{jose_jwk_kty_okp_ed25519ph, [parallel], [
 			kty_okp_ed25519ph_from_map_and_to_map,
 			kty_okp_ed25519ph_sign_and_verify
+		]},
+		{jose_jwk_kty_okp_ed448, [parallel], [
+			kty_okp_ed448_from_map_and_to_map,
+			kty_okp_ed448_sign_and_verify
+		]},
+		{jose_jwk_kty_okp_ed448ph, [parallel], [
+			kty_okp_ed448ph_from_map_and_to_map,
+			kty_okp_ed448ph_sign_and_verify
 		]},
 		{jose_jwk_kty_okp_x25519, [parallel], [
 			kty_okp_x25519_from_map_and_to_map,
@@ -172,6 +186,26 @@ kty_okp_ed25519ph_from_map_and_to_map(Config) ->
 kty_okp_ed25519ph_sign_and_verify(Config) ->
 	ct_property_test:quickcheck(
 		jose_jwk_kty_okp_ed25519ph_props:prop_sign_and_verify(),
+		Config).
+
+kty_okp_ed448_from_map_and_to_map(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwk_kty_okp_ed448_props:prop_from_map_and_to_map(),
+		Config).
+
+kty_okp_ed448_sign_and_verify(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwk_kty_okp_ed448_props:prop_sign_and_verify(),
+		Config).
+
+kty_okp_ed448ph_from_map_and_to_map(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwk_kty_okp_ed448ph_props:prop_from_map_and_to_map(),
+		Config).
+
+kty_okp_ed448ph_sign_and_verify(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwk_kty_okp_ed448ph_props:prop_sign_and_verify(),
 		Config).
 
 kty_okp_x25519_from_map_and_to_map(Config) ->
