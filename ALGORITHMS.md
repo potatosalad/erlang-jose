@@ -37,8 +37,8 @@ The following are algorithms related to the draft [CFRG ECDH and signatures in J
 | --------- | ------------ | -------- | -------- | ---------- |
 | Ed25519   | Signature    | [`libsodium`](https://github.com/potatosalad/erlang-libsodium) | [`jose_jwa_curve25519`](https://github.com/potatosalad/erlang-jose/blob/master/src/jose_jwa_curve25519.erl) | [EdDSA](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.1) |
 | Ed25519ph | Signature    | [`libsodium`](https://github.com/potatosalad/erlang-libsodium) | [`jose_jwa_curve25519`](https://github.com/potatosalad/erlang-jose/blob/master/src/jose_jwa_curve25519.erl) | [EdDSA](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.1) |
-| Ed448     | Signature    |          |          | [EdDSA](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.2) |
-| Ed448ph   | Signature    |          |          | [EdDSA](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.2) |
-| SHAKE256  | Hashing      |          | [`jose_jwa_sha3`](https://github.com/potatosalad/erlang-jose/blob/master/src/jose_jwa_sha3.erl) | [Keccak](http://keccak.noekeon.org/) |
+| Ed448     | Signature    |          | [`jose_jwa_curve448`](https://github.com/potatosalad/erlang-jose/blob/master/src/jose_jwa_curve448.erl) | [EdDSA](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.2) |
+| Ed448ph   | Signature    |          | [`jose_jwa_curve448`](https://github.com/potatosalad/erlang-jose/blob/master/src/jose_jwa_curve448.erl) | [EdDSA](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.2) |
+| SHAKE256  | Hashing      | [`keccakf1600`](https://github.com/potatosalad/erlang-keccakf1600) | [`jose_jwa_sha3`](https://github.com/potatosalad/erlang-jose/blob/master/src/jose_jwa_sha3.erl) | [Keccak](http://keccak.noekeon.org/) |
 | X25519    | Key Exchange | [`libsodium`](https://github.com/potatosalad/erlang-libsodium) | [`jose_jwa_curve25519`](https://github.com/potatosalad/erlang-jose/blob/master/src/jose_jwa_curve25519.erl) | [cfrgcurves](https://tools.ietf.org/html/draft-irtf-cfrg-curves#section-5) |
 | X448      | Key Exchange |          | [`jose_jwa_curve448`](https://github.com/potatosalad/erlang-jose/blob/master/src/jose_jwa_curve448.erl) | [cfrgcurves](https://tools.ietf.org/html/draft-irtf-cfrg-curves#section-5) |

@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.6.0 (2016-01-20)
+
+* Enhancements
+  * Add `Ed448` and `Ed448ph` standards from [draft-irtf-cfrg-eddsa](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa).
+  * Add support for [keccakf1600](https://github.com/potatosalad/erlang-keccakf1600) library with `jose_sha3_keccakf1600` for faster SHA-3 operations.
+  * Many, many more tests.
+
+* Fixes
+  * Fix pure Erlang implementation of SHA-3 algorithms.
+
 ## 1.5.2 (2016-01-19)
 
 * Enhancements
