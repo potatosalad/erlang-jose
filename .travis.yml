@@ -4,6 +4,8 @@ sudo: false
 
 elixir:
   - 1.0.5
+  - 1.1.1
+  - 1.2.0
 
 otp_release:
   - 17.5
@@ -16,3 +18,8 @@ notifications:
 after_script:
   - "rm -rf _build deps ebin"
   - "make tests"
+
+matrix:
+  exclude:
+    - otp_release: 17.5
+      elixir: 1.2.0
