@@ -131,16 +131,16 @@ end_per_suite(_Config) ->
 	_ = application:stop(jose),
 	ok.
 
-init_per_group('186-3rsatestvectors', Config) ->
+init_per_group(G='186-3rsatestvectors', Config) ->
 	SigGenFile = data_file("186-3rsatestvectors/SigGenPSS_186-3.txt", Config),
 	SigVerFile = data_file("186-3rsatestvectors/SigVerPSS_186-3.rsp", Config),
-	[{sig_gen_file, SigGenFile}, {sig_ver_file, SigVerFile} | Config];
-init_per_group('aesmmt', Config) ->
+	[{sig_gen_file, SigGenFile}, {sig_ver_file, SigVerFile} | jose_ct:start(G, Config)];
+init_per_group(G='aesmmt', Config) ->
 	Folder = data_file("aesmmt", Config),
 	{ok, Entries} = file:list_dir(Folder),
 	Files = [filename:join([Folder, Entry]) || Entry <- Entries],
-	[{aes_files, Files} | Config];
-init_per_group('curve25519', Config) ->
+	[{aes_files, Files} | jose_ct:start(G, Config)];
+init_per_group(G='curve25519', Config) ->
 	[
 		{curve25519, [
 			{
@@ -318,9 +318,9 @@ init_per_group('curve25519', Config) ->
 				hexstr2bin("de9edb7d7b7dc1b4d35b61c2ece435373f8343c85b78674dadfc7e146f882b4f"), % Bob's public key, X25519(g, 9)
 				hexstr2bin("4a5d9d5ba4ce2de1728e3bf480350f25e07e21c947d19e3376f09b3c1e161742")  % Their shared secret, K
 			}
-		]} | Config
+		]} | jose_ct:start(G, Config)
 	];
-init_per_group('curve448', Config) ->
+init_per_group(G='curve448', Config) ->
 	[
 		{curve448, [
 			{
@@ -696,29 +696,29 @@ init_per_group('curve448', Config) ->
 				hexstr2bin("3eb7a829b0cd20f5bcfc0b599b6feccf6da4627107bdb0d4f345b43027d8b972fc3e34fb4232a13ca706dcb57aec3dae07bdc1c67bf33609"), % Bob's public key, X448(g, 9)
 				hexstr2bin("07fff4181ac6cc95ec1c16a94a0f74d12da232ce40a77552281d282bb60c0b56fd2464c335543936521c24403085d59a449a5037514a879d")  % Their shared secret, K
 			}
-		]} | Config
+		]} | jose_ct:start(G, Config)
 	];
-init_per_group('gcmtestvectors', Config) ->
+init_per_group(G='gcmtestvectors', Config) ->
 	Folder = data_file("gcmtestvectors", Config),
 	{ok, Entries} = file:list_dir(Folder),
 	Files = [filename:join([Folder, Entry]) || Entry <- Entries],
-	[{aes_gcm_files, Files}, {one_in, 10} | Config];
-init_per_group('KAT_AES', Config) ->
+	[{aes_gcm_files, Files}, {one_in, 10} | jose_ct:start(G, Config)];
+init_per_group(G='KAT_AES', Config) ->
 	Folder = data_file("KAT_AES", Config),
 	{ok, Entries} = file:list_dir(Folder),
 	Files = [filename:join([Folder, Entry]) || Entry <- Entries],
-	[{aes_files, Files} | Config];
-init_per_group('keccaktestvectors', Config) ->
+	[{aes_files, Files} | jose_ct:start(G, Config)];
+init_per_group(G='keccaktestvectors', Config) ->
 	Folder = data_file("keccaktestvectors", Config),
 	{ok, Entries} = file:list_dir(Folder),
 	Files = [filename:join([Folder, Entry]) || Entry <- Entries],
-	[{sha3_files, Files} | Config];
-init_per_group('kwtestvectors', Config) ->
+	[{sha3_files, Files} | jose_ct:start(G, Config)];
+init_per_group(G='kwtestvectors', Config) ->
 	Folder = data_file("kwtestvectors", Config),
 	{ok, Entries} = file:list_dir(Folder),
 	Files = [filename:join([Folder, Entry]) || Entry <- Entries],
-	[{aeskw_files, Files}, {one_in, 5} | Config];
-init_per_group('nist-800-56A', Config) ->
+	[{aeskw_files, Files}, {one_in, 5} | jose_ct:start(G, Config)];
+init_per_group(G='nist-800-56A', Config) ->
 	Vectors = [
 		%% See [https://tools.ietf.org/html/rfc7518#appendix-C]
 		{sha256,
@@ -768,12 +768,12 @@ init_per_group('nist-800-56A', Config) ->
 			384,
 			base64url:decode(<<"SNOvl6h5iSYWJ_EhlnvK8o6om9iyR8HkKMQtQYGkYKkVY0HFMleoUm-H6-kLz8sW">>)}
 	],
-	[{vectors, Vectors} | Config];
-init_per_group('pkcs-1v2-1-vec', Config) ->
+	[{vectors, Vectors} | jose_ct:start(G, Config)];
+init_per_group(G='pkcs-1v2-1-vec', Config) ->
 	OAEPVectFile = data_file("pkcs-1v2-1-vec/oaep-vect.txt", Config),
 	PSSVectFile = data_file("pkcs-1v2-1-vec/pss-vect.txt", Config),
-	[{oaep_vect_file, OAEPVectFile}, {pss_vect_file, PSSVectFile} | Config];
-init_per_group('pkcs-5', Config) ->
+	[{oaep_vect_file, OAEPVectFile}, {pss_vect_file, PSSVectFile} | jose_ct:start(G, Config)];
+init_per_group(G='pkcs-5', Config) ->
 	PBKDF1Vectors = [
 		%% See [https://github.com/erlang/otp/blob/OTP-18.0/lib/public_key/test/pbe_SUITE.erl]
 		{sha,
@@ -864,8 +864,8 @@ init_per_group('pkcs-5', Config) ->
 			16,
 			hex:hex_to_bin(<<"89b69d0516f829893c696226650a8687">>)}
 	],
-	[{pbkdf1_vectors, PBKDF1Vectors}, {pbkdf2_vectors, PBKDF2Vectors} | Config];
-init_per_group('pkcs-7', Config) ->
+	[{pbkdf1_vectors, PBKDF1Vectors}, {pbkdf2_vectors, PBKDF2Vectors} | jose_ct:start(G, Config)];
+init_per_group(G='pkcs-7', Config) ->
 	Vectors = [begin
 		{hex:hex_to_bin(K), hex:hex_to_bin(V)}
 	end || {K, V} <- [
@@ -887,9 +887,10 @@ init_per_group('pkcs-7', Config) ->
 		{<<"000000000000000000000000000000"  >>, <<"00000000000000000000000000000001">>},
 		{<<"00000000000000000000000000000000">>, <<"0000000000000000000000000000000010101010101010101010101010101010">>}
 	]],
-	[{vectors, Vectors} | Config].
+	[{vectors, Vectors} | jose_ct:start(G, Config)].
 
-end_per_group(_Group, _Config) ->
+end_per_group(_Group, Config) ->
+	jose_ct:stop(Config),
 	ok.
 
 %%====================================================================

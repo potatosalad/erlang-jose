@@ -90,7 +90,7 @@ end_per_suite(_Config) ->
 	_ = application:stop(jose),
 	ok.
 
-init_per_group(jose_cfrg_curves, Config) ->
+init_per_group(G=jose_cfrg_curves, Config) ->
 	{ok, A1} = file:consult(data_file("jose_cfrg_curves/a.1.config", Config)),
 	{ok, A3} = file:consult(data_file("jose_cfrg_curves/a.3.config", Config)),
 	{ok, A4} = file:consult(data_file("jose_cfrg_curves/a.4.config", Config)),
@@ -99,26 +99,27 @@ init_per_group(jose_cfrg_curves, Config) ->
 	{ok, A7} = file:consult(data_file("jose_cfrg_curves/a.7.config", Config)),
 	[{jose_cfrg_curves_a_1, A1}, {jose_cfrg_curves_a_3, A3},
 	 {jose_cfrg_curves_a_4, A4}, {jose_cfrg_curves_a_5, A5},
-	 {jose_cfrg_curves_a_6, A6}, {jose_cfrg_curves_a_7, A7} | Config];
-init_per_group(jose_jwe, Config) ->
+	 {jose_cfrg_curves_a_6, A6}, {jose_cfrg_curves_a_7, A7} | jose_ct:start(G, Config)];
+init_per_group(G=jose_jwe, Config) ->
 	{ok, A1} = file:consult(data_file("jwe/a.1.config", Config)),
 	{ok, A2} = file:consult(data_file("jwe/a.2.config", Config)),
 	{ok, A3} = file:consult(data_file("jwe/a.3.config", Config)),
-	[{jwe_a_1, A1}, {jwe_a_2, A2}, {jwe_a_3, A3} | Config];
-init_per_group(jose_jwk, Config) ->
+	[{jwe_a_1, A1}, {jwe_a_2, A2}, {jwe_a_3, A3} | jose_ct:start(G, Config)];
+init_per_group(G=jose_jwk, Config) ->
 	{ok, C} = file:consult(data_file("jwk/c.config", Config)),
-	[{jwk_c, C} | Config];
-init_per_group(jose_jws, Config) ->
+	[{jwk_c, C} | jose_ct:start(G, Config)];
+init_per_group(G=jose_jws, Config) ->
 	{ok, A1} = file:consult(data_file("jws/a.1.config", Config)),
 	{ok, A2} = file:consult(data_file("jws/a.2.config", Config)),
 	{ok, A3} = file:consult(data_file("jws/a.3.config", Config)),
 	{ok, A4} = file:consult(data_file("jws/a.4.config", Config)),
 	{ok, A5} = file:consult(data_file("jws/a.5.config", Config)),
-	[{jws_a_1, A1}, {jws_a_2, A2}, {jws_a_3, A3}, {jws_a_4, A4}, {jws_a_5, A5} | Config];
-init_per_group(_Group, Config) ->
-	Config.
+	[{jws_a_1, A1}, {jws_a_2, A2}, {jws_a_3, A3}, {jws_a_4, A4}, {jws_a_5, A5} | jose_ct:start(G, Config)];
+init_per_group(Group, Config) ->
+	jose_ct:start(Group, Config).
 
-end_per_group(_Group, _Config) ->
+end_per_group(_Group, Config) ->
+	jose_ct:stop(Config),
 	ok.
 
 %%====================================================================

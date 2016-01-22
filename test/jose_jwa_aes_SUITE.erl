@@ -78,9 +78,10 @@ end_per_suite(_Config) ->
 	ok.
 
 init_per_group(Group, Config) ->
-	group_config(Group, Config).
+	jose_ct:start(Group, group_config(Group, Config)).
 
-end_per_group(_Group, _Config) ->
+end_per_group(_Group, Config) ->
+	jose_ct:stop(Config),
 	ok.
 
 %%====================================================================
