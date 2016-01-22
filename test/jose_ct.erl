@@ -7,6 +7,8 @@
 %% API
 -export([start/2]).
 -export([stop/1]).
+-export([progress_start/0]).
+-export([progress_stop/1]).
 
 %% Internal API
 -export([init/1]).
@@ -23,13 +25,23 @@
 start(Group, Config) ->
 	Now = os:timestamp(),
 	io:format(user, "~s[  ] ~s :: ~s~s", [?WHITE, format_utc_timestamp(Now), Group, ?RESET]),
-	Ref = erlang:make_ref(),
-	{ok, Pid} = proc_lib:start(?MODULE, init, [{self(), Ref}]),
-	[{jose_ct, {Ref, Pid, Now}} | Config].
+	{ok, Progress} = progress_start(),
+	[{jose_ct, {Progress, Now}} | Config].
 
 stop(Config) ->
 	Now = os:timestamp(),
-	{Ref, Pid, Old} = ?config(jose_ct, Config),
+	{Progress, Old} = ?config(jose_ct, Config),
+	ok = progress_stop(Progress),
+	Diff = timer:now_diff(Now, Old),
+	io:format(user, "~s[OK] ~s :: ~s elapsed~s~n", [?GREEN, format_utc_timestamp(Now), format_elapsed_time(Diff), ?RESET]),
+	ok.
+
+progress_start() ->
+	Ref = erlang:make_ref(),
+	{ok, Pid} = proc_lib:start(?MODULE, init, [{self(), Ref}]),
+	{ok, {Ref, Pid}}.
+
+progress_stop({Ref, Pid}) ->
 	Pid ! {stop, self(), Ref},
 	receive
 		Ref ->
@@ -37,10 +49,7 @@ stop(Config) ->
 	after
 		1000 ->
 			ok
-	end,
-	Diff = timer:now_diff(Now, Old),
-	io:format(user, "~s[OK] ~s :: ~s elapsed~s~n", [?GREEN, format_utc_timestamp(Now), format_elapsed_time(Diff), ?RESET]),
-	ok.
+	end.
 
 %% @private
 format_elapsed_time(USec) ->

@@ -1027,7 +1027,11 @@ data_file(File, Config) ->
 %% @private
 data_setup(Config) ->
 	lists:foldl(fun(F, C) ->
-		data_setup(F, C)
+		io:format(user, "\e[0;36m[FETCH] ~s\e[0m", [F]),
+		{ok, Progress} = jose_ct:progress_start(),
+		NewC = data_setup(F, C),
+		ok = jose_ct:progress_stop(Progress),
+		NewC
 	end, Config, [
 		"186-3rsatestvectors.zip",
 		"aesmmt.zip",
