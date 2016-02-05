@@ -6,9 +6,9 @@
 %%% @doc
 %%%
 %%% @end
-%%% Created :  20 Jan 2016 by Andrew Bennett <andrew@pixid.com>
+%%% Created :  05 Feb 2016 by Andrew Bennett <andrew@pixid.com>
 %%%-------------------------------------------------------------------
--module(jose_sha3_keccakf1600).
+-module(jose_sha3_keccakf1600_nif).
 
 -behaviour(jose_sha3).
 
@@ -25,19 +25,19 @@
 %%====================================================================
 
 sha3_224(InputBytes) ->
-	keccakf1600_fips202:sha3_224(InputBytes).
+	keccakf1600:hash(sha3_224, InputBytes).
 
 sha3_256(InputBytes) ->
-	keccakf1600_fips202:sha3_256(InputBytes).
+	keccakf1600:hash(sha3_256, InputBytes).
 
 sha3_384(InputBytes) ->
-	keccakf1600_fips202:sha3_384(InputBytes).
+	keccakf1600:hash(sha3_384, InputBytes).
 
 sha3_512(InputBytes) ->
-	keccakf1600_fips202:sha3_512(InputBytes).
+	keccakf1600:hash(sha3_512, InputBytes).
 
 shake128(InputBytes, OutputByteLen) ->
-	keccakf1600_fips202:shake128(InputBytes, OutputByteLen).
+	keccakf1600:hash(shake128, InputBytes, OutputByteLen).
 
 shake256(InputBytes, OutputByteLen) ->
-	keccakf1600_fips202:shake256(InputBytes, OutputByteLen).
+	keccakf1600:hash(shake256, InputBytes, OutputByteLen).

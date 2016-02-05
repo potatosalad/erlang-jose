@@ -3,7 +3,7 @@ defmodule JOSE.Mixfile do
 
   def project do
     [app: :jose,
-     version: "1.6.0",
+     version: "1.6.1",
      elixir: "~> 1.0",
      erlc_options: erlc_options,
      build_embedded: Mix.env == :prod,
@@ -31,7 +31,8 @@ defmodule JOSE.Mixfile do
      {:jiffy, github: "davisp/jiffy", only: [:dev, :test]},
      {:jsone, "~> 1.0", only: [:dev, :test]},
      {:jsx, "~> 2.0", only: [:dev, :test]},
-     # {:libsodium, "~> 0.0.2", only: [:dev, :test]},
+     {:keccakf1600, "~> 2.0.0", only: [:dev, :test]},
+     {:libsodium, "~> 0.0.3", only: [:dev, :test]},
      {:poison, "~> 1.5", only: [:dev, :test]},
      {:ex_doc, "~> 0.10", only: :docs},
      {:earmark, "~> 0.1", only: :docs}]

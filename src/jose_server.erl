@@ -351,6 +351,16 @@ check_sha3(Fallback, Entries) ->
 %% @private
 check_sha3_module(keccakf1600) ->
 	check_sha3_module(jose_sha3_keccakf1600);
+check_sha3_module(jose_sha3_keccakf1600) ->
+	_ = code:ensure_loaded(keccakf1600),
+	case erlang:function_exported(keccakf1600, hash, 3) of
+		false ->
+			% version < 2
+			check_sha3_module(jose_sha3_keccakf1600_driver);
+		true ->
+			% version >= 2
+			check_sha3_module(jose_sha3_keccakf1600_nif)
+	end;
 check_sha3_module(Module) when is_atom(Module) ->
 	Module.
 
