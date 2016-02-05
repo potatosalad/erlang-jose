@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6.1 (2016-02-05)
+
+* Enhancements
+  * Add support for NIF version of [keccakf1600](https://github.com/potatosalad/erlang-keccakf1600) library with `jose_sha3_keccakf1600_nif` (version 2 and up) for even faster SHA-3 operations.
+
 ## 1.6.0 (2016-01-20)
 
 * Enhancements

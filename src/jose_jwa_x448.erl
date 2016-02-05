@@ -4,7 +4,7 @@
 %%% @author Andrew Bennett <andrew@pixid.com>
 %%% @copyright 2014-2016, Andrew Bennett
 %%% @doc Elliptic Curves for Security - X448
-%%% See https://tools.ietf.org/html/draft-irtf-cfrg-curves
+%%% See https://tools.ietf.org/html/rfc7748
 %%% @end
 %%% Created :  07 Jan 2016 by Andrew Bennett <andrew@pixid.com>
 %%%-------------------------------------------------------------------
@@ -31,7 +31,7 @@
 -define(math, jose_jwa_math).
 -define(inv(Z), ?math:expmod(Z, ?p - 2, ?p)). % $= z^{-1} \mod p$, for z != 0
 -define(d, 611975850744529176160423220965553317543219696871016626328968936415087860042636474891785599283666020414768678979989378147065462815545017).
-% 4.2. Curve448 - https://tools.ietf.org/html/draft-irtf-cfrg-curves#section-4.2
+% 4.2. Curve448 - https://tools.ietf.org/html/rfc7748#section-4.2
 -define(p, 726838724295606890549323807888004534353641360687318060281490199180612328166730772686396383698676545930088884461843637361053498018365439). % ?math:intpow(2, 448) - ?math:intpow(2, 224) - 1
 -define(A, 156326).
 -define(A2sqrt, 528950257000142451010969798134146496096806208096258258133290419984524923934728256972792120570883515182233459997657945594599653183173011). % ?math:expmod((?A - 2), (?p + 1) div 4, ?p)
@@ -102,7 +102,7 @@ curve448(N, Base) ->
 	{{X, Z}, _} = F(N),
 	(X * ?inv(Z)) rem ?p.
 
-% 5. The X25519 and X448 functions - https://tools.ietf.org/html/draft-irtf-cfrg-curves#section-5
+% 5. The X25519 and X448 functions - https://tools.ietf.org/html/rfc7748#section-5
 
 clamp_scalar(K0) when is_integer(K0) ->
 	K1 = K0 band (bnot 3),

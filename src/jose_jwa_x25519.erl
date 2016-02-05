@@ -4,7 +4,7 @@
 %%% @author Andrew Bennett <andrew@pixid.com>
 %%% @copyright 2014-2016, Andrew Bennett
 %%% @doc Elliptic Curves for Security - X25519
-%%% See https://tools.ietf.org/html/draft-irtf-cfrg-curves
+%%% See https://tools.ietf.org/html/rfc7748
 %%% @end
 %%% Created :  06 Jan 2016 by Andrew Bennett <andrew@pixid.com>
 %%%-------------------------------------------------------------------
@@ -28,7 +28,7 @@
 %% Macros
 -define(math, jose_jwa_math).
 -define(inv(Z), ?math:expmod(Z, ?p - 2, ?p)). % $= z^{-1} \mod p$, for z != 0
-% 4.1. Curve25519 - https://tools.ietf.org/html/draft-irtf-cfrg-curves#section-4.1
+% 4.1. Curve25519 - https://tools.ietf.org/html/rfc7748#section-4.1
 -define(p, 57896044618658097711785492504343953926634992332820282019728792003956564819949). % ?math:intpow(2, 255) - 19
 -define(A, 486662).
 -define(order, 7237005577332262213973186563042994240857116359379907606001950938285454250989). % ?math:intpow(2, 252) + 16#14def9dea2f79cd65812631a5cf5d3ed
@@ -70,7 +70,7 @@ curve25519(N, Base) ->
 	{{X, Z}, _} = F(N),
 	(X * ?inv(Z)) rem ?p.
 
-% 5. The X25519 and X448 functions - https://tools.ietf.org/html/draft-irtf-cfrg-curves#section-5
+% 5. The X25519 and X448 functions - https://tools.ietf.org/html/rfc7748#section-5
 
 clamp_scalar(K0) ->
 	K1 = K0 band (bnot 7),

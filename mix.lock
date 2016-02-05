@@ -7,4 +7,4 @@
   "jsx": {:hex, :jsx, "2.8.0"},
   "keccakf1600": {:hex, :keccakf1600, "2.0.0"},
   "libsodium": {:hex, :libsodium, "0.0.3"},
-  "poison": {:hex, :poison, "1.5.0"}}
+  "poison": {:hex, :poison, "2.0.1"}}

@@ -11,7 +11,7 @@ Add `jose` to your project's dependencies in `mix.exs`
 ```elixir
 defp deps do
   [
-    {:jose, "~> 1.5"}
+    {:jose, "~> 1.6"}
   ]
 end
 ```
@@ -33,8 +33,8 @@ For example, with Elixir and `mix.exs`
 ```elixir
 defp deps do
   [
-    {:jose, "~> 1.5"},
-    {:poison, "~> 1.5"}
+    {:jose, "~> 1.6"},
+    {:poison, "~> 2.0"}
   ]
 end
 ```
@@ -78,7 +78,7 @@ Fallback support for SHA-3 is provided.  See [`crypto_fallback`](#cryptographic-
 External support for SHA-3 is provided by the [keccakf1600](https://github.com/potatosalad/erlang-keccakf1600) library.  If detected as being present, keccakf1600 will be used by default.  Other modules which implement the `jose_sha3` behaviors may also be used as follows:
 
 ```elixir
-JOSE.sha3_module(:keccakf1600)   # uses an asynchronous port driver written in C
+JOSE.sha3_module(:keccakf1600)   # uses a NIF written in C with timeslice reductions
 JOSE.sha3_module(:jose_jwa_sha3) # uses the pure Erlang implementation (slow)
 ```
 
@@ -443,20 +443,14 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 - [X] `OKP` with `{"crv":"Ed25519ph"}` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-eddsa](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.1)</sup>
 - [X] `OKP` with `{"crv":"Ed448"}` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-eddsa](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.2)</sup>
 - [X] `OKP` with `{"crv":"Ed448ph"}` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-eddsa](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.2)</sup>
-- [X] `OKP` with `{"crv":"X25519"}` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-curves](https://tools.ietf.org/html/draft-irtf-cfrg-curves#section-5)</sup>
-- [X] `OKP` with `{"crv":"X448"}` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-curves](https://tools.ietf.org/html/draft-irtf-cfrg-curves#section-5)</sup>
+- [X] `OKP` with `{"crv":"X25519"}` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [RFC 7748](https://tools.ietf.org/html/rfc7748#section-5)</sup>
+- [X] `OKP` with `{"crv":"X448"}` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [RFC 7748](https://tools.ietf.org/html/rfc7748#section-5)</sup>
 - [X] `RSA`
 
 ### JSON Web Signature (JWS) [RFC 7515](https://tools.ietf.org/html/rfc7515)
 
 #### `"alg"` [RFC 7518 Section 3](https://tools.ietf.org/html/rfc7518#section-3)
 
-- [X] `HS256`
-- [X] `HS384`
-- [X] `HS512`
-- [X] `RS256`
-- [X] `RS384`
-- [X] `RS512`
 - [X] `Ed25519` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-eddsa](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.1)</sup>
 - [X] `Ed25519ph` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-eddsa](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.1)</sup>
 - [X] `Ed448` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-eddsa](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.2)</sup>
@@ -464,9 +458,15 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 - [X] `ES256`
 - [X] `ES384`
 - [X] `ES512`
+- [X] `HS256`
+- [X] `HS384`
+- [X] `HS512`
 - [X] `PS256` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18)</sup>
 - [X] `PS384` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18)</sup>
 - [X] `PS512` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18)</sup>
+- [X] `RS256`
+- [X] `RS384`
+- [X] `RS512`
 - [X] `none` <sup>[unsecured](#footnote-unsecured)</sup>
 
 ### Additional Specifications
