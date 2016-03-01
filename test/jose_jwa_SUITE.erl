@@ -34,13 +34,11 @@
 -export([concat_kdf/1]).
 -export([concat_kdf_keylen/1]).
 -export([constant_time_compare/1]).
--export([ed25519_secret_to_public/1]).
+-export([curve25519_eddsa_secret_to_public/1]).
+-export([curve448_eddsa_secret_to_public/1]).
 -export([ed25519_sign_and_verify/1]).
--export([ed25519ph_secret_to_public/1]).
 -export([ed25519ph_sign_and_verify/1]).
--export([ed448_secret_to_public/1]).
 -export([ed448_sign_and_verify/1]).
--export([ed448ph_secret_to_public/1]).
 -export([ed448ph_sign_and_verify/1]).
 -export([pkcs1_rsaes_oaep_encrypt_and_decrypt/1]).
 -export([pkcs1_rsaes_oaep_encrypt_and_decrypt_with_label/1]).
@@ -99,17 +97,15 @@ groups() ->
 			concat_kdf_keylen
 		]},
 		{jose_jwa_curve25519, [parallel], [
-			ed25519_secret_to_public,
+			curve25519_eddsa_secret_to_public,
 			ed25519_sign_and_verify,
-			ed25519ph_secret_to_public,
 			ed25519ph_sign_and_verify,
 			x25519_secret_to_public,
 			x25519_shared_secret
 		]},
 		{jose_jwa_curve448, [parallel], [
-			ed448_secret_to_public,
+			curve448_eddsa_secret_to_public,
 			ed448_sign_and_verify,
-			ed448ph_secret_to_public,
 			ed448ph_sign_and_verify,
 			x448_secret_to_public,
 			x448_shared_secret
@@ -275,9 +271,14 @@ constant_time_compare(Config) ->
 		jose_jwa_props:prop_constant_time_compare(),
 		Config).
 
-ed25519_secret_to_public(Config) ->
+curve25519_eddsa_secret_to_public(Config) ->
 	ct_property_test:quickcheck(
-		jose_jwa_curve25519_props:prop_ed25519_secret_to_public(),
+		jose_jwa_curve25519_props:prop_eddsa_secret_to_public(),
+		Config).
+
+curve448_eddsa_secret_to_public(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwa_curve448_props:prop_eddsa_secret_to_public(),
 		Config).
 
 ed25519_sign_and_verify(Config) ->
@@ -285,29 +286,14 @@ ed25519_sign_and_verify(Config) ->
 		jose_jwa_curve25519_props:prop_ed25519_sign_and_verify(),
 		Config).
 
-ed25519ph_secret_to_public(Config) ->
-	ct_property_test:quickcheck(
-		jose_jwa_curve25519_props:prop_ed25519ph_secret_to_public(),
-		Config).
-
 ed25519ph_sign_and_verify(Config) ->
 	ct_property_test:quickcheck(
 		jose_jwa_curve25519_props:prop_ed25519ph_sign_and_verify(),
 		Config).
 
-ed448_secret_to_public(Config) ->
-	ct_property_test:quickcheck(
-		jose_jwa_curve448_props:prop_ed448_secret_to_public(),
-		Config).
-
 ed448_sign_and_verify(Config) ->
 	ct_property_test:quickcheck(
 		jose_jwa_curve448_props:prop_ed448_sign_and_verify(),
-		Config).
-
-ed448ph_secret_to_public(Config) ->
-	ct_property_test:quickcheck(
-		jose_jwa_curve448_props:prop_ed448ph_secret_to_public(),
 		Config).
 
 ed448ph_sign_and_verify(Config) ->

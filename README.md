@@ -11,7 +11,7 @@ Add `jose` to your project's dependencies in `mix.exs`
 ```elixir
 defp deps do
   [
-    {:jose, "~> 1.6"}
+    {:jose, "~> 1.7"}
   ]
 end
 ```
@@ -33,8 +33,8 @@ For example, with Elixir and `mix.exs`
 ```elixir
 defp deps do
   [
-    {:jose, "~> 1.6"},
-    {:poison, "~> 2.0"}
+    {:jose, "~> 1.7"},
+    {:poison, "~> 2.1"}
   ]
 end
 ```
@@ -58,15 +58,21 @@ Curve25519 and Curve448 and their associated signing/key exchange functions are 
 
 Fallback support for `Ed25519`, `Ed25519ph`, `Ed448`, `Ed448ph`, `X25519`, and `X448` is provided.  See [`crypto_fallback`](#cryptographic-algorithm-fallback) below.
 
-External support for `Ed25519`, `Ed25519ph`, and `X25519` is also provided by the [libsodium](https://github.com/potatosalad/erlang-libsodium) library.  If detected as being present, libsodium will be used by default.  Other modules which implement the `jose_curve25519` or `jose_curve448` behaviors may also be used as follows:
+External support is also provided by the following libraries:
+
+ * [libdecaf](https://github.com/potatosalad/erlang-libdecaf) - `Ed25519`, `Ed25519ph`, `Ed448`, `Ed448ph`, `X25519`, `X448`
+ * [libsodium](https://github.com/potatosalad/erlang-libsodium) - `Ed25519`, `Ed25519ph`, `X25519`
+
+If both libraries are present, libdecaf will be used by default.  Other modules which implement the `jose_curve25519` or `jose_curve448` behaviors may also be used as follows:
 
 ```elixir
 # Curve25519
-JOSE.curve25519_module(:libsodium)           # uses an asynchronous port driver written in C
+JOSE.curve25519_module(:libdecaf)            # uses a fast Erlang NIF for libdecaf
 JOSE.curve25519_module(:jose_jwa_curve25519) # uses the pure Erlang implementation (slow)
 
 # Curve448
-JOSE.curve448_module(:jose_jwa_curve448) # uses te purse Erlang implementation (slow)
+JOSE.curve448_module(:libdecaf)          # uses a fast Erlang NIF for libdecaf
+JOSE.curve448_module(:jose_jwa_curve448) # uses the pure Erlang implementation (slow)
 ```
 
 #### SHA-3 Support
@@ -75,7 +81,7 @@ SHA-3 is experimentally supported for use with `Ed448` and `Ed448ph` signing fun
 
 Fallback support for SHA-3 is provided.  See [`crypto_fallback`](#cryptographic-algorithm-fallback) below.
 
-External support for SHA-3 is provided by the [keccakf1600](https://github.com/potatosalad/erlang-keccakf1600) library.  If detected as being present, keccakf1600 will be used by default.  Other modules which implement the `jose_sha3` behaviors may also be used as follows:
+External support for SHA-3 is provided by the [keccakf1600](https://github.com/potatosalad/erlang-keccakf1600) and [libdecaf](https://github.com/potatosalad/erlang-libdecaf) libraries.  If present, keccakf1600 will be used by default.  Other modules which implement the `jose_sha3` behaviors may also be used as follows:
 
 ```elixir
 JOSE.sha3_module(:keccakf1600)   # uses a NIF written in C with timeslice reductions

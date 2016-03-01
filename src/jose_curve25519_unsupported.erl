@@ -13,14 +13,11 @@
 -behaviour(jose_curve25519).
 
 %% jose_curve25519 callbacks
--export([ed25519_keypair/0]).
--export([ed25519_keypair/1]).
--export([ed25519_secret_to_public/1]).
+-export([eddsa_keypair/0]).
+-export([eddsa_keypair/1]).
+-export([eddsa_secret_to_public/1]).
 -export([ed25519_sign/2]).
 -export([ed25519_verify/3]).
--export([ed25519ph_keypair/0]).
--export([ed25519ph_keypair/1]).
--export([ed25519ph_secret_to_public/1]).
 -export([ed25519ph_sign/2]).
 -export([ed25519ph_verify/3]).
 -export([x25519_keypair/0]).
@@ -35,16 +32,17 @@
 %% jose_curve25519 callbacks
 %%====================================================================
 
+% EdDSA
+eddsa_keypair() ->
+	?unsupported.
+
+eddsa_keypair(_Seed) ->
+	?unsupported.
+
+eddsa_secret_to_public(_SecretKey) ->
+	?unsupported.
+
 % Ed25519
-ed25519_keypair() ->
-	?unsupported.
-
-ed25519_keypair(_Seed) ->
-	?unsupported.
-
-ed25519_secret_to_public(_SecretKey) ->
-	?unsupported.
-
 ed25519_sign(_Message, _SecretKey) ->
 	?unsupported.
 
@@ -52,15 +50,6 @@ ed25519_verify(_Signature, _Message, _PublicKey) ->
 	?unsupported.
 
 % Ed25519ph
-ed25519ph_keypair() ->
-	?unsupported.
-
-ed25519ph_keypair(_Seed) ->
-	?unsupported.
-
-ed25519ph_secret_to_public(_SecretKey) ->
-	?unsupported.
-
 ed25519ph_sign(_Message, _SecretKey) ->
 	?unsupported.
 

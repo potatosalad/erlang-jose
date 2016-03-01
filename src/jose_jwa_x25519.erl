@@ -49,7 +49,13 @@
 
 coordinate_to_edwards25519(<< U:?b/unsigned-little-integer-unit:1 >>) ->
 	Y = ?math:mod((U - 1) * ?inv(U + 1), ?p),
-	X = jose_jwa_ed25519:xrecover(Y),
+	Xp = jose_jwa_ed25519:xrecover(Y),
+	X = case Xp band 1 of
+		0 ->
+			Xp;
+		_ ->
+			?p - Xp
+	end,
 	jose_jwa_ed25519:encode_point({X, Y, 1, X * Y}).
 
 curve25519(N, Base) ->

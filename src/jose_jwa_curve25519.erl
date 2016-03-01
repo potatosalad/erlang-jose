@@ -13,14 +13,11 @@
 -behaviour(jose_curve25519).
 
 %% jose_curve25519 callbacks
--export([ed25519_keypair/0]).
--export([ed25519_keypair/1]).
--export([ed25519_secret_to_public/1]).
+-export([eddsa_keypair/0]).
+-export([eddsa_keypair/1]).
+-export([eddsa_secret_to_public/1]).
 -export([ed25519_sign/2]).
 -export([ed25519_verify/3]).
--export([ed25519ph_keypair/0]).
--export([ed25519ph_keypair/1]).
--export([ed25519ph_secret_to_public/1]).
 -export([ed25519ph_sign/2]).
 -export([ed25519ph_verify/3]).
 -export([x25519_keypair/0]).
@@ -32,18 +29,19 @@
 %% jose_curve25519 callbacks
 %%====================================================================
 
-% Ed25519
-ed25519_keypair() ->
+% EdDSA
+eddsa_keypair() ->
 	jose_jwa_ed25519:keypair().
 
-ed25519_keypair(Seed)
+eddsa_keypair(Seed)
 		when is_binary(Seed) ->
 	jose_jwa_ed25519:keypair(Seed).
 
-ed25519_secret_to_public(SecretKey)
+eddsa_secret_to_public(SecretKey)
 		when is_binary(SecretKey) ->
 	jose_jwa_ed25519:secret_to_pk(SecretKey).
 
+% Ed25519
 ed25519_sign(Message, SecretKey)
 		when is_binary(Message)
 		andalso is_binary(SecretKey) ->
@@ -61,17 +59,6 @@ ed25519_verify(Signature, Message, PublicKey)
 	end.
 
 % Ed25519ph
-ed25519ph_keypair() ->
-	jose_jwa_ed25519:keypair().
-
-ed25519ph_keypair(Seed)
-		when is_binary(Seed) ->
-	jose_jwa_ed25519:keypair(Seed).
-
-ed25519ph_secret_to_public(SecretKey)
-		when is_binary(SecretKey) ->
-	jose_jwa_ed25519:secret_to_pk(SecretKey).
-
 ed25519ph_sign(Message, SecretKey)
 		when is_binary(Message)
 		andalso is_binary(SecretKey) ->

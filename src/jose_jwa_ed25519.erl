@@ -18,6 +18,8 @@
 -export([edwards_double/1]).
 -export([edwards_equal/2]).
 -export([scalarmult/2]).
+-export([scalarmult_base/1]).
+-export([normalize_point/1]).
 -export([secret/0]).
 -export([secret_to_curve25519/1]).
 -export([secret_to_pk/1]).
@@ -192,6 +194,16 @@ scalarmult(P, E) ->
 		1 ->
 			edwards_add(QQ, P)
 	end.
+
+scalarmult_base(E) ->
+	scalarmult(?B, E).
+
+normalize_point({X, Y, Z, _T}) ->
+	Zi = ?inv(Z),
+	Xp = ?math:mod((X * Zi), ?p),
+	Yp = ?math:mod((Y * Zi), ?p),
+	Zp = ?math:mod((Z * Zi), ?p),
+	{Xp, Yp, Zp, ?math:mod((Xp * Yp), ?p)}.
 
 % 5.1.5. Key Generation - https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.1.5
 

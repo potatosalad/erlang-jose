@@ -22,7 +22,7 @@ ed25519_secret() ->
 	binary(32).
 
 ed25519_keypair(Secret) ->
-	{PK, SK} = jose_curve25519:ed25519_keypair(Secret),
+	{PK, SK} = jose_curve25519:eddsa_keypair(Secret),
 	{SK, PK}.
 
 jwk_map() ->

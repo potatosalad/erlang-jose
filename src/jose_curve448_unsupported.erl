@@ -13,16 +13,17 @@
 -behaviour(jose_curve448).
 
 %% jose_curve448 callbacks
--export([ed448_keypair/0]).
--export([ed448_keypair/1]).
--export([ed448_secret_to_public/1]).
+-export([eddsa_keypair/0]).
+-export([eddsa_keypair/1]).
+-export([eddsa_secret_to_public/1]).
 -export([ed448_sign/2]).
+-export([ed448_sign/3]).
 -export([ed448_verify/3]).
--export([ed448ph_keypair/0]).
--export([ed448ph_keypair/1]).
--export([ed448ph_secret_to_public/1]).
+-export([ed448_verify/4]).
 -export([ed448ph_sign/2]).
+-export([ed448ph_sign/3]).
 -export([ed448ph_verify/3]).
+-export([ed448ph_verify/4]).
 -export([x448_keypair/0]).
 -export([x448_keypair/1]).
 -export([x448_secret_to_public/1]).
@@ -35,36 +36,40 @@
 %% jose_curve448 callbacks
 %%====================================================================
 
+% EdDSA
+eddsa_keypair() ->
+	?unsupported.
+
+eddsa_keypair(_Seed) ->
+	?unsupported.
+
+eddsa_secret_to_public(_SecretKey) ->
+	?unsupported.
+
 % Ed448
-ed448_keypair() ->
-	?unsupported.
-
-ed448_keypair(_Seed) ->
-	?unsupported.
-
-ed448_secret_to_public(_SecretKey) ->
-	?unsupported.
-
 ed448_sign(_Message, _SecretKey) ->
+	?unsupported.
+
+ed448_sign(_Message, _SecretKey, _Context) ->
 	?unsupported.
 
 ed448_verify(_Signature, _Message, _PublicKey) ->
 	?unsupported.
 
+ed448_verify(_Signature, _Message, _PublicKey, _Context) ->
+	?unsupported.
+
 % Ed448ph
-ed448ph_keypair() ->
-	?unsupported.
-
-ed448ph_keypair(_Seed) ->
-	?unsupported.
-
-ed448ph_secret_to_public(_SecretKey) ->
-	?unsupported.
-
 ed448ph_sign(_Message, _SecretKey) ->
 	?unsupported.
 
+ed448ph_sign(_Message, _SecretKey, _Context) ->
+	?unsupported.
+
 ed448ph_verify(_Signature, _Message, _PublicKey) ->
+	?unsupported.
+
+ed448ph_verify(_Signature, _Message, _PublicKey, _Context) ->
 	?unsupported.
 
 % X448

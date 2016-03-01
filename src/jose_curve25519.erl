@@ -10,14 +10,11 @@
 %%%-------------------------------------------------------------------
 -module(jose_curve25519).
 
--callback ed25519_keypair() -> {PublicKey::binary(), SecretKey::binary()}.
--callback ed25519_keypair(Seed::binary()) -> {PublicKey::binary(), SecretKey::binary()}.
--callback ed25519_secret_to_public(SecretKey::binary()) -> PublicKey::binary().
+-callback eddsa_keypair() -> {PublicKey::binary(), SecretKey::binary()}.
+-callback eddsa_keypair(Seed::binary()) -> {PublicKey::binary(), SecretKey::binary()}.
+-callback eddsa_secret_to_public(SecretKey::binary()) -> PublicKey::binary().
 -callback ed25519_sign(Message::binary(), SecretKey::binary()) -> Signature::binary().
 -callback ed25519_verify(Signature::binary(), Message::binary(), PublicKey::binary()) -> boolean().
--callback ed25519ph_keypair() -> {PublicKey::binary(), SecretKey::binary()}.
--callback ed25519ph_keypair(Seed::binary()) -> {PublicKey::binary(), SecretKey::binary()}.
--callback ed25519ph_secret_to_public(SecretKey::binary()) -> PublicKey::binary().
 -callback ed25519ph_sign(Message::binary(), SecretKey::binary()) -> Signature::binary().
 -callback ed25519ph_verify(Signature::binary(), Message::binary(), PublicKey::binary()) -> boolean().
 -callback x25519_keypair() -> {PublicKey::binary(), SecretKey::binary()}.
@@ -26,14 +23,11 @@
 -callback x25519_shared_secret(MySecretKey::binary(), YourPublicKey::binary()) -> SharedSecret::binary().
 
 %% jose_curve25519 callbacks
--export([ed25519_keypair/0]).
--export([ed25519_keypair/1]).
--export([ed25519_secret_to_public/1]).
+-export([eddsa_keypair/0]).
+-export([eddsa_keypair/1]).
+-export([eddsa_secret_to_public/1]).
 -export([ed25519_sign/2]).
 -export([ed25519_verify/3]).
--export([ed25519ph_keypair/0]).
--export([ed25519ph_keypair/1]).
--export([ed25519ph_secret_to_public/1]).
 -export([ed25519ph_sign/2]).
 -export([ed25519ph_verify/3]).
 -export([x25519_keypair/0]).
@@ -48,16 +42,17 @@
 %% jose_curve25519 callbacks
 %%====================================================================
 
+% EdDSA
+eddsa_keypair() ->
+	?JOSE_CURVE25519:eddsa_keypair().
+
+eddsa_keypair(Seed) ->
+	?JOSE_CURVE25519:eddsa_keypair(Seed).
+
+eddsa_secret_to_public(SecretKey) ->
+	?JOSE_CURVE25519:eddsa_secret_to_public(SecretKey).
+
 % Ed25519
-ed25519_keypair() ->
-	?JOSE_CURVE25519:ed25519_keypair().
-
-ed25519_keypair(Seed) ->
-	?JOSE_CURVE25519:ed25519_keypair(Seed).
-
-ed25519_secret_to_public(SecretKey) ->
-	?JOSE_CURVE25519:ed25519_secret_to_public(SecretKey).
-
 ed25519_sign(Message, SecretKey) ->
 	?JOSE_CURVE25519:ed25519_sign(Message, SecretKey).
 
@@ -65,15 +60,6 @@ ed25519_verify(Signature, Message, PublicKey) ->
 	?JOSE_CURVE25519:ed25519_verify(Signature, Message, PublicKey).
 
 % Ed25519ph
-ed25519ph_keypair() ->
-	?JOSE_CURVE25519:ed25519ph_keypair().
-
-ed25519ph_keypair(Seed) ->
-	?JOSE_CURVE25519:ed25519ph_keypair(Seed).
-
-ed25519ph_secret_to_public(SecretKey) ->
-	?JOSE_CURVE25519:ed25519ph_secret_to_public(SecretKey).
-
 ed25519ph_sign(Message, SecretKey) ->
 	?JOSE_CURVE25519:ed25519ph_sign(Message, SecretKey).
 

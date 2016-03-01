@@ -1,10 +1,10 @@
 %{"base64url": {:hex, :base64url, "0.0.1"},
   "cutkey": {:git, "https://github.com/potatosalad/cutkey.git", "00e3ce92da8360c2c943ad0431b54cb710d6d454", []},
-  "earmark": {:hex, :earmark, "0.1.19"},
-  "ex_doc": {:hex, :ex_doc, "0.10.0"},
-  "jiffy": {:git, "https://github.com/davisp/jiffy.git", "cfc61a2e952dc3182e0f9b1473467563699992e2", []},
+  "earmark": {:hex, :earmark, "0.2.1"},
+  "ex_doc": {:hex, :ex_doc, "0.11.4"},
+  "jiffy": {:git, "https://github.com/davisp/jiffy.git", "6303ff98aaa3fce625038c8b7af2aa8b802f4742", []},
   "jsone": {:hex, :jsone, "1.2.0"},
   "jsx": {:hex, :jsx, "2.8.0"},
   "keccakf1600": {:hex, :keccakf1600, "2.0.0"},
   "libsodium": {:hex, :libsodium, "0.0.3"},
-  "poison": {:hex, :poison, "2.0.1"}}
+  "poison": {:hex, :poison, "2.1.0"}}

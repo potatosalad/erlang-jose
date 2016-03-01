@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.7.0 (2016-03-01)
+
+* Enhancements
+  * Add support for [libdecaf](https://github.com/potatosalad/erlang-libdecaf) NIF which provides support for;
+    * `Ed25519`
+    * `Ed25519ph`
+    * `Ed448`
+    * `Ed448ph`
+    * `X25519`
+    * `X448`
+
+* Fixes
+  * Return 56 bytes instead of 57 bytes when converting between edwards448 and curve448.
+  * EdDSA related refactoring/cleanup.
+
 ## 1.6.1 (2016-02-05)
 
 * Enhancements

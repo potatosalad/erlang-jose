@@ -11,7 +11,7 @@
 -module(jose_jwa_x448).
 
 %% API
--export([coordinate_to_edwards448/1]).
+-export([coordinate_to_edwards448_4isogeny/1]).
 -export([vrecover/1]).
 -export([xrecover/1]).
 -export([curve448/2]).
@@ -51,11 +51,25 @@
 %% API
 %%====================================================================
 
-coordinate_to_edwards448(<< _:?b/unsigned-little-integer-unit:1 >>) ->
-	erlang:error(currently_broken).
+coordinate_to_edwards448_4isogeny(<< U:?b/unsigned-little-integer-unit:1 >>) ->
+	V = vrecover(U),
+	% -(u^5 - 2*u^3 - 4*u*v^2 + u)/(u^5 - 2*u^2*v^2 - 2*u^3 - 2*v^2 + u)
+	U2 = ?math:expmod(U, 2, ?p),
+	U3 = ?math:expmod(U, 3, ?p),
+	U5 = ?math:mod(U2*U3, ?p),
+	V2 = ?math:expmod(V, 2, ?p),
+	YN = ?math:mod(-(U5 - (2*U3) - (4*U*V2) + U), ?p),
+	YD = ?inv((U5 - (2*U2*V2) - (2*U3) - (2*V2) + U)),
+	Y = ?math:mod(YN*YD, ?p),
+	% 4*v*(u^2 - 1)/(u^4 - 2*u^2 + 4*v^2 + 1)
+	U4 = ?math:mod(U2*U2, ?p),
+	XN = ?math:mod((4*V*(U2 - 1)), ?p),
+	XD = ?inv((U4 - (2*U2) + (4*V2) + 1)),
+	X = ?math:mod(XN*XD, ?p),
+	jose_jwa_ed448:encode_point({X, Y, 1}).
 
 vrecover(U) ->
-	Y = ((1 + U) * ?inv(1 - U)) rem ?p,
+	Y = ?math:mod(((1 + U) * ?inv(1 - U)), ?p),
 	X = xrecover(Y),
 	UX = (U * ?inv(X)) rem ?p,
 	V = (?A2sqrt * UX) rem ?p,

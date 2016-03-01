@@ -89,12 +89,12 @@ to_thumbprint_map(K, F) ->
 %%====================================================================
 
 generate_key(Seed = << _:?secretbytes/binary >>) ->
-	{_PK, SK} = jose_curve448:ed448_keypair(Seed),
+	{_PK, SK} = jose_curve448:eddsa_keypair(Seed),
 	{SK, #{}};
 generate_key({okp, 'Ed448', Seed = << _:?secretbytes/binary >>}) ->
 	generate_key(Seed);
 generate_key({okp, 'Ed448'}) ->
-	{_PK, SK} = jose_curve448:ed448_keypair(),
+	{_PK, SK} = jose_curve448:eddsa_keypair(),
 	{SK, #{}}.
 
 generate_key(KTY, Fields)
@@ -125,7 +125,7 @@ verify(Message, 'Ed448', Signature, PK = << _:?publickeybytes/binary >>) ->
 %%====================================================================
 
 from_okp({'Ed448', SK = << Secret:?secretbytes/binary, PK:?publickeybytes/binary >>}) ->
-	case jose_curve448:ed448_secret_to_public(Secret) of
+	case jose_curve448:eddsa_secret_to_public(Secret) of
 		PK ->
 			{SK, #{}};
 		_ ->

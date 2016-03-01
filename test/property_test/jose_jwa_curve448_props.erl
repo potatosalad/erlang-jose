@@ -8,18 +8,11 @@
 
 -compile(export_all).
 
-ed448_secret() ->
+eddsa_secret() ->
 	binary(57).
 
-ed448_keypair(Secret) ->
-	{PK, SK} = jose_curve448:ed448_keypair(Secret),
-	{SK, PK}.
-
-ed448ph_secret() ->
-	binary(57).
-
-ed448ph_keypair(Secret) ->
-	{PK, SK} = jose_curve448:ed448ph_keypair(Secret),
+eddsa_keypair(Secret) ->
+	{PK, SK} = jose_curve448:eddsa_keypair(Secret),
 	{SK, PK}.
 
 x448_secret() ->
@@ -29,41 +22,29 @@ x448_keypair(Secret) ->
 	{PK, SK} = jose_curve448:x448_keypair(Secret),
 	{SK, PK}.
 
-ed448_keypair_gen() ->
+eddsa_keypair_gen() ->
 	?LET(Secret,
-		ed448_secret(),
-		ed448_keypair(Secret)).
+		eddsa_secret(),
+		eddsa_keypair(Secret)).
 
-prop_ed448_secret_to_public() ->
+prop_eddsa_secret_to_public() ->
 	?FORALL({<< Secret:57/binary, _/binary >>, PK},
-		ed448_keypair_gen(),
+		eddsa_keypair_gen(),
 		begin
-			PK =:= jose_jwa_curve448:ed448_secret_to_public(Secret)
+			PK =:= jose_jwa_curve448:eddsa_secret_to_public(Secret)
 		end).
 
 prop_ed448_sign_and_verify() ->
 	?FORALL({{SK, PK}, M},
-		{ed448_keypair_gen(), binary()},
+		{eddsa_keypair_gen(), binary()},
 		begin
 			S = jose_jwa_curve448:ed448_sign(M, SK),
 			jose_jwa_curve448:ed448_verify(S, M, PK)
 		end).
 
-ed448ph_keypair_gen() ->
-	?LET(Secret,
-		ed448ph_secret(),
-		ed448ph_keypair(Secret)).
-
-prop_ed448ph_secret_to_public() ->
-	?FORALL({<< Secret:57/binary, _/binary >>, PK},
-		ed448ph_keypair_gen(),
-		begin
-			PK =:= jose_jwa_curve448:ed448ph_secret_to_public(Secret)
-		end).
-
 prop_ed448ph_sign_and_verify() ->
 	?FORALL({{SK, PK}, M},
-		{ed448ph_keypair_gen(), binary()},
+		{eddsa_keypair_gen(), binary()},
 		begin
 			S = jose_jwa_curve448:ed448ph_sign(M, SK),
 			jose_jwa_curve448:ed448ph_verify(S, M, PK)

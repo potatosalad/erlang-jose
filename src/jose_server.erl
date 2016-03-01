@@ -185,7 +185,7 @@ check_curve25519(Fallback, Entries) ->
 		[] ->
 			case application:get_env(jose, curve25519_module, undefined) of
 				undefined ->
-					check_curve25519_modules(Fallback, [libsodium]);
+					check_curve25519_modules(Fallback, [libdecaf, libsodium]);
 				M when is_atom(M) ->
 					check_curve25519_module(M)
 			end
@@ -193,6 +193,8 @@ check_curve25519(Fallback, Entries) ->
 	[{curve25519_module, Curve25519Module} | Entries].
 
 %% @private
+check_curve25519_module(libdecaf) ->
+	jose_curve25519_libdecaf;
 check_curve25519_module(libsodium) ->
 	jose_curve25519_libsodium;
 check_curve25519_module(Module) when is_atom(Module) ->
@@ -224,7 +226,7 @@ check_curve448(Fallback, Entries) ->
 		[] ->
 			case application:get_env(jose, curve448_module, undefined) of
 				undefined ->
-					check_curve448_modules(Fallback, []);
+					check_curve448_modules(Fallback, [libdecaf]);
 				M when is_atom(M) ->
 					check_curve448_module(M)
 			end
@@ -232,6 +234,8 @@ check_curve448(Fallback, Entries) ->
 	[{curve448_module, Curve448Module} | Entries].
 
 %% @private
+check_curve448_module(libdecaf) ->
+	jose_curve448_libdecaf;
 check_curve448_module(Module) when is_atom(Module) ->
 	Module.
 
@@ -341,7 +345,7 @@ check_sha3(Fallback, Entries) ->
 		[] ->
 			case application:get_env(jose, sha3_module, undefined) of
 				undefined ->
-					check_sha3_modules(Fallback, [keccakf1600]);
+					check_sha3_modules(Fallback, [keccakf1600, libdecaf]);
 				M when is_atom(M) ->
 					check_sha3_module(M)
 			end
@@ -351,6 +355,8 @@ check_sha3(Fallback, Entries) ->
 %% @private
 check_sha3_module(keccakf1600) ->
 	check_sha3_module(jose_sha3_keccakf1600);
+check_sha3_module(libdecaf) ->
+	check_sha3_module(jose_sha3_libdecaf);
 check_sha3_module(jose_sha3_keccakf1600) ->
 	_ = code:ensure_loaded(keccakf1600),
 	case erlang:function_exported(keccakf1600, hash, 3) of

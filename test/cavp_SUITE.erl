@@ -1211,40 +1211,40 @@ data_setup_multiple([], _Directory, []) ->
 %% @private
 ed25519_vector({Secret, PK, Message, Signature}) ->
 	SK = << Secret/binary, PK/binary >>,
-	?tv_ok(T0, jose_jwa_curve25519, ed25519_secret_to_public, [Secret], PK),
+	?tv_ok(T0, jose_jwa_curve25519, eddsa_secret_to_public, [Secret], PK),
 	?tv_ok(T1, jose_jwa_curve25519, ed25519_sign, [Message, SK], Signature),
 	?tv_ok(T2, jose_jwa_curve25519, ed25519_verify, [Signature, Message, PK], true).
 
 %% @private
 ed25519ph_vector({Secret, PK, Message, Signature}) ->
 	SK = << Secret/binary, PK/binary >>,
-	?tv_ok(T0, jose_jwa_curve25519, ed25519ph_secret_to_public, [Secret], PK),
+	?tv_ok(T0, jose_jwa_curve25519, eddsa_secret_to_public, [Secret], PK),
 	?tv_ok(T1, jose_jwa_curve25519, ed25519ph_sign, [Message, SK], Signature),
 	?tv_ok(T2, jose_jwa_curve25519, ed25519ph_verify, [Signature, Message, PK], true).
 
 %% @private
 ed448_vector({Secret, PK, Message, Signature}) ->
 	SK = << Secret/binary, PK/binary >>,
-	?tv_ok(T0, jose_jwa_curve448, ed448_secret_to_public, [Secret], PK),
+	?tv_ok(T0, jose_jwa_curve448, eddsa_secret_to_public, [Secret], PK),
 	?tv_ok(T1, jose_jwa_curve448, ed448_sign, [Message, SK], Signature),
 	?tv_ok(T2, jose_jwa_curve448, ed448_verify, [Signature, Message, PK], true);
 ed448_vector({Secret, PK, Message, Context, Signature}) ->
 	SK = << Secret/binary, PK/binary >>,
-	?tv_ok(T0, jose_jwa_curve448, ed448_secret_to_public, [Secret], PK),
-	?tv_ok(T1, jose_jwa_curve448, ed448_sign, [{Context, Message}, SK], Signature),
-	?tv_ok(T2, jose_jwa_curve448, ed448_verify, [Signature, {Context, Message}, PK], true).
+	?tv_ok(T0, jose_jwa_curve448, eddsa_secret_to_public, [Secret], PK),
+	?tv_ok(T1, jose_jwa_curve448, ed448_sign, [Message, SK, Context], Signature),
+	?tv_ok(T2, jose_jwa_curve448, ed448_verify, [Signature, Message, PK, Context], true).
 
 %% @private
 ed448ph_vector({Secret, PK, Message, Signature}) ->
 	SK = << Secret/binary, PK/binary >>,
-	?tv_ok(T0, jose_jwa_curve448, ed448ph_secret_to_public, [Secret], PK),
+	?tv_ok(T0, jose_jwa_curve448, eddsa_secret_to_public, [Secret], PK),
 	?tv_ok(T1, jose_jwa_curve448, ed448ph_sign, [Message, SK], Signature),
 	?tv_ok(T2, jose_jwa_curve448, ed448ph_verify, [Signature, Message, PK], true);
 ed448ph_vector({Secret, PK, Message, Context, Signature}) ->
 	SK = << Secret/binary, PK/binary >>,
-	?tv_ok(T0, jose_jwa_curve448, ed448ph_secret_to_public, [Secret], PK),
-	?tv_ok(T1, jose_jwa_curve448, ed448ph_sign, [{Context, Message}, SK], Signature),
-	?tv_ok(T2, jose_jwa_curve448, ed448ph_verify, [Signature, {Context, Message}, PK], true).
+	?tv_ok(T0, jose_jwa_curve448, eddsa_secret_to_public, [Secret], PK),
+	?tv_ok(T1, jose_jwa_curve448, ed448ph_sign, [Message, SK, Context], Signature),
+	?tv_ok(T2, jose_jwa_curve448, ed448ph_verify, [Signature, Message, PK, Context], true).
 
 %% @private
 emc_rsa_oaep_encrypt_and_decrypt([

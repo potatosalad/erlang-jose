@@ -13,16 +13,17 @@
 -behaviour(jose_curve448).
 
 %% jose_curve448 callbacks
--export([ed448_keypair/0]).
--export([ed448_keypair/1]).
--export([ed448_secret_to_public/1]).
+-export([eddsa_keypair/0]).
+-export([eddsa_keypair/1]).
+-export([eddsa_secret_to_public/1]).
 -export([ed448_sign/2]).
+-export([ed448_sign/3]).
 -export([ed448_verify/3]).
--export([ed448ph_keypair/0]).
--export([ed448ph_keypair/1]).
--export([ed448ph_secret_to_public/1]).
+-export([ed448_verify/4]).
 -export([ed448ph_sign/2]).
+-export([ed448ph_sign/3]).
 -export([ed448ph_verify/3]).
+-export([ed448ph_verify/4]).
 -export([x448_keypair/0]).
 -export([x448_keypair/1]).
 -export([x448_secret_to_public/1]).
@@ -32,27 +33,29 @@
 %% jose_curve448 callbacks
 %%====================================================================
 
-% Ed448
-ed448_keypair() ->
+% EdDSA
+eddsa_keypair() ->
 	jose_jwa_ed448:keypair().
 
-ed448_keypair(Seed)
+eddsa_keypair(Seed)
 		when is_binary(Seed) ->
 	jose_jwa_ed448:keypair(Seed).
 
-ed448_secret_to_public(SecretKey)
+eddsa_secret_to_public(SecretKey)
 		when is_binary(SecretKey) ->
 	jose_jwa_ed448:secret_to_pk(SecretKey).
 
+% Ed448
 ed448_sign(Message, SecretKey)
 		when is_binary(Message)
 		andalso is_binary(SecretKey) ->
-	jose_jwa_ed448:sign(Message, SecretKey);
-ed448_sign({Context, Message}, SecretKey)
-		when is_binary(Context)
-		andalso is_binary(Message)
-		andalso is_binary(SecretKey) ->
-	jose_jwa_ed448:sign(Context, Message, SecretKey).
+	jose_jwa_ed448:sign(Message, SecretKey).
+
+ed448_sign(Message, SecretKey, Context)
+		when is_binary(Message)
+		andalso is_binary(SecretKey)
+		andalso is_binary(Context) ->
+	jose_jwa_ed448:sign(Message, SecretKey, Context).
 
 ed448_verify(Signature, Message, PublicKey)
 		when is_binary(Signature)
@@ -63,40 +66,31 @@ ed448_verify(Signature, Message, PublicKey)
 	catch
 		_:_ ->
 			false
-	end;
-ed448_verify(Signature, {Context, Message}, PublicKey)
+	end.
+
+ed448_verify(Signature, Message, PublicKey, Context)
 		when is_binary(Signature)
-		andalso is_binary(Context)
 		andalso is_binary(Message)
-		andalso is_binary(PublicKey) ->
+		andalso is_binary(PublicKey)
+		andalso is_binary(Context) ->
 	try
-		jose_jwa_ed448:verify(Signature, Context, Message, PublicKey)
+		jose_jwa_ed448:verify(Signature, Message, PublicKey, Context)
 	catch
 		_:_ ->
 			false
 	end.
 
 % Ed448ph
-ed448ph_keypair() ->
-	jose_jwa_ed448:keypair().
-
-ed448ph_keypair(Seed)
-		when is_binary(Seed) ->
-	jose_jwa_ed448:keypair(Seed).
-
-ed448ph_secret_to_public(SecretKey)
-		when is_binary(SecretKey) ->
-	jose_jwa_ed448:secret_to_pk(SecretKey).
-
 ed448ph_sign(Message, SecretKey)
 		when is_binary(Message)
 		andalso is_binary(SecretKey) ->
-	jose_jwa_ed448:sign_ph(Message, SecretKey);
-ed448ph_sign({Context, Message}, SecretKey)
-		when is_binary(Context)
-		andalso is_binary(Message)
-		andalso is_binary(SecretKey) ->
-	jose_jwa_ed448:sign_ph(Context, Message, SecretKey).
+	jose_jwa_ed448:sign_ph(Message, SecretKey).
+
+ed448ph_sign(Message, SecretKey, Context)
+		when is_binary(Message)
+		andalso is_binary(SecretKey)
+		andalso is_binary(Context) ->
+	jose_jwa_ed448:sign_ph(Message, SecretKey, Context).
 
 ed448ph_verify(Signature, Message, PublicKey)
 		when is_binary(Signature)
@@ -107,14 +101,15 @@ ed448ph_verify(Signature, Message, PublicKey)
 	catch
 		_:_ ->
 			false
-	end;
-ed448ph_verify(Signature, {Context, Message}, PublicKey)
+	end.
+
+ed448ph_verify(Signature, Message, PublicKey, Context)
 		when is_binary(Signature)
-		andalso is_binary(Context)
 		andalso is_binary(Message)
-		andalso is_binary(PublicKey) ->
+		andalso is_binary(PublicKey)
+		andalso is_binary(Context) ->
 	try
-		jose_jwa_ed448:verify_ph(Signature, Context, Message, PublicKey)
+		jose_jwa_ed448:verify_ph(Signature, Message, PublicKey, Context)
 	catch
 		_:_ ->
 			false

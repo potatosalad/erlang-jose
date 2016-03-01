@@ -171,10 +171,10 @@ crypto_supports() ->
 		{shake256, fun() -> jose_sha3:shake256(<<>>, 0) end}
 	]),
 	ExternalPublicKeys = external_checks([
-		{ed25519, fun jose_curve25519:ed25519_keypair/0},
-		{ed25519ph, fun jose_curve25519:ed25519ph_keypair/0},
-		{ed448, fun jose_curve448:ed448_keypair/0},
-		{ed448ph, fun jose_curve448:ed448ph_keypair/0},
+		{ed25519, fun jose_curve25519:eddsa_keypair/0},
+		{ed25519ph, fun jose_curve25519:eddsa_keypair/0},
+		{ed448, fun jose_curve448:eddsa_keypair/0},
+		{ed448ph, fun jose_curve448:eddsa_keypair/0},
 		{x25519, fun jose_curve25519:x25519_keypair/0},
 		{x448, fun jose_curve448:x448_keypair/0}
 	]),

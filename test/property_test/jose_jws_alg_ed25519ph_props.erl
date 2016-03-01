@@ -29,7 +29,7 @@ ed25519ph_secret() ->
 	binary(32).
 
 ed25519ph_keypair(Secret) ->
-	{PK, SK} = jose_curve25519:ed25519ph_keypair(Secret),
+	{PK, SK} = jose_curve25519:eddsa_keypair(Secret),
 	{SK, PK}.
 
 ed25519ph_keypair_gen() ->

@@ -22,7 +22,7 @@ ed448_secret() ->
 	binary(57).
 
 ed448_keypair(Secret) ->
-	{PK, SK} = jose_curve448:ed448_keypair(Secret),
+	{PK, SK} = jose_curve448:eddsa_keypair(Secret),
 	{SK, PK}.
 
 jwk_map() ->
