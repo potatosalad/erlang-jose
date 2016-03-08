@@ -62,14 +62,14 @@ ed25519_verify(Signature, Message, PublicKey)
 ed25519ph_sign(Message, SecretKey)
 		when is_binary(Message)
 		andalso is_binary(SecretKey) ->
-	jose_jwa_ed25519:sign_ph(Message, SecretKey).
+	jose_jwa_ed25519:sign_with_prehash(Message, SecretKey).
 
 ed25519ph_verify(Signature, Message, PublicKey)
 		when is_binary(Signature)
 		andalso is_binary(Message)
 		andalso is_binary(PublicKey) ->
 	try
-		jose_jwa_ed25519:verify_ph(Signature, Message, PublicKey)
+		jose_jwa_ed25519:verify_with_prehash(Signature, Message, PublicKey)
 	catch
 		_:_ ->
 			false

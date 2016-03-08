@@ -30,9 +30,9 @@
 -export([sk_to_curve25519/1]).
 -export([pk_to_curve25519/1]).
 -export([sign/2]).
--export([sign_ph/2]).
+-export([sign_with_prehash/2]).
 -export([verify/3]).
--export([verify_ph/3]).
+-export([verify_with_prehash/3]).
 
 %% Macros
 -define(math, jose_jwa_math).
@@ -257,7 +257,7 @@ sign(M, << Secret:?secretbytes/binary, PK:?publickeybytes/binary >>) when is_bin
 	S = ?math:mod(Rs + (K * As), ?l),
 	<< R/binary, S:?b/unsigned-little-integer-unit:1 >>.
 
-sign_ph(M, SK = << _:?secretkeybytes/binary >>) when is_binary(M) ->
+sign_with_prehash(M, SK = << _:?secretkeybytes/binary >>) when is_binary(M) ->
 	sign(?PH(M), SK).
 
 % 5.1.7. Verify - https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.1.7
@@ -269,5 +269,5 @@ verify(<< R:?b/bitstring, S:?b/unsigned-little-integer-unit:1 >>, M, PK = << _:?
 verify(Sig, M, << _:?publickeybytes/binary >>) when is_binary(Sig) andalso is_binary(M) ->
 	false.
 
-verify_ph(Sig, M, PK = << _:?publickeybytes/binary >>) when is_binary(Sig) andalso is_binary(M) ->
+verify_with_prehash(Sig, M, PK = << _:?publickeybytes/binary >>) when is_binary(Sig) andalso is_binary(M) ->
 	verify(Sig, ?PH(M), PK).

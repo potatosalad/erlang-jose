@@ -649,43 +649,47 @@ init_per_group(G='curve448', Config) ->
 			{ % TEST abc
 				hexstr2bin(
 					"833fe62409237b9d62ec77587520911e"
-					"9a759cec1d19755b7da901b96dca3d42"), % SECRET KEY
+					"9a759cec1d19755b7da901b96dca3d42"
+					"ef7822e0d5104127dc05d6dbefde69e3"
+					"ab2cec7c867c6e2c49"), % SECRET KEY
 				hexstr2bin(
-					"55ab69e205b6c7b344711f9576dfe48e"
-					"963e39e03f0fc0374465ff6b7eaa1d7d"
-					"0c95c1c36c1f4a7dc89e74fdd0dc9b34"
-					"187e1ee702b303f000"), % PUBLIC KEY
+					"259b71c19f83ef77a7abd26524cbdb31"
+					"61b590a48f7d17de3ee0ba9c52beb743"
+					"c09428a131d6b1b57303d90d8132c276"
+					"d5ed3d5d01c0f53880"), % PUBLIC KEY
 				hexstr2bin("616263"), % MESSAGE
 				hexstr2bin(
-					"c61f474654ce82432a6cc5c43f295b49"
-					"b5a8a256047f1edc09fe69588f75cc3b"
-					"c8bee6eaf6dc52ecac585583780fa238"
-					"2059416759a11d938079e3d0a7ed873d"
-					"4f99cdde00a35a6698e9e1763071e698"
-					"5eee73682dc91448b9058e31c1483719"
-					"f44a0d59b7d398c82c6db48c32d60db2"
-					"3e00") % SIGNATURE
+					"963cf799d20fdf51c460310c1cf65d0e"
+					"83c4ef5aa73332ba5b4c1e7635ff9e9b"
+					"6a12b16436fa3681b92575e7eba40ee2"
+					"79c487ad724b6d1080e1860e63dbdd58"
+					"9f5125505b4de024264625e61b097956"
+					"8703f9d9e2bbf5523a1886ee6da1ecb2"
+					"0552bb506eb35a042658ec534bfc1c2c"
+					"1a00") % SIGNATURE
 			},
 			{ % TEST abc (with context)
 				hexstr2bin(
 					"833fe62409237b9d62ec77587520911e"
-					"9a759cec1d19755b7da901b96dca3d42"), % SECRET KEY
+					"9a759cec1d19755b7da901b96dca3d42"
+					"ef7822e0d5104127dc05d6dbefde69e3"
+					"ab2cec7c867c6e2c49"), % SECRET KEY
 				hexstr2bin(
-					"55ab69e205b6c7b344711f9576dfe48e"
-					"963e39e03f0fc0374465ff6b7eaa1d7d"
-					"0c95c1c36c1f4a7dc89e74fdd0dc9b34"
-					"187e1ee702b303f000"), % PUBLIC KEY
+					"259b71c19f83ef77a7abd26524cbdb31"
+					"61b590a48f7d17de3ee0ba9c52beb743"
+					"c09428a131d6b1b57303d90d8132c276"
+					"d5ed3d5d01c0f53880"), % PUBLIC KEY
 				hexstr2bin("616263"), % MESSAGE
 				hexstr2bin("666f6f"), % CONTEXT
 				hexstr2bin(
-					"b0820f1ea13b9118d41c59de9637e92d"
-					"45878b88c72fc813a42468d90f2f323b"
-					"130e3104c9fb4746fcace1b0454cffaa"
-					"a420a405474fae5180f43b5d975e579c"
-					"059ecece8c6cbbc621baf0586db0747f"
-					"0b2a7728a6606dc86d0f157b5628e20d"
-					"e93c98afa9d5b1d4b6ba6994690db4fc"
-					"2f00") % SIGNATURE
+					"86a6bf52f9e8f84f451b2f392a8d1c3a"
+					"414425fac0068f74aeead53b0e6b53d4"
+					"555cea1726da4a65202880d407267087"
+					"9e8e6fa4d9694c060054f2065dc206a6"
+					"e615d0d8c99b95209b696c8125c5fbb9"
+					"bc82a0f7ed3d99c4c11c47798ef0f7eb"
+					"97b3b72ab4ac86eaf8b43449e8ac30ff"
+					"3f00") % SIGNATURE
 			}
 		]},
 		{x448, [

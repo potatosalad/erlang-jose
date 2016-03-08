@@ -31,12 +31,12 @@
 -export([pk_to_curve448/1]).
 -export([sign/2]).
 -export([sign/3]).
--export([sign_ph/2]).
--export([sign_ph/3]).
+-export([sign_with_prehash/2]).
+-export([sign_with_prehash/3]).
 -export([verify/3]).
 -export([verify/4]).
--export([verify_ph/3]).
--export([verify_ph/4]).
+-export([verify_with_prehash/3]).
+-export([verify_with_prehash/4]).
 
 %% Macros
 -define(math, jose_jwa_math).
@@ -232,23 +232,9 @@ secret_to_curve448(Secret = << _:?secretbytes/binary >>) ->
 	HFoot = 0,
 	<< Scalar:?b/unsigned-little-integer-unit:1 >> = << HHead:8/integer, HBody/binary, HKnee:8/integer, HFoot:8/integer >>,
 	Clamped = jose_jwa_x448:clamp_scalar(Scalar),
-	<< Clamped:?b_curve448/unsigned-little-integer-unit:1 >>;
-%% FIXME: allows 32-byte secret, remove after draft is fixed
-secret_to_curve448(Secret = << _:32/binary >>) ->
-	<< HHead0:6/bitstring, _:2/bitstring, HBody:54/binary, _:1/bitstring, HKnee0:7/bitstring, _HFoot0:8/integer, _/binary >> = ?H(Secret),
-	<< HHead:8/integer >> = << HHead0:6/bitstring, 0:2/integer >>,
-	<< HKnee:8/integer >> = << 0:1/integer, HKnee0:7/bitstring >>,
-	HFoot = 0,
-	<< Scalar:?b/unsigned-little-integer-unit:1 >> = << HHead:8/integer, HBody/binary, HKnee:8/integer, HFoot:8/integer >>,
-	Clamped = jose_jwa_x448:clamp_scalar(Scalar),
 	<< Clamped:?b_curve448/unsigned-little-integer-unit:1 >>.
 
 secret_to_pk(Secret = << _:?secretbytes/binary >>) ->
-	<< As:?b_curve448/unsigned-little-integer-unit:1 >> = secret_to_curve448(Secret),
-	A = scalarmult(?B, As),
-	encode_point(A);
-%% FIXME: allows 32-byte secret, remove after draft is fixed
-secret_to_pk(Secret = << _:32/binary >>) ->
 	<< As:?b_curve448/unsigned-little-integer-unit:1 >> = secret_to_curve448(Secret),
 	A = scalarmult(?B, As),
 	encode_point(A).
@@ -260,29 +246,15 @@ keypair() ->
 keypair(Secret = << _:?secretbytes/binary >>) ->
 	PK = secret_to_pk(Secret),
 	SK = << Secret/binary, PK/binary >>,
-	{PK, SK};
-%% FIXME: allows 32-byte secret, remove after draft is fixed
-keypair(Secret = << _:32/binary >>) ->
-	PK = secret_to_pk(Secret),
-	SK = << Secret/binary, PK/binary >>,
 	{PK, SK}.
 
 sk_to_secret(<< Secret:?secretbytes/binary, _:?publickeybytes/binary >>) ->
-	Secret;
-%% FIXME: allows 32-byte secret, remove after draft is fixed
-sk_to_secret(<< Secret:32/binary, _:?publickeybytes/binary >>) ->
 	Secret.
 
 sk_to_pk(<< _:?secretbytes/binary, PK:?publickeybytes/binary >>) ->
-	PK;
-%% FIXME: allows 32-byte secret, remove after draft is fixed
-sk_to_pk(<< _:32/binary, PK:?publickeybytes/binary >>) ->
 	PK.
 
 sk_to_curve448(<< Secret:?secretbytes/binary, _:?publickeybytes/binary >>) ->
-	secret_to_curve448(Secret);
-%% FIXME: allows 32-byte secret, remove after draft is fixed
-sk_to_curve448(<< Secret:32/binary, _:?publickeybytes/binary >>) ->
 	secret_to_curve448(Secret).
 
 pk_to_curve448(<< PK:?publickeybytes/binary >>) ->
@@ -295,9 +267,6 @@ pk_to_curve448(<< PK:?publickeybytes/binary >>) ->
 % 5.2.6. Sign - https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.2.6
 
 sign(M, SK = << _:?secretkeybytes/binary >>) when is_binary(M) ->
-	sign(M, SK, <<>>);
-%% FIXME: allows 32-byte secret, remove after draft is fixed
-sign(M, SK = << _:89/binary >>) when is_binary(M) ->
 	sign(M, SK, <<>>).
 
 sign(M, << Secret:?secretbytes/binary, PK:?publickeybytes/binary >>, C)
@@ -316,52 +285,12 @@ sign(M, << Secret:?secretbytes/binary, PK:?publickeybytes/binary >>, C)
 	<< Ki:?HBits/unsigned-little-integer-unit:1 >> = ?H(?HdomPure(C, (<< R/binary, PK/binary, M/binary >>))),
 	K = ?math:mod(Ki, ?l),
 	S = ?math:mod(Rs + (K * As), ?l),
-	<< R/binary, S:?b/unsigned-little-integer-unit:1 >>;
-%% FIXME: allows 32-byte secret, remove after draft is fixed
-sign(M, << Secret:32/binary, PK:?publickeybytes/binary >>, C)
-		when is_binary(C)
-		andalso byte_size(C) =< 255
-		andalso is_binary(M) ->
-	<< HHead0:6/bitstring, _:2/bitstring, HBody:54/binary, _:1/bitstring, HKnee0:7/bitstring, _HFoot0:8/integer, HTail:57/binary >> = ?H(Secret),
-	<< HHead:8/integer >> = << HHead0:6/bitstring, 0:2/integer >>,
-	<< HKnee:8/integer >> = << 0:1/integer, HKnee0:7/bitstring >>,
-	HFoot = 0,
-	<< Scalar:?b/unsigned-little-integer-unit:1 >> = << HHead:8/integer, HBody/binary, HKnee:8/integer, HFoot:8/integer >>,
-	As = jose_jwa_x448:clamp_scalar(Scalar),
-	<< Ri:?HBits/unsigned-little-integer-unit:1 >> = ?H(?HdomPure(C, (<< HTail/binary, M/binary >>))),
-	Rs = ?math:mod(Ri, ?l),
-	R = encode_point(scalarmult(?B, Rs)),
-	<< Ki:?HBits/unsigned-little-integer-unit:1 >> = ?H(?HdomPure(C, (<< R/binary, PK/binary, M/binary >>))),
-	K = ?math:mod(Ki, ?l),
-	S = ?math:mod(Rs + (K * As), ?l),
 	<< R/binary, S:?b/unsigned-little-integer-unit:1 >>.
 
-sign_ph(M, SK = << _:?secretkeybytes/binary >>) when is_binary(M) ->
-	sign_ph(M, SK, <<>>);
-%% FIXME: allows 32-byte secret, remove after draft is fixed
-sign_ph(M, SK = << _:89/binary >>) when is_binary(M) ->
-	sign_ph(M, SK, <<>>).
+sign_with_prehash(M, SK = << _:?secretkeybytes/binary >>) when is_binary(M) ->
+	sign_with_prehash(M, SK, <<>>).
 
-sign_ph(M, << Secret:?secretbytes/binary, PK:?publickeybytes/binary >>, C)
-		when is_binary(C)
-		andalso byte_size(C) =< 255
-		andalso is_binary(M) ->
-	HM = ?PH(C, M),
-	<< HHead0:6/bitstring, _:2/bitstring, HBody:54/binary, _:1/bitstring, HKnee0:7/bitstring, _HFoot0:8/integer, HTail:57/binary >> = ?H(Secret),
-	<< HHead:8/integer >> = << HHead0:6/bitstring, 0:2/integer >>,
-	<< HKnee:8/integer >> = << 0:1/integer, HKnee0:7/bitstring >>,
-	HFoot = 0,
-	<< Scalar:?b/unsigned-little-integer-unit:1 >> = << HHead:8/integer, HBody/binary, HKnee:8/integer, HFoot:8/integer >>,
-	As = jose_jwa_x448:clamp_scalar(Scalar),
-	<< Ri:?HBits/unsigned-little-integer-unit:1 >> = ?H(?HdomHash(C, (<< HTail/binary, HM/binary >>))),
-	Rs = ?math:mod(Ri, ?l),
-	R = encode_point(scalarmult(?B, Rs)),
-	<< Ki:?HBits/unsigned-little-integer-unit:1 >> = ?H(?HdomHash(C, (<< R/binary, PK/binary, HM/binary >>))),
-	K = ?math:mod(Ki, ?l),
-	S = ?math:mod(Rs + (K * As), ?l),
-	<< R/binary, S:?b/unsigned-little-integer-unit:1 >>;
-%% FIXME: allows 32-byte secret, remove after draft is fixed
-sign_ph(M, << Secret:32/binary, PK:?publickeybytes/binary >>, C)
+sign_with_prehash(M, << Secret:?secretbytes/binary, PK:?publickeybytes/binary >>, C)
 		when is_binary(C)
 		andalso byte_size(C) =< 255
 		andalso is_binary(M) ->
@@ -404,12 +333,12 @@ verify(Sig, M, << _:?publickeybytes/binary >>, C)
 		andalso is_binary(M) ->
 	false.
 
-verify_ph(Sig, M, PK = << _:?publickeybytes/binary >>)
+verify_with_prehash(Sig, M, PK = << _:?publickeybytes/binary >>)
 		when is_binary(Sig)
 		andalso is_binary(M) ->
-	verify_ph(Sig, M, PK, <<>>).
+	verify_with_prehash(Sig, M, PK, <<>>).
 
-verify_ph(<< R:?b/bitstring, S:?b/unsigned-little-integer-unit:1 >>, M, PK = << _:?publickeybytes/binary >>, C)
+verify_with_prehash(<< R:?b/bitstring, S:?b/unsigned-little-integer-unit:1 >>, M, PK = << _:?publickeybytes/binary >>, C)
 		when is_binary(C)
 		andalso byte_size(C) =< 255
 		andalso is_binary(M)
@@ -420,7 +349,7 @@ verify_ph(<< R:?b/bitstring, S:?b/unsigned-little-integer-unit:1 >>, M, PK = << 
 	<< Ki:?HBits/unsigned-little-integer-unit:1 >> = ?H(?HdomHash(C, (<< R/binary, PK/binary, HM/binary >>))),
 	K = ?math:mod(Ki, ?l),
 	edwards_equal(scalarmult(?B, S), edwards_add(decode_point(R), scalarmult(A, K)));
-verify_ph(Sig, M, << _:?publickeybytes/binary >>, C)
+verify_with_prehash(Sig, M, << _:?publickeybytes/binary >>, C)
 		when is_binary(Sig)
 		andalso is_binary(C)
 		andalso byte_size(C) =< 255

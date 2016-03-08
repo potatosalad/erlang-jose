@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.1 (2016-03-08)
+
+* Enhancements
+  * New [Edwards-curve Digital Signature Algorithm (EdDSA) version 04](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa-04) is out, update test vectors and remove support for 32 byte secrets for Ed448 and Ed448ph.
+
 ## 1.7.0 (2016-03-01)
 
 * Enhancements
