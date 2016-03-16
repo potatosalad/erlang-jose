@@ -16,6 +16,7 @@
 -export([from_map/1]).
 -export([to_map/2]).
 %% jose_jws_alg callbacks
+-export([generate_key/2]).
 -export([sign/3]).
 -export([verify/4]).
 
@@ -39,6 +40,9 @@ to_map(none, F) ->
 %%====================================================================
 %% jose_jws_alg callbacks
 %%====================================================================
+
+generate_key(none, _Fields) ->
+	erlang:error(not_supported).
 
 sign(_Key, _Message, none) ->
 	case jose_jwa:unsecured_signing() of

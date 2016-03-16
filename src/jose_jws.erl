@@ -36,6 +36,8 @@
 %% API
 -export([compact/1]).
 -export([expand/1]).
+-export([generate_key/1]).
+-export([merge/2]).
 -export([peek/1]).
 -export([peek_payload/1]).
 -export([peek_protected/1]).
@@ -58,6 +60,8 @@
 %% Decode API functions
 %%====================================================================
 
+from(List) when is_list(List) ->
+	[from(Element) || Element <- List];
 from({Modules, Map}) when is_map(Modules) andalso is_map(Map) ->
 	from_map({Modules, Map});
 from({Modules, Binary}) when is_map(Modules) andalso is_binary(Binary) ->
@@ -67,6 +71,8 @@ from(JWS=#jose_jws{}) ->
 from(Other) when is_map(Other) orelse is_binary(Other) ->
 	from({#{}, Other}).
 
+from_binary(List) when is_list(List) ->
+	[from_binary(Element) || Element <- List];
 from_binary({Modules, Binary}) when is_map(Modules) andalso is_binary(Binary) ->
 	from_map({Modules, jose:decode(Binary)});
 from_binary(Binary) when is_binary(Binary) ->
@@ -82,6 +88,8 @@ from_file({Modules, File}) when is_map(Modules) andalso (is_binary(File) orelse 
 from_file(File) when is_binary(File) orelse is_list(File) ->
 	from_file({#{}, File}).
 
+from_map(List) when is_list(List) ->
+	[from_map(Element) || Element <- List];
 from_map(Map) when is_map(Map) ->
 	from_map({#{}, Map});
 from_map({Modules, Map}) when is_map(Modules) andalso is_map(Map) ->
@@ -114,6 +122,8 @@ from_map({JWS, _Modules, Fields}) ->
 %% Encode API functions
 %%====================================================================
 
+to_binary(List) when is_list(List) ->
+	[to_binary(Element) || Element <- List];
 to_binary(JWS=#jose_jws{}) ->
 	{Modules, Map} = to_map(JWS),
 	{Modules, jose:encode(Map)};
@@ -131,6 +141,8 @@ to_file(File, JWS=#jose_jws{}) when is_binary(File) orelse is_list(File) ->
 to_file(File, Other) when is_binary(File) orelse is_list(File) ->
 	to_file(File, from(Other)).
 
+to_map(List) when is_list(List) ->
+	[to_map(Element) || Element <- List];
 to_map(JWS=#jose_jws{fields=Fields}) ->
 	record_to_map(JWS, #{}, Fields);
 to_map(Other) ->
@@ -184,6 +196,21 @@ expand(Binary) when is_binary(Binary) ->
 expand(List) when is_list(List) ->
 	expand({#{}, List}).
 
+generate_key(List) when is_list(List) ->
+	[generate_key(Element) || Element <- List];
+generate_key(#jose_jws{alg={Module, ALG}, fields=Fields}) ->
+	Module:generate_key(ALG, Fields);
+generate_key(Other) ->
+	generate_key(from(Other)).
+
+merge(LeftJWS=#jose_jws{}, RightMap) when is_map(RightMap) ->
+	{Modules, LeftMap} = to_map(LeftJWS),
+	from_map({Modules, maps:merge(LeftMap, RightMap)});
+merge(LeftOther, RightJWS=#jose_jws{}) ->
+	merge(LeftOther, element(2, to_map(RightJWS)));
+merge(LeftOther, RightMap) when is_map(RightMap) ->
+	merge(from(LeftOther), RightMap).
+
 peek(Signed) ->
 	peek_payload(Signed).
 
@@ -208,28 +235,60 @@ peek_signature(SignedBinary) when is_binary(SignedBinary) ->
 peek_signature(#{ <<"signature">> := Signature }) ->
 	base64url:decode(Signature).
 
-sign(Key, PlainText, JWS=#jose_jws{}) ->
-	sign(Key, PlainText, #{}, JWS);
-sign(Key, PlainText, Other) ->
-	sign(Key, PlainText, from(Other)).
+sign(KeyList, PlainText, SignerList)
+		when is_list(KeyList)
+		andalso is_list(SignerList)
+		andalso length(KeyList) =:= length(SignerList) ->
+	HeaderList = [#{} || _ <- SignerList],
+	sign(KeyList, PlainText, HeaderList, SignerList);
+sign(KeyList, PlainText, SignerList)
+		when is_list(KeyList)
+		andalso is_list(SignerList)
+		andalso length(KeyList) =/= length(SignerList) ->
+	erlang:error({badarg, [KeyList, PlainText, SignerList]});
+sign(KeyOrKeyList, PlainText, JWS=#jose_jws{}) ->
+	sign(KeyOrKeyList, PlainText, #{}, JWS);
+sign(KeyOrKeyList, PlainText, Other) ->
+	sign(KeyOrKeyList, PlainText, from(Other)).
 
-sign(Keys=[_ | _], PlainText, Header, JWS=#jose_jws{alg={ALGModule, ALG}})
-		when is_binary(PlainText)
+sign(KeyList, PlainText, Header, Signer=#jose_jws{})
+		when is_list(KeyList)
+		andalso is_binary(PlainText)
 		andalso is_map(Header) ->
-	{Modules, ProtectedBinary} = to_binary(JWS),
-	Protected = base64url:encode(ProtectedBinary),
+	HeaderList = [Header || _ <- KeyList],
+	SignerList = [Signer || _ <- KeyList],
+	sign(KeyList, PlainText, HeaderList, SignerList);
+sign(KeyList, PlainText, Header, SignerList)
+		when is_list(KeyList)
+		andalso is_binary(PlainText)
+		andalso is_map(Header)
+		andalso is_list(SignerList)
+		andalso length(KeyList) =:= length(SignerList) ->
+	HeaderList = [Header || _ <- KeyList],
+	sign(KeyList, PlainText, HeaderList, SignerList);
+sign(KeyList, PlainText, HeaderList, Signer=#jose_jws{})
+		when is_list(KeyList)
+		andalso is_binary(PlainText)
+		andalso is_list(HeaderList)
+		andalso length(KeyList) =:= length(HeaderList) ->
+	SignerList = [Signer || _ <- KeyList],
+	sign(KeyList, PlainText, HeaderList, SignerList);
+sign(KeyList, PlainText, HeaderList, SignerList)
+		when is_list(KeyList)
+		andalso is_binary(PlainText)
+		andalso is_list(HeaderList)
+		andalso is_list(SignerList)
+		andalso length(KeyList) =:= length(SignerList)
+		andalso length(KeyList) =:= length(HeaderList) ->
+	Keys = jose_jwk:from(KeyList),
+	Signers = from(SignerList),
 	Payload = base64url:encode(PlainText),
-	SigningInput = signing_input(PlainText, Protected, JWS),
-	Signatures = [begin
-		{Key, base64url:encode(ALGModule:sign(Key, SigningInput, ALG))}
-	end || Key <- Keys],
-	{Modules, #{
+	Signatures = map_signatures(Keys, PlainText, HeaderList, Signers, []),
+	{#{}, #{
 		<<"payload">> => Payload,
-		<<"signatures">> => [begin
-			signature_to_map(Protected, Header, Key, Signature)
-		end || {Key, Signature} <- Signatures]
+		<<"signatures">> => Signatures
 	}};
-sign(Key, PlainText, Header, JWS=#jose_jws{alg={ALGModule, ALG}})
+sign(Key=#jose_jwk{}, PlainText, Header, JWS=#jose_jws{alg={ALGModule, ALG}})
 		when is_binary(PlainText)
 		andalso is_map(Header) ->
 	{Modules, ProtectedBinary} = to_binary(JWS),
@@ -237,12 +296,34 @@ sign(Key, PlainText, Header, JWS=#jose_jws{alg={ALGModule, ALG}})
 	Payload = base64url:encode(PlainText),
 	SigningInput = signing_input(PlainText, Protected, JWS),
 	Signature = base64url:encode(ALGModule:sign(Key, SigningInput, ALG)),
-	{Modules, maps:put(<<"payload">>, Payload,
-		signature_to_map(Protected, Header, Key, Signature))};
-sign(Key, PlainText, Header, Other)
+	{Modules, maps:put(<<"payload">>, Payload, signature_to_map(Protected, Header, Key, Signature))};
+sign(Key=none, PlainText, Header, JWS=#jose_jws{alg={ALGModule, ALG}})
 		when is_binary(PlainText)
 		andalso is_map(Header) ->
-	sign(Key, PlainText, Header, from(Other)).
+	{Modules, ProtectedBinary} = to_binary(JWS),
+	Protected = base64url:encode(ProtectedBinary),
+	Payload = base64url:encode(PlainText),
+	SigningInput = signing_input(PlainText, Protected, JWS),
+	Signature = base64url:encode(ALGModule:sign(Key, SigningInput, ALG)),
+	{Modules, maps:put(<<"payload">>, Payload, signature_to_map(Protected, Header, Key, Signature))};
+sign(KeyList, PlainText, HeaderList, SignerList)
+		when (is_list(KeyList)
+			andalso is_list(HeaderList)
+			andalso length(KeyList) =/= length(HeaderList))
+		orelse (is_list(KeyList)
+			andalso is_list(SignerList)
+			andalso length(KeyList) =/= length(SignerList))
+		orelse (is_list(HeaderList)
+			andalso is_list(SignerList)
+			andalso length(HeaderList) =/= length(SignerList))
+		orelse (is_list(HeaderList)
+			andalso not is_list(KeyList)
+			andalso not is_list(SignerList)) ->
+	erlang:error({badarg, [KeyList, PlainText, HeaderList, SignerList]});
+sign(KeyOrKeyList, PlainText, Header, Other)
+		when is_binary(PlainText)
+		andalso is_map(Header) ->
+	sign(jose_jwk:from(KeyOrKeyList), PlainText, Header, from(Other)).
 
 %% See https://tools.ietf.org/html/draft-ietf-jose-jws-signing-input-options-04
 signing_input(Payload, JWS=#jose_jws{}) ->
@@ -362,6 +443,16 @@ do_expand(Binary) when is_binary(Binary) ->
 	end;
 do_expand(BadArg) ->
 	erlang:error({badarg, [BadArg]}).
+
+%% @private
+map_signatures([Key | Keys], PlainText, [Header | Headers], [Signer=#jose_jws{alg={ALGModule, ALG}} | Signers], Acc) ->
+	{_Modules, ProtectedBinary} = to_binary(Signer),
+	Protected = base64url:encode(ProtectedBinary),
+	SigningInput = signing_input(PlainText, Protected, Signer),
+	Signature = base64url:encode(ALGModule:sign(Key, SigningInput, ALG)),
+	map_signatures(Keys, PlainText, Headers, Signers, [signature_to_map(Protected, Header, Key, Signature) | Acc]);
+map_signatures([], _PlainText, [], [], Acc) ->
+	lists:reverse(Acc).
 
 %% @private
 record_to_map(JWS=#jose_jws{alg={Module, ALG}}, Modules, Fields0) ->

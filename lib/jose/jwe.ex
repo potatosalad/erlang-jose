@@ -336,6 +336,7 @@ defmodule JOSE.JWE do
   def to_record(%JOSE.JWE{unquote_splicing(pairs)}) do
     {:jose_jwe, unquote_splicing(vals)}
   end
+  def to_record(list) when is_list(list), do: for element <- list, into: [], do: to_record(element)
 
   @doc """
   Converts a `:jose_jwe` record into a `JOSE.JWE`.
@@ -344,6 +345,7 @@ defmodule JOSE.JWE do
   def from_record({:jose_jwe, unquote_splicing(vals)}) do
     %JOSE.JWE{unquote_splicing(pairs)}
   end
+  def from_record(list) when is_list(list), do: for element <- list, into: [], do: from_record(element)
 
   ## Decode API
 
@@ -370,12 +372,14 @@ defmodule JOSE.JWE do
        zip: {MyCustomCompress, :state}}
 
   """
+  def from(list) when is_list(list), do: for element <- list, into: [], do: from(element)
   def from(jwe=%JOSE.JWE{}), do: from(to_record(jwe))
   def from(any), do: :jose_jwe.from(any) |> from_record
 
   @doc """
   Converts a binary into a `JOSE.JWE`.
   """
+  def from_binary(list) when is_list(list), do: for element <- list, into: [], do: from_binary(element)
   def from_binary(binary), do: :jose_jwe.from_binary(binary) |> from_record
 
   @doc """
@@ -386,6 +390,7 @@ defmodule JOSE.JWE do
   @doc """
   Converts a map into a `JOSE.JWE`.
   """
+  def from_map(list) when is_list(list), do: for element <- list, into: [], do: from_map(element)
   def from_map(map), do: :jose_jwe.from_map(map) |> from_record
 
   ## Encode API
@@ -393,6 +398,7 @@ defmodule JOSE.JWE do
   @doc """
   Converts a `JOSE.JWE` into a binary.
   """
+  def to_binary(list) when is_list(list), do: for element <- list, into: [], do: to_binary(element)
   def to_binary(jwe=%JOSE.JWE{}), do: to_binary(to_record(jwe))
   def to_binary(any), do: :jose_jwe.to_binary(any)
 
@@ -405,6 +411,7 @@ defmodule JOSE.JWE do
   @doc """
   Converts a `JOSE.JWE` into a map.
   """
+  def to_map(list) when is_list(list), do: for element <- list, into: [], do: to_map(element)
   def to_map(jwe=%JOSE.JWE{}), do: to_map(to_record(jwe))
   def to_map(any), do: :jose_jwe.to_map(any)
 
@@ -518,6 +525,20 @@ defmodule JOSE.JWE do
   defdelegate expand(encrypted), to: :jose_jwe
 
   @doc """
+  Generates a new `JOSE.JWK` based on the algorithms of the specified `JOSE.JWE`.
+
+      iex> JOSE.JWE.generate_key(%{"alg" => "dir", "enc" => "A128GCM"})
+      %JOSE.JWK{fields: %{"alg" => "dir", "enc" => "A128GCM", "use" => "enc"},
+       keys: :undefined,
+       kty: {:jose_jwk_kty_oct,
+        <<188, 156, 171, 224, 232, 231, 41, 250, 210, 117, 112, 219, 134, 218, 94, 50>>}}
+
+  """
+  def generate_key(list) when is_list(list), do: for element <- list, into: [], do: generate_key(element)
+  def generate_key(jwe=%JOSE.JWE{}), do: generate_key(to_record(jwe))
+  def generate_key(any), do: JOSE.JWK.from_record(:jose_jwe.generate_key(any))
+
+  @doc """
   Decrypts the `encrypted_key` using the `jwk` and the `"alg"` and `"enc"` specified by the `jwe`.
 
       # let's define our jwk and encrypted_key
@@ -564,6 +585,13 @@ defmodule JOSE.JWE do
         error
     end
   end
+
+  @doc """
+  Merges map on right into map on left.
+  """
+  def merge(left=%JOSE.JWE{}, right), do: merge(left |> to_record, right)
+  def merge(left, right=%JOSE.JWE{}), do: merge(left, right |> to_record)
+  def merge(left, right), do: :jose_jwe.merge(left, right) |> from_record
 
   @doc """
   Returns the next `cek` using the `jwk` and the `"alg"` and `"enc"` specified by the `jwe`.

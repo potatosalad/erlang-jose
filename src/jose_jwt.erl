@@ -28,6 +28,7 @@
 -export([decrypt/2]).
 -export([encrypt/2]).
 -export([encrypt/3]).
+-export([merge/2]).
 -export([peek/1]).
 -export([peek_payload/1]).
 -export([peek_protected/1]).
@@ -40,6 +41,8 @@
 %% Decode API functions
 %%====================================================================
 
+from(List) when is_list(List) ->
+	[from(Element) || Element <- List];
 from({Modules, Map}) when is_map(Modules) andalso is_map(Map) ->
 	from_map({Modules, Map});
 from({Modules, Binary}) when is_map(Modules) andalso is_binary(Binary) ->
@@ -49,6 +52,8 @@ from(JWT=#jose_jwt{}) ->
 from(Other) when is_map(Other) orelse is_binary(Other) ->
 	from({#{}, Other}).
 
+from_binary(List) when is_list(List) ->
+	[from_binary(Element) || Element <- List];
 from_binary({Modules, Binary}) when is_map(Modules) andalso is_binary(Binary) ->
 	from_map({Modules, jose:decode(Binary)});
 from_binary(Binary) when is_binary(Binary) ->
@@ -64,6 +69,8 @@ from_file({Modules, File}) when is_map(Modules) andalso (is_binary(File) orelse 
 from_file(File) when is_binary(File) orelse is_list(File) ->
 	from_file({#{}, File}).
 
+from_map(List) when is_list(List) ->
+	[from_map(Element) || Element <- List];
 from_map(Map) when is_map(Map) ->
 	from_map({#{}, Map});
 from_map({Modules, Map}) when is_map(Modules) andalso is_map(Map) ->
@@ -75,6 +82,8 @@ from_map({JWT, _Modules, Fields}) ->
 %% Encode API functions
 %%====================================================================
 
+to_binary(List) when is_list(List) ->
+	[to_binary(Element) || Element <- List];
 to_binary(JWT=#jose_jwt{}) ->
 	{Modules, Map} = to_map(JWT),
 	{Modules, jose:encode(Map)};
@@ -92,6 +101,8 @@ to_file(File, JWT=#jose_jwt{}) when is_binary(File) orelse is_list(File) ->
 to_file(File, Other) when is_binary(File) orelse is_list(File) ->
 	to_file(File, from(Other)).
 
+to_map(List) when is_list(List) ->
+	[to_map(Element) || Element <- List];
 to_map(JWT=#jose_jwt{fields=Fields}) ->
 	record_to_map(JWT, #{}, Fields);
 to_map(Other) ->
@@ -133,6 +144,14 @@ encrypt(JWKOther, JWEMap, JWTOther) when is_map(JWEMap) ->
 encrypt(JWKOther, JWEOther, JWTOther) ->
 	encrypt(jose_jwk:from(JWKOther), jose_jwe:from(JWEOther), from(JWTOther)).
 
+merge(LeftJWT=#jose_jwt{}, RightMap) when is_map(RightMap) ->
+	{Modules, LeftMap} = to_map(LeftJWT),
+	from_map({Modules, maps:merge(LeftMap, RightMap)});
+merge(LeftOther, RightJWT=#jose_jwt{}) ->
+	merge(LeftOther, element(2, to_map(RightJWT)));
+merge(LeftOther, RightMap) when is_map(RightMap) ->
+	merge(from(LeftOther), RightMap).
+
 peek(Signed) ->
 	peek_payload(Signed).
 
@@ -142,8 +161,8 @@ peek_payload(Signed) ->
 peek_protected(Signed) ->
 	jose_jws:from(jose_jws:peek_protected(Signed)).
 
-sign(JWK=#jose_jwk{kty={Module, KTY}, fields=Fields}, JWT=#jose_jwt{}) ->
-	sign(JWK, Module:signer(KTY, Fields, JWT), JWT);
+sign(JWK=#jose_jwk{}, JWT=#jose_jwt{}) ->
+	sign(JWK, jose_jwk:signer(JWK), JWT);
 sign(JWKOther, JWTOther) ->
 	sign(jose_jwk:from(JWKOther), from(JWTOther)).
 

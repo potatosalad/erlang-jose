@@ -1,5 +1,53 @@
 # Changelog
 
+## 1.7.2 (2016-03-16)
+
+* Enhancements
+  * Better support for lists of terms.
+  * Added merge functions:
+    * `JOSE.JWE.merge/2`
+    * `JOSE.JWK.merge/2`
+    * `JOSE.JWS.merge/2`
+    * `JOSE.JWT.merge/2`
+  * Added signer, verifier, and block_encryptor functions:
+    * `JOSE.JWK.signer/1`
+    * `JOSE.JWK.verifier/1`
+    * `JOSE.JWK.block_encryptor/1`
+  * Support for `"alg"`, `"enc"`, and `"use"` on keys.
+
+Examples of new functionality:
+
+```elixir
+iex> # Let's generate a 64 byte octet key
+iex> jwk = JOSE.JWK.generate_key({:oct, 64}) |> JOSE.JWK.to_map |> elem(1)
+%{"k" => "FXSy7PufOayusvfyKQzdxCegm7yWIMp1b0LD13v57Nq2wF_B-fcr7LDOkufDikmFFsVYWLgrA2zEB--_qqDn3g", "kty" => "oct"}
+
+iex> # Based on the key's size and type, a default signer (JWS) can be determined
+iex> JOSE.JWK.signer(jwk)
+%{"alg" => "HS512"}
+
+iex> # A list of algorithms for which this key type can be verified against can also be determined
+iex> JOSE.JWK.verifier(jwk)
+["HS256", "HS384", "HS512"]
+
+iex> # Based on the key's size and type, a default enctypro (JWE) can be determined
+iex> JOSE.JWK.block_encryptor(jwk)
+%{"alg" => "dir", "enc" => "A256CBC-HS512"}
+
+iex> # Keys can be generated based on the signing algorithm (JWS)
+iex> JOSE.JWS.generate_key(%{"alg" => "HS256"}) |> JOSE.JWK.to_map |> elem(1)
+%{"alg" => "HS256", "k" => "UuP3Tw2xbGV5N3BGh34cJNzzC2R1zU7i4rOnF9A8nqY", "kty" => "oct", "use" => "sig"}
+
+iex> # Keys can be generated based on the encryption algorithm (JWE)
+iex> JOSE.JWE.generate_key(%{"alg" => "dir", "enc" => "A128GCM"}) |> JOSE.JWK.to_map |> elem(1)
+%{"alg" => "dir", "enc" => "A128GCM", "k" => "8WNdBjXXwg6QTwrrOnvEPw", "kty" => "oct", "use" => "enc"}
+
+iex> # Example of merging a map into an existing JWS (also works with JWE, JWK, and JWT)
+iex> jws = JOSE.JWS.from(%{"alg" => "HS256"})
+iex> JOSE.JWS.merge(jws, %{"typ" => "JWT"}) |> JOSE.JWS.to_map |> elem(1)
+%{"alg" => "HS256", "typ" => "JWT"}
+```
+
 ## 1.7.1 (2016-03-08)
 
 * Enhancements

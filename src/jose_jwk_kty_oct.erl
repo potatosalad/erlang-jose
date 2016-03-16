@@ -11,6 +11,9 @@
 -module(jose_jwk_kty_oct).
 -behaviour(jose_jwk).
 -behaviour(jose_jwk_kty).
+-behaviour(jose_jwk_oct).
+-behaviour(jose_jwk_use_enc).
+-behaviour(jose_jwk_use_sig).
 
 %% jose_jwk callbacks
 -export([from_map/1]).
@@ -19,15 +22,18 @@
 -export([to_public_map/2]).
 -export([to_thumbprint_map/2]).
 %% jose_jwk_kty callbacks
--export([block_encryptor/3]).
--export([derive_key/1]).
 -export([generate_key/1]).
 -export([generate_key/2]).
 -export([key_encryptor/3]).
+%% jose_jwk_use_enc callbacks
+-export([block_encryptor/2]).
+-export([derive_key/1]).
+%% jose_jwk_use_sig callbacks
 -export([sign/3]).
--export([signer/3]).
+-export([signer/2]).
+-export([verifier/2]).
 -export([verify/4]).
-%% API
+%% jose_jwk_oct callbacks
 -export([from_oct/1]).
 -export([to_oct/1]).
 
@@ -59,7 +65,28 @@ to_thumbprint_map(K, F) ->
 %% jose_jwk_kty callbacks
 %%====================================================================
 
-block_encryptor(KTY, Fields, PlainText) ->
+generate_key(Size) when is_integer(Size) ->
+	{crypto:rand_bytes(Size), #{}};
+generate_key({oct, Size}) when is_integer(Size) ->
+	generate_key(Size).
+
+generate_key(KTY, Fields) ->
+	{NewKTY, OtherFields} = generate_key(byte_size(KTY)),
+	{NewKTY, maps:merge(maps:remove(<<"kid">>, Fields), OtherFields)}.
+
+key_encryptor(KTY, Fields, Key) ->
+	jose_jwk_kty:key_encryptor(KTY, Fields, Key).
+
+%%====================================================================
+%% jose_jwk_use_enc callbacks
+%%====================================================================
+
+block_encryptor(_KTY, #{ <<"alg">> := ALG, <<"enc">> := ENC, <<"use">> := <<"enc">> }) ->
+	#{
+		<<"alg">> => ALG,
+		<<"enc">> => ENC
+	};
+block_encryptor(KTY, Fields) ->
 	ENC = case bit_size(KTY) of
 		128 ->
 			<<"A128GCM">>;
@@ -77,7 +104,7 @@ block_encryptor(KTY, Fields, PlainText) ->
 		512 ->
 			<<"A256CBC-HS512">>;
 		_ ->
-			erlang:error({badarg, [KTY, Fields, PlainText]})
+			erlang:error({badarg, [KTY, Fields]})
 	end,
 	#{
 		<<"alg">> => <<"dir">>,
@@ -87,31 +114,40 @@ block_encryptor(KTY, Fields, PlainText) ->
 derive_key(Key) ->
 	Key.
 
-generate_key(Size) when is_integer(Size) ->
-	{crypto:rand_bytes(Size), #{}};
-generate_key({oct, Size}) when is_integer(Size) ->
-	generate_key(Size).
-
-generate_key(KTY, Fields) ->
-	{NewKTY, OtherFields} = generate_key(byte_size(KTY)),
-	{NewKTY, maps:merge(maps:remove(<<"kid">>, Fields), OtherFields)}.
-
-key_encryptor(KTY, Fields, Key) ->
-	jose_jwk_kty:key_encryptor(KTY, Fields, Key).
+%%====================================================================
+%% jose_jwk_use_sig callbacks
+%%====================================================================
 
 sign(Message, DigestType, Key) ->
 	crypto:hmac(DigestType, Key, Message).
 
-signer(_Key, _Fields, _PlainText) ->
+signer(_KTY, #{ <<"alg">> := ALG, <<"use">> := <<"sig">> }) ->
 	#{
-		<<"alg">> => <<"HS256">>
+		<<"alg">> => ALG
+	};
+signer(Key, _Fields) ->
+	#{
+		<<"alg">> => case bit_size(Key) of
+			KeySize when KeySize < 384 -> <<"HS256">>;
+			KeySize when KeySize < 512 -> <<"HS384">>;
+			_ -> <<"HS512">>
+		end
 	}.
+
+verifier(_KTY, #{ <<"alg">> := ALG, <<"use">> := <<"sig">> }) ->
+	[ALG];
+verifier(Key, _Fields) ->
+	case bit_size(Key) of
+		KeySize when KeySize < 384 -> [<<"HS256">>];
+		KeySize when KeySize < 512 -> [<<"HS256">>, <<"HS384">>];
+		_ -> [<<"HS256">>, <<"HS384">>, <<"HS512">>]
+	end.
 
 verify(Message, DigestType, Signature, Key) ->
 	jose_jwa:constant_time_compare(Signature, sign(Message, DigestType, Key)).
 
 %%====================================================================
-%% API functions
+%% jose_jwk_oct callbacks
 %%====================================================================
 
 from_oct(OCTBinary) when is_binary(OCTBinary) ->

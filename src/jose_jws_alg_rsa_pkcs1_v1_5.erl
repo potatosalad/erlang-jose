@@ -18,6 +18,7 @@
 -export([from_map/1]).
 -export([to_map/2]).
 %% jose_jws_alg callbacks
+-export([generate_key/2]).
 -export([sign/3]).
 -export([verify/4]).
 
@@ -57,6 +58,13 @@ to_map(?RS512, F) ->
 %%====================================================================
 %% jose_jws_alg callbacks
 %%====================================================================
+
+generate_key(?RS256, _Fields) ->
+	jose_jws_alg:generate_key({rsa, 2048}, <<"RS256">>);
+generate_key(?RS384, _Fields) ->
+	jose_jws_alg:generate_key({rsa, 3072}, <<"RS384">>);
+generate_key(?RS512, _Fields) ->
+	jose_jws_alg:generate_key({rsa, 4096}, <<"RS512">>).
 
 sign(#jose_jwk{kty={KTYModule, KTY}}, Message, #jose_jws_alg_rsa_pkcs1_v1_5{digest=DigestType}) ->
 	KTYModule:sign(Message, {rsa_pkcs1_padding, DigestType}, KTY).

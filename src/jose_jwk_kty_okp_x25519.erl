@@ -11,6 +11,7 @@
 -module(jose_jwk_kty_okp_x25519).
 -behaviour(jose_jwk).
 -behaviour(jose_jwk_kty).
+-behaviour(jose_jwk_use_enc).
 
 %% jose_jwk callbacks
 -export([from_map/1]).
@@ -19,11 +20,12 @@
 -export([to_public_map/2]).
 -export([to_thumbprint_map/2]).
 %% jose_jwk_kty callbacks
--export([block_encryptor/3]).
--export([derive_key/2]).
 -export([generate_key/1]).
 -export([generate_key/2]).
 -export([key_encryptor/3]).
+%% jose_jwk_use_enc callbacks
+-export([block_encryptor/2]).
+-export([derive_key/2]).
 %% API
 -export([from_okp/1]).
 -export([from_openssh_key/1]).
@@ -87,20 +89,6 @@ to_thumbprint_map(K, F) ->
 %% jose_jwk_kty callbacks
 %%====================================================================
 
-block_encryptor(_KTY, _Fields, _PlainText) ->
-	#{
-		<<"alg">> => <<"ECDH-ES">>,
-		<<"enc">> => case jose_jwa:is_block_cipher_supported({aes_gcm, 128}) of
-			false -> <<"A128CBC-HS256">>;
-			true  -> <<"A128GCM">>
-		end
-	}.
-
-derive_key(<< _:?secretbytes/binary, PK:?publickeybytes/binary >>, SK = << _:?secretkeybytes/binary >>) ->
-	derive_key(PK, SK);
-derive_key(PK = << _:?publickeybytes/binary >>, << Secret:?secretbytes/binary, _:?publickeybytes/binary >>) ->
-	jose_curve25519:x25519_shared_secret(Secret, PK).
-
 generate_key(Seed = << _:?secretbytes/binary >>) ->
 	{PK, SK} = jose_curve25519:x25519_keypair(Seed),
 	{<< SK/binary, PK/binary >>, #{}};
@@ -119,6 +107,39 @@ generate_key(KTY, Fields)
 
 key_encryptor(KTY, Fields, Key) ->
 	jose_jwk_kty:key_encryptor(KTY, Fields, Key).
+
+%%====================================================================
+%% jose_jwk_use_enc callbacks
+%%====================================================================
+
+block_encryptor(_KTY, Fields=#{ <<"alg">> := ALG, <<"enc">> := ENC, <<"use">> := <<"enc">> }) ->
+	Folder = fun
+		(K, V, F)
+				when K =:= <<"apu">>
+				orelse K =:= <<"apv">>
+				orelse K =:= <<"epk">> ->
+			maps:put(K, V, F);
+		(_K, _V, F) ->
+			F
+	end,
+	maps:fold(Folder, #{
+		<<"alg">> => ALG,
+		<<"enc">> => ENC
+	}, Fields);
+block_encryptor(KTY, Fields) ->
+	block_encryptor(KTY, maps:merge(Fields, #{
+		<<"alg">> => <<"ECDH-ES">>,
+		<<"enc">> => case jose_jwa:is_block_cipher_supported({aes_gcm, 128}) of
+			false -> <<"A128CBC-HS256">>;
+			true  -> <<"A128GCM">>
+		end,
+		<<"use">> => <<"enc">>
+	})).
+
+derive_key(<< _:?secretbytes/binary, PK:?publickeybytes/binary >>, SK = << _:?secretkeybytes/binary >>) ->
+	derive_key(PK, SK);
+derive_key(PK = << _:?publickeybytes/binary >>, << Secret:?secretbytes/binary, _:?publickeybytes/binary >>) ->
+	jose_curve25519:x25519_shared_secret(Secret, PK).
 
 %%====================================================================
 %% API functions

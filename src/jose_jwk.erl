@@ -92,16 +92,20 @@
 -export([block_decrypt/2]).
 -export([block_encrypt/2]).
 -export([block_encrypt/3]).
+-export([block_encryptor/1]).
 -export([box_decrypt/2]).
 -export([box_encrypt/2]).
 -export([box_encrypt/3]).
 -export([box_encrypt/4]).
 -export([generate_key/1]).
+-export([merge/2]).
 -export([shared_secret/2]).
 -export([sign/2]).
 -export([sign/3]).
+-export([signer/1]).
 -export([thumbprint/1]).
 -export([thumbprint/2]).
+-export([verifier/1]).
 -export([verify/2]).
 -export([verify_strict/3]).
 
@@ -126,6 +130,8 @@
 %% Decode API functions
 %%====================================================================
 
+from(List) when is_list(List) ->
+	[from(Element) || Element <- List];
 from({Modules, Map}) when is_map(Modules) andalso is_map(Map) ->
 	from_map({Modules, Map});
 from({Modules, Binary}) when is_map(Modules) andalso is_binary(Binary) ->
@@ -135,6 +141,8 @@ from(JWK=#jose_jwk{}) ->
 from(Other) when is_map(Other) orelse is_binary(Other) ->
 	from({#{}, Other}).
 
+from(Key, List) when is_list(List) ->
+	[from(Key, Element) || Element <- List];
 from(Key, {Modules, EncryptedMap}) when is_map(Modules) andalso is_map(EncryptedMap) ->
 	from_map(Key, {Modules, EncryptedMap});
 from(Key, {Modules, EncryptedBinary}) when is_map(Modules) andalso is_binary(EncryptedBinary) ->
@@ -144,11 +152,15 @@ from(_Key, JWK=#jose_jwk{}) ->
 from(Key, Other) when is_map(Other) orelse is_binary(Other) ->
 	from(Key, {#{}, Other}).
 
+from_binary(List) when is_list(List) ->
+	[from_binary(Element) || Element <- List];
 from_binary({Modules, Binary}) when is_map(Modules) andalso is_binary(Binary) ->
 	from_map({Modules, jose:decode(Binary)});
 from_binary(Binary) when is_binary(Binary) ->
 	from_binary({#{}, Binary}).
 
+from_binary(Key, List) when is_list(List) ->
+	[from_binary(Key, Element) || Element <- List];
 from_binary(Key, {Modules, Encrypted = << ${, _/binary >>}) when is_map(Modules) andalso is_binary(Encrypted) ->
 	EncrypedMap = jose:decode(Encrypted),
 	from_map(Key, {Modules, EncrypedMap});
@@ -178,6 +190,8 @@ from_file(Key, {Modules, File}) when is_map(Modules) andalso (is_binary(File) or
 from_file(Key, File) when is_binary(File) orelse is_list(File) ->
 	from_file(Key, {#{}, File}).
 
+from_key(List) when is_list(List) ->
+	[from_key(Element) || Element <- List];
 from_key(Key) ->
 	case jose_jwk_kty:from_key(Key) of
 		{KTYModule, {KTY, Fields}} when KTYModule =/= error ->
@@ -186,6 +200,8 @@ from_key(Key) ->
 			FromKeyError
 	end.
 
+from_map(List) when is_list(List) ->
+	[from_map(Element) || Element <- List];
 from_map(Map) when is_map(Map) ->
 	from_map({#{}, Map});
 from_map({Modules, Map}) when is_map(Modules) andalso is_map(Map) ->
@@ -221,12 +237,16 @@ from_map({#jose_jwk{ keys = undefined, kty = undefined }, _Modules, _Map}) ->
 from_map({JWK, _Modules, Fields}) ->
 	JWK#jose_jwk{ fields = Fields }.
 
+from_map(Key, List) when is_list(List) ->
+	[from_map(Key, Element) || Element <- List];
 from_map(Key, {Modules, Encrypted}) when is_map(Modules) andalso is_map(Encrypted) ->
 	{JWKBinary, JWE=#jose_jwe{}} = jose_jwe:block_decrypt(Key, {Modules, Encrypted}),
 	{JWE, from_binary({Modules, JWKBinary})};
 from_map(Key, Encrypted) when is_map(Encrypted) ->
 	from_map(Key, {#{}, Encrypted}).
 
+from_oct(List) when is_list(List) ->
+	[from_oct(Element) || Element <- List];
 from_oct({#{ kty := Module }, Binary}) when is_binary(Binary) ->
 	{KTY, Fields} = Module:from_oct(Binary),
 	#jose_jwk{ kty = {Module, KTY}, fields = Fields };
@@ -240,6 +260,8 @@ from_oct({#{}, Binary}) when is_binary(Binary) ->
 from_oct(Binary) when is_binary(Binary) ->
 	from_oct({#{}, Binary}).
 
+from_oct(Key, List) when is_list(List) ->
+	[from_oct(Key, Element) || Element <- List];
 from_oct(Key, {Modules, Encrypted}) when is_map(Modules) andalso is_binary(Encrypted) ->
 	{OCTBinary, JWE=#jose_jwe{}} = jose_jwe:block_decrypt(Key, {Modules, Encrypted}),
 	{JWE, from_oct({Modules, OCTBinary})};
@@ -266,6 +288,8 @@ from_oct_file(Key, {Modules, File}) when is_map(Modules) andalso (is_binary(File
 from_oct_file(Key, File) when is_binary(File) orelse is_list(File) ->
 	from_oct_file(Key, {#{}, File}).
 
+from_okp(List) when is_list(List) ->
+	[from_okp(Element) || Element <- List];
 from_okp({#{ kty := Module }, OKP}) ->
 	{KTY, Fields} = Module:from_okp(OKP),
 	#jose_jwk{ kty = {Module, KTY}, fields = Fields };
@@ -282,6 +306,8 @@ from_okp(P={'Ed448ph', Binary}) when is_binary(Binary) ->
 from_okp(P={'X448', Binary}) when is_binary(Binary) ->
 	from_okp({#{ kty => ?KTY_OKP_X448_MODULE }, P}).
 
+from_openssh_key(List) when is_list(List) ->
+	[from_openssh_key(Element) || Element <- List];
 from_openssh_key({#{ kty := Module }, Binary}) when is_binary(Binary) ->
 	{KTY, Fields} = Module:from_openssh_key(Binary),
 	#jose_jwk{ kty = {Module, KTY}, fields = Fields };
@@ -327,6 +353,8 @@ from_openssh_key_file({Modules, File}) when is_map(Modules) andalso (is_binary(F
 from_openssh_key_file(File) when is_binary(File) orelse is_list(File) ->
 	from_openssh_key_file({#{}, File}).
 
+from_pem(List) when is_list(List) ->
+	[from_pem(Element) || Element <- List];
 from_pem({#{ kty := Module }, Binary}) when is_binary(Binary) ->
 	{KTY, Fields} = Module:from_pem(Binary),
 	#jose_jwk{ kty = {Module, KTY}, fields = Fields };
@@ -340,6 +368,8 @@ from_pem({#{}, Binary}) when is_binary(Binary) ->
 from_pem(Binary) when is_binary(Binary) ->
 	from_pem({#{}, Binary}).
 
+from_pem(Key, List) when is_list(List) ->
+	[from_pem(Key, Element) || Element <- List];
 from_pem(Key, {#{ kty := Module }, Binary}) when is_binary(Binary) ->
 	{KTY, Fields} = Module:from_pem(Key, Binary),
 	#jose_jwk{ kty = {Module, KTY}, fields = Fields };
@@ -377,12 +407,16 @@ from_pem_file(Key, File) when is_binary(File) orelse is_list(File) ->
 %% Encode API functions
 %%====================================================================
 
+to_binary(List) when is_list(List) ->
+	[to_binary(Element) || Element <- List];
 to_binary(JWK=#jose_jwk{}) ->
 	{Modules, Map} = to_map(JWK),
 	{Modules, jose:encode(Map)};
 to_binary(Other) ->
 	to_binary(from(Other)).
 
+to_binary(Key, List) when is_list(List) ->
+	[to_binary(Key, Element) || Element <- List];
 to_binary(Key, JWK=#jose_jwk{kty={Module, KTY}, fields=Fields}) ->
 	to_binary(Key, Module:key_encryptor(KTY, Fields, Key), JWK);
 to_binary(Key, Other) ->
@@ -421,11 +455,15 @@ to_file(Key, File, JWE=#jose_jwe{}, JWK=#jose_jwk{}) when is_binary(File) orelse
 to_file(Key, File, JWEOther, JWKOther) when is_binary(File) orelse is_list(File) ->
 	to_file(Key, File, jose_jwe:from(JWEOther), from(JWKOther)).
 
+to_key(List) when is_list(List) ->
+	[to_key(Element) || Element <- List];
 to_key(#jose_jwk{kty={Module, KTY}}) ->
 	{#{ kty => Module }, Module:to_key(KTY)};
 to_key(Other) ->
 	to_key(from(Other)).
 
+to_map(List) when is_list(List) ->
+	[to_map(Element) || Element <- List];
 to_map(JWK=#jose_jwk{fields=Fields}) ->
 	record_to_map(JWK, #{}, Fields);
 to_map(Other) ->
@@ -443,6 +481,8 @@ to_map(Key, JWE=#jose_jwe{}, JWK=#jose_jwk{}) ->
 to_map(Key, JWEOther, JWKOther) ->
 	to_map(Key, jose_jwe:from(JWEOther), from(JWKOther)).
 
+to_oct(List) when is_list(List) ->
+	[to_oct(Element) || Element <- List];
 to_oct(#jose_jwk{kty={Module, KTY}}) ->
 	{#{ kty => Module }, Module:to_oct(KTY)};
 to_oct(Other) ->
@@ -487,11 +527,15 @@ to_oct_file(Key, File, JWE=#jose_jwe{}, JWK=#jose_jwk{}) when is_binary(File) or
 to_oct_file(Key, File, JWEOther, JWKOther) when is_binary(File) orelse is_list(File) ->
 	to_oct_file(Key, File, jose_jwe:from(JWEOther), from(JWKOther)).
 
+to_okp(List) when is_list(List) ->
+	[to_okp(Element) || Element <- List];
 to_okp(#jose_jwk{kty={Module, KTY}}) ->
 	{#{ kty => Module }, Module:to_okp(KTY)};
 to_okp(Other) ->
 	to_okp(from(Other)).
 
+to_openssh_key(List) when is_list(List) ->
+	[to_openssh_key(Element) || Element <- List];
 to_openssh_key(#jose_jwk{kty={Module, KTY}, fields=Fields}) ->
 	{#{ kty => Module }, Module:to_openssh_key(KTY, Fields)};
 to_openssh_key(Other) ->
@@ -508,6 +552,8 @@ to_openssh_key_file(File, JWK=#jose_jwk{}) when is_binary(File) orelse is_list(F
 to_openssh_key_file(File, Other) when is_binary(File) orelse is_list(File) ->
 	to_openssh_key_file(File, from(Other)).
 
+to_pem(List) when is_list(List) ->
+	[to_pem(Element) || Element <- List];
 to_pem(#jose_jwk{kty={Module, KTY}}) ->
 	{#{ kty => Module }, Module:to_pem(KTY)};
 to_pem(Other) ->
@@ -540,6 +586,8 @@ to_pem_file(Key, File, JWK=#jose_jwk{}) when is_binary(File) orelse is_list(File
 to_pem_file(Key, File, Other) when is_binary(File) orelse is_list(File) ->
 	to_pem_file(Key, File, from(Other)).
 
+to_public(List) when is_list(List) ->
+	[to_public(Element) || Element <- List];
 to_public(JWK=#jose_jwk{}) ->
 	from_map(to_public_map(JWK));
 to_public(Other) ->
@@ -550,16 +598,22 @@ to_public_file(File, JWK=#jose_jwk{}) when is_binary(File) orelse is_list(File) 
 to_public_file(File, Other) when is_binary(File) orelse is_list(File) ->
 	to_public_file(File, from(Other)).
 
+to_public_key(List) when is_list(List) ->
+	[to_public_key(Element) || Element <- List];
 to_public_key(JWT=#jose_jwk{}) ->
 	to_key(to_public(JWT));
 to_public_key(Other) ->
 	to_public_key(from(Other)).
 
+to_public_map(List) when is_list(List) ->
+	[to_public_map(Element) || Element <- List];
 to_public_map(#jose_jwk{kty={Module, KTY}, fields=Fields}) ->
 	{#{ kty => Module }, Module:to_public_map(KTY, Fields)};
 to_public_map(Other) ->
 	to_public_map(from(Other)).
 
+to_thumbprint_map(List) when is_list(List) ->
+	[to_thumbprint_map(Element) || Element <- List];
 to_thumbprint_map(#jose_jwk{kty={Module, KTY}, fields=Fields}) ->
 	{#{ kty => Module }, Module:to_thumbprint_map(KTY, Fields)};
 to_thumbprint_map(Other) ->
@@ -574,8 +628,8 @@ block_decrypt(Encrypted, JWK=#jose_jwk{}) ->
 block_decrypt(Encrypted, Other) ->
 	block_decrypt(Encrypted, from(Other)).
 
-block_encrypt(PlainText, JWK=#jose_jwk{kty={Module, KTY}, fields=Fields}) ->
-	block_encrypt(PlainText, Module:block_encryptor(KTY, Fields, PlainText), JWK);
+block_encrypt(PlainText, JWK=#jose_jwk{}) ->
+	block_encrypt(PlainText, block_encryptor(JWK), JWK);
 block_encrypt(PlainText, Other) ->
 	block_encrypt(PlainText, from(Other)).
 
@@ -583,6 +637,13 @@ block_encrypt(PlainText, JWE=#jose_jwe{}, JWK=#jose_jwk{}) ->
 	jose_jwe:block_encrypt(JWK, PlainText, JWE);
 block_encrypt(PlainText, JWEOther, JWKOther) ->
 	block_encrypt(PlainText, jose_jwe:from(JWEOther), from(JWKOther)).
+
+block_encryptor(List) when is_list(List) ->
+	[block_encryptor(Element) || Element <- List];
+block_encryptor(#jose_jwk{kty={Module, KTY}, fields=Fields}) ->
+	Module:block_encryptor(KTY, Fields);
+block_encryptor(Other) ->
+	block_encryptor(from(Other)).
 
 box_decrypt(Encrypted, MyPrivateJWK=#jose_jwk{}) ->
 	jose_jwe:block_decrypt(MyPrivateJWK, Encrypted);
@@ -596,10 +657,11 @@ box_encrypt(PlainText, OtherPublicJWK=#jose_jwk{}) ->
 box_encrypt(PlainText, JWKOtherPublic) ->
 	box_encrypt(PlainText, from(JWKOtherPublic)).
 
-box_encrypt(PlainText, OtherPublicJWK=#jose_jwk{}, MyPrivateJWK=#jose_jwk{kty={Module, KTY}}) ->
-	{_, MyPublicMap} = to_public_map(MyPrivateJWK),
-	Fields = #{ <<"epk">> => MyPublicMap },
-	JWEFields = Module:block_encryptor(KTY, Fields, PlainText),
+box_encrypt(PlainText, OtherPublicJWK=#jose_jwk{}, MyPrivateJWK=#jose_jwk{}) ->
+	MyPublicJWK0 = #jose_jwk{fields=Fields0} = to_public(MyPrivateJWK),
+	Fields = maps:put(Fields0, <<"epk">>, element(2, to_map(MyPublicJWK0))),
+	MyPublicJWK = MyPublicJWK0#jose_jwk{fields=Fields},
+	JWEFields = block_encryptor(MyPublicJWK),
 	box_encrypt(PlainText, JWEFields, OtherPublicJWK, MyPrivateJWK);
 box_encrypt(PlainText, JWKOtherPublic, JWKMyPrivate) ->
 	box_encrypt(PlainText, from(JWKOtherPublic), from(JWKMyPrivate)).
@@ -626,33 +688,88 @@ generate_key({#{ kty := Module }, Parameters}) ->
 generate_key(Parameters) ->
 	jose_jwk_kty:generate_key(Parameters).
 
+merge(LeftJWK=#jose_jwk{}, RightMap) when is_map(RightMap) ->
+	{Modules, LeftMap} = to_map(LeftJWK),
+	from_map({Modules, maps:merge(LeftMap, RightMap)});
+merge(LeftOther, RightJWK=#jose_jwk{}) ->
+	merge(LeftOther, element(2, to_map(RightJWK)));
+merge(LeftOther, RightMap) when is_map(RightMap) ->
+	merge(from(LeftOther), RightMap).
+
 shared_secret(#jose_jwk{kty={Module, YourKTY}}, #jose_jwk{kty={Module, MyKTY}}) ->
 	Module:derive_key(YourKTY, MyKTY);
 shared_secret(YourJWK, MyJWK) ->
 	shared_secret(from(YourJWK), from(MyJWK)).
 
-sign(PlainText, JWK=#jose_jwk{kty={Module, KTY}, fields=Fields}) ->
-	sign(PlainText, Module:signer(KTY, Fields, PlainText), JWK);
+sign(PlainText, JWK=#jose_jwk{}) ->
+	sign(PlainText, signer(JWK), JWK);
+sign(PlainText, KeyList)
+		when is_list(KeyList) ->
+	Folder = fun
+		Folder(Key=#jose_jwk{}, {Signers, Keys}) ->
+			Signer = signer(Key),
+			{[Signer | Signers], [Key | Keys]};
+		Folder(Other, Acc) ->
+			Folder(from(Other), Acc)
+	end,
+	{Signers, Keys} = lists:foldr(Folder, {[], []}, KeyList),
+	sign(PlainText, Signers, Keys);
 sign(PlainText, Other) ->
 	sign(PlainText, from(Other)).
 
 sign(PlainText, JWS=#jose_jws{}, JWK=#jose_jwk{}) ->
 	jose_jws:sign(JWK, PlainText, JWS);
+sign(PlainText, SignerList, KeyList)
+		when is_list(SignerList)
+		andalso is_list(KeyList)
+		andalso length(SignerList) =:= length(KeyList) ->
+	Signers = jose_jws:from(SignerList),
+	Keys = from(KeyList),
+	jose_jws:sign(Keys, PlainText, Signers);
+sign(PlainText, JWS=#jose_jws{}, KeyList)
+		when is_list(KeyList) ->
+	jose_jws:sign(from(KeyList), PlainText, JWS);
+sign(PlainText, SignerList, KeyList)
+		when is_list(SignerList)
+		andalso is_list(KeyList)
+		andalso length(SignerList) =/= length(KeyList) ->
+	erlang:error({badarg, [PlainText, SignerList, KeyList]});
+sign(PlainText, JWSOther, KeyList)
+		when is_list(KeyList) ->
+	sign(PlainText, jose_jws:from(JWSOther), KeyList);
 sign(PlainText, JWSOther, JWKOther) ->
 	sign(PlainText, jose_jws:from(JWSOther), from(JWKOther)).
 
+signer(List) when is_list(List) ->
+	[signer(Element) || Element <- List];
+signer(#jose_jwk{kty={Module, KTY}, fields=Fields}) ->
+	Module:signer(KTY, Fields);
+signer(Other) ->
+	signer(from(Other)).
+
 %% See https://tools.ietf.org/html/rfc7638
+thumbprint(List) when is_list(List) ->
+	[thumbprint(Element) || Element <- List];
 thumbprint(JWK=#jose_jwk{}) ->
 	thumbprint(sha256, JWK);
 thumbprint(Other) ->
 	thumbprint(from(Other)).
 
+thumbprint(DigestType, List) when is_list(List) ->
+	[thumbprint(DigestType, Element) || Element <- List];
 thumbprint(DigestType, JWK=#jose_jwk{}) ->
 	{_, ThumbprintMap} = to_thumbprint_map(JWK),
 	ThumbprintBinary = jose:encode(ThumbprintMap),
 	base64url:encode(crypto:hash(DigestType, ThumbprintBinary));
 thumbprint(DigestType, Other) ->
 	thumbprint(DigestType, from(Other)).
+
+verifier(List) when is_list(List) ->
+	[verifier(Element) || Element <- List];
+verifier(#jose_jwk{kty={Module, KTY}, fields=Fields}) ->
+	Module:verifier(KTY, Fields);
+verifier(Other) ->
+	verifier(from(Other)).
 
 verify(Signed, JWK=#jose_jwk{}) ->
 	jose_jws:verify(JWK, Signed);

@@ -18,6 +18,7 @@
 -export([from_map/1]).
 -export([to_map/2]).
 %% jose_jwe_alg callbacks
+-export([generate_key/3]).
 -export([key_decrypt/3]).
 -export([key_encrypt/3]).
 -export([next_cek/3]).
@@ -62,6 +63,9 @@ to_map(A = ?PBES2_HS512_A256KW, F) ->
 %%====================================================================
 %% jose_jwe_alg callbacks
 %%====================================================================
+
+generate_key(_Fields, {ENCModule, ENC}, ALG=#jose_jwe_alg_pbes2{}) ->
+	jose_jwe_alg:generate_key({oct, 16}, maps:get(<<"alg">>, to_map(ALG, #{})), ENCModule:algorithm(ENC)).
 
 key_decrypt(Password, {_ENCModule, _ENC, EncryptedKey}, #jose_jwe_alg_pbes2{hmac=HMAC, bits=Bits, salt=Salt, iter=Iterations}) when is_binary(Password) ->
 	{ok, DerivedKey} = jose_jwa_pkcs5:pbkdf2({hmac, HMAC}, Password, Salt, Iterations, (Bits div 8) + (Bits rem 8)),

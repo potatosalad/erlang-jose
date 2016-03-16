@@ -11,6 +11,7 @@
 -module(jose_jwk_kty_okp_ed448).
 -behaviour(jose_jwk).
 -behaviour(jose_jwk_kty).
+-behaviour(jose_jwk_use_sig).
 
 %% jose_jwk callbacks
 -export([from_map/1]).
@@ -22,8 +23,10 @@
 -export([generate_key/1]).
 -export([generate_key/2]).
 -export([key_encryptor/3]).
+%% jose_jwk_use_sig callbacks
 -export([sign/3]).
--export([signer/3]).
+-export([signer/2]).
+-export([verifier/2]).
 -export([verify/4]).
 %% API
 -export([from_okp/1]).
@@ -107,13 +110,28 @@ generate_key(KTY, Fields)
 key_encryptor(KTY, Fields, Key) ->
 	jose_jwk_kty:key_encryptor(KTY, Fields, Key).
 
+%%====================================================================
+%% jose_jwk_use_sig callbacks
+%%====================================================================
+
 sign(Message, 'Ed448', SK = << _:?secretkeybytes/binary >>) ->
 	jose_curve448:ed448_sign(Message, SK).
 
-signer(<< _:?secretkeybytes/binary >>, _Fields, _PlainText) ->
+signer(<< _:?secretkeybytes/binary >>, #{ <<"alg">> := ALG, <<"use">> := <<"sig">> }) ->
+	#{
+		<<"alg">> => ALG
+	};
+signer(<< _:?secretkeybytes/binary >>, _Fields) ->
 	#{
 		<<"alg">> => ?crv
 	}.
+
+verifier(<< _:?publickeybytes/binary >>, #{ <<"alg">> := ALG, <<"use">> := <<"sig">> }) ->
+	[ALG];
+verifier(<< _:?secretbytes/binary, PK:?publickeybytes/binary >>, Fields) ->
+	verifier(PK, Fields);
+verifier(<< _:?publickeybytes/binary >>, _Fields) ->
+	[?crv].
 
 verify(Message, 'Ed448', Signature, << _:?secretbytes/binary, PK:?publickeybytes/binary >>) ->
 	verify(Message, 'Ed448', Signature, PK);

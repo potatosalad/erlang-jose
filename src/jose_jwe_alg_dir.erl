@@ -18,6 +18,7 @@
 -export([from_map/1]).
 -export([to_map/2]).
 %% jose_jwe_alg callbacks
+-export([generate_key/3]).
 -export([key_decrypt/3]).
 -export([key_encrypt/3]).
 -export([next_cek/3]).
@@ -41,6 +42,9 @@ to_map(dir, F) ->
 %%====================================================================
 %% jose_jwe_alg callbacks
 %%====================================================================
+
+generate_key(_Fields, {ENCModule, ENC}, dir) ->
+	jose_jwe_alg:generate_key({oct, (ENCModule:bits(ENC) div 8)}, <<"dir">>, ENCModule:algorithm(ENC)).
 
 key_decrypt(Key, _EncryptedKey, dir) when is_binary(Key) ->
 	Key;

@@ -18,6 +18,7 @@
 -export([from_map/1]).
 -export([to_map/2]).
 %% jose_jws_alg callbacks
+-export([generate_key/2]).
 -export([sign/3]).
 -export([verify/4]).
 
@@ -57,6 +58,13 @@ to_map(?ES512, F) ->
 %%====================================================================
 %% jose_jws_alg callbacks
 %%====================================================================
+
+generate_key(?ES256, _Fields) ->
+	jose_jws_alg:generate_key({ec, <<"P-256">>}, <<"ES256">>);
+generate_key(?ES384, _Fields) ->
+	jose_jws_alg:generate_key({ec, <<"P-384">>}, <<"ES384">>);
+generate_key(?ES512, _Fields) ->
+	jose_jws_alg:generate_key({ec, <<"P-521">>}, <<"ES512">>).
 
 sign(#jose_jwk{kty={KTYModule, KTY}}, Message, #jose_jws_alg_ecdsa{digest=DigestType}) ->
 	KTYModule:sign(Message, DigestType, KTY).

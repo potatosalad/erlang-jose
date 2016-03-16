@@ -2,33 +2,40 @@
 %% vim: ts=4 sw=4 ft=erlang noet
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <andrew@pixid.com>
-%%% @copyright 2014-2015, Andrew Bennett
+%%% @copyright 2014-2016, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
-%%% Created :  18 Aug 2015 by Andrew Bennett <andrew@pixid.com>
+%%% Created :  16 Mar 2016 by Andrew Bennett <andrew@pixid.com>
 %%%-------------------------------------------------------------------
--module(jose_jwk_oct).
+-module(jose_jwk_use_sig).
 
--callback from_oct(OCTBinary) -> {KTY, Fields}
+-callback sign(Message, Options, KTY) -> Signature
 	when
-		OCTBinary :: binary(),
+		Message   :: iodata(),
+		Options   :: any(),
 		KTY       :: any(),
-		Fields    :: map().
--callback to_oct(KTY) -> OCTBinary
+		Signature :: iodata().
+-callback signer(KTY, Fields) -> JWSMap
 	when
-		KTY       :: any(),
-		OCTBinary :: binary().
-
-%% API
--export([from_binary/1]).
+		KTY    :: any(),
+		Fields :: map(),
+		JWSMap :: map().
+-callback verifier(KTY, Fields) -> [JWSALG]
+	when
+		KTY    :: any(),
+		Fields :: map(),
+		JWSALG :: iodata().
+-callback verify(Message, Options, Signature, KTY) -> boolean()
+	when
+		Message   :: iodata(),
+		Options   :: any(),
+		Signature :: iodata(),
+		KTY       :: any().
 
 %%====================================================================
 %% API functions
 %%====================================================================
-
-from_binary(OCTBinary) when is_binary(OCTBinary) ->
-	jose_jwk_kty:from_oct(OCTBinary).
 
 %%%-------------------------------------------------------------------
 %%% Internal functions

@@ -11,6 +11,8 @@
 -module(jose_jwk_kty_ec).
 -behaviour(jose_jwk).
 -behaviour(jose_jwk_kty).
+-behaviour(jose_jwk_use_enc).
+-behaviour(jose_jwk_use_sig).
 
 -include_lib("public_key/include/public_key.hrl").
 
@@ -21,13 +23,16 @@
 -export([to_public_map/2]).
 -export([to_thumbprint_map/2]).
 %% jose_jwk_kty callbacks
--export([block_encryptor/3]).
--export([derive_key/2]).
 -export([generate_key/1]).
 -export([generate_key/2]).
 -export([key_encryptor/3]).
+%% jose_jwk_use_enc callbacks
+-export([block_encryptor/2]).
+-export([derive_key/2]).
+%% jose_jwk_use_sig callbacks
 -export([sign/3]).
--export([signer/3]).
+-export([signer/2]).
+-export([verifier/2]).
 -export([verify/4]).
 %% API
 -export([from_key/1]).
@@ -100,22 +105,6 @@ to_thumbprint_map(K, F) ->
 %% jose_jwk_kty callbacks
 %%====================================================================
 
-block_encryptor(_KTY, _Fields, _PlainText) ->
-	#{
-		<<"alg">> => <<"ECDH-ES">>,
-		<<"enc">> => case jose_jwa:is_block_cipher_supported({aes_gcm, 128}) of
-			false -> <<"A128CBC-HS256">>;
-			true  -> <<"A128GCM">>
-		end
-	}.
-
-derive_key({ECPoint=#'ECPoint'{}, _}, ECPrivateKey=#'ECPrivateKey'{}) ->
-	public_key:compute_key(ECPoint, ECPrivateKey);
-derive_key(#'ECPrivateKey'{parameters=ECParameters, publicKey=Octets}, ECPrivateKey=#'ECPrivateKey'{}) ->
-	ECPoint = #'ECPoint'{point=Octets},
-	ECPublicKey = {ECPoint, ECParameters},
-	derive_key(ECPublicKey, ECPrivateKey).
-
 generate_key(P=#'ECParameters'{}) ->
 	{public_key:generate_key(P), #{}};
 generate_key({namedCurve, P}) when is_atom(P) ->
@@ -128,6 +117,12 @@ generate_key({#'ECPoint'{}, P}) ->
 	generate_key(P);
 generate_key(P) when is_atom(P) ->
 	generate_key({namedCurve, P});
+generate_key(<<"P-256">>) ->
+	generate_key(secp256r1);
+generate_key(<<"P-384">>) ->
+	generate_key(secp384r1);
+generate_key(<<"P-521">>) ->
+	generate_key(secp521r1);
 generate_key({ec, P=#'ECParameters'{}}) ->
 	generate_key(P);
 generate_key({ec, P=#'ECPrivateKey'{}}) ->
@@ -137,6 +132,8 @@ generate_key({ec, P={#'ECPoint'{}, _}}) ->
 generate_key({ec, P={namedCurve, _}}) ->
 	generate_key(P);
 generate_key({ec, P}) when is_atom(P) ->
+	generate_key(P);
+generate_key({ec, P}) when is_binary(P) ->
 	generate_key(P).
 
 generate_key(KTY, Fields) ->
@@ -145,6 +142,45 @@ generate_key(KTY, Fields) ->
 
 key_encryptor(KTY, Fields, Key) ->
 	jose_jwk_kty:key_encryptor(KTY, Fields, Key).
+
+%%====================================================================
+%% jose_jwk_use_enc callbacks
+%%====================================================================
+
+block_encryptor(_KTY, Fields=#{ <<"alg">> := ALG, <<"enc">> := ENC, <<"use">> := <<"enc">> }) ->
+	Folder = fun
+		(K, V, F)
+				when K =:= <<"apu">>
+				orelse K =:= <<"apv">>
+				orelse K =:= <<"epk">> ->
+			maps:put(K, V, F);
+		(_K, _V, F) ->
+			F
+	end,
+	maps:fold(Folder, #{
+		<<"alg">> => ALG,
+		<<"enc">> => ENC
+	}, Fields);
+block_encryptor(KTY, Fields) ->
+	block_encryptor(KTY, maps:merge(Fields, #{
+		<<"alg">> => <<"ECDH-ES">>,
+		<<"enc">> => case jose_jwa:is_block_cipher_supported({aes_gcm, 128}) of
+			false -> <<"A128CBC-HS256">>;
+			true  -> <<"A128GCM">>
+		end,
+		<<"use">> => <<"enc">>
+	})).
+
+derive_key({ECPoint=#'ECPoint'{}, _}, ECPrivateKey=#'ECPrivateKey'{}) ->
+	public_key:compute_key(ECPoint, ECPrivateKey);
+derive_key(#'ECPrivateKey'{parameters=ECParameters, publicKey=Octets}, ECPrivateKey=#'ECPrivateKey'{}) ->
+	ECPoint = #'ECPoint'{point=Octets},
+	ECPublicKey = {ECPoint, ECParameters},
+	derive_key(ECPublicKey, ECPrivateKey).
+
+%%====================================================================
+%% jose_jwk_use_sig callbacks
+%%====================================================================
 
 sign(Message, DigestType, ECPrivateKey=#'ECPrivateKey'{}) ->
 	DERSignature = public_key:sign(Message, DigestType, ECPrivateKey),
@@ -159,10 +195,39 @@ sign(Message, DigestType, ECPrivateKey=#'ECPrivateKey'{}) ->
 sign(_Message, _DigestType, {#'ECPoint'{}, _}) ->
 	erlang:error(not_supported).
 
-signer(#'ECPrivateKey'{}, _Fields, _PlainText) ->
+signer(#'ECPrivateKey'{}, #{ <<"alg">> := ALG, <<"use">> := <<"sig">> }) ->
 	#{
-		<<"alg">> => <<"ES256">>
+		<<"alg">> => ALG
+	};
+signer(#'ECPrivateKey'{parameters={namedCurve, Parameters}}, _Fields) ->
+	#{
+		<<"alg">> => case parameters_to_crv(Parameters) of
+			<<"P-256">> -> <<"ES256">>;
+			<<"P-384">> -> <<"ES384">>;
+			<<"P-521">> -> <<"ES512">>
+		end
 	}.
+
+verifier(_KTY, #{ <<"alg">> := ALG, <<"use">> := <<"sig">> }) ->
+	[ALG];
+verifier(#'ECPrivateKey'{parameters=ECParameters, publicKey=Octets0}, Fields) ->
+	Octets = case Octets0 of
+		{_, Octets1} ->
+			Octets1;
+		_ ->
+			Octets0
+	end,
+	ECPoint = #'ECPoint'{point=Octets},
+	ECPublicKey = {ECPoint, ECParameters},
+	verifier(ECPublicKey, Fields);
+verifier({#'ECPoint'{}, {namedCurve, Parameters}}, _Fields) ->
+	[
+		case parameters_to_crv(Parameters) of
+			<<"P-256">> -> <<"ES256">>;
+			<<"P-384">> -> <<"ES384">>;
+			<<"P-521">> -> <<"ES512">>
+		end
+	].
 
 verify(Message, DigestType, Signature, ECPublicKey={#'ECPoint'{}, _}) ->
 	SignatureLen = byte_size(Signature),

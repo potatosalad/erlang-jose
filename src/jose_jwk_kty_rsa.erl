@@ -11,6 +11,8 @@
 -module(jose_jwk_kty_rsa).
 -behaviour(jose_jwk).
 -behaviour(jose_jwk_kty).
+-behaviour(jose_jwk_use_enc).
+-behaviour(jose_jwk_use_sig).
 
 -include_lib("public_key/include/public_key.hrl").
 
@@ -21,14 +23,17 @@
 -export([to_public_map/2]).
 -export([to_thumbprint_map/2]).
 %% jose_jwk_kty callbacks
--export([block_encryptor/3]).
--export([decrypt_private/3]).
--export([encrypt_public/3]).
 -export([generate_key/1]).
 -export([generate_key/2]).
 -export([key_encryptor/3]).
+%% jose_jwk_use_enc callbacks
+-export([block_encryptor/2]).
+-export([decrypt_private/3]).
+-export([encrypt_public/3]).
+%% jose_jwk_use_sig callbacks
 -export([sign/3]).
--export([signer/3]).
+-export([signer/2]).
+-export([verifier/2]).
 -export([verify/4]).
 %% API
 -export([from_key/1]).
@@ -131,27 +136,6 @@ to_thumbprint_map(K, F) ->
 %% jose_jwk_kty callbacks
 %%====================================================================
 
-block_encryptor(_KTY, _Fields, _PlainText) ->
-	#{
-		<<"alg">> => case jose_jwa:is_rsa_crypt_supported(rsa_oaep) of
-			false -> <<"RSA1_5">>;
-			true  -> <<"RSA-OAEP">>
-		end,
-		<<"enc">> => case jose_jwa:is_block_cipher_supported({aes_gcm, 128}) of
-			false -> <<"A128CBC-HS256">>;
-			true  -> <<"A128GCM">>
-		end
-	}.
-
-decrypt_private(CipherText, Options, RSAPrivateKey=#'RSAPrivateKey'{}) ->
-	jose_jwa:decrypt_private(CipherText, RSAPrivateKey, Options).
-
-encrypt_public(PlainText, Options, RSAPublicKey=#'RSAPublicKey'{}) ->
-	jose_jwa:encrypt_public(PlainText, RSAPublicKey, Options);
-encrypt_public(PlainText, Options, #'RSAPrivateKey'{modulus=Modulus, publicExponent=PublicExponent}) ->
-	RSAPublicKey = #'RSAPublicKey'{modulus=Modulus, publicExponent=PublicExponent},
-	encrypt_public(PlainText, Options, RSAPublicKey).
-
 generate_key(#'RSAPrivateKey'{ modulus = N, publicExponent = E }) ->
 	generate_key({rsa, int_to_bit_size(N), E});
 generate_key(#'RSAPublicKey'{ modulus = N, publicExponent = E }) ->
@@ -184,18 +168,69 @@ generate_key(KTY, Fields) ->
 key_encryptor(KTY, Fields, Key) ->
 	jose_jwk_kty:key_encryptor(KTY, Fields, Key).
 
+%%====================================================================
+%% jose_jwk_use_enc callbacks
+%%====================================================================
+
+block_encryptor(_KTY, #{ <<"alg">> := ALG, <<"enc">> := ENC, <<"use">> := <<"enc">> }) ->
+	#{
+		<<"alg">> => ALG,
+		<<"enc">> => ENC
+	};
+block_encryptor(_KTY, _Fields) ->
+	#{
+		<<"alg">> => case jose_jwa:is_rsa_crypt_supported(rsa_oaep) of
+			false -> <<"RSA1_5">>;
+			true  -> <<"RSA-OAEP">>
+		end,
+		<<"enc">> => case jose_jwa:is_block_cipher_supported({aes_gcm, 128}) of
+			false -> <<"A128CBC-HS256">>;
+			true  -> <<"A128GCM">>
+		end
+	}.
+
+decrypt_private(CipherText, Options, RSAPrivateKey=#'RSAPrivateKey'{}) ->
+	jose_jwa:decrypt_private(CipherText, RSAPrivateKey, Options).
+
+encrypt_public(PlainText, Options, RSAPublicKey=#'RSAPublicKey'{}) ->
+	jose_jwa:encrypt_public(PlainText, RSAPublicKey, Options);
+encrypt_public(PlainText, Options, #'RSAPrivateKey'{modulus=Modulus, publicExponent=PublicExponent}) ->
+	RSAPublicKey = #'RSAPublicKey'{modulus=Modulus, publicExponent=PublicExponent},
+	encrypt_public(PlainText, Options, RSAPublicKey).
+
+%%====================================================================
+%% jose_jwk_use_sig callbacks
+%%====================================================================
+
 sign(Message, {Padding, DigestType}, RSAPrivateKey=#'RSAPrivateKey'{}) ->
 	jose_jwa:sign(Message, DigestType, RSAPrivateKey, Padding);
 sign(Message, DigestType, RSAPrivateKey=#'RSAPrivateKey'{}) ->
 	sign(Message, {rsa_pkcs1_padding, DigestType}, RSAPrivateKey).
 
-signer(_Key, _Fields, _PlainText) ->
+signer(#'RSAPrivateKey'{}, #{ <<"alg">> := ALG, <<"use">> := <<"sig">> }) ->
+	#{
+		<<"alg">> => ALG
+	};
+signer(#'RSAPrivateKey'{}, _Fields) ->
 	#{
 		<<"alg">> => case jose_jwa:is_rsa_sign_supported(rsa_pkcs1_pss_padding) of
 			false -> <<"RS256">>;
 			true  -> <<"PS256">>
 		end
 	}.
+
+verifier(_KTY, #{ <<"alg">> := ALG, <<"use">> := <<"sig">> }) ->
+	[ALG];
+verifier(#'RSAPrivateKey'{modulus=Modulus, publicExponent=PublicExponent}, Fields) ->
+	RSAPublicKey = #'RSAPublicKey'{modulus=Modulus, publicExponent=PublicExponent},
+	verifier(RSAPublicKey, Fields);
+verifier(#'RSAPublicKey'{}, _Fields) ->
+	case jose_jwa:is_rsa_sign_supported(rsa_pkcs1_pss_padding) of
+		false ->
+			[<<"RS256">>, <<"RS384">>, <<"RS512">>];
+		true ->
+			[<<"PS256">>, <<"PS384">>, <<"PS512">>, <<"RS256">>, <<"RS384">>, <<"RS512">>]
+	end.
 
 verify(Message, {Padding, DigestType}, Signature, RSAPublicKey=#'RSAPublicKey'{}) ->
 	jose_jwa:verify(Message, DigestType, Signature, RSAPublicKey, Padding);

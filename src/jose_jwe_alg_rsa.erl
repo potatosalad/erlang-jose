@@ -18,6 +18,7 @@
 -export([from_map/1]).
 -export([to_map/2]).
 %% jose_jwe_alg callbacks
+-export([generate_key/3]).
 -export([key_decrypt/3]).
 -export([key_encrypt/3]).
 -export([next_cek/3]).
@@ -57,6 +58,13 @@ to_map(?RSA_OAEP_256, F) ->
 %%====================================================================
 %% jose_jwe_alg callbacks
 %%====================================================================
+
+generate_key(_Fields, {ENCModule, ENC}, ?RSA1_5) ->
+	jose_jwe_alg:generate_key({rsa, 2048}, <<"RSA1_5">>, ENCModule:algorithm(ENC));
+generate_key(_Fields, {ENCModule, ENC}, ?RSA_OAEP) ->
+	jose_jwe_alg:generate_key({rsa, 2048}, <<"RSA-OAEP">>, ENCModule:algorithm(ENC));
+generate_key(_Fields, {ENCModule, ENC}, ?RSA_OAEP_256) ->
+	jose_jwe_alg:generate_key({rsa, 2048}, <<"RSA-OAEP-256">>, ENCModule:algorithm(ENC)).
 
 key_decrypt(#jose_jwk{kty={KTYModule, KTY}}, {_ENCModule, _ENC, EncryptedKey}, #jose_jwe_alg_rsa{algorithm=Algorithm}) ->
 	KTYModule:decrypt_private(EncryptedKey, Algorithm, KTY).

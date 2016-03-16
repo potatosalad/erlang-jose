@@ -33,3 +33,17 @@
 		ALG          :: any(),
 		DecryptedKey :: iodata(),
 		NewALG       :: any().
+
+%% API
+-export([generate_key/3]).
+
+%%====================================================================
+%% API functions
+%%====================================================================
+
+generate_key(Parameters, Algorithm, Encryption) ->
+	jose_jwk:merge(jose_jwk:generate_key(Parameters), #{
+		<<"alg">> => Algorithm,
+		<<"enc">> => Encryption,
+		<<"use">> => <<"enc">>
+	}).

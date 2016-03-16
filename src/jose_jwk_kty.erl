@@ -12,70 +12,6 @@
 
 -include_lib("public_key/include/public_key.hrl").
 
--ifdef(optional_callbacks).
--callback block_encryptor(KTY, Fields, PlainText) -> JWEMap
-	when
-		KTY       :: any(),
-		Fields    :: map(),
-		PlainText :: iodata(),
-		JWEMap    :: map().
--callback decrypt_private(CipherText, Options, KTY) -> PlainText
-	when
-		CipherText :: iodata(),
-		Options    :: any(),
-		KTY        :: any(),
-		PlainText  :: iodata().
--callback derive_key(KTY) -> DerivedKey
-	when
-		KTY        :: any(),
-		DerivedKey :: iodata().
--callback derive_key(OtherKTY, KTY) -> DerivedKey
-	when
-		OtherKTY   :: any(),
-		KTY        :: any(),
-		DerivedKey :: iodata().
--callback encrypt_public(PlainText, Options, KTY) -> CipherText
-	when
-		PlainText  :: iodata(),
-		Options    :: any(),
-		KTY        :: any(),
-		CipherText :: iodata().
--callback key_encryptor(KTY, Fields, Key) -> JWEMap
-	when
-		KTY    :: any(),
-		Fields :: map(),
-		Key    :: any(),
-		JWEMap :: map().
--callback sign(Message, Options, KTY) -> Signature
-	when
-		Message   :: iodata(),
-		Options   :: any(),
-		KTY       :: any(),
-		Signature :: iodata().
--callback signer(KTY, Fields, Message) -> JWSMap
-	when
-		KTY     :: any(),
-		Fields  :: map(),
-		Message :: any(),
-		JWSMap  :: map().
--callback verify(Message, Options, Signature, KTY) -> boolean()
-	when
-		Message   :: iodata(),
-		Options   :: any(),
-		Signature :: iodata(),
-		KTY       :: any().
-
--optional_callbacks([block_encryptor/3]).
--optional_callbacks([decrypt_private/3]).
--optional_callbacks([derive_key/1]).
--optional_callbacks([derive_key/2]).
--optional_callbacks([encrypt_public/3]).
--optional_callbacks([key_encryptor/3]).
--optional_callbacks([sign/3]).
--optional_callbacks([signer/3]).
--optional_callbacks([verify/4]).
--endif.
-
 -callback generate_key(Parameters) -> KTY
 	when
 		Parameters :: any(),
@@ -85,6 +21,12 @@
 		KTY    :: any(),
 		Fields :: map(),
 		NewKTY :: any().
+-callback key_encryptor(KTY, Fields, Key) -> JWEMap
+	when
+		KTY    :: any(),
+		Fields :: map(),
+		Key    :: any(),
+		JWEMap :: map().
 
 %% API
 -export([from_key/1]).
@@ -152,6 +94,8 @@ generate_key(P={ec, {#'ECPoint'{}, _}}) ->
 generate_key(P={ec, {namedCurve, _}}) ->
 	jose_jwk:generate_key({#{ kty => ?KTY_EC_MODULE }, P});
 generate_key(P={ec, Atom}) when is_atom(Atom) ->
+	jose_jwk:generate_key({#{ kty => ?KTY_EC_MODULE }, P});
+generate_key(P={ec, Binary}) when is_binary(Binary) ->
 	jose_jwk:generate_key({#{ kty => ?KTY_EC_MODULE }, P});
 generate_key(P={oct, Size}) when is_integer(Size) ->
 	jose_jwk:generate_key({#{ kty => ?KTY_OCT_MODULE }, P});

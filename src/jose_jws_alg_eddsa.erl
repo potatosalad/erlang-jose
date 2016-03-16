@@ -18,6 +18,7 @@
 -export([from_map/1]).
 -export([to_map/2]).
 %% jose_jws_alg callbacks
+-export([generate_key/2]).
 -export([sign/3]).
 -export([verify/4]).
 
@@ -51,6 +52,13 @@ to_map('Ed448ph', F) ->
 %%====================================================================
 %% jose_jws_alg callbacks
 %%====================================================================
+
+generate_key(ALG, _Fields)
+		when ALG =:= 'Ed25519'
+		orelse ALG =:= 'Ed25519ph'
+		orelse ALG =:= 'Ed448'
+		orelse ALG =:= 'Ed448ph' ->
+	jose_jws_alg:generate_key({okp, ALG}, atom_to_binary(ALG, unicode)).
 
 sign(#jose_jwk{kty={KTYModule, KTY}}, Message, ALG) ->
 	KTYModule:sign(Message, ALG, KTY).

@@ -52,6 +52,7 @@ defmodule JOSE.JWT do
   def to_record(%JOSE.JWT{unquote_splicing(pairs)}) do
     {:jose_jwt, unquote_splicing(vals)}
   end
+  def to_record(list) when is_list(list), do: for element <- list, into: [], do: to_record(element)
 
   @doc """
   Converts a `:jose_jwt` record into a `JOSE.JWT`.
@@ -60,6 +61,7 @@ defmodule JOSE.JWT do
   def from_record({:jose_jwt, unquote_splicing(vals)}) do
     %JOSE.JWT{unquote_splicing(pairs)}
   end
+  def from_record(list) when is_list(list), do: for element <- list, into: [], do: from_record(element)
 
   ## Decode API
 
@@ -72,12 +74,14 @@ defmodule JOSE.JWT do
       %JOSE.JWT{fields: %{"test" => true}}
 
   """
+  def from(list) when is_list(list), do: for element <- list, into: [], do: from(element)
   def from(jwt=%JOSE.JWT{}), do: from(to_record(jwt))
   def from(any), do: :jose_jwt.from(any) |> from_record
 
   @doc """
   Converts a binary into a `JOSE.JWT`.
   """
+  def from_binary(list) when is_list(list), do: for element <- list, into: [], do: from_binary(element)
   def from_binary(binary), do: :jose_jwt.from_binary(binary) |> from_record
 
   @doc """
@@ -88,6 +92,7 @@ defmodule JOSE.JWT do
   @doc """
   Converts a map into a `JOSE.JWT`.
   """
+  def from_map(list) when is_list(list), do: for element <- list, into: [], do: from_map(element)
   def from_map(map), do: :jose_jwt.from_map(map) |> from_record
 
   ## Encode API
@@ -95,6 +100,7 @@ defmodule JOSE.JWT do
   @doc """
   Converts a `JOSE.JWT` into a binary.
   """
+  def to_binary(list) when is_list(list), do: for element <- list, into: [], do: to_binary(element)
   def to_binary(jwt=%JOSE.JWT{}), do: to_binary(to_record(jwt))
   def to_binary(any), do: :jose_jwt.to_binary(any)
 
@@ -107,6 +113,7 @@ defmodule JOSE.JWT do
   @doc """
   Converts a `JOSE.JWT` into a map.
   """
+  def to_map(list) when is_list(list), do: for element <- list, into: [], do: to_map(element)
   def to_map(jwt=%JOSE.JWT{}), do: to_map(to_record(jwt))
   def to_map(any), do: :jose_jwt.to_map(any)
 
@@ -145,6 +152,13 @@ defmodule JOSE.JWT do
   def encrypt(jwk, jwe=%JOSE.JWE{}, jwt), do: encrypt(jwk, JOSE.JWE.to_record(jwe), jwt)
   def encrypt(jwk, jwe, jwt=%JOSE.JWT{}), do: encrypt(jwk, jwe, to_record(jwt))
   def encrypt(jwk, jwe, jwt), do: :jose_jwt.encrypt(jwk, jwe, jwt)
+
+  @doc """
+  Merges map on right into map on left.
+  """
+  def merge(left=%JOSE.JWT{}, right), do: merge(left |> to_record, right)
+  def merge(left, right=%JOSE.JWT{}), do: merge(left, right |> to_record)
+  def merge(left, right), do: :jose_jwt.merge(left, right) |> from_record
 
   @doc """
   See `peek_payload/1`.

@@ -10,6 +10,11 @@
 %%%-------------------------------------------------------------------
 -module(jose_jws_alg).
 
+-callback generate_key(ALG, Fields) -> JWK
+	when
+		ALG    :: any(),
+		Fields :: map(),
+		JWK    :: jose_jwk:key().
 -callback sign(Key, Message, ALG) -> Signature
 	when
 		Key       :: any(),
@@ -22,3 +27,16 @@
 		Message   :: iodata(),
 		Signature :: iodata(),
 		ALG       :: any().
+
+%% API
+-export([generate_key/2]).
+
+%%====================================================================
+%% API functions
+%%====================================================================
+
+generate_key(Parameters, Algorithm) ->
+	jose_jwk:merge(jose_jwk:generate_key(Parameters), #{
+		<<"alg">> => Algorithm,
+		<<"use">> => <<"sig">>
+	}).

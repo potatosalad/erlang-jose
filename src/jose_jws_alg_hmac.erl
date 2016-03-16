@@ -18,6 +18,7 @@
 -export([from_map/1]).
 -export([to_map/2]).
 %% jose_jws_alg callbacks
+-export([generate_key/2]).
 -export([sign/3]).
 -export([verify/4]).
 %% API
@@ -56,6 +57,13 @@ to_map(?HS512, F) ->
 %%====================================================================
 %% jose_jws_alg callbacks
 %%====================================================================
+
+generate_key(?HS256, _Fields) ->
+	jose_jws_alg:generate_key({oct, 32}, <<"HS256">>);
+generate_key(?HS384, _Fields) ->
+	jose_jws_alg:generate_key({oct, 48}, <<"HS384">>);
+generate_key(?HS512, _Fields) ->
+	jose_jws_alg:generate_key({oct, 64}, <<"HS512">>).
 
 sign(#jose_jwk{kty={KTYModule, KTY}}, Message, #jose_jws_alg_hmac{hmac=HMAC}) ->
 	KTYModule:sign(Message, HMAC, KTY).

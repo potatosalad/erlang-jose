@@ -40,8 +40,10 @@
 -export([compact/1]).
 -export([compress/2]).
 -export([expand/1]).
+-export([generate_key/1]).
 -export([key_decrypt/3]).
 -export([key_encrypt/3]).
+-export([merge/2]).
 -export([next_cek/2]).
 -export([next_iv/1]).
 -export([uncompress/2]).
@@ -272,6 +274,13 @@ expand({Modules, Binary}) when is_binary(Binary) ->
 expand(Binary) when is_binary(Binary) ->
 	expand({#{}, Binary}).
 
+generate_key(List) when is_list(List) ->
+	[generate_key(Element) || Element <- List];
+generate_key(#jose_jwe{alg={ALGModule, ALG}, enc={ENCModule, ENC}, fields=Fields}) ->
+	ALGModule:generate_key(Fields, {ENCModule, ENC}, ALG);
+generate_key(Other) ->
+	generate_key(from(Other)).
+
 key_decrypt(Key, EncryptedKey, #jose_jwe{alg={ALGModule, ALG}, enc={ENCModule, ENC}}) ->
 	ALGModule:key_decrypt(Key, {ENCModule, ENC, EncryptedKey}, ALG);
 key_decrypt(Key, EncryptedKey, JWE=#jose_jwe{}) ->
@@ -285,6 +294,14 @@ key_encrypt(Key, DecryptedKey, JWE0=#jose_jwe{alg={ALGModule, ALG0}}) ->
 	{EncryptedKey, JWE1};
 key_encrypt(Key, EncryptedKey, Other) ->
 	key_encrypt(Key, EncryptedKey, from(Other)).
+
+merge(LeftJWE=#jose_jwe{}, RightMap) when is_map(RightMap) ->
+	{Modules, LeftMap} = to_map(LeftJWE),
+	from_map({Modules, maps:merge(LeftMap, RightMap)});
+merge(LeftOther, RightJWE=#jose_jwe{}) ->
+	merge(LeftOther, element(2, to_map(RightJWE)));
+merge(LeftOther, RightMap) when is_map(RightMap) ->
+	merge(from(LeftOther), RightMap).
 
 next_cek(Key, JWE0=#jose_jwe{alg={ALGModule, ALG0}, enc={ENCModule, ENC}}) ->
 	{DecryptedKey, ALG1} = ALGModule:next_cek(Key, {ENCModule, ENC}, ALG0),

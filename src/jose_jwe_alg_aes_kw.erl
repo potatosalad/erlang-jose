@@ -18,6 +18,7 @@
 -export([from_map/1]).
 -export([to_map/2]).
 %% jose_jwe_alg callbacks
+-export([generate_key/3]).
 -export([key_decrypt/3]).
 -export([key_encrypt/3]).
 -export([next_cek/3]).
@@ -75,6 +76,9 @@ to_map(A = ?A256GCMKW, F) ->
 %%====================================================================
 %% jose_jwe_alg callbacks
 %%====================================================================
+
+generate_key(_Fields, {ENCModule, ENC}, ALG=#jose_jwe_alg_aes_kw{bits=Bits}) ->
+	jose_jwe_alg:generate_key({oct, (Bits div 8)}, maps:get(<<"alg">>, to_map(ALG, #{})), ENCModule:algorithm(ENC)).
 
 key_decrypt(DerivedKey, {_ENCModule, _ENC, EncryptedKey}, #jose_jwe_alg_aes_kw{bits=Bits, gcm=false})
 		when is_binary(DerivedKey)

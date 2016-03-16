@@ -20,6 +20,7 @@
 -export([from_map/1]).
 -export([to_map/2]).
 %% jose_jwe_alg callbacks
+-export([generate_key/3]).
 -export([key_decrypt/3]).
 -export([key_encrypt/3]).
 -export([next_cek/3]).
@@ -70,6 +71,11 @@ to_map(A = ?ECDH_ES, F) ->
 %%====================================================================
 %% jose_jwe_alg callbacks
 %%====================================================================
+
+generate_key(_Fields, {ENCModule, ENC}, ALG=#jose_jwe_alg_ecdh_es{epk=EphemeralPublicJWK=#jose_jwk{}}) ->
+	jose_jwe_alg:generate_key(EphemeralPublicJWK, maps:get(<<"alg">>, to_map(ALG, #{})), ENCModule:algorithm(ENC));
+generate_key(_Fields, {ENCModule, ENC}, ALG=#jose_jwe_alg_ecdh_es{}) ->
+	jose_jwe_alg:generate_key({ec, <<"P-521">>}, maps:get(<<"alg">>, to_map(ALG, #{})), ENCModule:algorithm(ENC)).
 
 key_decrypt({OtherPublicJWK=#jose_jwk{}, MyPrivateJWK=#jose_jwk{}}, EncryptedKey, JWEECDHES=#jose_jwe_alg_ecdh_es{epk=EphemeralPublicJWK=#jose_jwk{}}) ->
 	case jose_jwk:thumbprint(OtherPublicJWK) =:= jose_jwk:thumbprint(EphemeralPublicJWK) of
