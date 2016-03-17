@@ -124,8 +124,8 @@ decrypt(Key, {Modules, Encrypted}) when is_map(Modules) andalso is_binary(Encryp
 decrypt(Key, Encrypted) when is_map(Encrypted) orelse is_binary(Encrypted) ->
 	decrypt(Key, {#{}, Encrypted}).
 
-encrypt(JWK=#jose_jwk{kty={Module, KTY}, fields=Fields}, JWT=#jose_jwt{}) ->
-	encrypt(JWK, Module:block_encryptor(KTY, Fields, JWT), JWT);
+encrypt(JWK=#jose_jwk{}, JWT=#jose_jwt{}) ->
+	encrypt(JWK, jose_jwk:block_encryptor(JWK), JWT);
 encrypt(JWKOther, JWTOther) ->
 	encrypt(jose_jwk:from(JWKOther), from(JWTOther)).
 

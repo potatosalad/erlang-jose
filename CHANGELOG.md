@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.3 (2016-03-17)
+
+* Fixes
+  * `JOSE.JWT.encrypt/2` now uses `JOSE.JWK.block_encryptor/1` properly.
+
 ## 1.7.2 (2016-03-16)
 
 * Enhancements
