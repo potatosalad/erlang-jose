@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.5 (2016-05-13)
+
+* Fixes
+  * Removed leftover development file accidentally included in last release.
+
 ## 1.7.4 (2016-05-13)
 
 * Enhancements
