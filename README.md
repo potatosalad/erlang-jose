@@ -1,6 +1,6 @@
 # JOSE
 
-[![Build Status](https://travis-ci.org/potatosalad/erlang-jose.png?branch=master)](https://travis-ci.org/potatosalad/erlang-jose) [![Hex.pm](https://img.shields.io/hexpm/v/jose.svg)](https://hex.pm/packages/jose)
+[![Build Status](https://travis-ci.org/potatosalad/erlang-jose.svg?branch=master)](https://travis-ci.org/potatosalad/erlang-jose) [![Hex.pm](https://img.shields.io/hexpm/v/jose.svg)](https://hex.pm/packages/jose)
 
 JSON Object Signing and Encryption (JOSE) for Erlang and Elixir.
 
