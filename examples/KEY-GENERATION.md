@@ -1,9 +1,11 @@
 # Examples: Key Generation
 
-There are two key generation methods described below for each key type:
+There are four key generation methods described below for each key type:
 
 * Method 1: OpenSSL
 * Method 2: `jose_jwk:generate_key/1` or `JOSE.JWK.generate_key/1`
+* Method 3: `jose_jwe:generate_key/1` or `JOSE.JWE.generate_key/1`
+* Method 4: `jose_jws:generate_key/1` or `JOSE.JWS.generate_key/1`
 
 ## EC
 
@@ -42,6 +44,11 @@ jwk = JOSE.JWK.generate_key(:secp521r1)
 jwk = JOSE.JWK.generate_key({:ec, :secp256r1})
 jwk = JOSE.JWK.generate_key({:ec, :secp384r1})
 jwk = JOSE.JWK.generate_key({:ec, :secp521r1})
+
+# Alternative curve alias syntax:
+jwk = JOSE.JWK.generate_key({:ec, "P-256"})
+jwk = JOSE.JWK.generate_key({:ec, "P-384"})
+jwk = JOSE.JWK.generate_key({:ec, "P-521"})
 ```
 
 Keys may also be generated based on other keys.  The new key will use the same curve as the supplied key.
@@ -49,6 +56,30 @@ Keys may also be generated based on other keys.  The new key will use the same c
 ```elixir
 old_jwk = JOSE.JWK.from_pem_file("ec-secp256r1.pem")
 new_jwk = JOSE.JWK.generate_key(old_jwk)
+```
+
+### Method 3
+
+If you have a JWE header with an `"epk"` field, a new key will be generated based on the same key type of the `"epk"`.  Otherwise, the `P-521` curve will be used.
+
+```elixir
+# Based on the "epk" field.
+epk = JOSE.JWK.generate_key({:ec, "P-256"})
+jwe = JOSE.JWE.from_map(%{"alg" => "ECDH-ES", "enc" => "A128GCM", "epk" => epk |> JOSE.JWK.to_map |> elem(1)})
+jwk = JOSE.JWE.generate_key(jwe)
+
+# Otherwise, defaults to "P-521".
+jwk = JOSE.JWE.generate_key(%{"alg" => "ECDH-ES", "enc" => "A128GCM"})
+```
+
+### Method 4
+
+If you have a JWS header with one of the ECDSA signature algorithms specified, a corresponding EC key will be generated with the correct curve for the signature type.
+
+```elixir
+jwk_ec256 = JOSE.JWS.generate_key(%{"alg" => "ES256"})
+jwk_ec384 = JOSE.JWS.generate_key(%{"alg" => "ES384"})
+jwk_ec521 = JOSE.JWS.generate_key(%{"alg" => "ES512"})
 ```
 
 ## oct
@@ -87,6 +118,29 @@ old_jwk = JOSE.JWK.from_oct_file("oct-128-bit.bin")
 new_jwk = JOSE.JWK.generate_key(old_jwk)
 ```
 
+### Method 3
+
+If you have a JWE header with an `"alg"` field that requires a symmetric key, a new `oct` key will be generated based on the byte size required of `"alg"` and/or `"enc"`.
+
+```elixir
+jwk_oct16 = JOSE.JWE.generate_key(%{"alg" => "dir", "enc" => "A128GCM"})
+jwk_oct24 = JOSE.JWE.generate_key(%{"alg" => "dir", "enc" => "A192GCM"})
+jwk_oct32 = JOSE.JWE.generate_key(%{"alg" => "dir", "enc" => "A256GCM"})
+jwk_oct32 = JOSE.JWE.generate_key(%{"alg" => "dir", "enc" => "A128CBC-HS256"})
+jwk_oct48 = JOSE.JWE.generate_key(%{"alg" => "dir", "enc" => "A192CBC-HS384"})
+jwk_oct64 = JOSE.JWE.generate_key(%{"alg" => "dir", "enc" => "A256CBC-HS512"})
+```
+
+### Method 4
+
+If you have a JWS header with an `"alg"` field that requires a symmetric key, a new `oct` key will be generated based on the byte size recommended for `"alg".
+
+```elixir
+jwk_oct32 = JOSE.JWS.generate_key(%{"alg" => "HS256"})
+jwk_oct48 = JOSE.JWS.generate_key(%{"alg" => "HS384"})
+jwk_oct64 = JOSE.JWS.generate_key(%{"alg" => "HS512"})
+```
+
 ## OKP
 
 This key type is an octet key pair with an associated curve (see [draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves)).
@@ -95,7 +149,7 @@ This key type is an octet key pair with an associated curve (see [draft-ietf-jos
 
 *NOTE:* Only `Ed25519` is currently supported by `ssh-keygen`.
 
-The basic formula for generating a random octet sequence is `ssh-keygen -t TYPE -f FILE`, for example:
+The basic formula for generating a octet key pair is `ssh-keygen -t TYPE -f FILE`, for example:
 
 ```bash
 ssh-keygen -t ed25519 -f ed25519
@@ -128,6 +182,28 @@ Keys may also be generated based on other keys.  The new key will use the same c
 ```elixir
 old_jwk = JOSE.JWK.from_openssh_key_file("ed25519")
 new_jwk = JOSE.JWK.generate_key(old_jwk)
+```
+
+### Method 3
+
+If you have a JWE header with an `"epk"` field, a new key will be generated based on the same key type of the `"epk"`.
+
+```elixir
+# Based on the "epk" field.
+epk = JOSE.JWK.generate_key({:okp, :X25519})
+jwe = JOSE.JWE.from_map(%{"alg" => "ECDH-ES", "enc" => "A128GCM", "epk" => epk |> JOSE.JWK.to_map |> elem(1)})
+jwk = JOSE.JWE.generate_key(jwe)
+```
+
+### Method 4
+
+If you have a JWS header with one of the EdDSA signature algorithms specified, a corresponding OKP key will be generated with the correct curve for the signature type.
+
+```elixir
+jwk_Ed25519   = JOSE.JWS.generate_key(%{"alg" => "Ed25519"})
+jwk_Ed25519ph = JOSE.JWS.generate_key(%{"alg" => "Ed25519ph"})
+jwk_Ed448     = JOSE.JWS.generate_key(%{"alg" => "Ed448"})
+jwk_Ed448ph   = JOSE.JWS.generate_key(%{"alg" => "Ed448ph"})
 ```
 
 ## RSA
@@ -168,4 +244,30 @@ Keys may also be generated based on other keys.  The new key will use the same m
 ```elixir
 old_jwk = JOSE.JWK.from_pem_file("rsa-2048.pem")
 new_jwk = JOSE.JWK.generate_key(old_jwk)
+```
+
+### Method 3
+
+If you have a JWE header with an `"alg"` field that requires an asymmetric RSA key, a new `RSA` key will be generated. 2048-bit keys are generated in these cases.
+
+```elixir
+jwk_rsa1_5      = JOSE.JWE.generate_key(%{"alg" => "RSA1_5", "enc" => "A128GCM"})
+jwk_rsa_oaep    = JOSE.JWE.generate_key(%{"alg" => "RSA-OAEP", "enc" => "A128GCM"})
+jwk_rsa_oaep256 = JOSE.JWE.generate_key(%{"alg" => "RSA-OAEP-256", "enc" => "A128GCM"})
+```
+
+### Method 4
+
+If you have a JWS header with one of the RSA PKCS1 or PSS signature algorithms specified, a corresponding RSA key will be generated with a recommended modulus size based on the digest type.
+
+```elixir
+# RS256, RS384, RS512
+jwk_rsa2048 = JOSE.JWS.generate_key(%{"alg" => "RS256"})
+jwk_rsa3072 = JOSE.JWS.generate_key(%{"alg" => "RS384"})
+jwk_rsa4096 = JOSE.JWS.generate_key(%{"alg" => "RS512"})
+
+# PS256, PS384, PS512
+jwk_rsa2048 = JOSE.JWS.generate_key(%{"alg" => "PS256"})
+jwk_rsa3072 = JOSE.JWS.generate_key(%{"alg" => "PS384"})
+jwk_rsa4096 = JOSE.JWS.generate_key(%{"alg" => "PS512"})
 ```

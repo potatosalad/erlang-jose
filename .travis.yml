@@ -3,14 +3,14 @@ language: elixir
 sudo: false
 
 elixir:
-  - 1.0.5
   - 1.1.1
   - 1.2.0
+  - 1.2.5
 
 otp_release:
-  - 17.5
   - 18.0
   - 18.2
+  - 18.3
 
 notifications:
   email: false
@@ -18,8 +18,3 @@ notifications:
 after_script:
   - "rm -rf _build deps ebin"
   - "make tests"
-
-matrix:
-  exclude:
-    - otp_release: 17.5
-      elixir: 1.2.0
