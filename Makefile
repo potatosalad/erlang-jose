@@ -4,8 +4,10 @@ DEPS = base64url
 
 dep_base64url = git git://github.com/dvv/base64url.git master
 
-TEST_DEPS = cutkey jiffy jsone jsx keccakf1600 libsodium triq
-# TEST_DEPS = cutkey jiffy jsone jsx keccakf1600 libdecaf libsodium triq
+# libsodium
+# TEST_DEPS = cutkey jiffy jsone jsx keccakf1600 libsodium triq
+# libdecaf
+TEST_DEPS = cutkey jiffy jsone jsx libdecaf triq
 
 dep_cutkey = git git://github.com/potatosalad/cutkey.git master
 dep_jiffy = git git://github.com/davisp/jiffy.git master

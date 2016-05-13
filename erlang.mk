@@ -16,7 +16,7 @@
 
 ERLANG_MK_FILENAME := $(realpath $(lastword $(MAKEFILE_LIST)))
 
-ERLANG_MK_VERSION = 2.0.0-pre.2-63-g250b348-dirty
+ERLANG_MK_VERSION = 2.0.0-pre.2-118-gd2eb8b1-dirty
 
 # Core configuration.
 
@@ -546,9 +546,9 @@ define dep_autopatch_rebar.erl
 		[] -> ok;
 		_ ->
 			Write("\npre-app::\n\t$$\(MAKE) -f c_src/Makefile.erlang.mk\n"),
-			PortSpecWrite(io_lib:format("ERL_CFLAGS = -finline-functions -Wall -fPIC -I ~s/erts-~s/include -I ~s\n",
+			PortSpecWrite(io_lib:format("ERL_CFLAGS = -finline-functions -Wall -fPIC -I \\"~s/erts-~s/include\\" -I \\"~s\\"\n",
 				[code:root_dir(), erlang:system_info(version), code:lib_dir(erl_interface, include)])),
-			PortSpecWrite(io_lib:format("ERL_LDFLAGS = -L ~s -lerl_interface -lei\n",
+			PortSpecWrite(io_lib:format("ERL_LDFLAGS = -L \\"~s\\" -lerl_interface -lei\n",
 				[code:lib_dir(erl_interface, lib)])),
 			[PortSpecWrite(["\n", E, "\n"]) || E <- OsEnv],
 			FilterEnv = fun(Env) ->
@@ -1076,13 +1076,13 @@ ifeq ($(wildcard src/$(PROJECT).app.src),)
 	$(app_verbose) printf "$(subst $(newline),\n,$(subst ",\",$(call app_file,$(GITDESCRIBE),$(MODULES))))" \
 		> ebin/$(PROJECT).app
 else
-	$(verbose) if [ -z "$$(grep -E '^[^%]*{\s*modules\s*,' src/$(PROJECT).app.src)" ]; then \
+	$(verbose) if [ -z "$$(grep -e '^[^%]*{\s*modules\s*,' src/$(PROJECT).app.src)" ]; then \
 		echo "Empty modules entry not found in $(PROJECT).app.src. Please consult the erlang.mk README for instructions." >&2; \
 		exit 1; \
 	fi
 	$(appsrc_verbose) cat src/$(PROJECT).app.src \
 		| sed "s/{[[:space:]]*modules[[:space:]]*,[[:space:]]*\[\]}/{modules, \[$(call comma_list,$(MODULES))\]}/" \
-		| sed "s/{id,[[:space:]]*\"git\"}/{id, \"$(GITDESCRIBE)\"}/" \
+		| sed "s/{id,[[:space:]]*\"git\"}/{id, \"$(subst /,\/,$(GITDESCRIBE))\"}/" \
 		> ebin/$(PROJECT).app
 endif
 
@@ -1200,7 +1200,7 @@ endif
 # We strip out -Werror because we don't want to fail due to
 # warnings when used as a dependency.
 
-compat_prepare_erlc_opts = $(shell echo "$1" | sed 's/, */,/')
+compat_prepare_erlc_opts = $(shell echo "$1" | sed 's/, */,/g')
 
 define compat_convert_erlc_opts
 $(if $(filter-out -Werror,$1),\
@@ -1208,11 +1208,18 @@ $(if $(filter-out -Werror,$1),\
 		$(shell echo $1 | cut -b 2-)))
 endef
 
+define compat_erlc_opts_to_list
+[$(call comma_list,$(foreach o,$(call compat_prepare_erlc_opts,$1),$(call compat_convert_erlc_opts,$o)))]
+endef
+
 define compat_rebar_config
-{deps, [$(call comma_list,$(foreach d,$(DEPS),\
-	{$(call dep_name,$d),".*",{git,"$(call dep_repo,$d)","$(call dep_commit,$d)"}}))]}.
-{erl_opts, [$(call comma_list,$(foreach o,$(call compat_prepare_erlc_opts,$(ERLC_OPTS)),\
-	$(call compat_convert_erlc_opts,$o)))]}.
+{deps, [
+$(call comma_list,$(foreach d,$(DEPS),\
+	$(if $(filter hex,$(call dep_fetch,$d)),\
+		{$(call dep_name,$d)$(comma)"$(call dep_repo,$d)"},\
+		{$(call dep_name,$d)$(comma)".*"$(comma){git,"$(call dep_repo,$d)"$(comma)"$(call dep_commit,$d)"}})))
+]}.
+{erl_opts, $(call compat_erlc_opts_to_list,$(ERLC_OPTS))}.
 endef
 
 $(eval _compat_rebar_config = $$(compat_rebar_config))
@@ -1234,8 +1241,8 @@ help::
 		"  bootstrap          Generate a skeleton of an OTP application" \
 		"  bootstrap-lib      Generate a skeleton of an OTP library" \
 		"  bootstrap-rel      Generate the files needed to build a release" \
-		"  new-app n=NAME     Create a new local OTP application NAME" \
-		"  new-lib n=NAME     Create a new local OTP library NAME" \
+		"  new-app in=NAME    Create a new local OTP application NAME" \
+		"  new-lib in=NAME    Create a new local OTP library NAME" \
 		"  new t=TPL n=NAME   Generate a module NAME based on the template TPL" \
 		"  new t=T n=N in=APP Generate a module NAME based on the template TPL in APP" \
 		"  list-templates     List available templates"
@@ -1393,6 +1400,11 @@ terminate(_Reason, _State) ->
 
 code_change(_OldVsn, State, _Extra) ->
 	{ok, State}.
+endef
+
+define tpl_module
+-module($(n)).
+-export([]).
 endef
 
 define tpl_cowboy_http
@@ -1709,6 +1721,7 @@ ifeq ($(PLATFORM),msys2)
 # We hardcode the compiler used on MSYS2. The default CC=cc does
 # not produce working code. The "gcc" MSYS2 package also doesn't.
 	CC = /mingw64/bin/gcc
+	export CC
 	CFLAGS ?= -O3 -std=c99 -finline-functions -Wall -Wmissing-prototypes
 	CXXFLAGS ?= -O3 -finline-functions -Wall
 else ifeq ($(PLATFORM),darwin)
@@ -2010,7 +2023,7 @@ help::
 CT_RUN = ct_run \
 	-no_auto_compile \
 	-noinput \
-	-pa $(CURDIR)/ebin $(DEPS_DIR)/*/ebin $(TEST_DIR) \
+	-pa $(CURDIR)/ebin $(DEPS_DIR)/*/ebin $(APPS_DIR)/*/ebin $(TEST_DIR) \
 	-dir $(TEST_DIR) \
 	-logdir $(CURDIR)/logs
 
@@ -2019,12 +2032,18 @@ ct: $(if $(IS_APP),,apps-ct)
 else
 ct: test-build $(if $(IS_APP),,apps-ct)
 	$(verbose) mkdir -p $(CURDIR)/logs/
-	$(gen_verbose) $(CT_RUN) -suite $(addsuffix _SUITE,$(CT_SUITES)) $(CT_OPTS)
+	$(gen_verbose) $(CT_RUN) -sname ct_$(PROJECT) -suite $(addsuffix _SUITE,$(CT_SUITES)) $(CT_OPTS)
 endif
 
 ifneq ($(ALL_APPS_DIRS),)
-apps-ct:
-	$(verbose) for app in $(ALL_APPS_DIRS); do $(MAKE) -C $$app ct IS_APP=1; done
+define ct_app_target
+apps-ct-$1:
+	$(MAKE) -C $1 ct IS_APP=1
+endef
+
+$(foreach app,$(ALL_APPS_DIRS),$(eval $(call ct_app_target,$(app))))
+
+apps-ct: test-build $(addprefix apps-ct-,$(ALL_APPS_DIRS))
 endif
 
 ifndef t
@@ -2041,7 +2060,7 @@ endif
 define ct_suite_target
 ct-$(1): test-build
 	$(verbose) mkdir -p $(CURDIR)/logs/
-	$(gen_verbose) $(CT_RUN) -suite $(addsuffix _SUITE,$(1)) $(CT_EXTRA) $(CT_OPTS)
+	$(gen_verbose) $(CT_RUN) -sname ct_$(PROJECT) -suite $(addsuffix _SUITE,$(1)) $(CT_EXTRA) $(CT_OPTS)
 endef
 
 $(foreach test,$(CT_SUITES),$(eval $(call ct_suite_target,$(test))))
@@ -2112,6 +2131,8 @@ endif
 # Configuration.
 
 ESCRIPT_NAME ?= $(PROJECT)
+ESCRIPT_FILE ?= $(ESCRIPT_NAME)
+
 ESCRIPT_COMMENT ?= This is an -*- erlang -*- file
 
 ESCRIPT_BEAMS ?= "ebin/*", "deps/*/ebin/*"
@@ -2157,7 +2178,7 @@ define ESCRIPT_RAW
 '  ]),'\
 '  file:change_mode(Escript, 8#755)'\
 'end,'\
-'Ez("$(ESCRIPT_NAME)"),'\
+'Ez("$(ESCRIPT_FILE)"),'\
 'halt().'
 endef
 
@@ -2377,7 +2398,8 @@ define cover_report.erl
 		true -> N - 1; false -> N end}} || {M, {Y, N}} <- Report],
 	TotalY = lists:sum([Y || {_, {Y, _}} <- Report1]),
 	TotalN = lists:sum([N || {_, {_, N}} <- Report1]),
-	TotalPerc = round(100 * TotalY / (TotalY + TotalN)),
+	Perc = fun(Y, N) -> case Y + N of 0 -> 100; S -> round(100 * Y / S) end end,
+	TotalPerc = Perc(TotalY, TotalN),
 	{ok, F} = file:open("$(COVER_REPORT_DIR)/index.html", [write]),
 	io:format(F, "<!DOCTYPE html><html>~n"
 		"<head><meta charset=\"UTF-8\">~n"
@@ -2387,7 +2409,7 @@ define cover_report.erl
 	io:format(F, "<table><tr><th>Module</th><th>Coverage</th></tr>~n", []),
 	[io:format(F, "<tr><td><a href=\"~p.COVER.html\">~p</a></td>"
 		"<td>~p%</td></tr>~n",
-		[M, M, round(100 * Y / (Y + N))]) || {M, {Y, N}} <- Report1],
+		[M, M, Perc(Y, N)]) || {M, {Y, N}} <- Report1],
 	How = "$(subst $(space),$(comma)$(space),$(basename $(COVERDATA)))",
 	Date = "$(shell date -u "+%Y-%m-%dT%H:%M:%SZ")",
 	io:format(F, "</table>~n"

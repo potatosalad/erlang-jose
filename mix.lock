@@ -6,5 +6,6 @@
   "jsone": {:hex, :jsone, "1.2.0"},
   "jsx": {:hex, :jsx, "2.8.0"},
   "keccakf1600": {:hex, :keccakf1600, "2.0.0"},
+  "libdecaf": {:hex, :libdecaf, "0.0.2"},
   "libsodium": {:hex, :libsodium, "0.0.3"},
   "poison": {:hex, :poison, "2.1.0"}}
