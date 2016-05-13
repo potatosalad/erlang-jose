@@ -258,14 +258,7 @@ eme_pkcs1_encode(DM, K)
 		andalso is_integer(K) ->
 	MLen = byte_size(DM),
 	PSLen = K - MLen - 3,
-	PS = <<
-		<< (case C of
-			0 ->
-				<< (crypto:rand_uniform(1, 256)) >>;
-			_ ->
-				<< C >>
-		end)/binary >> || << C >> <= crypto:strong_rand_bytes(PSLen)
-	>>,
+	PS = non_zero_strong_random_bytes(PSLen),
 	EM = << 16#00, 16#02, PS/binary, 16#00, DM/binary >>,
 	{ok, EM}.
 
@@ -925,6 +918,26 @@ int_to_byte_size(0, B) ->
 	B;
 int_to_byte_size(I, B) ->
 	int_to_byte_size(I bsr 8, B + 1).
+
+%% @private
+non_zero_strong_random_byte() ->
+	case crypto:strong_rand_bytes(1) of
+		<< 0 >> ->
+			non_zero_strong_random_byte();
+		Byte ->
+			Byte
+	end.
+
+%% @private
+non_zero_strong_random_bytes(N) ->
+	<<
+		<< (case C of
+			0 ->
+				<< (non_zero_strong_random_byte())/binary >>;
+			_ ->
+				<< C >>
+		end)/binary >> || << C >> <= crypto:strong_rand_bytes(N)
+	>>.
 
 %% @private
 pad_to_key_size(Bytes, Data) when byte_size(Data) < Bytes ->
