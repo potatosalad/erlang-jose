@@ -264,7 +264,7 @@ eme_pkcs1_encode(DM, K)
 				<< (crypto:rand_uniform(1, 256)) >>;
 			_ ->
 				<< C >>
-		end)/binary >> || << C >> <= crypto:rand_bytes(PSLen)
+		end)/binary >> || << C >> <= crypto:strong_rand_bytes(PSLen)
 	>>,
 	EM = << 16#00, 16#02, PS/binary, 16#00, DM/binary >>,
 	{ok, EM}.
@@ -413,7 +413,7 @@ emsa_pss_encode(Hash, Message, -1, EMBits)
 emsa_pss_encode(Hash, Message, SaltLen, EMBits)
 		when is_integer(SaltLen)
 		andalso SaltLen >= 0 ->
-	Salt = crypto:rand_bytes(SaltLen),
+	Salt = crypto:strong_rand_bytes(SaltLen),
 	emsa_pss_encode(Hash, Message, Salt, EMBits);
 emsa_pss_encode(Hash, Message, Salt, EMBits)
 		when is_tuple(Hash)
@@ -602,7 +602,7 @@ rsaes_oaep_encrypt(Hash, PlainText, Label, RSAPublicKey=#'RSAPublicKey'{})
 		andalso is_binary(PlainText)
 		andalso is_binary(Label) ->
 	HLen = byte_size(Hash(<<>>)),
-	Seed = crypto:rand_bytes(HLen),
+	Seed = crypto:strong_rand_bytes(HLen),
 	rsaes_oaep_encrypt(Hash, PlainText, Label, Seed, RSAPublicKey);
 rsaes_oaep_encrypt(Hash, PlainText, Label, RSAPublicKey)
 		when is_tuple(Hash)

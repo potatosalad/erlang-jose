@@ -37,7 +37,7 @@ from_binary(Password, EncryptedPEMBinary) when is_binary(EncryptedPEMBinary) ->
 	end.
 
 to_binary(Password, KeyType, Key) ->
-	CipherInfo = {"DES-EDE3-CBC", crypto:rand_bytes(8)},
+	CipherInfo = {"DES-EDE3-CBC", crypto:strong_rand_bytes(8)},
 	PasswordString = binary_to_list(iolist_to_binary(Password)),
 	PEMEntry = public_key:pem_entry_encode(KeyType, Key, {CipherInfo, PasswordString}),
 	public_key:pem_encode([PEMEntry]).

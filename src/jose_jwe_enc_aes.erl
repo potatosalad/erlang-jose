@@ -195,10 +195,10 @@ block_encrypt({AAD, PlainText}, CEK, IV, #jose_jwe_enc_aes{
 	{CipherText, CipherTag}.
 
 next_cek(#jose_jwe_enc_aes{cek_len=CEKLen}) ->
-	crypto:rand_bytes(CEKLen).
+	crypto:strong_rand_bytes(CEKLen).
 
 next_iv(#jose_jwe_enc_aes{iv_len=IVLen}) ->
-	crypto:rand_bytes(IVLen).
+	crypto:strong_rand_bytes(IVLen).
 
 %%====================================================================
 %% API functions
