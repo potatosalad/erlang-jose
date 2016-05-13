@@ -139,7 +139,7 @@ key_encryptor(_KTY, _Fields, Key) when is_binary(Key) ->
 			true  -> <<"A128GCM">>
 		end,
 		<<"p2c">> => 4096,
-		<<"p2s">> => base64url:encode(crypto:rand_bytes(16))
+		<<"p2s">> => base64url:encode(crypto:strong_rand_bytes(16))
 	}.
 
 %%%-------------------------------------------------------------------

@@ -74,7 +74,7 @@ key_decrypt(#jose_jwk{kty={KTYModule, KTY}}, EncryptedKey, JWEPBES2=#jose_jwe_al
 	key_decrypt(KTYModule:derive_key(KTY), EncryptedKey, JWEPBES2).
 
 key_encrypt(Password, DecryptedKey, ALG0=#jose_jwe_alg_pbes2{bits=Bits, salt=undefined}) ->
-	ALG1 = ALG0#jose_jwe_alg_pbes2{salt=wrap_salt(crypto:rand_bytes(Bits div 8), ALG0)},
+	ALG1 = ALG0#jose_jwe_alg_pbes2{salt=wrap_salt(crypto:strong_rand_bytes(Bits div 8), ALG0)},
 	key_encrypt(Password, DecryptedKey, ALG1);
 key_encrypt(Password, DecryptedKey, ALG0=#jose_jwe_alg_pbes2{bits=Bits, iter=undefined}) ->
 	ALG1 = ALG0#jose_jwe_alg_pbes2{iter=(Bits * 32)},

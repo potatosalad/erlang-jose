@@ -104,7 +104,7 @@ key_encrypt(DerivedKey, DecryptedKey, JWEAESKW=#jose_jwe_alg_aes_kw{bits=Bits, g
 	{CipherText, CipherTag} = jose_jwa:block_encrypt({aes_gcm, Bits}, DerivedKey, IV, {<<>>, DecryptedKey}),
 	{CipherText, JWEAESKW#jose_jwe_alg_aes_kw{ tag = CipherTag }};
 key_encrypt(DerivedKey, DecryptedKey, JWEAESKW=#jose_jwe_alg_aes_kw{gcm=true, iv=undefined}) ->
-	key_encrypt(DerivedKey, DecryptedKey, JWEAESKW#jose_jwe_alg_aes_kw{ iv = crypto:rand_bytes(12) });
+	key_encrypt(DerivedKey, DecryptedKey, JWEAESKW#jose_jwe_alg_aes_kw{ iv = crypto:strong_rand_bytes(12) });
 key_encrypt(#jose_jwk{kty={KTYModule, KTY}}, DecryptedKey, JWEAESKW=#jose_jwe_alg_aes_kw{}) ->
 	key_encrypt(KTYModule:derive_key(KTY), DecryptedKey, JWEAESKW).
 

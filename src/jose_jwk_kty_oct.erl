@@ -66,7 +66,7 @@ to_thumbprint_map(K, F) ->
 %%====================================================================
 
 generate_key(Size) when is_integer(Size) ->
-	{crypto:rand_bytes(Size), #{}};
+	{crypto:strong_rand_bytes(Size), #{}};
 generate_key({oct, Size}) when is_integer(Size) ->
 	generate_key(Size).
 
