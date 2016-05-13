@@ -14,7 +14,7 @@ defmodule JOSE do
   Additional specifications and drafts implemented:
 
     * JSON Web Key (JWK) Thumbprint [RFC 7638](https://tools.ietf.org/html/rfc7638)
-    * JWS Unencoded Payload Option  [draft-ietf-jose-jws-signing-input-options-04](https://tools.ietf.org/html/draft-ietf-jose-jws-signing-input-options-04)
+    * JWS Unencoded Payload Option  [RFC 7797](https://tools.ietf.org/html/rfc7797)
   """
 
   ## Functions
@@ -39,6 +39,7 @@ defmodule JOSE do
 
   Currently supported Curve25519 modules (first found is used as default):
 
+    * [`libdecaf`](https://github.com/potatosalad/erlang-libdecaf)
     * [`libsodium`](https://github.com/potatosalad/erlang-libsodium)
     * `jose_jwa_curve25519` - only supported when `crypto_fallback/0` is `true`
 
@@ -56,6 +57,7 @@ defmodule JOSE do
 
   Currently supported Curve448 modules (first found is used as default):
 
+    * [`libdecaf`](https://github.com/potatosalad/erlang-libdecaf)
     * `jose_jwa_curve448` - only supported when `crypto_fallback/0` is `true` 
 
   Additional modules that implement the `jose_curve448` behavior may also be used.
@@ -102,6 +104,7 @@ defmodule JOSE do
   Currently supported SHA3 modules (first found is used as default):
 
     * [`keccakf1600`](https://github.com/potatosalad/erlang-keccakf1600)
+    * [`libdecaf`](https://github.com/potatosalad/erlang-libdecaf)
     * `jose_jwa_sha3` - only supported when `crypto_fallback/0` is `true`
 
   Additional modules that implement the `jose_sha3` behavior may also be used.

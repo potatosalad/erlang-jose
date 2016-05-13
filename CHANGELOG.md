@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.7.4 (2016-05-13)
+
+* Enhancements
+  * More detailed documentation on [key generation](https://hexdocs.pm/jose/key-generation.html).
+
+* Fixes
+  * Replaced usage of `crypto:rand_bytes/1` with `crypto:strong_rand_bytes/1` in preparation for Elixir 1.3 and OTP 19 (thanks to [@asonge](https://github.com/asonge) for [#17](https://github.com/potatosalad/erlang-jose/pull/17)).
+
 ## 1.7.3 (2016-03-17)
 
 * Fixes

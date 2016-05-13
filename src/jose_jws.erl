@@ -5,7 +5,7 @@
 %%% @copyright 2014-2015, Andrew Bennett
 %%% @doc JSON Web Signature (JWS)
 %%% See RFC 7515: https://tools.ietf.org/html/rfc7515
-%%% See: https://tools.ietf.org/html/draft-ietf-jose-jws-signing-input-options-04
+%%% See RFC 7797: https://tools.ietf.org/html/rfc7797
 %%% @end
 %%% Created :  21 Jul 2015 by Andrew Bennett <andrew@pixid.com>
 %%%-------------------------------------------------------------------
@@ -325,7 +325,7 @@ sign(KeyOrKeyList, PlainText, Header, Other)
 		andalso is_map(Header) ->
 	sign(jose_jwk:from(KeyOrKeyList), PlainText, Header, from(Other)).
 
-%% See https://tools.ietf.org/html/draft-ietf-jose-jws-signing-input-options-04
+%% See https://tools.ietf.org/html/rfc7797
 signing_input(Payload, JWS=#jose_jws{}) ->
 	{_, ProtectedBinary} = to_binary(JWS),
 	Protected = base64url:encode(ProtectedBinary),
