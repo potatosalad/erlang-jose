@@ -16,6 +16,18 @@ defp deps do
 end
 ```
 
+If you are using deployment tools (`exrm`, etc.) and your app depends
+on `jose` directly, you will need to include `jose` in your
+applications list in `mix.exs` to ensure they get compiled into your
+release:
+
+```elixir
+def application do
+  [mod: {YourApp, []},
+   applications: [:jose]]
+end
+```
+
 Add `jose` to your project's dependencies in your `Makefile` for [`erlang.mk`](https://github.com/ninenines/erlang.mk) or the following to your `rebar.config`
 
 ```erlang
@@ -23,6 +35,8 @@ Add `jose` to your project's dependencies in your `Makefile` for [`erlang.mk`](h
   {jose, ".*", {git, "git://github.com/potatosalad/erlang-jose.git", {branch, "master"}}}
 ]}.
 ```
+
+
 
 #### JSON Encoder/Decoder
 
@@ -232,7 +246,7 @@ jwt = %{
 
 signed = JOSE.JWT.sign(jwk, jws, jwt)
 # {%{alg: :jose_jws_alg_hmac},
-#  %{"payload" => "eyJleHAiOjEzMDA4MTkzODAsImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlLCJpc3MiOiJqb2UifQ", 
+#  %{"payload" => "eyJleHAiOjEzMDA4MTkzODAsImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlLCJpc3MiOiJqb2UifQ",
 #    "protected" => "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
 #    "signature" => "shLcxOl_HBBsOTvPnskfIlxHUibPN7Y9T4LhPB-iBwM"}}
 
@@ -285,7 +299,7 @@ CompactSigned = jose_jws:compact(Signed).
 Verified = jose_jwt:verify(JWK, CompactSigned).
 % {true,
 %     #jose_jwt{
-%         fields = 
+%         fields =
 %             #{<<"exp">> => 1300819380,
 %               <<"http://example.com/is_root">> => true,
 %               <<"iss">> => <<"joe">>}},
