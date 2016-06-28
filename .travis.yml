@@ -1,29 +1,30 @@
-language: elixir
+language: generic
 
-sudo: false
+sudo: required
 
-elixir:
-  - 1.1.1
-  - 1.2.5
-
-otp_release:
-  - 18.0
-  - 18.3
+services:
+  - docker
 
 notifications:
   email: false
 
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-      - llvm-toolchain-precise-3.7
-    packages:
-      - clang-3.7
-
 env:
-  - CC=clang-3.7 CXX=clang++-3.7 ARCHFLAGS=-Wgcc-compat
+  - OTP_VERSION=18.3 ELIXIR_VERSION=1.2.6
+  - OTP_VERSION=19.0 ELIXIR_VERSION=1.3.0
 
-after_script:
-  - "rm -rf _build deps ebin"
-  - "make tests"
+cache:
+  directories:
+    - docker-otp-18.3-elixir-1.2.6
+    - docker-otp-19.0-elixir-1.3.0
+
+before_install:
+  -
+    if [ -e "docker-otp-${OTP_VERSION}-elixir-${ELIXIR_VERSION}/image.tar" ]; then
+      docker load -i "docker-otp-${OTP_VERSION}-elixir-${ELIXIR_VERSION}/image.tar";
+    else
+      docker build -t docker-otp-${OTP_VERSION}-elixir-${ELIXIR_VERSION} -f priv/Dockerfile --build-arg OTP_VERSION=${OTP_VERSION} --build-arg ELIXIR_VERSION=${ELIXIR_VERSION} priv;
+      mkdir -p "docker-otp-${OTP_VERSION}-elixir-${ELIXIR_VERSION}"; docker save -o "docker-otp-${OTP_VERSION}-elixir-${ELIXIR_VERSION}/image.tar" docker-otp-${OTP_VERSION}-elixir-${ELIXIR_VERSION};
+    fi
+
+script:
+  - docker run -v `pwd`:/build/jose docker-otp-${OTP_VERSION}-elixir-${ELIXIR_VERSION} sh -c 'cd jose && LANG=en_US.UTF-8 mix local.hex --force && LANG=en_US.UTF-8 mix deps.get && CC=clang-3.8 CXX=clang++-3.8 ARCHFLAGS=-Wgcc-compat MIX_ENV=test LANG=en_US.UTF-8 mix test && rm -rf _build deps ebin && CC=clang-3.8 CXX=clang++-3.8 ARCHFLAGS=-Wgcc-compat LANG=en_US.UTF-8 make tests'
