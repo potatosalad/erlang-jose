@@ -11,7 +11,7 @@ RUN apt-get update && \
     curl -O https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb && \
     dpkg -i erlang-solutions_1.0_all.deb && \
     apt-get update && \
-    apt-get -y install esl-erlang=1:${OTP_VERSION} elixir=${ELIXIR_VERSION}-1 git make clang-3.8 autoconf automake libtool locales && \
+    apt-get -y install esl-erlang=1:${OTP_VERSION} elixir=${ELIXIR_VERSION}-1 git make clang-3.8 autoconf automake libtool locales openssl libssl-dev && \
     sed -i 's/^# \(en_US.UTF-8 UTF-8\)/\1/' /etc/locale.gen && \
     locale-gen
 
