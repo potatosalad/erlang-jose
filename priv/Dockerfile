@@ -16,6 +16,10 @@ RUN apt-get update && \
     locale-gen
 
 ENV LANG en_US.UTF-8
+ENV CC clang-3.8
+ENV CXX clang++-3.8
+ENV ARCHFLAGS -Wgcc-compat
+ENV MIX_ENV test
 
 RUN mkdir /build
 WORKDIR /build

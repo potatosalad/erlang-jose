@@ -19,7 +19,7 @@ cache:
 
 before_install:
   -
-    if [ -e "docker-otp-${OTP_VERSION}-elixir-${ELIXIR_VERSION}/image.tar" ]; then
+    if [ -e "docker-otp-${OTP_VERSION}-elixir-${ELIXIR_VERSION}/image.tar" -a "0" -eq "1" ]; then
       docker load -i "docker-otp-${OTP_VERSION}-elixir-${ELIXIR_VERSION}/image.tar";
     else
       docker build -t docker-otp-${OTP_VERSION}-elixir-${ELIXIR_VERSION} -f priv/Dockerfile --build-arg OTP_VERSION=${OTP_VERSION} --build-arg ELIXIR_VERSION=${ELIXIR_VERSION} priv;
@@ -27,4 +27,4 @@ before_install:
     fi
 
 script:
-  - docker run -v `pwd`:/build/jose docker-otp-${OTP_VERSION}-elixir-${ELIXIR_VERSION} sh -c 'cd jose && LANG=en_US.UTF-8 mix local.hex --force && LANG=en_US.UTF-8 mix deps.get && CC=clang-3.8 CXX=clang++-3.8 ARCHFLAGS=-Wgcc-compat MIX_ENV=test LANG=en_US.UTF-8 mix test && rm -rf _build deps ebin && CC=clang-3.8 CXX=clang++-3.8 ARCHFLAGS=-Wgcc-compat LANG=en_US.UTF-8 make tests'
+  - docker run -v `pwd`:/build/jose docker-otp-${OTP_VERSION}-elixir-${ELIXIR_VERSION} sh -c 'cd jose && mix local.hex --force && mix local.rebar --force && mix deps.get && mix test && rm -rf _build deps ebin && make tests'
