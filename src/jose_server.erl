@@ -292,9 +292,9 @@ check_json_module('Elixir.JOSE.Poison') ->
 	Bin = ?POISON_BIN,
 	case code:ensure_loaded('Elixir.JOSE.Poison') of
 		{module, 'Elixir.JOSE.Poison'} ->
-			try jose_json_poison_ord_encoder:encode(Map) of
+			try jose_json_poison_lexical_encoder:encode(Map) of
 				Bin ->
-					jose_json_poison_ord_encoder;
+					jose_json_poison_lexical_encoder;
 				_ ->
 					check_json_module(jose_json_poison_compat_encoder)
 			catch
