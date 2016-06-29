@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.6 (2016-06-29)
+
+* Fixes
+  * Compatibility fixes for OTP 19 and Elixir 1.3 
+
 ## 1.7.5 (2016-05-13)
 
 * Fixes
