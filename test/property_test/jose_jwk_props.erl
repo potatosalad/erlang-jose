@@ -67,31 +67,31 @@ jwk_encryptor_gen() ->
 							{{rsa, RSAPrivateKey, RSAPublicKey}, JWE, {PrivateJWK, PublicJWK}}
 						end);
 				{<<"A128KW">>, _} ->
-					K = crypto:rand_bytes(16),
+					K = crypto:strong_rand_bytes(16),
 					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => base64url:encode(K) })};
 				{<<"A192KW">>, _} ->
-					K = crypto:rand_bytes(24),
+					K = crypto:strong_rand_bytes(24),
 					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => base64url:encode(K) })};
 				{<<"A256KW">>, _} ->
-					K = crypto:rand_bytes(32),
+					K = crypto:strong_rand_bytes(32),
 					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => base64url:encode(K) })};
 				{<<"dir">>, <<"A128CBC-HS256">>} ->
-					K = crypto:rand_bytes(32),
+					K = crypto:strong_rand_bytes(32),
 					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => base64url:encode(K) })};
 				{<<"dir">>, <<"A192CBC-HS384">>} ->
-					K = crypto:rand_bytes(48),
+					K = crypto:strong_rand_bytes(48),
 					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => base64url:encode(K) })};
 				{<<"dir">>, <<"A256CBC-HS512">>} ->
-					K = crypto:rand_bytes(64),
+					K = crypto:strong_rand_bytes(64),
 					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => base64url:encode(K) })};
 				{<<"dir">>, <<"A128GCM">>} ->
-					K = crypto:rand_bytes(16),
+					K = crypto:strong_rand_bytes(16),
 					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => base64url:encode(K) })};
 				{<<"dir">>, <<"A192GCM">>} ->
-					K = crypto:rand_bytes(24),
+					K = crypto:strong_rand_bytes(24),
 					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => base64url:encode(K) })};
 				{<<"dir">>, <<"A256GCM">>} ->
-					K = crypto:rand_bytes(32),
+					K = crypto:strong_rand_bytes(32),
 					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => base64url:encode(K) })};
 				{<<"ECDH-ES", _/binary>>, _} ->
 					?LET(CurveId,
@@ -106,13 +106,13 @@ jwk_encryptor_gen() ->
 							{{ecdh, AliceKeypair, BobKeypair}, JWE, {{AlicePrivateJWK, AlicePublicJWK}, {BobPrivateJWK, BobPublicJWK}}}
 						end);
 				{<<"A128GCMKW">>, _} ->
-					K = crypto:rand_bytes(16),
+					K = crypto:strong_rand_bytes(16),
 					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => base64url:encode(K) })};
 				{<<"A192GCMKW">>, _} ->
-					K = crypto:rand_bytes(24),
+					K = crypto:strong_rand_bytes(24),
 					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => base64url:encode(K) })};
 				{<<"A256GCMKW">>, _} ->
-					K = crypto:rand_bytes(32),
+					K = crypto:strong_rand_bytes(32),
 					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => base64url:encode(K) })};
 				{<<"PBES2", _/binary>>, _} ->
 					?LET(Key,

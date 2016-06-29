@@ -373,7 +373,10 @@ gcm_block_decrypt(H, K, IV, A, C, T) ->
 			gcm_ghash(H, <<>>, IV)
 	end,
 	S0 = crypto:stream_init(aes_ctr, K, Y0),
-	{S1 = {aes_ctr, {_, Y1, EKY0, _}}, _} = crypto:stream_encrypt(S0, Y0),
+	{S1, EKY0xor} = crypto:stream_encrypt(S0, Y0),
+	EKY0 = crypto:exor(EKY0xor, Y0),
+	<< Y0int:128/unsigned-big-integer-unit:1 >> = Y0,
+	Y1 = << (Y0int + 1):128/unsigned-big-integer-unit:1 >>,
 	GHASH = gcm_ghash(H, A, C),
 	TBits = bit_size(T),
 	<< TPrime:TBits/bitstring, _/bitstring >> = crypto:exor(GHASH, EKY0),
@@ -394,7 +397,10 @@ gcm_block_encrypt(H, K, IV, A, P) ->
 			gcm_ghash(H, <<>>, IV)
 	end,
 	S0 = crypto:stream_init(aes_ctr, K, Y0),
-	{S1 = {aes_ctr, {_, Y1, EKY0, _}}, _} = crypto:stream_encrypt(S0, Y0),
+	{S1, EKY0xor} = crypto:stream_encrypt(S0, Y0),
+	EKY0 = crypto:exor(EKY0xor, Y0),
+	<< Y0int:128/unsigned-big-integer-unit:1 >> = Y0,
+	Y1 = << (Y0int + 1):128/unsigned-big-integer-unit:1 >>,
 	C = gcm_exor(S1, Y1, P, <<>>),
 	GHASH = gcm_ghash(H, A, C),
 	T = crypto:exor(GHASH, EKY0),
@@ -404,12 +410,16 @@ gcm_block_encrypt(H, K, IV, A, P) ->
 gcm_exor(_S, _Y, <<>>, C) ->
 	C;
 gcm_exor(S0, Y0, << B:128/bitstring, P/bitstring >>, C0) ->
-	{S1 = {aes_ctr, {_, Y1, EKY0, _}}, _} = crypto:stream_encrypt(S0, Y0),
+	{S1, EKY0xor} = crypto:stream_encrypt(S0, Y0),
+	EKY0 = crypto:exor(EKY0xor, Y0),
+	<< Y0int:128/unsigned-big-integer-unit:1 >> = Y0,
+	Y1 = << (Y0int + 1):128/unsigned-big-integer-unit:1 >>,
 	C1 = << C0/binary, (crypto:exor(B, EKY0))/binary >>,
 	gcm_exor(S1, Y1, P, C1);
 gcm_exor(S0, Y0, P, C0) ->
 	PBits = bit_size(P),
-	{{aes_ctr, {_, _, << EKY0:PBits/bitstring, _/bitstring >>, _}}, _} = crypto:stream_encrypt(S0, Y0),
+	{_S1, EKY0xor} = crypto:stream_encrypt(S0, Y0),
+	<< EKY0:PBits/bitstring, _/bitstring >> = crypto:exor(EKY0xor, Y0),
 	C1 = << C0/binary, (crypto:exor(P, EKY0))/binary >>,
 	C1.
 

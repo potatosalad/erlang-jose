@@ -42,7 +42,7 @@ alg_map(256) ->
 aes_gcm_map(#{ <<"alg">> := << "A", _, _, _, "GCMKW" >> }) ->
 	oneof([
 		#{},
-		#{ <<"iv">> => base64url:encode(crypto:rand_bytes(12)), <<"tag">> => base64url:encode(crypto:rand_bytes(8)) }
+		#{ <<"iv">> => base64url:encode(crypto:strong_rand_bytes(12)), <<"tag">> => base64url:encode(crypto:strong_rand_bytes(8)) }
 	]);
 aes_gcm_map(_) ->
 	#{}.
