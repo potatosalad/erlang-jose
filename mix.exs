@@ -28,14 +28,13 @@ defmodule JOSE.Mixfile do
   defp deps do
     [{:base64url, "~> 0.0.1"},
      {:cutkey, github: "potatosalad/cutkey", only: [:dev, :test]},
-     {:jiffy, github: "davisp/jiffy", only: [:dev, :test]},
-     {:jsone, "~> 1.0", only: [:dev, :test]},
+     {:jsone, "~> 1.2", only: [:dev, :test]},
      {:jsx, "~> 2.8", only: [:dev, :test]},
      # {:keccakf1600, "~> 2.0.0", only: [:dev, :test]},
      {:libdecaf, "~> 0.0.2", only: [:dev, :test]},
      # {:libsodium, "~> 0.0.3", only: [:dev, :test]},
-     {:poison, "~> 2.1", only: [:dev, :test]},
-     {:ex_doc, "~> 0.11", only: :docs},
+     {:poison, "~> 2.2", only: [:dev, :test]},
+     {:ex_doc, "~> 0.12", only: :docs},
      {:earmark, "~> 0.2", only: :docs}]
   end
 
