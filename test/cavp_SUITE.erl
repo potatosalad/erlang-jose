@@ -1006,6 +1006,10 @@ x448(Config) ->
 %%%-------------------------------------------------------------------
 
 %% @private
+archive_file(File, Config) ->
+	filename:join([?config(data_dir, Config), "archive", File]).
+
+%% @private
 concatenation_kdf([{Hash, Z, OtherInfo, KeyDataLen, DerivedKey} | Vectors], Config) ->
 	case jose_jwa_concat_kdf:kdf(Hash, Z, OtherInfo, KeyDataLen) of
 		DerivedKey ->
@@ -1030,6 +1034,13 @@ data_file(File, Config) ->
 
 %% @private
 data_setup(Config) ->
+	ArchiveDir = data_file("archive", Config),
+	case filelib:is_dir(ArchiveDir) of
+		true ->
+			ok;
+		false ->
+			ok = file:make_dir(ArchiveDir)
+	end,
 	lists:foldl(fun(F, C) ->
 		io:format(user, "\e[0;36m[FETCH] ~s\e[0m", [F]),
 		{ok, Progress} = jose_ct:progress_start(),
@@ -1048,7 +1059,7 @@ data_setup(Config) ->
 
 %% @private
 data_setup(F = "186-3rsatestvectors.zip", Config) ->
-	Zip = data_file(F, Config),
+	Zip = archive_file(F, Config),
 	Dir = data_file("186-3rsatestvectors", Config),
 	URL = "http://csrc.nist.gov/groups/STM/cavp/documents/dss/186-3rsatestvectors.zip",
 	ok = data_setup(Zip, Dir, URL),
@@ -1063,7 +1074,7 @@ data_setup(F = "186-3rsatestvectors.zip", Config) ->
 	ok = data_setup(Zip, Dir, "SigGenPSS_186-3.txt", Filter),
 	Config;
 data_setup(F = "aesmmt.zip", Config) ->
-	Zip = data_file(F, Config),
+	Zip = archive_file(F, Config),
 	Dir = data_file("aesmmt", Config),
 	URL = "http://csrc.nist.gov/groups/STM/cavp/documents/aes/aesmmt.zip",
 	ok = data_setup(Zip, Dir, URL),
@@ -1078,7 +1089,7 @@ data_setup(F = "aesmmt.zip", Config) ->
 	ok = data_setup(Zip, Dir, "CBCMMT128.rsp", Filter),
 	Config;
 data_setup(F = "gcmtestvectors.zip", Config) ->
-	Zip = data_file(F, Config),
+	Zip = archive_file(F, Config),
 	Dir = data_file("gcmtestvectors", Config),
 	URL = "http://csrc.nist.gov/groups/STM/cavp/documents/mac/gcmtestvectors.zip",
 	ok = data_setup(Zip, Dir, URL),
@@ -1096,7 +1107,7 @@ data_setup(F = "gcmtestvectors.zip", Config) ->
 	end,
 	Config;
 data_setup(F = "KAT_AES.zip", Config) ->
-	Zip = data_file(F, Config),
+	Zip = archive_file(F, Config),
 	Dir = data_file("KAT_AES", Config),
 	URL = "http://csrc.nist.gov/groups/STM/cavp/documents/aes/KAT_AES.zip",
 	ok = data_setup(Zip, Dir, URL),
@@ -1126,7 +1137,7 @@ data_setup(F = "keccaktestvectors", Config) ->
 	ok = data_setup_multiple(DataFiles, Directory, URLs),
 	Config;
 data_setup(F = "kwtestvectors.zip", Config) ->
-	Zip = data_file(F, Config),
+	Zip = archive_file(F, Config),
 	Dir = data_file("kwtestvectors", Config),
 	URL = "http://csrc.nist.gov/groups/STM/cavp/documents/mac/kwtestvectors.zip",
 	ok = data_setup(Zip, Dir, URL),
@@ -1144,7 +1155,7 @@ data_setup(F = "kwtestvectors.zip", Config) ->
 	ok = data_setup(Zip, Dir, "KW_AD_128.txt", Filter),
 	Config;
 data_setup(F = "pkcs-1v2-1-vec.zip", Config) ->
-	Zip = data_file(F, Config),
+	Zip = archive_file(F, Config),
 	Dir = data_file("pkcs-1v2-1-vec", Config),
 	URL = "ftp://ftp.rsasecurity.com/pub/pkcs/pkcs-1/pkcs-1v2-1-vec.zip",
 	ok = data_setup(Zip, Dir, URL),

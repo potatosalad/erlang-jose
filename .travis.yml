@@ -16,10 +16,17 @@ cache:
   directories:
     - docker-otp-18.3-elixir-1.2.6
     - docker-otp-19.0-elixir-1.3.1
+    - test/cavp_SUITE_data/186-3rsatestvectors
+    - test/cavp_SUITE_data/aesmmt
+    - test/cavp_SUITE_data/archive
+    - test/cavp_SUITE_data/gcmtestvectors
+    - test/cavp_SUITE_data/keccaktestvectors
+    - test/cavp_SUITE_data/kwtestvectors
+    - test/cavp_SUITE_data/pkcs-1v2-1-vec
 
 before_install:
   -
-    if [ -e "docker-otp-${OTP_VERSION}-elixir-${ELIXIR_VERSION}/image.tar" -a "0" -eq "1" ]; then
+    if [ -e "docker-otp-${OTP_VERSION}-elixir-${ELIXIR_VERSION}/image.tar" ]; then
       docker load -i "docker-otp-${OTP_VERSION}-elixir-${ELIXIR_VERSION}/image.tar";
     else
       docker build -t docker-otp-${OTP_VERSION}-elixir-${ELIXIR_VERSION} -f priv/Dockerfile --build-arg OTP_VERSION=${OTP_VERSION} --build-arg ELIXIR_VERSION=${ELIXIR_VERSION} priv;

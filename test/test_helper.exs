@@ -7,7 +7,7 @@ defmodule JOSETestHelper do
   end
 
   def gen_hmac do
-    :crypto.rand_bytes(:crypto.rand_uniform(64, 256))
+    :crypto.strong_rand_bytes(:crypto.rand_uniform(64, 256))
   end
 
   def gen_private_key(:ecdsa) do
