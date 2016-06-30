@@ -204,6 +204,8 @@ jwk_Ed25519   = JOSE.JWS.generate_key(%{"alg" => "Ed25519"})
 jwk_Ed25519ph = JOSE.JWS.generate_key(%{"alg" => "Ed25519ph"})
 jwk_Ed448     = JOSE.JWS.generate_key(%{"alg" => "Ed448"})
 jwk_Ed448ph   = JOSE.JWS.generate_key(%{"alg" => "Ed448ph"})
+# EdDSA defaults to Ed25519
+jwk_EdDSA     = JOSE.JWS.generate_key(%{"alg" => "EdDSA"})
 ```
 
 ## RSA

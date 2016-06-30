@@ -17,14 +17,8 @@
 %% Tests.
 -export([alg_ecdsa_from_map_and_to_map/1]).
 -export([alg_ecdsa_sign_and_verify/1]).
--export([alg_ed25519_from_map_and_to_map/1]).
--export([alg_ed25519_sign_and_verify/1]).
--export([alg_ed25519ph_from_map_and_to_map/1]).
--export([alg_ed25519ph_sign_and_verify/1]).
--export([alg_ed448_from_map_and_to_map/1]).
--export([alg_ed448_sign_and_verify/1]).
--export([alg_ed448ph_from_map_and_to_map/1]).
--export([alg_ed448ph_sign_and_verify/1]).
+-export([alg_eddsa_from_map_and_to_map/1]).
+-export([alg_eddsa_sign_and_verify/1]).
 -export([alg_hmac_from_map_and_to_map/1]).
 -export([alg_hmac_sign_and_verify/1]).
 -export([alg_none_from_map_and_to_map/1]).
@@ -37,10 +31,7 @@
 all() ->
 	[
 		{group, jose_jws_alg_ecdsa},
-		{group, jose_jws_alg_ed25519},
-		{group, jose_jws_alg_ed25519ph},
-		{group, jose_jws_alg_ed448},
-		{group, jose_jws_alg_ed448ph},
+		{group, jose_jws_alg_eddsa},
 		{group, jose_jws_alg_hmac},
 		{group, jose_jws_alg_none},
 		{group, jose_jws_alg_rsa_pkcs1_v1_5},
@@ -53,21 +44,9 @@ groups() ->
 			alg_ecdsa_from_map_and_to_map,
 			alg_ecdsa_sign_and_verify
 		]},
-		{jose_jws_alg_ed25519, [parallel], [
-			alg_ed25519_from_map_and_to_map,
-			alg_ed25519_sign_and_verify
-		]},
-		{jose_jws_alg_ed25519ph, [parallel], [
-			alg_ed25519ph_from_map_and_to_map,
-			alg_ed25519ph_sign_and_verify
-		]},
-		{jose_jws_alg_ed448, [parallel], [
-			alg_ed448_from_map_and_to_map,
-			alg_ed448_sign_and_verify
-		]},
-		{jose_jws_alg_ed448ph, [parallel], [
-			alg_ed448ph_from_map_and_to_map,
-			alg_ed448ph_sign_and_verify
+		{jose_jws_alg_eddsa, [parallel], [
+			alg_eddsa_from_map_and_to_map,
+			alg_eddsa_sign_and_verify
 		]},
 		{jose_jws_alg_hmac, [parallel], [
 			alg_hmac_from_map_and_to_map,
@@ -119,44 +98,14 @@ alg_ecdsa_sign_and_verify(Config) ->
 		jose_jws_alg_ecdsa_props:prop_sign_and_verify(),
 		Config).
 
-alg_ed25519_from_map_and_to_map(Config) ->
+alg_eddsa_from_map_and_to_map(Config) ->
 	ct_property_test:quickcheck(
-		jose_jws_alg_ed25519_props:prop_from_map_and_to_map(),
+		jose_jws_alg_eddsa_props:prop_from_map_and_to_map(),
 		Config).
 
-alg_ed25519_sign_and_verify(Config) ->
+alg_eddsa_sign_and_verify(Config) ->
 	ct_property_test:quickcheck(
-		jose_jws_alg_ed25519_props:prop_sign_and_verify(),
-		Config).
-
-alg_ed25519ph_from_map_and_to_map(Config) ->
-	ct_property_test:quickcheck(
-		jose_jws_alg_ed25519ph_props:prop_from_map_and_to_map(),
-		Config).
-
-alg_ed25519ph_sign_and_verify(Config) ->
-	ct_property_test:quickcheck(
-		jose_jws_alg_ed25519ph_props:prop_sign_and_verify(),
-		Config).
-
-alg_ed448_from_map_and_to_map(Config) ->
-	ct_property_test:quickcheck(
-		jose_jws_alg_ed448_props:prop_from_map_and_to_map(),
-		Config).
-
-alg_ed448_sign_and_verify(Config) ->
-	ct_property_test:quickcheck(
-		jose_jws_alg_ed448_props:prop_sign_and_verify(),
-		Config).
-
-alg_ed448ph_from_map_and_to_map(Config) ->
-	ct_property_test:quickcheck(
-		jose_jws_alg_ed448ph_props:prop_from_map_and_to_map(),
-		Config).
-
-alg_ed448ph_sign_and_verify(Config) ->
-	ct_property_test:quickcheck(
-		jose_jws_alg_ed448ph_props:prop_sign_and_verify(),
+		jose_jws_alg_eddsa_props:prop_sign_and_verify(),
 		Config).
 
 alg_hmac_from_map_and_to_map(Config) ->

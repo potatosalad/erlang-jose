@@ -35,6 +35,7 @@
 -export([kty_okp_x25519_box_encrypt_and_box_decrypt/1]).
 -export([kty_okp_x448_from_map_and_to_map/1]).
 -export([kty_okp_x448_box_encrypt_and_box_decrypt/1]).
+-export([kty_rsa_convert_sfm_to_crt/1]).
 -export([kty_rsa_from_map_and_to_map/1]).
 -export([kty_rsa_from_pem_and_to_pem/1]).
 -export([kty_rsa_block_encrypt_and_block_decrypt/1]).
@@ -97,6 +98,7 @@ groups() ->
 			kty_okp_x448_box_encrypt_and_box_decrypt
 		]},
 		{jose_jwk_kty_rsa, [parallel], [
+			kty_rsa_convert_sfm_to_crt,
 			kty_rsa_from_map_and_to_map,
 			kty_rsa_from_pem_and_to_pem,
 			kty_rsa_block_encrypt_and_block_decrypt,
@@ -227,6 +229,11 @@ kty_okp_x448_from_map_and_to_map(Config) ->
 kty_okp_x448_box_encrypt_and_box_decrypt(Config) ->
 	ct_property_test:quickcheck(
 		jose_jwk_kty_okp_x448_props:prop_box_encrypt_and_box_decrypt(),
+		Config).
+
+kty_rsa_convert_sfm_to_crt(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwk_kty_rsa_props:prop_convert_sfm_to_crt(),
 		Config).
 
 kty_rsa_from_map_and_to_map(Config) ->

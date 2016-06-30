@@ -114,7 +114,8 @@ key_encryptor(KTY, Fields, Key) ->
 %% jose_jwk_use_sig callbacks
 %%====================================================================
 
-sign(Message, 'Ed25519', SK = << _:?secretkeybytes/binary >>) ->
+sign(Message, ALG, SK = << _:?secretkeybytes/binary >>)
+		when ALG =:= 'Ed25519' orelse ALG =:= 'EdDSA' ->
 	jose_curve25519:ed25519_sign(Message, SK).
 
 signer(<< _:?secretkeybytes/binary >>, #{ <<"alg">> := ALG, <<"use">> := <<"sig">> }) ->
@@ -123,7 +124,7 @@ signer(<< _:?secretkeybytes/binary >>, #{ <<"alg">> := ALG, <<"use">> := <<"sig"
 	};
 signer(<< _:?secretkeybytes/binary >>, _Fields) ->
 	#{
-		<<"alg">> => ?crv
+		<<"alg">> => <<"EdDSA">>
 	}.
 
 verifier(<< _:?publickeybytes/binary >>, #{ <<"alg">> := ALG, <<"use">> := <<"sig">> }) ->
@@ -131,11 +132,13 @@ verifier(<< _:?publickeybytes/binary >>, #{ <<"alg">> := ALG, <<"use">> := <<"si
 verifier(<< _:?secretbytes/binary, PK:?publickeybytes/binary >>, Fields) ->
 	verifier(PK, Fields);
 verifier(<< _:?publickeybytes/binary >>, _Fields) ->
-	[?crv].
+	[?crv, <<"EdDSA">>].
 
-verify(Message, 'Ed25519', Signature, << _:?secretbytes/binary, PK:?publickeybytes/binary >>) ->
-	verify(Message, 'Ed25519', Signature, PK);
-verify(Message, 'Ed25519', Signature, PK = << _:?publickeybytes/binary >>) ->
+verify(Message, ALG, Signature, << _:?secretbytes/binary, PK:?publickeybytes/binary >>)
+		when ALG =:= 'Ed25519' orelse ALG =:= 'EdDSA' ->
+	verify(Message, ALG, Signature, PK);
+verify(Message, ALG, Signature, PK = << _:?publickeybytes/binary >>)
+		when ALG =:= 'Ed25519' orelse ALG =:= 'EdDSA' ->
 	jose_curve25519:ed25519_verify(Signature, Message, PK).
 
 %%====================================================================

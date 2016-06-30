@@ -23,7 +23,7 @@
 -export([verify/4]).
 
 %% Types
--type alg() :: 'Ed25519' | 'Ed25519ph' | 'Ed448' | 'Ed448ph'.
+-type alg() :: 'Ed25519' | 'Ed25519ph' | 'Ed448' | 'Ed448ph' | 'EdDSA'.
 
 -export_type([alg/0]).
 
@@ -38,7 +38,9 @@ from_map(F = #{ <<"alg">> := <<"Ed25519ph">> }) ->
 from_map(F = #{ <<"alg">> := <<"Ed448">> }) ->
 	{'Ed448', maps:remove(<<"alg">>, F)};
 from_map(F = #{ <<"alg">> := <<"Ed448ph">> }) ->
-	{'Ed448ph', maps:remove(<<"alg">>, F)}.
+	{'Ed448ph', maps:remove(<<"alg">>, F)};
+from_map(F = #{ <<"alg">> := <<"EdDSA">> }) ->
+	{'EdDSA', maps:remove(<<"alg">>, F)}.
 
 to_map('Ed25519', F) ->
 	F#{ <<"alg">> => <<"Ed25519">> };
@@ -47,7 +49,9 @@ to_map('Ed25519ph', F) ->
 to_map('Ed448', F) ->
 	F#{ <<"alg">> => <<"Ed448">> };
 to_map('Ed448ph', F) ->
-	F#{ <<"alg">> => <<"Ed448ph">> }.
+	F#{ <<"alg">> => <<"Ed448ph">> };
+to_map('EdDSA', F) ->
+	F#{ <<"alg">> => <<"EdDSA">> }.
 
 %%====================================================================
 %% jose_jws_alg callbacks
@@ -58,7 +62,9 @@ generate_key(ALG, _Fields)
 		orelse ALG =:= 'Ed25519ph'
 		orelse ALG =:= 'Ed448'
 		orelse ALG =:= 'Ed448ph' ->
-	jose_jws_alg:generate_key({okp, ALG}, atom_to_binary(ALG, unicode)).
+	jose_jws_alg:generate_key({okp, ALG}, atom_to_binary(ALG, unicode));
+generate_key('EdDSA', _Fields) ->
+	jose_jws_alg:generate_key({okp, 'Ed25519'}, <<"EdDSA">>).
 
 sign(#jose_jwk{kty={KTYModule, KTY}}, Message, ALG) ->
 	KTYModule:sign(Message, ALG, KTY).

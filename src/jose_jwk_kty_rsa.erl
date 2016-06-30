@@ -282,6 +282,95 @@ to_pem(Password, RSAPublicKey=#'RSAPublicKey'{}) ->
 %%%-------------------------------------------------------------------
 
 %% @private
+convert_sfm_to_crt(Key=#'RSAPrivateKey'{
+		version = 'two-prime',
+		otherPrimeInfos = 'asn1_NOVALUE',
+		privateExponent = D,
+		exponent1 = undefined,
+		exponent2 = undefined,
+		publicExponent = E,
+		modulus = N,
+		prime1 = undefined,
+		prime2 = undefined,
+		coefficient = undefined})
+		when is_integer(D)
+		andalso is_integer(E)
+		andalso is_integer(N) ->
+	KTOT = D * E - 1,
+	T = convert_sfm_to_crt_find_t(KTOT),
+	A = 2,
+	K = T,
+	P0 = convert_sfm_to_crt_find_p(KTOT, T, K, A, N, D),
+	Q0 = N div P0,
+	{P, Q} = case Q0 > P0 of
+	  true ->
+	    {Q0, P0};
+	  false ->
+	    {P0, Q0}
+	end,
+	DP = jose_jwa_math:mod(D, P - 1),
+	DQ = jose_jwa_math:mod(D, Q - 1),
+	QI = convert_sfm_to_crt_mod_inverse(Q, P),
+	Key#'RSAPrivateKey'{
+		exponent1 = DP,
+		exponent2 = DQ,
+		prime1 = P,
+		prime2 = Q,
+		coefficient = QI
+	}.
+
+%% @private
+convert_sfm_to_crt_egcd(0, B) ->
+	{B, 0, 1};
+convert_sfm_to_crt_egcd(A, B) ->
+	{G, Y, X} = convert_sfm_to_crt_egcd(jose_jwa_math:mod(B, A), A),
+	{G, X - (B div A) * Y, Y}.
+
+%% @private
+convert_sfm_to_crt_find_p(KTOT, T, K, A, N, D) when K < KTOT ->
+	R = case jose_jwa_math:expmod(A, K, N) of
+		C when C =/= 1 andalso C =/= (N - 1) ->
+			case jose_jwa_math:expmod(C, 2, N) of
+				1 ->
+					P0 = convert_sfm_to_crt_gcd(C + 1, N),
+					{true, P0};
+				_ ->
+					false
+			end;
+		_ ->
+			false
+	end,
+	case R of
+		{true, P} ->
+			P;
+		false ->
+			convert_sfm_to_crt_find_p(KTOT, T, K * 2, A, N, D)
+	end;
+convert_sfm_to_crt_find_p(KTOT, T, _K, A, N, D) ->
+	convert_sfm_to_crt_find_p(KTOT, T, T, A + 2, N, D).
+
+%% @private
+convert_sfm_to_crt_find_t(T) when T > 0 andalso T rem 2 =:= 0 ->
+	convert_sfm_to_crt_find_t(T div 2);
+convert_sfm_to_crt_find_t(T) ->
+	T.
+
+%% @private
+convert_sfm_to_crt_gcd(A, 0) ->
+	A;
+convert_sfm_to_crt_gcd(A, B) ->
+	convert_sfm_to_crt_gcd(B, jose_jwa_math:mod(A, B)).
+
+%% @private
+convert_sfm_to_crt_mod_inverse(A, M) ->
+	case convert_sfm_to_crt_egcd(A, M) of
+		{1, X, _Y} ->
+			jose_jwa_math:mod(X, M);
+		_ ->
+			no_inverse
+	end.
+
+%% @private
 from_map_rsa_private_key(F = #{ <<"d">> := D }, Key) ->
 	from_map_rsa_private_key(maps:remove(<<"d">>, F), Key#'RSAPrivateKey'{ privateExponent = crypto:bytes_to_integer(base64url:decode(D)) });
 from_map_rsa_private_key(F = #{ <<"dp">> := DP }, Key) ->
@@ -306,6 +395,43 @@ from_map_rsa_private_key(F = #{ <<"oth">> := OTH }, Key) ->
 			coefficient = crypto:bytes_to_integer(base64url:decode(OT))}
 	end || #{ <<"d">> := OD, <<"r">> := OR, <<"t">> := OT } <- OTH],
 	from_map_rsa_private_key(maps:remove(<<"oth">>, F), Key#'RSAPrivateKey'{ version = 'multi', otherPrimeInfos = OtherPrimeInfos });
+from_map_rsa_private_key(F, Key0=#'RSAPrivateKey'{
+		version = 'two-prime',
+		otherPrimeInfos = 'asn1_NOVALUE',
+		privateExponent = D,
+		exponent1 = undefined,
+		exponent2 = undefined,
+		publicExponent = E,
+		modulus = N,
+		prime1 = undefined,
+		prime2 = undefined,
+		coefficient = undefined})
+		when is_integer(D)
+		andalso is_integer(E)
+		andalso is_integer(N) ->
+	Ref = erlang:make_ref(),
+	Parent = self(),
+	{Child, Monitor} = spawn_monitor(fun() ->
+		Parent ! {Ref, convert_sfm_to_crt(Key0)},
+		exit(normal)
+	end),
+	receive
+		{Ref, Key} ->
+			_ = erlang:demonitor(Monitor, [flush]),
+			from_map_rsa_private_key(F, Key);
+		{'DOWN', Monitor, process, Child, _Reason} ->
+			erlang:error({badarg, [Key0]})
+	after
+		1000 ->
+			true = erlang:exit(Child, kill),
+			receive
+				{Ref, Key} ->
+					_ = erlang:demonitor(Monitor, [flush]),
+					from_map_rsa_private_key(F, Key);
+				{'DOWN', Monitor, process, Child, _Reason} ->
+					erlang:error({badarg, [Key0]})
+			end
+	end;
 from_map_rsa_private_key(F, Key) ->
 	{Key, F}.
 

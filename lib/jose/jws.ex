@@ -26,6 +26,7 @@ defmodule JOSE.JWS do
     * `"Ed25519ph"`
     * `"Ed448"`
     * `"Ed448ph"`
+    * `"EdDSA"`
     * `"ES256"`
     * `"ES384"`
     * `"ES512"`
@@ -78,6 +79,18 @@ defmodule JOSE.JWS do
       iex> signed_ed448ph = JOSE.JWS.sign(jwk_ed448ph, "{}", %{ "alg" => "Ed448ph" }) |> JOSE.JWS.compact |> elem(1)
       "eyJhbGciOiJFZDQ0OHBoIn0.e30._7wxQF8Am-Fg3E-KgREXBv3Gr2vqLM6ja_7hs6kA5EakCrJVQ2QiAHrr4NriLABmiPbVd7F7IiaAApyR3Ud4ak3lGcHVxSyksjJjvBUbKnSB_xkT6v_QMmx27hV08JlxskUkfvjAG0-yKGC8BXoT9R0A"
       iex> JOSE.JWS.verify(jwk_ed448ph, signed_ed448ph) |> elem(0)
+      true
+
+  ### EdDSA
+
+      # EdDSA works with Ed25519, Ed25519ph, Ed448, and Ed448ph keys.
+      # However, it defaults to Ed25519 for key generation.
+      jwk_eddsa = JOSE.JWS.generate_key(%{ "alg" => "EdDSA" })
+
+      # EdDSA
+      iex> signed_eddsa = JOSE.JWS.sign(jwk_eddsa, "{}", %{ "alg" => "EdDSA" }) |> JOSE.JWS.compact |> elem(1)
+      "eyJhbGciOiJFZERTQSJ9.e30.rhb5ZY7MllNbW9q-SCn_NglhYtaRGMXEUDj6BvJjltOt19tEI_1wFrVK__jL91i9hO7WtVqRH_OfHiilnO1CAQ"
+      iex> JOSE.JWS.verify(jwk_eddsa, signed_eddsa) |> elem(0)
       true
 
   ### ES256, ES384, and ES512

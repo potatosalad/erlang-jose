@@ -103,6 +103,8 @@ from_map({JWS, Modules, Map=#{ <<"alg">> := << "Ed25519", _/binary >> }}) ->
 	from_map({JWS, Modules#{ alg => ?ALG_EDDSA_MODULE }, Map});
 from_map({JWS, Modules, Map=#{ <<"alg">> := << "Ed448", _/binary >> }}) ->
 	from_map({JWS, Modules#{ alg => ?ALG_EDDSA_MODULE }, Map});
+from_map({JWS, Modules, Map=#{ <<"alg">> := << "EdDSA", _/binary >> }}) ->
+	from_map({JWS, Modules#{ alg => ?ALG_EDDSA_MODULE }, Map});
 from_map({JWS, Modules, Map=#{ <<"alg">> := << "ES", _/binary >> }}) ->
 	from_map({JWS, Modules#{ alg => ?ALG_ECDSA_MODULE }, Map});
 from_map({JWS, Modules, Map=#{ <<"alg">> := << "HS", _/binary >> }}) ->

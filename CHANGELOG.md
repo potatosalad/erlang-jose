@@ -1,9 +1,42 @@
 # Changelog
 
+## 1.7.7 (2016-06-30)
+
+* Enhancements
+  * Improved handling of RSA private keys in SMF (Straightforward Method) form to CRT (Chinese Remainder Theorem) form, see [#19](https://github.com/potatosalad/erlang-jose/issues/19)  This is especially useful for keys produced by Java programs using the `RSAPrivateKeySpec` API as mentioned in [Section 9.3 of RFC 7517](https://tools.ietf.org/html/rfc7517#section-9.3).
+  * Updated EdDSA operations to comply with draft 02 of [draft-ietf-jose-cfrg-curves-02](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves-02).
+
+Example RSA SMF to CRT usage:
+
+```erlang
+%% The following map of an RSA secret key is in SMF (Straightforward Method) form.
+%% Notice that we only have d, e, and n for this secret key.
+JWK = jose_jwk:from(#{
+  <<"d">> => <<"WSAGFGM7fSyYn5NyBL0dp3kjHjQ3djjhQoOAFasoyeE">>,
+  <<"e">> => <<"AQAB">>,
+  <<"kty">> => <<"RSA">>,
+  <<"n">> => <<"0PM6Aooi_KYkDA1r-S24SauFpfTRc5kiPLF3a1EhuY8">>
+}).
+
+%% If we convert it back to a map, it is now in CRT (Chinese Remainder Theorem) form.
+%% Notice that the dp, dq, p, q, and qi have been restored.
+element(2, jose_jwk:to_map(JWK)) =:= #{
+  <<"d">> => <<"WSAGFGM7fSyYn5NyBL0dp3kjHjQ3djjhQoOAFasoyeE">>,
+  <<"dp">> => <<"G00J545ym1bqC9hnFDo3aQ">>,
+  <<"dq">> => <<"tt0FvEZgKli6IL4rVKx3cw">>,
+  <<"e">> => <<"AQAB">>,
+  <<"kty">> => <<"RSA">>,
+  <<"n">> => <<"0PM6Aooi_KYkDA1r-S24SauFpfTRc5kiPLF3a1EhuY8">>,
+  <<"p">> => <<"9O5YQ0w6PIpDl6c6yqwyKQ">>,
+  <<"q">> => <<"2mScgy86M3q6b301UAU09w">>,
+  <<"qi">> => <<"Wrp0SgcGgTT5WmeuHD6Sqw">>
+}.
+```
+
 ## 1.7.6 (2016-06-29)
 
 * Fixes
-  * Compatibility fixes for OTP 19 and Elixir 1.3 
+  * Compatibility fixes for OTP 19 and Elixir 1.3
 
 ## 1.7.5 (2016-05-13)
 

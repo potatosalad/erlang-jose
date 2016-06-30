@@ -46,7 +46,7 @@ For example, with Elixir and `mix.exs`
 defp deps do
   [
     {:jose, "~> 1.7"},
-    {:poison, "~> 2.1"}
+    {:poison, "~> 2.2"}
   ]
 end
 ```
@@ -421,7 +421,7 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 
 - [X] `RSA1_5`
 - [X] `RSA-OAEP`
-- [X] `RSA-OAEP-256` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18)</sup>
+- [X] `RSA-OAEP-256` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18), [OTP-19](#footnote-otp-19)</sup>
 - [X] `A128KW` <sup>[OTP-17](#footnote-otp-17)</sup>
 - [X] `A192KW` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18)</sup>
 - [X] `A256KW` <sup>[OTP-17](#footnote-otp-17)</sup>
@@ -473,15 +473,16 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 - [X] `Ed25519ph` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-eddsa](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.1)</sup>
 - [X] `Ed448` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-eddsa](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.2)</sup>
 - [X] `Ed448ph` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-eddsa](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.2)</sup>
+- [X] `EdDSA` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-eddsa](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa)</sup>
 - [X] `ES256`
 - [X] `ES384`
 - [X] `ES512`
 - [X] `HS256`
 - [X] `HS384`
 - [X] `HS512`
-- [X] `PS256` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18)</sup>
-- [X] `PS384` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18)</sup>
-- [X] `PS512` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18)</sup>
+- [X] `PS256` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18), [OTP-19](#footnote-otp-19)</sup>
+- [X] `PS384` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18), [OTP-19](#footnote-otp-19)</sup>
+- [X] `PS512` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18), [OTP-19](#footnote-otp-19)</sup>
 - [X] `RS256`
 - [X] `RS384`
 - [X] `RS512`
@@ -495,5 +496,7 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 <sup><a name="footnote-otp-17">OTP-17</a></sup> Native algorithm not supported by OTP-17.  Use the [`crypto_fallback`](#cryptographic-algorithm-fallback) setting to enable the non-native implementation.  See [ALGORITHMS.md](https://github.com/potatosalad/erlang-jose/blob/master/ALGORITHMS.md) for more information about algorithm support for specific OTP versions.
 
 <sup><a name="footnote-otp-18">OTP-18</a></sup> Native algorithm not supported by OTP-18.  Use the [`crypto_fallback`](#cryptographic-algorithm-fallback) setting to enable the non-native implementation.  See [ALGORITHMS.md](https://github.com/potatosalad/erlang-jose/blob/master/ALGORITHMS.md) for more information about algorithm support for specific OTP versions.
+
+<sup><a name="footnote-otp-19">OTP-19</a></sup> Native algorithm not supported by OTP-19.  Use the [`crypto_fallback`](#cryptographic-algorithm-fallback) setting to enable the non-native implementation.  See [ALGORITHMS.md](https://github.com/potatosalad/erlang-jose/blob/master/ALGORITHMS.md) for more information about algorithm support for specific OTP versions.
 
 <sup><a name="footnote-unsecured">unsecured</a></sup> This algorithm is disabled by default due to the unsecured signing vulnerability.  Use the [`unsecured_signing`](#unsecured-signing-vulnerability) setting to enable this algorithm.

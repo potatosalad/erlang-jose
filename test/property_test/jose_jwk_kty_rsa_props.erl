@@ -44,10 +44,42 @@ jwk_map() ->
 			{Keys, PrivateJWKMap}
 		end).
 
+jwk_map_sfm_and_crt() ->
+	?LET({Keys, PrivateJWKMapCRT},
+		jwk_map(),
+		begin
+			PrivateJWKMapSFM = maps:without([
+				<<"dp">>,
+				<<"dq">>,
+				<<"p">>,
+				<<"q">>,
+				<<"qi">>
+			], PrivateJWKMapCRT),
+			{Keys, PrivateJWKMapCRT, PrivateJWKMapSFM}
+		end).
+
 jwk_gen() ->
 	?LET({Keys, PrivateJWKMap},
 		jwk_map(),
 		{Keys, jose_jwk:from_map(PrivateJWKMap)}).
+
+prop_convert_sfm_to_crt() ->
+	?FORALL({{PrivateKey, PublicKey}, PrivateJWKMapCRT, PrivateJWKMapSFM},
+		?LET({{Keys, JWKMapCRT, JWKMapSFM}, Extras},
+			{jwk_map_sfm_and_crt(), binary_map()},
+			{Keys, maps:merge(Extras, JWKMapCRT), maps:merge(Extras, JWKMapSFM)}),
+		begin
+			PrivateJWKCRT = jose_jwk:from_map(PrivateJWKMapCRT),
+			PrivateJWKSFM = jose_jwk:from_map(PrivateJWKMapSFM),
+			ThumbprintCRT = jose_jwk:thumbprint(PrivateJWKMapCRT),
+			ThumbprintSFM = jose_jwk:thumbprint(PrivateJWKMapSFM),
+			PrivateJWKCRT =:= PrivateJWKSFM
+			andalso PrivateKey =:= element(2, jose_jwk:to_key(PrivateJWKCRT))
+			andalso PrivateKey =:= element(2, jose_jwk:to_key(PrivateJWKSFM))
+			andalso PublicKey =:= element(2, jose_jwk:to_public_key(PrivateJWKCRT))
+			andalso PublicKey =:= element(2, jose_jwk:to_public_key(PrivateJWKSFM))
+			andalso ThumbprintCRT =:= ThumbprintSFM
+		end).
 
 prop_from_map_and_to_map() ->
 	?FORALL({{PrivateKey, PublicKey}, PrivateJWKMap},

@@ -5,5 +5,5 @@
   "jiffy": {:git, "https://github.com/davisp/jiffy.git", "6303ff98aaa3fce625038c8b7af2aa8b802f4742", []},
   "jsone": {:hex, :jsone, "1.2.3", "d2e9979326bdaacf50ab0e52c80f53d74cded93d1ae21fabcf66346238cc0322", [:rebar3], []},
   "jsx": {:hex, :jsx, "2.8.0", "749bec6d205c694ae1786d62cea6cc45a390437e24835fd16d12d74f07097727", [:mix, :rebar], []},
-  "libdecaf": {:hex, :libdecaf, "0.0.2", "400baa3cf4c274b4a4280cefb1d6f52ffde905e620da0e9831997ae9eb36f34b", [:rebar3], []},
+  "libdecaf": {:hex, :libdecaf, "0.0.3", "899b02e86ea6abcf4ce3831753cedfd5a91881d29e9c0a4fba591452c53ecc80", [:rebar3], []},
   "poison": {:hex, :poison, "2.2.0", "4763b69a8a77bd77d26f477d196428b741261a761257ff1cf92753a0d4d24a63", [:mix], []}}
