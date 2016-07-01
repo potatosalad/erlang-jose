@@ -162,7 +162,9 @@ jose_cfrg_curves_a_3(Config) ->
 	A_2_JWK = jose_jwk:from_file(data_file("jose_cfrg_curves/a.2.jwk+json", Config)),
 	% A.3
 	A_3_JWK = jose_jwk:from_binary(?config("a.3.jwk+json", C)),
-	A_3_THUMBPRINT = base64url:encode(hex:hex_to_bin(?config("a.3.thumbprint", C))),
+	A_3_THUMBPRINT_HEX = ?config("a.3.thumbprint+hex", C),
+	A_3_THUMBPRINT = base64url:encode(hex:hex_to_bin(A_3_THUMBPRINT_HEX)),
+	A_3_THUMBPRINT = ?config("a.3.thumbprint+b64", C),
 	A_3_THUMBPRINT = jose_jwk:thumbprint(A_1_JWK),
 	A_3_THUMBPRINT = jose_jwk:thumbprint(A_2_JWK),
 	A_3_THUMBPRINT = jose_jwk:thumbprint(A_3_JWK),
