@@ -54,7 +54,7 @@ defmodule JOSE.Mixfile do
       _ ->
         []
     end
-    [:debug_info, :warnings_as_errors | extra_options]
+    [:debug_info | (if Mix.env == :prod, do: [], else: [:warnings_as_errors]) ++ extra_options]
   end
 
   defp package do
