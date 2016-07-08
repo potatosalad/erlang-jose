@@ -33,6 +33,7 @@
 -export([jws_a_3/1]).
 -export([jws_a_4/1]).
 -export([jws_a_5/1]).
+-export([rfc7520_5_9/1]).
 
 %% Macros.
 -define(tv_ok(T, M, F, A, E),
@@ -48,7 +49,8 @@ all() ->
 		{group, jose_cfrg_curves},
 		{group, jose_jwe},
 		{group, jose_jwk},
-		{group, jose_jws}
+		{group, jose_jws},
+		{group, rfc7520}
 	].
 
 groups() ->
@@ -77,6 +79,9 @@ groups() ->
 			jws_a_3,
 			jws_a_4,
 			jws_a_5
+		]},
+		{rfc7520, [parallel], [
+			rfc7520_5_9
 		]}
 	].
 
@@ -115,6 +120,9 @@ init_per_group(G=jose_jws, Config) ->
 	{ok, A4} = file:consult(data_file("jws/a.4.config", Config)),
 	{ok, A5} = file:consult(data_file("jws/a.5.config", Config)),
 	[{jws_a_1, A1}, {jws_a_2, A2}, {jws_a_3, A3}, {jws_a_4, A4}, {jws_a_5, A5} | jose_ct:start(G, Config)];
+init_per_group(G=rfc7520, Config) ->
+	{ok, V_5_9} = file:consult(data_file("rfc7520/5.9.config", Config)),
+	[{rfc7520_5_9, V_5_9} | jose_ct:start(G, Config)];
 init_per_group(Group, Config) ->
 	jose_ct:start(Group, Config).
 
@@ -658,6 +666,43 @@ jws_a_5(Config) ->
 	%% Sign and Verify
 	{true, A_5_PAYLOAD_DATA, A_5_JWS} = jose_jws:verify(none, jose_jws:sign(none, A_5_PAYLOAD_DATA, A_5_JWS)),
 	ok.
+
+% Examples of Protecting Content Using JSON Object Signing and Encryption (JOSE)
+% 5.9.  Compressed Content
+% https://tools.ietf.org/html/rfc7520#section-5.9
+rfc7520_5_9(Config) ->
+	C = ?config(rfc7520_5_9, Config),
+	% 5.9.1
+	V_5_9_1_PLAIN_TEXT = ?config("figure.72", C),
+	V_5_9_1_JWK = jose_jwk:from_binary(?config("figure.151", C)),
+	% 5.9.2
+	V_5_9_2_COMPRESSED_PLAIN_TEXT = ?config("figure.162", C),
+	V_5_9_1_PLAIN_TEXT = jose_jwe_zip:uncompress(base64url:decode(V_5_9_2_COMPRESSED_PLAIN_TEXT), zlib),
+	V_5_9_2_COMPRESSED_PLAIN_TEXT = base64url:encode(jose_jwe_zip:compress(V_5_9_1_PLAIN_TEXT, zlib)),
+	V_5_9_2_CEK = ?config("figure.163", C),
+	V_5_9_2_IV = ?config("figure.164", C),
+	% 5.9.3
+	V_5_9_3_ENCRYPTED_KEY = ?config("figure.165", C),
+	{ALG, _} = jose_jwe_alg_aes_kw:from_map(#{<<"alg">> => <<"A128KW">>}),
+	V_5_9_3_ENCRYPTED_KEY = base64url:encode(element(1, jose_jwe_alg_aes_kw:key_encrypt(V_5_9_1_JWK, base64url:decode(V_5_9_2_CEK), ALG))),
+	V_5_9_2_CEK = base64url:encode(jose_jwe_alg_aes_kw:key_decrypt(V_5_9_1_JWK, {undefined, undefined, base64url:decode(V_5_9_3_ENCRYPTED_KEY)}, ALG)),
+	% 5.9.4
+    V_5_9_4_JWE = jose_jwe:from_binary(?config("figure.166", C)),
+    V_5_9_4_JWE_PROTECTED = ?config("figure.167", C),
+    V_5_9_4_JWE = jose_jwe:from_binary(base64url:decode(V_5_9_4_JWE_PROTECTED)),
+    V_5_9_4_CIPHER_TEXT = ?config("figure.168", C),
+    V_5_9_4_CIPHER_TAG = ?config("figure.169", C),
+    % 5.9.5
+    V_5_9_5_JWE_COMPACT = ?config("figure.170", C),
+    V_5_9_5_JWE_MAP = jose:decode(?config("figure.172", C)),
+    V_5_9_4_CIPHER_TEXT = maps:get(<<"ciphertext">>, V_5_9_5_JWE_MAP),
+    V_5_9_4_CIPHER_TAG = maps:get(<<"tag">>, V_5_9_5_JWE_MAP),
+    {V_5_9_1_PLAIN_TEXT, V_5_9_4_JWE} = jose_jwe:block_decrypt(V_5_9_1_JWK, V_5_9_5_JWE_COMPACT),
+    {V_5_9_1_PLAIN_TEXT, V_5_9_4_JWE} = jose_jwe:block_decrypt(V_5_9_1_JWK, V_5_9_5_JWE_MAP),
+    % Roundtrip test
+    {_, CIPHER_TEXT} = jose_jwe:compact(jose_jwe:block_encrypt(V_5_9_1_JWK, V_5_9_1_PLAIN_TEXT, base64url:decode(V_5_9_2_CEK), base64url:decode(V_5_9_2_IV), V_5_9_4_JWE)),
+    {V_5_9_1_PLAIN_TEXT, V_5_9_4_JWE} = jose_jwe:block_decrypt(V_5_9_1_JWK, CIPHER_TEXT),
+    ok.
 
 %%%-------------------------------------------------------------------
 %%% Internal functions

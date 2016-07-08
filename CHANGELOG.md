@@ -1,9 +1,12 @@
 # Changelog
 
-## 1.7.8 (????-??-??)
+## 1.7.8 (2016-07-08)
 
 * Enhancements
-  * Updated EdDSA tests to comply with draft 03 of [draft-ietf-jose-cfrg-curves-02](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves-03).
+  * Updated EdDSA tests to comply with draft 04 of [draft-ietf-jose-cfrg-curves-04](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves-04).
+
+* Fixes
+  * Fixed compression encoding bug for `{"zip":"DEF"}` operations (thanks to [@amadden734](https://github.com/amadden734) see [potatosalad/ruby-jose#3](https://github.com/potatosalad/ruby-jose/pull/3))
 
 ## 1.7.7 (2016-06-30)
 

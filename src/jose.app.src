@@ -2,7 +2,7 @@
 %% vim: ts=4 sw=4 ft=erlang noet
 {application, jose, [
 	{description, "JSON Object Signing and Encryption"},
-	{vsn, "1.7.7"},
+	{vsn, "1.7.8"},
 	{id, "git"},
 	{mod, {'jose_app', []}},
 	{registered, []},

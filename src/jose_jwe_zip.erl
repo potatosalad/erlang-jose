@@ -53,10 +53,20 @@ to_map(?DEF, Fields) ->
 %%====================================================================
 
 compress(Uncompressed, zlib) ->
-	zlib:compress(Uncompressed).
+	Z = zlib:open(),
+	ok = zlib:deflateInit(Z, default, deflated, -15, 8, default),
+	Compressed = zlib:deflate(Z, Uncompressed, finish),
+	ok = zlib:deflateEnd(Z),
+	ok = zlib:close(Z),
+	iolist_to_binary(Compressed).
 
 uncompress(Compressed, zlib) ->
-	zlib:uncompress(Compressed).
+	Z = zlib:open(),
+	ok = zlib:inflateInit(Z, -15),
+	Uncompressed = zlib:inflate(Z, Compressed),
+	ok = zlib:inflateEnd(Z),
+	ok = zlib:close(Z),
+	iolist_to_binary(Uncompressed).
 
 %%====================================================================
 %% API functions
