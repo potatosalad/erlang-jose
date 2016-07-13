@@ -269,4 +269,30 @@ defmodule JOSETest do
     assert :erlang.element(1, JOSE.JWT.verify_strict(jwk, ["HS256"], token)) == true
     assert :erlang.element(1, JOSE.JWT.verify_strict(jwk, ["HS256"], token_unsecure)) == false
   end
+
+  test "JSON test vectors" do
+    vectors = [
+      {%{}, "{}"},
+      {[], "[]"},
+      {"", "\"\""},
+      {1, "1"},
+      {[1, 2, 3], "[1,2,3]"},
+      {%{"c" => 3, "b" => 2, "a" => [1,2,3]}, "{\"a\":[1,2,3],\"b\":2,\"c\":3}"},
+      {%{"a" => %{"z" => 1, "y" => 2, "x" => 3}, "b" => 4}, "{\"a\":{\"x\":3,\"y\":2,\"z\":1},\"b\":4}"},
+      {true, "true"},
+      {false, "false"}
+    ]
+    for {term, json} <- vectors do
+      # assert :jose_json_jiffy.encode(term) == json
+      # assert :jose_json_jiffy.decode(json) == term
+      assert :jose_json_jsone.encode(term) == json
+      assert :jose_json_jsone.decode(json) == term
+      assert :jose_json_jsx.encode(term) == json
+      assert :jose_json_jsx.decode(json) == term
+      assert :jose_json_poison_compat_encoder.encode(term) == json
+      assert :jose_json_poison_compat_encoder.decode(json) == term
+      assert :jose_json_poison_lexical_encoder.encode(term) == json
+      assert :jose_json_poison_lexical_encoder.decode(json) == term
+    end
+  end
 end

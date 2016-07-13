@@ -3,7 +3,7 @@ defmodule JOSE.Mixfile do
 
   def project do
     [app: :jose,
-     version: "1.7.8",
+     version: "1.7.9",
      elixir: "~> 1.0",
      erlc_options: erlc_options,
      build_embedded: Mix.env == :prod,

@@ -1,6 +1,16 @@
-if Code.ensure_loaded?(Poison) do
+defmodule JOSE.Poison.LexicalEncodeError do
+  defexception value: nil, message: nil
 
-defmodule JOSE.Poison.Encode do
+  def message(%{value: value, message: nil}) do
+    "unable to encode value: #{inspect value}"
+  end
+
+  def message(%{message: message}) do
+    message
+  end
+end
+
+defmodule JOSE.Poison.LexicalEncode do
   defmacro __using__(_) do
     quote do
       defp encode_name(value) do
@@ -10,9 +20,46 @@ defmodule JOSE.Poison.Encode do
           is_atom(value) ->
             Atom.to_string(value)
           true ->
-            raise Poison.EncodeError, value: value,
+            module =
+              if Code.ensure_loaded?(Poison) do
+                Poison.EncodeError
+              else
+                JOSE.Poison.LexicalEncodeError
+              end
+            raise module, value: value,
               message: "expected string or atom key, got: #{inspect value}"
         end
+      end
+    end
+  end
+end
+
+defmodule JOSE.Poison.LexicalPretty do
+  defmacro __using__(_) do
+    quote do
+      @default_indent 2
+      @default_offset 0
+
+      @compile {:inline, pretty: 1, indent: 1, offset: 1, offset: 2, spaces: 1}
+
+      defp pretty(options) do
+        !!Keyword.get(options, :pretty)
+      end
+
+      defp indent(options) do
+        Keyword.get(options, :indent, @default_indent)
+      end
+
+      defp offset(options) do
+        Keyword.get(options, :offset, @default_offset)
+      end
+
+      defp offset(options, value) do
+        Keyword.put(options, :offset, value)
+      end
+
+      defp spaces(count) do
+        :binary.copy(" ", count)
       end
     end
   end
@@ -25,19 +72,27 @@ defprotocol JOSE.Poison.LexicalEncoder do
 end
 
 defimpl JOSE.Poison.LexicalEncoder, for: Atom do
-  def encode(atom, options), do: Poison.Encoder.Atom.encode(atom, options)
+  def encode(atom, options) do
+    apply(Poison.Encoder.Atom, :encode, [atom, options])
+  end
 end
 
 defimpl JOSE.Poison.LexicalEncoder, for: BitString do
-  def encode(string, options), do: Poison.Encoder.BitString.encode(string, options)
+  def encode(string, options) do
+    apply(Poison.Encoder.BitString, :encode, [string, options])
+  end
 end
 
 defimpl JOSE.Poison.LexicalEncoder, for: Integer do
-  def encode(integer, options), do: Poison.Encoder.Integer.encode(integer, options)
+  def encode(integer, options) do
+    apply(Poison.Encoder.Integer, :encode, [integer, options])
+  end
 end
 
 defimpl JOSE.Poison.LexicalEncoder, for: Float do
-  def encode(float, options), do: Poison.Encoder.Float.encode(float, options)
+  def encode(float, options) do
+    apply(Poison.Encoder.Float, :encode, [float, options])
+  end
 end
 
 defimpl JOSE.Poison.LexicalEncoder, for: Map do
@@ -45,8 +100,8 @@ defimpl JOSE.Poison.LexicalEncoder, for: Map do
 
   @compile :inline_list_funcs
 
-  use Poison.Pretty
-  use JOSE.Poison.Encode
+  use JOSE.Poison.LexicalPretty
+  use JOSE.Poison.LexicalEncode
 
   # TODO: Remove once we require Elixir 1.1+
   defmacro __deriving__(module, struct, options) do
@@ -79,7 +134,7 @@ end
 defimpl JOSE.Poison.LexicalEncoder, for: List do
   alias JOSE.Poison.LexicalEncoder
 
-  use Poison.Pretty
+  use JOSE.Poison.LexicalPretty
 
   @compile :inline_list_funcs
 
@@ -105,7 +160,7 @@ defimpl JOSE.Poison.LexicalEncoder, for: List do
 end
 
 defimpl JOSE.Poison.LexicalEncoder, for: [Range, Stream, MapSet, HashSet] do
-  use Poison.Pretty
+  use JOSE.Poison.LexicalPretty
 
   def encode(collection, options) do
     encode(collection, pretty(options), options)
@@ -137,8 +192,8 @@ end
 defimpl JOSE.Poison.LexicalEncoder, for: HashDict do
   alias JOSE.Poison.LexicalEncoder
 
-  use Poison.Pretty
-  use JOSE.Poison.Encode
+  use JOSE.Poison.LexicalPretty
+  use JOSE.Poison.LexicalEncode
 
   def encode(dict, options) do
     if HashDict.size(dict) < 1 do
@@ -212,8 +267,12 @@ defimpl JOSE.Poison.LexicalEncoder, for: Any do
   end
 
   def encode(value, _options) do
-    raise Poison.EncodeError, value: value
+    module =
+      if Code.ensure_loaded?(Poison) do
+        Poison.EncodeError
+      else
+        JOSE.Poison.LexicalEncodeError
+      end
+    raise module, value: value
   end
-end
-
 end

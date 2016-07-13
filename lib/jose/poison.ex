@@ -1,5 +1,3 @@
-if Code.ensure_loaded?(Poison) do
-
 defmodule JOSE.Poison do
   alias JOSE.Poison.LexicalEncoder
 
@@ -12,6 +10,4 @@ defmodule JOSE.Poison do
       iodata
     end
   end
-end
-
 end

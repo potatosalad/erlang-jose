@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.9 (2016-07-13)
+
+* Fixes
+  * Fixed JSON encoding bug in `jose_json_poison_compat_encoder` for projects using Poison as the JSON encoder where Erlang loads Elixir as a dependency.
+
 ## 1.7.8 (2016-07-08)
 
 * Enhancements
