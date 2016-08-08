@@ -20,6 +20,24 @@ defmodule JOSE do
   ## Functions
 
   @doc """
+  Gets the current ChaCha20/Poly1305 module used by `jose_chacha20_poly1305`, see `chacha20_poly1305_module/1` for default.
+  """
+  defdelegate chacha20_poly1305_module(), to: :jose
+
+  @doc """
+  Sets the current ChaCha20/Poly1305 module used by `jose_chacha20_poly1305`.
+
+  Currently supported ChaCha20/Poly1305 modules (first found is used as default):
+
+    * `crypto` - only when 96-bit nonce is supported
+    * [`libsodium`](https://github.com/potatosalad/erlang-libsodium)
+    * `jose_jwa_chacha20_poly1305` - only supported when `crypto_fallback/0` is `true`
+
+  Additional modules that implement the `jose_chacha20_poly1305` behavior may also be used.
+  """
+  defdelegate chacha20_poly1305_module(module), to: :jose
+
+  @doc """
   Gets the current Cryptographic Algorithm Fallback state, defaults to `false`.
   """
   defdelegate crypto_fallback(), to: :jose

@@ -31,6 +31,7 @@
 -export([constant_time_compare/2]).
 -export([ec_key_mode/0]).
 -export([is_block_cipher_supported/1]).
+-export([is_chacha20_poly1305_supported/0]).
 -export([is_rsa_crypt_supported/1]).
 -export([is_rsa_sign_supported/1]).
 -export([supports/0]).
@@ -168,6 +169,7 @@ crypto_supports() ->
 		['$1']
 	}])),
 	ExternalHashs = external_checks([
+		{poly1305, fun() -> jose_chacha20_poly1305:authenticate(<<>>, <<0:256>>, <<0:96>>) end},
 		{shake256, fun() -> jose_sha3:shake256(<<>>, 0) end}
 	]),
 	ExternalPublicKeys = external_checks([
@@ -179,7 +181,7 @@ crypto_supports() ->
 		{x448, fun jose_curve448:x448_keypair/0}
 	]),
 	Supports = crypto:supports(),
-	RecommendedHashs = [md5, sha, sha256, sha384, sha512, shake256],
+	RecommendedHashs = [md5, poly1305, sha, sha256, sha384, sha512, shake256],
 	Hashs = RecommendedHashs -- ((RecommendedHashs -- proplists:get_value(hashs, Supports)) -- ExternalHashs),
 	RecommendedPublicKeys = [ec_gf2m, ecdh, ecdsa, ed25519, ed25519ph, ed448, ed448ph, rsa, x25519, x448],
 	PublicKeys = RecommendedPublicKeys -- ((RecommendedPublicKeys -- proplists:get_value(public_keys, Supports)) -- ExternalPublicKeys),
@@ -213,6 +215,14 @@ is_block_cipher_supported(Cipher) ->
 			true;
 		_ ->
 			false
+	end.
+
+is_chacha20_poly1305_supported() ->
+	case catch ?MAYBE_START_JOSE(ets:lookup_element(?TAB, chacha20_poly1305_module, 2)) of
+		jose_chacha20_poly1305_unsupported ->
+			false;
+		_ ->
+			true
 	end.
 
 is_rsa_crypt_supported(Padding) ->
@@ -258,7 +268,8 @@ supports() ->
 		{<<"A256CBC-HS512">>, ciphers, {aes_cbc, 256}},
 		{<<"A128GCM">>, ciphers, {aes_gcm, 128}},
 		{<<"A192GCM">>, ciphers, {aes_gcm, 192}},
-		{<<"A256GCM">>, ciphers, {aes_gcm, 256}}
+		{<<"A256GCM">>, ciphers, {aes_gcm, 256}},
+		{<<"ChaCha20/Poly1305">>, ciphers, {chacha20_poly1305, 256}}
 	], Supports, []),
 	JWEZIP = support_check([
 		<<"DEF">>
@@ -291,6 +302,7 @@ supports() ->
 		{<<"PS256">>, rsa_sign, rsa_pkcs1_pss_padding},
 		{<<"PS384">>, rsa_sign, rsa_pkcs1_pss_padding},
 		{<<"PS512">>, rsa_sign, rsa_pkcs1_pss_padding},
+		{<<"Poly1305">>, hashs, poly1305},
 		{<<"RS256">>, rsa_sign, rsa_pkcs1_padding},
 		{<<"RS384">>, rsa_sign, rsa_pkcs1_padding},
 		{<<"RS512">>, rsa_sign, rsa_pkcs1_padding},

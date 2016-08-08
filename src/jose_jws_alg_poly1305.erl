@@ -2,13 +2,13 @@
 %% vim: ts=4 sw=4 ft=erlang noet
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <andrew@pixid.com>
-%%% @copyright 2014-2015, Andrew Bennett
+%%% @copyright 2014-2016, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
-%%% Created :  23 Jul 2015 by Andrew Bennett <andrew@pixid.com>
+%%% Created :  08 Aug 2016 by Andrew Bennett <andrew@pixid.com>
 %%%-------------------------------------------------------------------
--module(jose_jws_alg_hmac).
+-module(jose_jws_alg_poly1305).
 -behaviour(jose_jws).
 -behaviour(jose_jws_alg).
 
@@ -19,12 +19,17 @@
 -export([to_map/2]).
 %% jose_jws_alg callbacks
 -export([generate_key/2]).
+-export([presign/2]).
 -export([sign/3]).
 -export([verify/4]).
 %% API
 
 %% Types
--type alg() :: 'HS256' | 'HS384' | 'HS512'.
+-record('Poly1305', {
+	nonce = undefined :: undefined | << _:12 >>
+}).
+
+-type alg() :: #'Poly1305'{}.
 
 -export_type([alg/0]).
 
@@ -32,35 +37,35 @@
 %% jose_jws callbacks
 %%====================================================================
 
-from_map(F = #{ <<"alg">> := <<"HS256">> }) ->
-	{'HS256', maps:remove(<<"alg">>, F)};
-from_map(F = #{ <<"alg">> := <<"HS384">> }) ->
-	{'HS384', maps:remove(<<"alg">>, F)};
-from_map(F = #{ <<"alg">> := <<"HS512">> }) ->
-	{'HS512', maps:remove(<<"alg">>, F)}.
+from_map(F = #{ <<"alg">> := <<"Poly1305">> }) ->
+	from_map(maps:remove(<<"alg">>, F), #'Poly1305'{}).
 
-to_map('HS256', F) ->
-	F#{ <<"alg">> => <<"HS256">> };
-to_map('HS384', F) ->
-	F#{ <<"alg">> => <<"HS384">> };
-to_map('HS512', F) ->
-	F#{ <<"alg">> => <<"HS512">> }.
+to_map(#'Poly1305'{nonce=undefined}, F) ->
+	F#{ <<"alg">> => <<"Poly1305">> };
+to_map(#'Poly1305'{nonce=Nonce}, F) ->
+	F#{ <<"alg">> => <<"Poly1305">>, <<"nonce">> => base64url:encode(Nonce) }.
 
 %%====================================================================
 %% jose_jws_alg callbacks
 %%====================================================================
 
-generate_key('HS256', _Fields) ->
-	jose_jws_alg:generate_key({oct, 32}, <<"HS256">>);
-generate_key('HS384', _Fields) ->
-	jose_jws_alg:generate_key({oct, 48}, <<"HS384">>);
-generate_key('HS512', _Fields) ->
-	jose_jws_alg:generate_key({oct, 64}, <<"HS512">>).
+generate_key(#'Poly1305'{}, _Fields) ->
+	jose_jws_alg:generate_key({oct, 32}, <<"Poly1305">>).
 
-sign(#jose_jwk{kty={KTYModule, KTY}}, Message, ALG) ->
+presign(_Key, ALG=#'Poly1305'{nonce=undefined}) ->
+	Nonce = crypto:strong_rand_bytes(12),
+	ALG#'Poly1305'{nonce=Nonce};
+presign(_Key, ALG) ->
+	ALG.
+
+sign(#jose_jwk{kty={KTYModule, KTY}}, Message, ALG=#'Poly1305'{nonce=Nonce})
+		when is_binary(Nonce) andalso bit_size(Nonce) == 96 ->
 	KTYModule:sign(Message, ALG, KTY).
 
-verify(#jose_jwk{kty={KTYModule, KTY}}, Message, Signature, ALG) ->
+verify(_Key, _Message, _Signature, #'Poly1305'{nonce=undefined}) ->
+	false;
+verify(#jose_jwk{kty={KTYModule, KTY}}, Message, Signature, ALG=#'Poly1305'{nonce=Nonce})
+		when is_binary(Nonce) andalso bit_size(Nonce) == 96 ->
 	KTYModule:verify(Message, ALG, Signature, KTY).
 
 %%====================================================================
@@ -70,3 +75,9 @@ verify(#jose_jwk{kty={KTYModule, KTY}}, Message, Signature, ALG) ->
 %%%-------------------------------------------------------------------
 %%% Internal functions
 %%%-------------------------------------------------------------------
+
+%% @private
+from_map(F = #{ <<"nonce">> := Nonce }, ALG) ->
+	from_map(maps:remove(<<"nonce">>, F), ALG#'Poly1305'{nonce=base64url:decode(Nonce)});
+from_map(F, ALG) ->
+	{ALG, F}.

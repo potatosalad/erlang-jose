@@ -41,6 +41,7 @@ defmodule JOSE.JWA do
     * `{:aes_gcm, 128}` - AES GCM with 128-bit `key` size and variable `iv` size
     * `{:aes_gcm, 192}` - AES GCM with 192-bit `key` size and variable `iv` size
     * `{:aes_gcm, 256}` - AES GCM with 256-bit `key` size and variable `iv` size
+    * `{:chacha20_poly1305, 256}` - ChaCha20/Poly1305 with 256-bit `key` size and 96-bit `iv` size
   """
   defdelegate block_decrypt(cipher, key, iv, cipher_text), to: :jose_jwa
 
@@ -66,6 +67,7 @@ defmodule JOSE.JWA do
     * `{:aes_gcm, 128}` - AES GCM with 128-bit `key` size and variable `iv` size
     * `{:aes_gcm, 192}` - AES GCM with 192-bit `key` size and variable `iv` size
     * `{:aes_gcm, 256}` - AES GCM with 256-bit `key` size and variable `iv` size
+    * `{:chacha20_poly1305, 256}` - ChaCha20/Poly1305 with 256-bit `key` size and 96-bit `iv` size
   """
   defdelegate block_encrypt(cipher, key, iv, plain_text), to: :jose_jwa
 
@@ -140,11 +142,12 @@ defmodule JOSE.JWA do
   Returns the current block ciphers and their associated modules.
 
       iex> JOSE.JWA.crypto_ciphers()
-      [{{:aes_cbc, 128}, :crypto}, {{:aes_cbc, 192}, :jose_jwa_aes},
+      [{{:aes_cbc, 128}, :crypto}, {{:aes_cbc, 192}, :crypto},
        {{:aes_cbc, 256}, :crypto}, {{:aes_ecb, 128}, :crypto},
-       {{:aes_ecb, 192}, :jose_jwa_aes}, {{:aes_ecb, 256}, :crypto},
+       {{:aes_ecb, 192}, :crypto}, {{:aes_ecb, 256}, :crypto},
        {{:aes_gcm, 128}, :crypto}, {{:aes_gcm, 192}, :crypto},
-       {{:aes_gcm, 256}, :crypto}]
+       {{:aes_gcm, 256}, :crypto},
+       {{:chacha20_poly1305, 256}, :jose_chacha20_poly1305}]
 
   """
   defdelegate crypto_ciphers(), to: :jose_jwa
@@ -164,10 +167,11 @@ defmodule JOSE.JWA do
 
       iex> JOSE.JWA.crypto_supports()
       [ciphers: [aes_cbc: 128, aes_cbc: 192, aes_cbc: 256, aes_ecb: 128, aes_ecb: 192,
-        aes_ecb: 256, aes_gcm: 128, aes_gcm: 192, aes_gcm: 256],
-       hashs: [:md5, :sha, :sha256, :sha384, :sha512],
-       public_keys: [:ec_gf2m, :ecdh, :ecdsa, :rsa],
-       rsa_crypt: [:rsa1_5, :rsa_oaep, :rsa_oaep_256],
+        aes_ecb: 256, aes_gcm: 128, aes_gcm: 192, aes_gcm: 256,
+        chacha20_poly1305: 256],
+       hashs: [:md5, :poly1305, :sha, :sha256, :sha384, :sha512, :shake256],
+       public_keys: [:ec_gf2m, :ecdh, :ecdsa, :ed25519, :ed25519ph, :ed448, :ed448ph,
+        :rsa, :x25519, :x448], rsa_crypt: [:rsa1_5, :rsa_oaep, :rsa_oaep_256],
        rsa_sign: [:rsa_pkcs1_padding, :rsa_pkcs1_pss_padding]]
 
   """
@@ -189,6 +193,11 @@ defmodule JOSE.JWA do
   defdelegate is_block_cipher_supported(cipher), to: :jose_jwa
 
   @doc """
+  Checks whether ChaCha20/Poly1305 support is available or not.
+  """
+  defdelegate is_chacha20_poly1305_supported(), to: :jose_jwa
+
+  @doc """
   Checks whether the `padding` is natively supported by `:public_key` or not.
   """
   defdelegate is_rsa_crypt_supported(padding), to: :jose_jwa
@@ -204,15 +213,21 @@ defmodule JOSE.JWA do
       iex> JOSE.JWA.supports()
       [{:jwe,
         {:alg,
-         ["A128GCMKW", "A128KW", "A192GCMKW", "A256GCMKW", "A256KW", "ECDH-ES",
-          "ECDH-ES+A128KW", "ECDH-ES+A192KW", "ECDH-ES+A256KW", "PBES2-HS256+A128KW",
-          "PBES2-HS512+A256KW", "RSA-OAEP", "RSA1_5", "dir"]},
-        {:enc, ["A128CBC-HS256", "A128GCM", "A192GCM", "A256CBC-HS512", "A256GCM"]},
-        {:zip, ["DEF"]}}, {:jwk, {:kty, ["EC", "RSA", "oct"]}},
+         ["A128GCMKW", "A128KW", "A192GCMKW", "A192KW", "A256GCMKW", "A256KW",
+          "ECDH-ES", "ECDH-ES+A128KW", "ECDH-ES+A192KW", "ECDH-ES+A256KW",
+          "PBES2-HS256+A128KW", "PBES2-HS384+A192KW", "PBES2-HS512+A256KW",
+          "RSA-OAEP", "RSA-OAEP-256", "RSA1_5", "dir"]},
+        {:enc,
+         ["A128CBC-HS256", "A128GCM", "A192CBC-HS384", "A192GCM", "A256CBC-HS512",
+          "A256GCM", "ChaCha20/Poly1305"]}, {:zip, ["DEF"]}},
+       {:jwk, {:kty, ["EC", "OKP", "RSA", "oct"]},
+        {:kty_OKP_crv,
+         ["Ed25519", "Ed25519ph", "Ed448", "Ed448ph", "X25519", "X448"]}},
        {:jws,
         {:alg,
-         ["ES256", "ES384", "ES512", "HS256", "HS384", "HS512", "RS256", "RS384",
-          "RS512", "none"]}}]
+         ["ES256", "ES384", "ES512", "Ed25519", "Ed25519ph", "Ed448", "Ed448ph",
+          "HS256", "HS384", "HS512", "PS256", "PS384", "PS512", "Poly1305", "RS256",
+          "RS384", "RS512", "none"]}}]
 
   """
   defdelegate supports(), to: :jose_jwa

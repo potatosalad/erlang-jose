@@ -10,18 +10,13 @@
 %%%-------------------------------------------------------------------
 -module(jose_block_encryptor).
 
+-ifdef(optional_callbacks).
+
 -callback block_decrypt(Cipher, Key, CipherText) -> PlainText | error
 	when
 		Cipher     :: {atom(), pos_integer()},
 		Key        :: bitstring(),
 		CipherText :: binary(),
-		PlainText  :: binary().
--callback block_decrypt(Cipher, Key, IV, CipherText) -> PlainText | error
-	when
-		Cipher     :: {atom(), pos_integer()},
-		Key        :: bitstring(),
-		IV         :: bitstring(),
-		CipherText :: binary() | {binary(), binary(), binary()},
 		PlainText  :: binary().
 -callback block_encrypt(Cipher, Key, PlainText) -> CipherText
 	when
@@ -29,6 +24,19 @@
 		Key        :: bitstring(),
 		PlainText  :: binary(),
 		CipherText :: binary().
+
+-optional_callbacks([block_decrypt/3]).
+-optional_callbacks([block_encrypt/3]).
+
+-endif.
+
+-callback block_decrypt(Cipher, Key, IV, CipherText) -> PlainText | error
+	when
+		Cipher     :: {atom(), pos_integer()},
+		Key        :: bitstring(),
+		IV         :: bitstring(),
+		CipherText :: binary() | {binary(), binary(), binary()},
+		PlainText  :: binary().
 -callback block_encrypt(Cipher, Key, IV, PlainText) -> CipherText
 	when
 		Cipher     :: {atom(), pos_integer()},

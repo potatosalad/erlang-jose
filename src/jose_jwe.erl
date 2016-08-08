@@ -56,6 +56,8 @@
 -define(ENC_AES_MODULE,     jose_jwe_enc_aes).
 -define(ZIP_MODULE,         jose_jwe_zip).
 
+-define(ENC_CHACHA20_POLY1305_MODULE, jose_jwe_enc_chacha20_poly1305).
+
 %%====================================================================
 %% Decode API functions
 %%====================================================================
@@ -111,6 +113,8 @@ from_map({JWE, Modules, Map=#{ <<"alg">> := << "RSA", _/binary >> }}) ->
 	from_map({JWE, Modules#{ alg => ?ALG_RSA_MODULE }, Map});
 from_map({JWE, Modules, Map=#{ <<"enc">> := << "A", _/binary >> }}) ->
 	from_map({JWE, Modules#{ enc => ?ENC_AES_MODULE }, Map});
+from_map({JWE, Modules, Map=#{ <<"enc">> := << "ChaCha20/Poly1305" >> }}) ->
+	from_map({JWE, Modules#{ enc => ?ENC_CHACHA20_POLY1305_MODULE }, Map});
 from_map({JWE, Modules, Map=#{ <<"zip">> := <<"DEF">> }}) ->
 	from_map({JWE, Modules#{ zip => ?ZIP_MODULE }, Map});
 from_map({#jose_jwe{ alg = undefined, enc = undefined }, _Modules, _Map}) ->

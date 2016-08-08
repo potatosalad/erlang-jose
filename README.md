@@ -11,7 +11,7 @@ Add `jose` to your project's dependencies in `mix.exs`
 ```elixir
 defp deps do
   [
-    {:jose, "~> 1.7"}
+    {:jose, "~> 1.8"}
   ]
 end
 ```
@@ -45,7 +45,7 @@ For example, with Elixir and `mix.exs`
 ```elixir
 defp deps do
   [
-    {:jose, "~> 1.7"},
+    {:jose, "~> 1.8"},
     {:poison, "~> 2.2"}
   ]
 end
@@ -63,6 +63,24 @@ Or with Erlang and `rebar.config`
 `jose` will attempt to find a suitable JSON encoder/decoder and will default to Poison on Elixir and jiffy, jsone, or jsx on Erlang.  If more than one are present, it will default to Poison.
 
 You may also specify a different `json_module` as an application environment variable to `jose` or by using `jose:json_module/1` or `JOSE.json_module/1`.
+
+#### ChaCha20/Poly1305 Support
+
+ChaCha20/Poly1305 encryption and one-time message authentication functions are experimentally supported based on [RFC 7539](https://tools.ietf.org/html/rfc7539).
+
+Fallback support for `ChaCha20/Poly1305` encryption and `Poly1305` signing is also provided.  See [`crypto_fallback`](#cryptographic-algorithm-fallback) below.
+
+External support is also provided by the following libraries:
+
+ * [libsodium](https://github.com/potatosalad/erlang-libsodium) - `ChaCha20/Poly1305` encryption and `Poly1305` signing
+
+Other modules which implement the `jose_chacha20_poly1305` behavior may also be used as follows:
+
+```elixir
+# ChaCha20/Poly1305
+JOSE.chacha20_poly1305_module(:libsodium)                  # uses a fast Erlang port driver for libsodium
+JOSE.chacha20_poly1305_module(:jose_jwa_chacha20_poly1305) # uses the pure Erlang implementation (slow)
+```
 
 #### Curve25519 and Curve448 Support
 
@@ -118,17 +136,18 @@ JOSE.JWA.supports
 
 [{:jwe,
   {:alg,
-   ["A128GCMKW", "A128KW", "A192GCMKW", "A256GCMKW", "A256KW", "ECDH-ES",
-    "ECDH-ES+A128KW", "ECDH-ES+A192KW", "ECDH-ES+A256KW", "PBES2-HS256+A128KW",
-    "PBES2-HS512+A256KW", "RSA-OAEP", "RSA1_5", "dir"]},
-  {:enc, ["A128CBC-HS256", "A128GCM", "A192GCM", "A256CBC-HS512", "A256GCM"]},
-  {:zip, ["DEF"]}},
- {:jwk, {:kty, ["EC", "OKP", "RSA", "oct"]},
-  {:kty_OKP_crv, ["Ed25519", "Ed25519ph", "X25519"]}},
+   ["A128GCMKW", "A128KW", "A192GCMKW", "A192KW", "A256GCMKW", "A256KW",
+    "ECDH-ES", "ECDH-ES+A128KW", "ECDH-ES+A192KW", "ECDH-ES+A256KW",
+    "PBES2-HS256+A128KW", "PBES2-HS384+A192KW", "PBES2-HS512+A256KW",
+    "RSA-OAEP", "RSA1_5", "dir"]},
+  {:enc,
+   ["A128CBC-HS256", "A128GCM", "A192CBC-HS384", "A192GCM", "A256CBC-HS512",
+    "A256GCM"]}, {:zip, ["DEF"]}},
+ {:jwk, {:kty, ["EC", "OKP", "RSA", "oct"]}, {:kty_OKP_crv, []}},
  {:jws,
   {:alg,
-   ["ES256", "ES384", "ES512", "Ed25519", "Ed25519ph", "HS256", "HS384",
-    "HS512", "RS256", "RS384", "RS512"]}}]
+   ["ES256", "ES384", "ES512", "HS256", "HS384", "HS512", "RS256", "RS384",
+    "RS512"]}}]
 
 # setting crypto_fallback to true
 JOSE.crypto_fallback(true)
@@ -144,15 +163,15 @@ JOSE.JWA.supports
     "RSA-OAEP", "RSA-OAEP-256", "RSA1_5", "dir"]},
   {:enc,
    ["A128CBC-HS256", "A128GCM", "A192CBC-HS384", "A192GCM", "A256CBC-HS512",
-    "A256GCM"]}, {:zip, ["DEF"]}},
+    "A256GCM", "ChaCha20/Poly1305"]}, {:zip, ["DEF"]}},
  {:jwk, {:kty, ["EC", "OKP", "RSA", "oct"]},
   {:kty_OKP_crv,
    ["Ed25519", "Ed25519ph", "Ed448", "Ed448ph", "X25519", "X448"]}},
  {:jws,
   {:alg,
    ["ES256", "ES384", "ES512", "Ed25519", "Ed25519ph", "Ed448", "Ed448ph",
-    "HS256", "HS384", "HS512", "PS256", "PS384", "PS512", "RS256", "RS384",
-    "RS512"]}}]
+    "HS256", "HS384", "HS512", "PS256", "PS384", "PS512", "Poly1305", "RS256",
+    "RS384", "RS512"]}}]
 ```
 
 #### Unsecured Signing Vulnerability
@@ -203,8 +222,9 @@ You may also enable the `"none"` algorithm as an application environment variabl
 JOSE.JWA.supports[:jws]
 
 {:alg,
- ["ES256", "ES384", "ES512", "HS256", "HS384", "HS512", "RS256", "RS384",
-  "RS512"]}
+ ["ES256", "ES384", "ES512", "Ed25519", "Ed25519ph", "Ed448", "Ed448ph",
+  "HS256", "HS384", "HS512", "PS256", "PS384", "PS512", "Poly1305", "RS256",
+  "RS384", "RS512"]}
 
 # setting unsecured_signing to true
 JOSE.unsecured_signing(true)
@@ -213,8 +233,9 @@ JOSE.unsecured_signing(true)
 JOSE.JWA.supports[:jws]
 
 {:alg,
- ["ES256", "ES384", "ES512", "HS256", "HS384", "HS512", "RS256", "RS384",
-  "RS512", "none"]}
+ ["ES256", "ES384", "ES512", "Ed25519", "Ed25519ph", "Ed448", "Ed448ph",
+  "HS256", "HS384", "HS512", "PS256", "PS384", "PS512", "Poly1305", "RS256",
+  "RS384", "RS512", "none"]}
 ```
 
 ## Usage
@@ -256,8 +277,8 @@ verified = JOSE.JWT.verify(jwk, compact_signed)
 # {true,
 #  %JOSE.JWT{fields: %{"exp" => 1300819380, "http://example.com/is_root" => true,
 #     "iss" => "joe"}},
-#  %JOSE.JWS{alg: {:jose_jws_alg_hmac, {:jose_jws_alg_hmac, :sha256}},
-#   b64: :undefined, fields: %{"typ" => "JWT"}, sph: :undefined}}
+#  %JOSE.JWS{alg: {:jose_jws_alg_hmac, :HS256}, b64: :undefined,
+#   fields: %{"typ" => "JWT"}}}
 
 verified == JOSE.JWT.verify(jwk, signed)
 # true
@@ -302,8 +323,8 @@ Verified = jose_jwt:verify(JWK, CompactSigned).
 %               <<"http://example.com/is_root">> => true,
 %               <<"iss">> => <<"joe">>}},
 %     #jose_jws{
-%         alg = {jose_jws_alg_hmac,{jose_jws_alg_hmac,sha256}},
-%         b64 = undefined,sph = undefined,
+%         alg = {jose_jws_alg_hmac,'HS256'},
+%         b64 = undefined,
 %         fields = #{<<"typ">> => <<"JWT">>}}}
 
 Verified =:= jose_jwt:verify(JWK, Signed).
@@ -419,9 +440,9 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 
 #### `"alg"` [RFC 7518 Section 4](https://tools.ietf.org/html/rfc7518#section-4)
 
-- [X] `RSA1_5`
-- [X] `RSA-OAEP`
-- [X] `RSA-OAEP-256` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18), [OTP-19](#footnote-otp-19)</sup>
+- [X] `A128GCMKW` <sup>[OTP-17](#footnote-otp-17)</sup>
+- [X] `A192GCMKW` <sup>[OTP-17](#footnote-otp-17)</sup>
+- [X] `A256GCMKW` <sup>[OTP-17](#footnote-otp-17)</sup>
 - [X] `A128KW` <sup>[OTP-17](#footnote-otp-17)</sup>
 - [X] `A192KW` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18)</sup>
 - [X] `A256KW` <sup>[OTP-17](#footnote-otp-17)</sup>
@@ -430,12 +451,12 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 - [X] `ECDH-ES+A128KW`
 - [X] `ECDH-ES+A192KW`
 - [X] `ECDH-ES+A256KW`
-- [X] `A128GCMKW` <sup>[OTP-17](#footnote-otp-17)</sup>
-- [X] `A192GCMKW` <sup>[OTP-17](#footnote-otp-17)</sup>
-- [X] `A256GCMKW` <sup>[OTP-17](#footnote-otp-17)</sup>
 - [X] `PBES2-HS256+A128KW` <sup>[OTP-17](#footnote-otp-17)</sup>
 - [X] `PBES2-HS384+A192KW` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18)</sup>
 - [X] `PBES2-HS512+A256KW` <sup>[OTP-17](#footnote-otp-17)</sup>
+- [X] `RSA1_5`
+- [X] `RSA-OAEP`
+- [X] `RSA-OAEP-256` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18), [OTP-19](#footnote-otp-19)</sup>
 
 #### `"enc"` [RFC 7518 Section 5](https://tools.ietf.org/html/rfc7518#section-5)
 
@@ -445,6 +466,7 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 - [X] `A128GCM` <sup>[OTP-17](#footnote-otp-17)</sup>
 - [X] `A192GCM` <sup>[OTP-17](#footnote-otp-17)</sup>
 - [X] `A256GCM` <sup>[OTP-17](#footnote-otp-17)</sup>
+- [X] `ChaCha20/Poly1305` <sup>experimental</sup>
 
 #### `"zip"` [RFC 7518 Section 7.3](https://tools.ietf.org/html/rfc7518#section-7.3)
 
@@ -480,6 +502,7 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 - [X] `HS256`
 - [X] `HS384`
 - [X] `HS512`
+- [X] `Poly1305` <sup>experimental</sup>
 - [X] `PS256` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18), [OTP-19](#footnote-otp-19)</sup>
 - [X] `PS384` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18), [OTP-19](#footnote-otp-19)</sup>
 - [X] `PS512` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18), [OTP-19](#footnote-otp-19)</sup>

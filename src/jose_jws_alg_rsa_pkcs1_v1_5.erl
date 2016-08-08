@@ -25,52 +25,44 @@
 %% API
 
 %% Types
--record(jose_jws_alg_rsa_pkcs1_v1_5, {
-	digest = undefined :: undefined | sha256 | sha384 | sha512
-}).
-
--type alg() :: #jose_jws_alg_rsa_pkcs1_v1_5{}.
+-type alg() :: 'RS256' | 'RS384' | 'RS512'.
 
 -export_type([alg/0]).
-
--define(RS256, #jose_jws_alg_rsa_pkcs1_v1_5{digest=sha256}).
--define(RS384, #jose_jws_alg_rsa_pkcs1_v1_5{digest=sha384}).
--define(RS512, #jose_jws_alg_rsa_pkcs1_v1_5{digest=sha512}).
 
 %%====================================================================
 %% jose_jws callbacks
 %%====================================================================
 
 from_map(F = #{ <<"alg">> := <<"RS256">> }) ->
-	{?RS256, maps:remove(<<"alg">>, F)};
+	{'RS256', maps:remove(<<"alg">>, F)};
 from_map(F = #{ <<"alg">> := <<"RS384">> }) ->
-	{?RS384, maps:remove(<<"alg">>, F)};
+	{'RS384', maps:remove(<<"alg">>, F)};
 from_map(F = #{ <<"alg">> := <<"RS512">> }) ->
-	{?RS512, maps:remove(<<"alg">>, F)}.
+	{'RS512', maps:remove(<<"alg">>, F)}.
 
-to_map(?RS256, F) ->
+to_map('RS256', F) ->
 	F#{ <<"alg">> => <<"RS256">> };
-to_map(?RS384, F) ->
+to_map('RS384', F) ->
 	F#{ <<"alg">> => <<"RS384">> };
-to_map(?RS512, F) ->
+to_map('RS512', F) ->
 	F#{ <<"alg">> => <<"RS512">> }.
 
 %%====================================================================
 %% jose_jws_alg callbacks
 %%====================================================================
 
-generate_key(?RS256, _Fields) ->
+generate_key('RS256', _Fields) ->
 	jose_jws_alg:generate_key({rsa, 2048}, <<"RS256">>);
-generate_key(?RS384, _Fields) ->
+generate_key('RS384', _Fields) ->
 	jose_jws_alg:generate_key({rsa, 3072}, <<"RS384">>);
-generate_key(?RS512, _Fields) ->
+generate_key('RS512', _Fields) ->
 	jose_jws_alg:generate_key({rsa, 4096}, <<"RS512">>).
 
-sign(#jose_jwk{kty={KTYModule, KTY}}, Message, #jose_jws_alg_rsa_pkcs1_v1_5{digest=DigestType}) ->
-	KTYModule:sign(Message, {rsa_pkcs1_padding, DigestType}, KTY).
+sign(#jose_jwk{kty={KTYModule, KTY}}, Message, ALG) ->
+	KTYModule:sign(Message, ALG, KTY).
 
-verify(#jose_jwk{kty={KTYModule, KTY}}, Message, Signature, #jose_jws_alg_rsa_pkcs1_v1_5{digest=DigestType}) ->
-	KTYModule:verify(Message, {rsa_pkcs1_padding, DigestType}, Signature, KTY).
+verify(#jose_jwk{kty={KTYModule, KTY}}, Message, Signature, ALG) ->
+	KTYModule:verify(Message, ALG, Signature, KTY).
 
 %%====================================================================
 %% API functions

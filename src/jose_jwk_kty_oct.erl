@@ -118,8 +118,13 @@ derive_key(Key) ->
 %% jose_jwk_use_sig callbacks
 %%====================================================================
 
-sign(Message, DigestType, Key) ->
-	crypto:hmac(DigestType, Key, Message).
+sign(Message, JWSALG, Key) when is_atom(JWSALG) ->
+	DigestType = jws_alg_to_digest_type(JWSALG),
+	crypto:hmac(DigestType, Key, Message);
+sign(Message, {'Poly1305', Nonce}, Key) ->
+	jose_chacha20_poly1305:authenticate(Message, Key, Nonce);
+sign(_Message, JWSALG, _Key) ->
+	erlang:error({not_supported, [JWSALG]}).
 
 signer(_KTY, #{ <<"alg">> := ALG, <<"use">> := <<"sig">> }) ->
 	#{
@@ -138,13 +143,28 @@ verifier(_KTY, #{ <<"alg">> := ALG, <<"use">> := <<"sig">> }) ->
 	[ALG];
 verifier(Key, _Fields) ->
 	case bit_size(Key) of
+		256 ->
+			case jose_jwa:is_chacha20_poly1305_supported() of
+				true ->
+					[<<"HS256">>, <<"Poly1305">>];
+				false ->
+					[<<"HS256">>]
+			end;
 		KeySize when KeySize < 384 -> [<<"HS256">>];
 		KeySize when KeySize < 512 -> [<<"HS256">>, <<"HS384">>];
 		_ -> [<<"HS256">>, <<"HS384">>, <<"HS512">>]
 	end.
 
-verify(Message, DigestType, Signature, Key) ->
-	jose_jwa:constant_time_compare(Signature, sign(Message, DigestType, Key)).
+verify(Message, JWSALG, Signature, Key) when is_atom(JWSALG) ->
+	try sign(Message, JWSALG, Key) of
+		Challenge ->
+			jose_jwa:constant_time_compare(Signature, Challenge)
+	catch
+		error:{not_supported, _} ->
+			false
+	end;
+verify(Message, {'Poly1305', Nonce}, Signature, Key) ->
+	jose_chacha20_poly1305:verify(Signature, Message, Key, Nonce).
 
 %%====================================================================
 %% jose_jwk_oct callbacks
@@ -159,3 +179,13 @@ to_oct(OCTBinary) when is_binary(OCTBinary) ->
 %%%-------------------------------------------------------------------
 %%% Internal functions
 %%%-------------------------------------------------------------------
+
+%% @private
+jws_alg_to_digest_type('HS256') ->
+	sha256;
+jws_alg_to_digest_type('HS384') ->
+	sha384;
+jws_alg_to_digest_type('HS512') ->
+	sha512;
+jws_alg_to_digest_type(ALG) ->
+	erlang:error({not_supported, [ALG]}).

@@ -33,6 +33,7 @@ defmodule JOSE.JWS do
     * `"HS256"`
     * `"HS384"`
     * `"HS512"`
+    * `"Poly1305"`
     * `"PS256"`
     * `"PS384"`
     * `"PS512"`
@@ -143,6 +144,25 @@ defmodule JOSE.JWS do
       iex> JOSE.JWS.verify(jwk_hs512, signed_hs512) |> elem(0)
       true
 
+  ### Poly1305
+
+  This is highly experimental and based on [RFC 7539](https://tools.ietf.org/html/rfc7539).
+
+  Every signed message has a new 96-bit nonce generated which is used to generate a one-time key from the secret.
+
+      # let's generate the key we'll use below
+      jwk_poly1305 = JOSE.JWK.generate_key({:oct, 32})
+
+      # Poly1305
+      iex> signed_poly1305 = JOSE.JWS.sign(jwk_poly1305, "{}", %{ "alg" => "Poly1305" }) |> JOSE.JWS.compact |> elem(1)
+      "eyJhbGciOiJQb2x5MTMwNSIsIm5vbmNlIjoiTjhiR3A1QXdob0Y3Yk1YUiJ9.e30.XWcCkV1WU72cTO-XuiNRAQ"
+      iex> JOSE.JWS.verify(jwk_poly1305, signed_poly1305) |> elem(0)
+      true
+
+      # let's inspect the protected header to see the generated nonce
+      iex> JOSE.JWS.peek_protected(signed_poly1305)
+      "{\"alg\":\"Poly1305\",\"nonce\":\"N8bGp5AwhoF7bMXR\"}"
+
   ### PS256, PS384, and PS512
 
       # let's generate the 3 keys we'll use below (cutkey must be installed as a dependency)
@@ -226,17 +246,14 @@ defmodule JOSE.JWS do
   Converts a binary or map into a `JOSE.JWS`.
 
       iex> JOSE.JWS.from(%{ "alg" => "HS256" })
-      %JOSE.JWS{alg: {:jose_jws_alg_hmac, {:jose_jws_alg_hmac, :sha256}},
-       b64: :undefined, fields: %{}}
+      %JOSE.JWS{alg: {:jose_jws_alg_hmac, :HS256}, b64: :undefined, fields: %{}}
       iex> JOSE.JWS.from("{\"alg\":\"HS256\"}")
-      %JOSE.JWS{alg: {:jose_jws_alg_hmac, {:jose_jws_alg_hmac, :sha256}},
-       b64: :undefined, fields: %{}}
+      %JOSE.JWS{alg: {:jose_jws_alg_hmac, :HS256}, b64: :undefined, fields: %{}}
 
   Support for custom algorithms may be added by specifying a map tuple:
 
       iex> JOSE.JWS.from({%{ alg: MyCustomAlgorithm }, %{ "alg" => "custom" }})
-      %JOSE.JWS{alg: {MyCustomAlgorithm, :state},
-       b64: :undefined, fields: %{}}
+      %JOSE.JWS{alg: {MyCustomAlgorithm, :state}, b64: :undefined, fields: %{}}
 
   *Note:* `MyCustomAlgorithm` must implement the `:jose_jws` and `:jose_jws_alg` behaviours.
   """
@@ -573,8 +590,7 @@ defmodule JOSE.JWS do
        kty: {:jose_jwk_kty_oct, <<169, 72, 56, 99>>}}
       iex> JOSE.JWS.verify(jwk, "eyJhbGciOiJIUzI1NiJ9.e30.5paAJxaOXSqRUIXrP_vJXUZu2SCBH-ojgP4D6Xr6GPU")
       {true, "{}",
-       %JOSE.JWS{alg: {:jose_jws_alg_hmac, {:jose_jws_alg_hmac, :sha256}},
-        b64: :undefined, fields: %{}}}
+       %JOSE.JWS{alg: {:jose_jws_alg_hmac, :HS256}, b64: :undefined, fields: %{}}}
 
   A list of `jwk` keys can also be specified where each key will be used to verify every entry in a signed list:
 
@@ -593,19 +609,17 @@ defmodule JOSE.JWS do
       [{%JOSE.JWK{fields: %{}, keys: :undefined,
          kty: {:jose_jwk_kty_oct, <<169, 72, 56, 99>>}},
         [{true, "{}",
-          %JOSE.JWS{alg: {:jose_jws_alg_hmac, {:jose_jws_alg_hmac, :sha256}},
-           b64: :undefined, fields: %{}}},
+          %JOSE.JWS{alg: {:jose_jws_alg_hmac, :HS256}, b64: :undefined, fields: %{}}},
          {false, "{}",
-          %JOSE.JWS{alg: {:jose_jws_alg_hmac, {:jose_jws_alg_hmac, :sha256}},
-           b64: :undefined, fields: %{}}}]},
+          %JOSE.JWS{alg: {:jose_jws_alg_hmac, :HS256}, b64: :undefined,
+           fields: %{}}}]},
        {%JOSE.JWK{fields: %{}, keys: :undefined,
          kty: {:jose_jwk_kty_oct, <<31, 235, 255, 55>>}},
         [{false, "{}",
-          %JOSE.JWS{alg: {:jose_jws_alg_hmac, {:jose_jws_alg_hmac, :sha256}},
-           b64: :undefined, fields: %{}}},
+          %JOSE.JWS{alg: {:jose_jws_alg_hmac, :HS256}, b64: :undefined, fields: %{}}},
          {true, "{}",
-          %JOSE.JWS{alg: {:jose_jws_alg_hmac, {:jose_jws_alg_hmac, :sha256}},
-           b64: :undefined, fields: %{}}}]}]
+          %JOSE.JWS{alg: {:jose_jws_alg_hmac, :HS256}, b64: :undefined,
+           fields: %{}}}]}]
 
   """
   def verify(jwk=%JOSE.JWK{}, signed), do: verify(JOSE.JWK.to_record(jwk), signed)

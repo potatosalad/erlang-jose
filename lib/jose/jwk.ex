@@ -521,12 +521,14 @@ defmodule JOSE.JWK do
 
     * `"EC"` - uses the same named curve to generate a new key
     * `"oct"` - uses the byte size to generate a new key
+    * `"OKP"` - uses the same named curve to generate a new key
     * `"RSA"` - uses the same modulus and exponent sizes to generate a new key
 
   The following initialization params may also be used:
 
-    * `{:ec, :secp256r1 | :secp384r1 | :secp521r1}` - generates an `"EC"` key using the `"P-256"`, `"P-384"`, or `"P-521"` curves
+    * `{:ec, "P-256" | "P-384" | "P-521"}` - generates an `"EC"` key using the `"P-256"`, `"P-384"`, or `"P-521"` curves
     * `{:oct, bytes}` - generates an `"oct"` key made of a random `bytes` number of bytes
+    * `{:okp, :Ed25519 | :Ed25519ph | :Ed448 | :Ed448ph | :X25519 | :X448}` - generates an `"OKP"` key using the specified EdDSA or ECDH edwards curve
     * `{:rsa, modulus_size} | {:rsa, modulus_size, exponent_size}` - generates an `"RSA"` key using the `modulus_size` and `exponent_size`
 
   """

@@ -29,6 +29,8 @@
 -export([alg_rsa_key_encrypt_and_key_decrypt/1]).
 -export([enc_aes_from_map_and_to_map/1]).
 -export([enc_aes_block_encrypt_and_block_decrypt/1]).
+-export([enc_chacha20_poly1305_from_map_and_to_map/1]).
+-export([enc_chacha20_poly1305_block_encrypt_and_block_decrypt/1]).
 -export([zip_from_map_and_to_map/1]).
 -export([zip_block_encrypt_and_block_decrypt/1]).
 -export([zip_compress_and_uncompress/1]).
@@ -41,6 +43,7 @@ all() ->
 		{group, jose_jwe_alg_pbes2},
 		{group, jose_jwe_alg_rsa},
 		{group, jose_jwe_enc_aes},
+		{group, jose_jwe_enc_chacha20_poly1305},
 		{group, jose_jwe_zip}
 	].
 
@@ -71,6 +74,10 @@ groups() ->
 		{jose_jwe_enc_aes, [parallel], [
 			enc_aes_from_map_and_to_map,
 			enc_aes_block_encrypt_and_block_decrypt
+		]},
+		{jose_jwe_enc_chacha20_poly1305, [parallel], [
+			enc_chacha20_poly1305_from_map_and_to_map,
+			enc_chacha20_poly1305_block_encrypt_and_block_decrypt
 		]},
 		{jose_jwe_zip, [parallel], [
 			zip_from_map_and_to_map,
@@ -169,6 +176,16 @@ enc_aes_from_map_and_to_map(Config) ->
 enc_aes_block_encrypt_and_block_decrypt(Config) ->
 	ct_property_test:quickcheck(
 		jose_jwe_enc_aes_props:prop_block_encrypt_and_block_decrypt(),
+		Config).
+
+enc_chacha20_poly1305_from_map_and_to_map(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwe_enc_chacha20_poly1305_props:prop_from_map_and_to_map(),
+		Config).
+
+enc_chacha20_poly1305_block_encrypt_and_block_decrypt(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwe_enc_chacha20_poly1305_props:prop_block_encrypt_and_block_decrypt(),
 		Config).
 
 zip_from_map_and_to_map(Config) ->

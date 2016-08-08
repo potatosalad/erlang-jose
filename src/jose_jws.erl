@@ -53,6 +53,7 @@
 -define(ALG_EDDSA_MODULE,          jose_jws_alg_eddsa).
 -define(ALG_HMAC_MODULE,           jose_jws_alg_hmac).
 -define(ALG_NONE_MODULE,           jose_jws_alg_none).
+-define(ALG_POLY1305_MODULE,       jose_jws_alg_poly1305).
 -define(ALG_RSA_PKCS1_V1_5_MODULE, jose_jws_alg_rsa_pkcs1_v1_5).
 -define(ALG_RSA_PSS_MODULE,        jose_jws_alg_rsa_pss).
 
@@ -109,6 +110,8 @@ from_map({JWS, Modules, Map=#{ <<"alg">> := << "ES", _/binary >> }}) ->
 	from_map({JWS, Modules#{ alg => ?ALG_ECDSA_MODULE }, Map});
 from_map({JWS, Modules, Map=#{ <<"alg">> := << "HS", _/binary >> }}) ->
 	from_map({JWS, Modules#{ alg => ?ALG_HMAC_MODULE }, Map});
+from_map({JWS, Modules, Map=#{ <<"alg">> := << "Poly1305" >> }}) ->
+	from_map({JWS, Modules#{ alg => ?ALG_POLY1305_MODULE }, Map});
 from_map({JWS, Modules, Map=#{ <<"alg">> := << "PS", _/binary >> }}) ->
 	from_map({JWS, Modules#{ alg => ?ALG_RSA_PSS_MODULE }, Map});
 from_map({JWS, Modules, Map=#{ <<"alg">> := << "RS", _/binary >> }}) ->
@@ -293,20 +296,36 @@ sign(KeyList, PlainText, HeaderList, SignerList)
 sign(Key=#jose_jwk{}, PlainText, Header, JWS=#jose_jws{alg={ALGModule, ALG}})
 		when is_binary(PlainText)
 		andalso is_map(Header) ->
-	{Modules, ProtectedBinary} = to_binary(JWS),
+	_ = code:ensure_loaded(ALGModule),
+	NewALG = case erlang:function_exported(ALGModule, presign, 2) of
+		false ->
+			ALG;
+		true ->
+			ALGModule:presign(Key, ALG)
+	end,
+	NewJWS = JWS#jose_jws{alg={ALGModule, NewALG}},
+	{Modules, ProtectedBinary} = to_binary(NewJWS),
 	Protected = base64url:encode(ProtectedBinary),
 	Payload = base64url:encode(PlainText),
-	SigningInput = signing_input(PlainText, Protected, JWS),
-	Signature = base64url:encode(ALGModule:sign(Key, SigningInput, ALG)),
+	SigningInput = signing_input(PlainText, Protected, NewJWS),
+	Signature = base64url:encode(ALGModule:sign(Key, SigningInput, NewALG)),
 	{Modules, maps:put(<<"payload">>, Payload, signature_to_map(Protected, Header, Key, Signature))};
 sign(Key=none, PlainText, Header, JWS=#jose_jws{alg={ALGModule, ALG}})
 		when is_binary(PlainText)
 		andalso is_map(Header) ->
-	{Modules, ProtectedBinary} = to_binary(JWS),
+	_ = code:ensure_loaded(ALGModule),
+	NewALG = case erlang:function_exported(ALGModule, presign, 2) of
+		false ->
+			ALG;
+		true ->
+			ALGModule:presign(Key, ALG)
+	end,
+	NewJWS = JWS#jose_jws{alg={ALGModule, NewALG}},
+	{Modules, ProtectedBinary} = to_binary(NewJWS),
 	Protected = base64url:encode(ProtectedBinary),
 	Payload = base64url:encode(PlainText),
-	SigningInput = signing_input(PlainText, Protected, JWS),
-	Signature = base64url:encode(ALGModule:sign(Key, SigningInput, ALG)),
+	SigningInput = signing_input(PlainText, Protected, NewJWS),
+	Signature = base64url:encode(ALGModule:sign(Key, SigningInput, NewALG)),
 	{Modules, maps:put(<<"payload">>, Payload, signature_to_map(Protected, Header, Key, Signature))};
 sign(KeyList, PlainText, HeaderList, SignerList)
 		when (is_list(KeyList)
@@ -448,10 +467,18 @@ do_expand(BadArg) ->
 
 %% @private
 map_signatures([Key | Keys], PlainText, [Header | Headers], [Signer=#jose_jws{alg={ALGModule, ALG}} | Signers], Acc) ->
-	{_Modules, ProtectedBinary} = to_binary(Signer),
+	_ = code:ensure_loaded(ALGModule),
+	NewALG = case erlang:function_exported(ALGModule, presign, 2) of
+		false ->
+			ALG;
+		true ->
+			ALGModule:presign(Key, ALG)
+	end,
+	NewSigner = Signer#jose_jws{alg={ALGModule, NewALG}},
+	{_Modules, ProtectedBinary} = to_binary(NewSigner),
 	Protected = base64url:encode(ProtectedBinary),
-	SigningInput = signing_input(PlainText, Protected, Signer),
-	Signature = base64url:encode(ALGModule:sign(Key, SigningInput, ALG)),
+	SigningInput = signing_input(PlainText, Protected, NewSigner),
+	Signature = base64url:encode(ALGModule:sign(Key, SigningInput, NewALG)),
 	map_signatures(Keys, PlainText, Headers, Signers, [signature_to_map(Protected, Header, Key, Signature) | Acc]);
 map_signatures([], _PlainText, [], [], Acc) ->
 	lists:reverse(Acc).

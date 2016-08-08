@@ -182,7 +182,8 @@ derive_key(#'ECPrivateKey'{parameters=ECParameters, publicKey=Octets}, ECPrivate
 %% jose_jwk_use_sig callbacks
 %%====================================================================
 
-sign(Message, DigestType, ECPrivateKey=#'ECPrivateKey'{}) ->
+sign(Message, JWSALG, ECPrivateKey=#'ECPrivateKey'{}) ->
+	DigestType = jws_alg_to_digest_type(ECPrivateKey, JWSALG),
 	DERSignature = public_key:sign(Message, DigestType, ECPrivateKey),
 	#'ECDSA-Sig-Value'{ r = R, s = S } = public_key:der_decode('ECDSA-Sig-Value', DERSignature),
 	RBin = int_to_bin(R),
@@ -192,7 +193,7 @@ sign(Message, DigestType, ECPrivateKey=#'ECPrivateKey'{}) ->
 	SPad = pad(SBin, Size),
 	Signature = << RPad/binary, SPad/binary >>,
 	Signature;
-sign(_Message, _DigestType, {#'ECPoint'{}, _}) ->
+sign(_Message, _JWSALG, {#'ECPoint'{}, _}) ->
 	erlang:error(not_supported).
 
 signer(#'ECPrivateKey'{}, #{ <<"alg">> := ALG, <<"use">> := <<"sig">> }) ->
@@ -229,14 +230,20 @@ verifier({#'ECPoint'{}, {namedCurve, Parameters}}, _Fields) ->
 		end
 	].
 
-verify(Message, DigestType, Signature, ECPublicKey={#'ECPoint'{}, _}) ->
-	SignatureLen = byte_size(Signature),
-	{RBin, SBin} = split_binary(Signature, (SignatureLen div 2)),
-	R = crypto:bytes_to_integer(RBin),
-	S = crypto:bytes_to_integer(SBin),
-	DERSignature = public_key:der_encode('ECDSA-Sig-Value', #'ECDSA-Sig-Value'{ r = R, s = S }),
-	public_key:verify(Message, DigestType, DERSignature, ECPublicKey);
-verify(Message, DigestType, Signature, #'ECPrivateKey'{parameters=ECParameters, publicKey=Octets0}) ->
+verify(Message, JWSALG, Signature, ECPublicKey={#'ECPoint'{}, _}) ->
+	try jws_alg_to_digest_type(ECPublicKey, JWSALG) of
+		DigestType ->
+			SignatureLen = byte_size(Signature),
+			{RBin, SBin} = split_binary(Signature, (SignatureLen div 2)),
+			R = crypto:bytes_to_integer(RBin),
+			S = crypto:bytes_to_integer(SBin),
+			DERSignature = public_key:der_encode('ECDSA-Sig-Value', #'ECDSA-Sig-Value'{ r = R, s = S }),
+			public_key:verify(Message, DigestType, DERSignature, ECPublicKey)
+	catch
+		error:{not_supported, _} ->
+			false
+	end;
+verify(Message, JWSALG, Signature, #'ECPrivateKey'{parameters=ECParameters, publicKey=Octets0}) ->
 	Octets = case Octets0 of
 		{_, Octets1} ->
 			Octets1;
@@ -245,7 +252,7 @@ verify(Message, DigestType, Signature, #'ECPrivateKey'{parameters=ECParameters, 
 	end,
 	ECPoint = #'ECPoint'{point=Octets},
 	ECPublicKey = {ECPoint, ECParameters},
-	verify(Message, DigestType, Signature, ECPublicKey).
+	verify(Message, JWSALG, Signature, ECPublicKey).
 
 %%====================================================================
 %% API functions
@@ -332,6 +339,20 @@ int_to_bin_neg(-1, Ds=[MSB|_]) when MSB >= 16#80 ->
 	list_to_binary(Ds);
 int_to_bin_neg(X,Ds) ->
 	int_to_bin_neg(X bsr 8, [(X band 255)|Ds]).
+
+%% @private
+jws_alg_to_digest_type(<<"P-256">>, 'ES256') ->
+	sha256;
+jws_alg_to_digest_type(<<"P-384">>, 'ES384') ->
+	sha384;
+jws_alg_to_digest_type(<<"P-521">>, 'ES512') ->
+	sha512;
+jws_alg_to_digest_type(#'ECPrivateKey'{parameters={namedCurve, Parameters}}, ALG) ->
+	jws_alg_to_digest_type(parameters_to_crv(Parameters), ALG);
+jws_alg_to_digest_type({#'ECPoint'{}, {namedCurve, Parameters}}, ALG) ->
+	jws_alg_to_digest_type(parameters_to_crv(Parameters), ALG);
+jws_alg_to_digest_type(KeyOrCurve, ALG) ->
+	erlang:error({not_supported, [KeyOrCurve, ALG]}).
 
 %% @private
 pad(Bin, Size) when byte_size(Bin) =:= Size ->

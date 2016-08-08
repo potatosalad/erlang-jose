@@ -295,4 +295,39 @@ defmodule JOSETest do
       assert :jose_json_poison_lexical_encoder.decode(json) == term
     end
   end
+
+  # See https://github.com/ueberauth/guardian/issues/152#issuecomment-221270029
+  test "sign and verify with incompatible key types is not allowed" do
+    jwk_oct16 = JOSE.JWK.generate_key({:oct, 16})
+    jwk_ec256 = JOSE.JWK.generate_key({:ec, "P-256"})
+    jwk_ec521 = JOSE.JWK.generate_key({:ec, "P-521"})
+    jws_hs256 = JOSE.JWS.from(%{ "alg" => "HS256" })
+    jws_es256 = JOSE.JWS.from(%{ "alg" => "ES256" })
+    jwt = JOSE.JWT.from(%{ "test" => true })
+    assert_raise ErlangError, "erlang error: {:not_supported, [:ES256]}", fn ->
+      JOSE.JWT.sign(jwk_oct16, jws_es256, jwt)
+    end
+    assert_raise ErlangError, "erlang error: {:not_supported, [\"P-256\", :HS256]}", fn ->
+      JOSE.JWT.sign(jwk_ec256, jws_hs256, jwt)
+    end
+    assert_raise ErlangError, "erlang error: {:not_supported, [\"P-521\", :ES256]}", fn ->
+      JOSE.JWT.sign(jwk_ec521, jws_es256, jwt)
+    end
+    signed_hs256 = JOSE.JWT.sign(jwk_oct16, jws_hs256, jwt) |> JOSE.JWS.compact |> elem(1)
+    signed_es256 = JOSE.JWT.sign(jwk_ec256, jws_es256, jwt) |> JOSE.JWS.compact |> elem(1)
+    assert(JOSE.JWT.verify_strict(jwk_oct16, ["HS256"], signed_hs256) |> elem(0))
+    assert(JOSE.JWT.verify_strict(jwk_ec256, ["ES256"], signed_es256) |> elem(0))
+    refute(JOSE.JWT.verify_strict(jwk_ec256, ["HS256"], signed_hs256) |> elem(0))
+    refute(JOSE.JWT.verify_strict(jwk_oct16, ["ES256"], signed_es256) |> elem(0))
+    refute(JOSE.JWT.verify(jwk_ec256, signed_hs256) |> elem(0))
+    refute(JOSE.JWT.verify(jwk_oct16, signed_es256) |> elem(0))
+    {kty_module, kty} = jwk_oct16.kty
+    bad_signed_input = JOSE.JWS.signing_input(JOSE.JWT.to_binary(jwt) |> elem(1), jws_es256)
+    bad_signature    = kty_module.sign(bad_signed_input, :HS256, kty) |> :base64url.encode
+    bad_signed_hs256 = bad_signed_input <> "." <> bad_signature
+    refute(JOSE.JWT.verify_strict(jwk_oct16, ["HS256"], bad_signed_hs256) |> elem(0))
+    refute(JOSE.JWT.verify_strict(jwk_ec256, ["ES256"], bad_signed_hs256) |> elem(0))
+    refute(JOSE.JWT.verify(jwk_oct16, bad_signed_hs256) |> elem(0))
+    refute(JOSE.JWT.verify(jwk_ec256, bad_signed_hs256) |> elem(0))
+  end
 end

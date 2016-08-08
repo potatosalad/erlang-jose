@@ -25,6 +25,10 @@ alg() ->
 		<<"ES512">>
 	]).
 
+alg(secp256r1) -> return(<<"ES256">>);
+alg(secp384r1) -> return(<<"ES384">>);
+alg(secp521r1) -> return(<<"ES512">>).
+
 opt_map() ->
 	oneof([
 		#{},
@@ -55,7 +59,7 @@ jwk_jws_maps() ->
 	?LET({CurveId, ALG, {PrivateKey, PublicKey}, Opts},
 		?LET(CurveId,
 			ec_curve(),
-			{CurveId, alg(), ec_keypair(CurveId), opt_map()}),
+			{CurveId, alg(CurveId), ec_keypair(CurveId), opt_map()}),
 		begin
 			JWKSigner = jose_jwk:from_key(PrivateKey),
 			JWKVerifier = jose_jwk:from_key(PublicKey),

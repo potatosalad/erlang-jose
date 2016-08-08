@@ -36,6 +36,7 @@ defmodule JOSE.JWE do
     * `"A128GCM"`
     * `"A192GCM"`
     * `"A256GCM"`
+    * `"ChaCha20/Poly1305"`
 
   ## Compression Algorithms
 
@@ -299,6 +300,16 @@ defmodule JOSE.JWE do
       iex> encrypted_a256gcm = JOSE.JWE.block_encrypt(jwk_oct256, "{}", %{ "alg" => "dir", "enc" => "A256GCM" }) |> JOSE.JWE.compact |> elem(1)
       "eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..rDTJhd5ja5pDAYtn.PrM.MQdLgiVXQsG_cLas93ZEHw"
       iex> JOSE.JWE.block_decrypt(jwk_oct256, encrypted_a256gcm) |> elem(0)
+      "{}"
+
+  ### ChaCha20/Poly1305
+
+  This is highly experimental and based on [RFC 7539](https://tools.ietf.org/html/rfc7539).
+
+      # ChaCha20/Poly1305
+      iex> encrypted_chacha20_poly1305 = JOSE.JWE.block_encrypt(jwk_oct256, "{}", %{ "alg" => "dir", "enc" => "ChaCha20/Poly1305" }) |> JOSE.JWE.compact |> elem(1)
+      "eyJhbGciOiJkaXIiLCJlbmMiOiJDaGFDaGEyMC9Qb2x5MTMwNSJ9..gunc-Xr1t1jqZX1l.8Yc.yi9qKB4ANjfQCPjgYwf-zQ"
+      iex> JOSE.JWE.block_decrypt(jwk_oct256, encrypted_chacha20_poly1305) |> elem(0)
       "{}"
 
   ## Compression Examples

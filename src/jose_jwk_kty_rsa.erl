@@ -202,10 +202,9 @@ encrypt_public(PlainText, Options, #'RSAPrivateKey'{modulus=Modulus, publicExpon
 %% jose_jwk_use_sig callbacks
 %%====================================================================
 
-sign(Message, {Padding, DigestType}, RSAPrivateKey=#'RSAPrivateKey'{}) ->
-	jose_jwa:sign(Message, DigestType, RSAPrivateKey, Padding);
-sign(Message, DigestType, RSAPrivateKey=#'RSAPrivateKey'{}) ->
-	sign(Message, {rsa_pkcs1_padding, DigestType}, RSAPrivateKey).
+sign(Message, JWSALG, RSAPrivateKey=#'RSAPrivateKey'{}) ->
+	{Padding, DigestType} = jws_alg_to_digest_type(JWSALG),
+	jose_jwa:sign(Message, DigestType, RSAPrivateKey, Padding).
 
 signer(#'RSAPrivateKey'{}, #{ <<"alg">> := ALG, <<"use">> := <<"sig">> }) ->
 	#{
@@ -232,13 +231,17 @@ verifier(#'RSAPublicKey'{}, _Fields) ->
 			[<<"PS256">>, <<"PS384">>, <<"PS512">>, <<"RS256">>, <<"RS384">>, <<"RS512">>]
 	end.
 
-verify(Message, {Padding, DigestType}, Signature, RSAPublicKey=#'RSAPublicKey'{}) ->
-	jose_jwa:verify(Message, DigestType, Signature, RSAPublicKey, Padding);
-verify(Message, DigestType, Signature, RSAPublicKey=#'RSAPublicKey'{}) ->
-	verify(Message, {rsa_pkcs1_padding, DigestType}, Signature, RSAPublicKey);
-verify(Message, DigestType, Signature, #'RSAPrivateKey'{modulus=Modulus, publicExponent=PublicExponent}) ->
+verify(Message, JWSALG, Signature, RSAPublicKey=#'RSAPublicKey'{}) ->
+	try jws_alg_to_digest_type(JWSALG) of
+		{Padding, DigestType} ->
+			jose_jwa:verify(Message, DigestType, Signature, RSAPublicKey, Padding)
+	catch
+		error:{not_supported, _} ->
+			false
+	end;
+verify(Message, JWSALG, Signature, #'RSAPrivateKey'{modulus=Modulus, publicExponent=PublicExponent}) ->
 	RSAPublicKey = #'RSAPublicKey'{modulus=Modulus, publicExponent=PublicExponent},
-	verify(Message, DigestType, Signature, RSAPublicKey).
+	verify(Message, JWSALG, Signature, RSAPublicKey).
 
 %%====================================================================
 %% API functions
@@ -468,3 +471,19 @@ int_to_bit_size(0, B) ->
 	B;
 int_to_bit_size(I, B) ->
 	int_to_bit_size(I bsr 1, B + 1).
+
+%% @private
+jws_alg_to_digest_type('PS256') ->
+	{rsa_pkcs1_pss_padding, sha256};
+jws_alg_to_digest_type('PS384') ->
+	{rsa_pkcs1_pss_padding, sha384};
+jws_alg_to_digest_type('PS512') ->
+	{rsa_pkcs1_pss_padding, sha512};
+jws_alg_to_digest_type('RS256') ->
+	{rsa_pkcs1_padding, sha256};
+jws_alg_to_digest_type('RS384') ->
+	{rsa_pkcs1_padding, sha384};
+jws_alg_to_digest_type('RS512') ->
+	{rsa_pkcs1_padding, sha512};
+jws_alg_to_digest_type(ALG) ->
+	erlang:error({not_supported, [ALG]}).

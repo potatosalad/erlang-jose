@@ -23,6 +23,8 @@
 -export([alg_hmac_sign_and_verify/1]).
 -export([alg_none_from_map_and_to_map/1]).
 -export([alg_none_sign_and_verify/1]).
+-export([alg_poly1305_from_map_and_to_map/1]).
+-export([alg_poly1305_sign_and_verify/1]).
 -export([alg_rsa_pkcs1_v1_5_from_map_and_to_map/1]).
 -export([alg_rsa_pkcs1_v1_5_sign_and_verify/1]).
 -export([alg_rsa_pss_from_map_and_to_map/1]).
@@ -34,6 +36,7 @@ all() ->
 		{group, jose_jws_alg_eddsa},
 		{group, jose_jws_alg_hmac},
 		{group, jose_jws_alg_none},
+		{group, jose_jws_alg_poly1305},
 		{group, jose_jws_alg_rsa_pkcs1_v1_5},
 		{group, jose_jws_alg_rsa_pss}
 	].
@@ -55,6 +58,10 @@ groups() ->
 		{jose_jws_alg_none, [parallel], [
 			alg_none_from_map_and_to_map,
 			alg_none_sign_and_verify
+		]},
+		{jose_jws_alg_poly1305, [parallel], [
+			alg_poly1305_from_map_and_to_map,
+			alg_poly1305_sign_and_verify
 		]},
 		{jose_jws_alg_rsa_pkcs1_v1_5, [parallel], [
 			alg_rsa_pkcs1_v1_5_from_map_and_to_map,
@@ -126,6 +133,16 @@ alg_none_from_map_and_to_map(Config) ->
 alg_none_sign_and_verify(Config) ->
 	ct_property_test:quickcheck(
 		jose_jws_alg_none_props:prop_sign_and_verify(),
+		Config).
+
+alg_poly1305_from_map_and_to_map(Config) ->
+	ct_property_test:quickcheck(
+		jose_jws_alg_poly1305_props:prop_from_map_and_to_map(),
+		Config).
+
+alg_poly1305_sign_and_verify(Config) ->
+	ct_property_test:quickcheck(
+		jose_jws_alg_poly1305_props:prop_sign_and_verify(),
 		Config).
 
 alg_rsa_pkcs1_v1_5_from_map_and_to_map(Config) ->

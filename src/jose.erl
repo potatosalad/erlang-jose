@@ -11,6 +11,8 @@
 -module(jose).
 
 %% API
+-export([chacha20_poly1305_module/0]).
+-export([chacha20_poly1305_module/1]).
 -export([crypto_fallback/0]).
 -export([crypto_fallback/1]).
 -export([curve25519_module/0]).
@@ -41,6 +43,12 @@ end).
 %%====================================================================
 %% API functions
 %%====================================================================
+
+chacha20_poly1305_module() ->
+	?MAYBE_START_JOSE(ets:lookup_element(?TAB, chacha20_poly1305_module, 2)).
+
+chacha20_poly1305_module(ChaCha20Poly1305Module) when is_atom(ChaCha20Poly1305Module) ->
+	?MAYBE_START_JOSE(jose_server:chacha20_poly1305_module(ChaCha20Poly1305Module)).
 
 crypto_fallback() ->
 	jose_jwa:crypto_fallback().

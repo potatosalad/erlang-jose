@@ -1,5 +1,38 @@
 # Changelog
 
+## 1.8.0 (2016-08-??)
+
+* Enhancements
+  * ChaCha20/Poly1305 encryption and one-time message authentication functions are experimentally supported based on [RFC 7539](https://tools.ietf.org/html/rfc7539).
+
+Examples of new functionality:
+
+```elixir
+iex> # Encrypt
+iex> jwe = %{"alg" => "dir", "enc" => "ChaCha20/Poly1305"}
+iex> jwk = JOSE.JWE.generate_key(jwe) |> JOSE.JWK.to_map |> elem(1)
+%{"alg" => "dir", "enc" => "ChaCha20/Poly1305", "k" => "EffEuY2nbShIVtizmek8AuR7ftSuY2e8XRxGjMc8QAc", "kty" => "oct", "use" => "enc"}
+iex> plain_text = "message to encrypt"
+iex> encrypted = JOSE.JWK.block_encrypt(plain_text, jwk) |> JOSE.JWE.compact |> elem(1)
+"eyJhbGciOiJkaXIiLCJlbmMiOiJDaGFDaGEyMC9Qb2x5MTMwNSJ9..lbsERynEgQS8CRXZ.D_kt8ChsaYWX9gL9tJlJ2n0E.y0o_TYjGlaB9sEEcA9o12A"
+
+iex> # Decrypt
+iex> plain_text == JOSE.JWK.block_decrypt(encrypted, jwk) |> elem(0)
+true
+
+iex> # Sign
+iex> jws = %{"alg" => "Poly1305"}
+iex> jwk = JOSE.JWS.generate_key(jws) |> JOSE.JWK.to_map |> elem(1)
+%{"alg" => "Poly1305", "k" => "2X-OZVLA41Wy7mAjqWRaZyOw8FLyL3O3_f8d16D_-tQ", "kty" => "oct", "use" => "sig"}
+iex> message = "message to sign"
+iex> signed = JOSE.JWK.sign(message, jwk) |> JOSE.JWS.compact |> elem(1)
+"eyJhbGciOiJQb2x5MTMwNSIsIm5vbmNlIjoicGExU1dlQzJVQzhwZlQ1NCJ9.bWVzc2FnZSB0byBzaWdu.IUI-PvN5bh_9jX-MeDtetw"
+
+iex> # Verify
+iex> JOSE.JWK.verify_strict(signed, ["Poly1305"], jwk) |> elem(0)
+true
+```
+
 ## 1.7.9 (2016-07-13)
 
 * Fixes
