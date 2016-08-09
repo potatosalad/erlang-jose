@@ -1,9 +1,13 @@
 # Changelog
 
-## 1.8.0 (2016-08-??)
+## 1.8.0 (2016-08-08)
 
 * Enhancements
   * ChaCha20/Poly1305 encryption and one-time message authentication functions are experimentally supported based on [RFC 7539](https://tools.ietf.org/html/rfc7539).
+
+* Fixes
+  * Handling invalid token without raising Exception [#22](https://github.com/potatosalad/erlang-jose/issues/22)
+  * `JOSE.JWT.verify` uses CPU intensively when signed is nil [#23](https://github.com/potatosalad/erlang-jose/issues/23)
 
 Examples of new functionality:
 

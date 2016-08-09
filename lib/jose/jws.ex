@@ -634,17 +634,22 @@ defmodule JOSE.JWS do
     end, signed)
   end
   def verify(key, signed) do
-    case :jose_jws.verify(key, signed) do
-      {verified, payload, jws} when is_tuple(jws) ->
-        {verified, payload, from_record(jws)}
-      list when is_list(list) ->
-        for {jwk, verifications} <- list do
-          {JOSE.JWK.from_record(jwk), for {verified, payload, jws} <- verifications do
-            {verified, payload, from_record(jws)}
-          end}
-        end
-      error ->
-        error
+    try do
+      case :jose_jws.verify(key, signed) do
+        {verified, payload, jws} when is_tuple(jws) ->
+          {verified, payload, from_record(jws)}
+        list when is_list(list) ->
+          for {jwk, verifications} <- list do
+            {JOSE.JWK.from_record(jwk), for {verified, payload, jws} <- verifications do
+              {verified, payload, from_record(jws)}
+            end}
+          end
+        error ->
+          error
+      end
+    catch
+      class, reason ->
+        {class, reason}
     end
   end
 
@@ -680,17 +685,22 @@ defmodule JOSE.JWS do
     end, allow, signed)
   end
   def verify_strict(key, allow, signed) do
-    case :jose_jws.verify_strict(key, allow, signed) do
-      {verified, payload, jws} when is_tuple(jws) ->
-        {verified, payload, from_record(jws)}
-      list when is_list(list) ->
-        for {jwk, verifications} <- list do
-          {JOSE.JWK.from_record(jwk), for {verified, payload, jws} <- verifications do
-            {verified, payload, from_record(jws)}
-          end}
-        end
-      error ->
-        error
+    try do
+      case :jose_jws.verify_strict(key, allow, signed) do
+        {verified, payload, jws} when is_tuple(jws) ->
+          {verified, payload, from_record(jws)}
+        list when is_list(list) ->
+          for {jwk, verifications} <- list do
+            {JOSE.JWK.from_record(jwk), for {verified, payload, jws} <- verifications do
+              {verified, payload, from_record(jws)}
+            end}
+          end
+        error ->
+          error
+      end
+    catch
+      class, reason ->
+        {class, reason}
     end
   end
 

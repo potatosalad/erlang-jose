@@ -188,6 +188,8 @@ verify(Other, SignedBinary) when is_binary(SignedBinary) ->
 	verify(Other, {#{}, SignedBinary});
 verify(Other, SignedMap) when is_map(SignedMap) ->
 	verify(Other, {#{}, SignedMap});
+verify(JWK=#jose_jwk{}, Signed) ->
+	erlang:error({badarg, [JWK, Signed]});
 verify(Other, Signed) ->
 	verify(jose_jwk:from(Other), Signed).
 
@@ -198,6 +200,8 @@ verify_strict(Other, Allow, SignedBinary) when is_binary(SignedBinary) ->
 	verify_strict(Other, Allow, {#{}, SignedBinary});
 verify_strict(Other, Allow, SignedMap) when is_map(SignedMap) ->
 	verify_strict(Other, Allow, {#{}, SignedMap});
+verify_strict(JWK=#jose_jwk{}, Allow, Signed) ->
+	erlang:error({badarg, [JWK, Allow, Signed]});
 verify_strict(Other, Allow, Signed) ->
 	verify_strict(jose_jwk:from(Other), Allow, Signed).
 

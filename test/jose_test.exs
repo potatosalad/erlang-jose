@@ -330,4 +330,24 @@ defmodule JOSETest do
     refute(JOSE.JWT.verify(jwk_oct16, bad_signed_hs256) |> elem(0))
     refute(JOSE.JWT.verify(jwk_ec256, bad_signed_hs256) |> elem(0))
   end
+
+  # See https://github.com/potatosalad/erlang-jose/issues/22
+  test "handles invalid signed data without raising exception" do
+    jwk = %{
+      "kty" => "oct",
+      "k" => :base64url.encode("symmetric key")
+    }
+    assert({:error, _} = JOSE.JWT.verify(jwk, "invalid"))
+    assert({:error, _} = JOSE.JWT.verify_strict(jwk, [], "invalid"))
+  end
+
+  # See https://github.com/potatosalad/erlang-jose/issues/23
+  test "handles nil signed data" do
+    jwk = %{
+      "kty" => "oct",
+      "k" => :base64url.encode("symmetric key")
+    }
+    assert({:error, _} = JOSE.JWT.verify(jwk, nil))
+    assert({:error, _} = JOSE.JWT.verify_strict(jwk, [], nil))
+  end
 end

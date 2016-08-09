@@ -661,20 +661,25 @@ defmodule JOSE.JWK do
     end)
   end
   def verify(signed, jwk) do
-    case :jose_jwk.verify(signed, jwk) do
-      {verified, payload, jws} when is_tuple(jws) ->
-        {verified, payload, JOSE.JWS.from_record(jws)}
-      list when is_list(list) ->
-        for {jwk, verifications} <- list do
-          {JOSE.JWK.from_record(jwk), Enum.map(verifications, fn
-            {verified, jwt, jws} when is_tuple(jwt) and is_tuple(jws) ->
-              {verified, from_record(jwt), JOSE.JWS.from_record(jws)}
-            other ->
-              other
-          end)}
-        end
-      error ->
-        error
+    try do
+      case :jose_jwk.verify(signed, jwk) do
+        {verified, payload, jws} when is_tuple(jws) ->
+          {verified, payload, JOSE.JWS.from_record(jws)}
+        list when is_list(list) ->
+          for {jwk, verifications} <- list do
+            {JOSE.JWK.from_record(jwk), Enum.map(verifications, fn
+              {verified, jwt, jws} when is_tuple(jwt) and is_tuple(jws) ->
+                {verified, from_record(jwt), JOSE.JWS.from_record(jws)}
+              other ->
+                other
+            end)}
+          end
+        error ->
+          error
+      end
+    catch
+      class, reason ->
+        {class, reason}
     end
   end
 
@@ -693,20 +698,25 @@ defmodule JOSE.JWK do
     end)
   end
   def verify_strict(signed, allow, jwk) do
-    case :jose_jwk.verify_strict(signed, allow, jwk) do
-      {verified, payload, jws} when is_tuple(jws) ->
-        {verified, payload, JOSE.JWS.from_record(jws)}
-      list when is_list(list) ->
-        for {jwk, verifications} <- list do
-          {JOSE.JWK.from_record(jwk), Enum.map(verifications, fn
-            {verified, jwt, jws} when is_tuple(jwt) and is_tuple(jws) ->
-              {verified, from_record(jwt), JOSE.JWS.from_record(jws)}
-            other ->
-              other
-          end)}
-        end
-      error ->
-        error
+    try do
+      case :jose_jwk.verify_strict(signed, allow, jwk) do
+        {verified, payload, jws} when is_tuple(jws) ->
+          {verified, payload, JOSE.JWS.from_record(jws)}
+        list when is_list(list) ->
+          for {jwk, verifications} <- list do
+            {JOSE.JWK.from_record(jwk), Enum.map(verifications, fn
+              {verified, jwt, jws} when is_tuple(jwt) and is_tuple(jws) ->
+                {verified, from_record(jwt), JOSE.JWS.from_record(jws)}
+              other ->
+                other
+            end)}
+          end
+        error ->
+          error
+      end
+    catch
+      class, reason ->
+        {class, reason}
     end
   end
 
