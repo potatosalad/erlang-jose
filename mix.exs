@@ -32,10 +32,10 @@ defmodule JOSE.Mixfile do
      {:jsx, "~> 2.8", only: [:dev, :test]},
      # {:keccakf1600, "~> 2.0.0", only: [:dev, :test]},
      {:libdecaf, "~> 0.0.3", only: [:dev, :test]},
-     {:libsodium, "~> 0.0.7", only: [:dev, :test]},
+     {:libsodium, "~> 0.0.8", only: [:dev, :test]},
      {:poison, "~> 2.2", only: [:dev, :test]},
-     {:ex_doc, "~> 0.12", only: :docs},
-     {:earmark, "~> 0.2", only: :docs}]
+     {:ex_doc, "~> 0.13", only: :docs},
+     {:earmark, "~> 1.0.1", only: :docs}]
   end
 
   defp description do
