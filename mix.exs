@@ -5,10 +5,10 @@ defmodule JOSE.Mixfile do
     [app: :jose,
      version: "1.8.0",
      elixir: "~> 1.0",
-     erlc_options: erlc_options,
+     erlc_options: erlc_options(),
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     deps: deps,
+     deps: deps(),
      name: "JOSE",
      source_url: "https://github.com/potatosalad/erlang-jose",
      docs: fn ->
@@ -16,8 +16,8 @@ defmodule JOSE.Mixfile do
        [source_ref: ref, main: "JOSE", extras: ["README.md", "CHANGELOG.md",
         "examples/KEY-GENERATION.md", "ALGORITHMS.md"]]
      end,
-     description: description,
-     package: package]
+     description: description(),
+     package: package()]
   end
 
   def application do
