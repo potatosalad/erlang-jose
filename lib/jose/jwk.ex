@@ -50,7 +50,7 @@ defmodule JOSE.JWK do
   """
   def from(list) when is_list(list), do: for element <- list, into: [], do: from(element)
   def from(jwk=%JOSE.JWK{}), do: from(to_record(jwk))
-  def from(any), do: :jose_jwk.from(any) |> from_record
+  def from(any), do: :jose_jwk.from(any) |> from_record()
 
   @doc """
   Decrypts an encrypted binary or map into a `JOSE.JWK` using the specified `password`.
@@ -68,108 +68,108 @@ defmodule JOSE.JWK do
   """
   def from(password, list) when is_list(list), do: for element <- list, into: [], do: from(password, element)
   def from(password, jwk=%JOSE.JWK{}), do: from(password, to_record(jwk))
-  def from(password, any), do: :jose_jwk.from(password, any) |> from_encrypted_record
+  def from(password, any), do: :jose_jwk.from(password, any) |> from_encrypted_record()
 
   @doc """
   Converts a binary into a `JOSE.JWK`.
   """
   def from_binary(list) when is_list(list), do: for element <- list, into: [], do: from_binary(element)
-  def from_binary(binary), do: :jose_jwk.from_binary(binary) |> from_record
+  def from_binary(binary), do: :jose_jwk.from_binary(binary) |> from_record()
 
   @doc """
   Decrypts an encrypted binary into a `JOSE.JWK` using `password`.  See `from/2`.
   """
   def from_binary(password, list) when is_list(list), do: for element <- list, into: [], do: from_binary(password, element)
-  def from_binary(password, binary), do: :jose_jwk.from_binary(password, binary) |> from_encrypted_record
+  def from_binary(password, binary), do: :jose_jwk.from_binary(password, binary) |> from_encrypted_record()
 
   @doc """
   Reads file and calls `from_binary/1` to convert into a `JOSE.JWK`.
   """
-  def from_file(file), do: :jose_jwk.from_file(file) |> from_record
+  def from_file(file), do: :jose_jwk.from_file(file) |> from_record()
 
   @doc """
   Reads encrypted file and calls `from_binary/2` to convert into a `JOSE.JWK` using `password`.  See `from/2`.
   """
-  def from_file(password, file), do: :jose_jwk.from_file(password, file) |> from_encrypted_record
+  def from_file(password, file), do: :jose_jwk.from_file(password, file) |> from_encrypted_record()
 
   @doc """
   Converts Erlang records for `:ECPrivateKey`, `:ECPublicKey`, `:RSAPrivateKey`, and `:RSAPublicKey` into a `JOSE.JWK`.
   """
   def from_key(list) when is_list(list), do: for element <- list, into: [], do: from_key(element)
-  def from_key(key), do: :jose_jwk.from_key(key) |> from_record
+  def from_key(key), do: :jose_jwk.from_key(key) |> from_record()
 
   @doc """
   Converts a map into a `JOSE.JWK`.
   """
   def from_map(list) when is_list(list), do: for element <- list, into: [], do: from_map(element)
-  def from_map(map), do: :jose_jwk.from_map(map) |> from_record
+  def from_map(map), do: :jose_jwk.from_map(map) |> from_record()
 
   @doc """
   Decrypts an encrypted map into a `JOSE.JWK` using `password`.  See `from/2`.
   """
   def from_map(password, list) when is_list(list), do: for element <- list, into: [], do: from_map(password, element)
-  def from_map(password, map), do: :jose_jwk.from_map(password, map) |> from_encrypted_record
+  def from_map(password, map), do: :jose_jwk.from_map(password, map) |> from_encrypted_record()
 
   @doc """
   Converts an arbitrary binary into a `JOSE.JWK` with `"kty"` of `"oct"`.
   """
   def from_oct(list) when is_list(list), do: for element <- list, into: [], do: from_oct(element)
-  def from_oct(oct), do: :jose_jwk.from_oct(oct) |> from_record
+  def from_oct(oct), do: :jose_jwk.from_oct(oct) |> from_record()
 
   @doc """
   Decrypts an encrypted arbitrary binary into a `JOSE.JWK` with `"kty"` of `"oct"` using `password`.  See `from/2`.
   """
   def from_oct(password, list) when is_list(list), do: for element <- list, into: [], do: from_oct(password, element)
-  def from_oct(password, oct), do: :jose_jwk.from_oct(password, oct) |> from_encrypted_record
+  def from_oct(password, oct), do: :jose_jwk.from_oct(password, oct) |> from_encrypted_record()
 
   @doc """
   Reads file and calls `from_oct/1` to convert into a `JOSE.JWK`.
   """
-  def from_oct_file(file), do: :jose_jwk.from_oct_file(file) |> from_record
+  def from_oct_file(file), do: :jose_jwk.from_oct_file(file) |> from_record()
 
   @doc """
   Reads encrypted file and calls `from_oct/2` to convert into a `JOSE.JWK` using `password`.  See `from/2`.
   """
-  def from_oct_file(password, file), do: :jose_jwk.from_oct_file(password, file) |> from_encrypted_record
+  def from_oct_file(password, file), do: :jose_jwk.from_oct_file(password, file) |> from_encrypted_record()
 
   @doc """
   Converts an octet key pair into a `JOSE.JWK` with `"kty"` of `"OKP"`.
   """
   def from_okp(list) when is_list(list), do: for element <- list, into: [], do: from_okp(element)
-  def from_okp(okp), do: :jose_jwk.from_okp(okp) |> from_record
+  def from_okp(okp), do: :jose_jwk.from_okp(okp) |> from_record()
 
   @doc """
   Converts an openssh key into a `JOSE.JWK` with `"kty"` of `"OKP"`.
   """
   def from_openssh_key(list) when is_list(list), do: for element <- list, into: [], do: from_openssh_key(element)
-  def from_openssh_key(openssh_key), do: :jose_jwk.from_openssh_key(openssh_key) |> from_record
+  def from_openssh_key(openssh_key), do: :jose_jwk.from_openssh_key(openssh_key) |> from_record()
 
   @doc """
   Reads file and calls `from_openssh_key/1` to convert into a `JOSE.JWK`.
   """
-  def from_openssh_key_file(file), do: :jose_jwk.from_openssh_key_file(file) |> from_record
+  def from_openssh_key_file(file), do: :jose_jwk.from_openssh_key_file(file) |> from_record()
 
   @doc """
   Converts a PEM (Privacy Enhanced Email) binary into a `JOSE.JWK`.
   """
   def from_pem(list) when is_list(list), do: for element <- list, into: [], do: from_pem(element)
-  def from_pem(pem), do: :jose_jwk.from_pem(pem) |> from_record
+  def from_pem(pem), do: :jose_jwk.from_pem(pem) |> from_record()
 
   @doc """
   Decrypts an encrypted PEM (Privacy Enhanced Email) binary into a `JOSE.JWK` using `password`.
   """
   def from_pem(password, list) when is_list(list), do: for element <- list, into: [], do: from_pem(password, element)
-  def from_pem(password, pem), do: :jose_jwk.from_pem(password, pem) |> from_record
+  def from_pem(password, pem), do: :jose_jwk.from_pem(password, pem) |> from_record()
 
   @doc """
   Reads file and calls `from_oct/1` to convert into a `JOSE.JWK`.
   """
-  def from_pem_file(file), do: :jose_jwk.from_pem_file(file) |> from_record
+  def from_pem_file(file), do: :jose_jwk.from_pem_file(file) |> from_record()
 
   @doc """
   Reads encrypted file and calls `from_pem/2` to convert into a `JOSE.JWK` using `password`.
   """
-  def from_pem_file(password, file), do: :jose_jwk.from_pem_file(password, file) |> from_record
+  def from_pem_file(password, file), do: :jose_jwk.from_pem_file(password, file) |> from_record()
 
   defp from_encrypted_record({jwe, jwk}) when is_tuple(jwe) and is_tuple(jwk),
     do: {JOSE.JWE.from_record(jwe), from_record(jwk)}
@@ -356,7 +356,7 @@ defmodule JOSE.JWK do
   """
   def to_public(list) when is_list(list), do: for element <- list, into: [], do: to_public(element)
   def to_public(jwk=%JOSE.JWK{}), do: to_public(to_record(jwk))
-  def to_public(jwk), do: :jose_jwk.to_public(jwk) |> from_record
+  def to_public(jwk), do: :jose_jwk.to_public(jwk) |> from_record()
 
   @doc """
   Calls `to_public/1` and then `to_file/2` on a `JOSE.JWK`.
@@ -532,15 +532,15 @@ defmodule JOSE.JWK do
     * `{:rsa, modulus_size} | {:rsa, modulus_size, exponent_size}` - generates an `"RSA"` key using the `modulus_size` and `exponent_size`
 
   """
-  def generate_key(jwk=%JOSE.JWK{}), do: jwk |> to_record |> generate_key
-  def generate_key(parameters), do: :jose_jwk.generate_key(parameters) |> from_record
+  def generate_key(jwk=%JOSE.JWK{}), do: jwk |> to_record() |> generate_key()
+  def generate_key(parameters), do: :jose_jwk.generate_key(parameters) |> from_record()
 
   @doc """
   Merges map on right into map on left.
   """
-  def merge(left=%JOSE.JWK{}, right), do: merge(left |> to_record, right)
-  def merge(left, right=%JOSE.JWK{}), do: merge(left, right |> to_record)
-  def merge(left, right), do: :jose_jwk.merge(left, right) |> from_record
+  def merge(left=%JOSE.JWK{}, right), do: merge(left |> to_record(), right)
+  def merge(left, right=%JOSE.JWK{}), do: merge(left, right |> to_record())
+  def merge(left, right), do: :jose_jwk.merge(left, right) |> from_record()
 
   @doc """
   Computes the shared secret between two keys.  Currently only works for `"EC"` keys and `"OKP"` keys with `"crv"` set to `"X25519"` or `"X448"`.
