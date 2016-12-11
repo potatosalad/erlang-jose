@@ -76,24 +76,24 @@ defmodule JOSE.JWT do
   """
   def from(list) when is_list(list), do: for element <- list, into: [], do: from(element)
   def from(jwt=%JOSE.JWT{}), do: from(to_record(jwt))
-  def from(any), do: :jose_jwt.from(any) |> from_record
+  def from(any), do: :jose_jwt.from(any) |> from_record()
 
   @doc """
   Converts a binary into a `JOSE.JWT`.
   """
   def from_binary(list) when is_list(list), do: for element <- list, into: [], do: from_binary(element)
-  def from_binary(binary), do: :jose_jwt.from_binary(binary) |> from_record
+  def from_binary(binary), do: :jose_jwt.from_binary(binary) |> from_record()
 
   @doc """
   Reads file and calls `from_binary/1` to convert into a `JOSE.JWT`.
   """
-  def from_file(file), do: :jose_jwt.from_file(file) |> from_record
+  def from_file(file), do: :jose_jwt.from_file(file) |> from_record()
 
   @doc """
   Converts a map into a `JOSE.JWT`.
   """
   def from_map(list) when is_list(list), do: for element <- list, into: [], do: from_map(element)
-  def from_map(map), do: :jose_jwt.from_map(map) |> from_record
+  def from_map(map), do: :jose_jwt.from_map(map) |> from_record()
 
   ## Encode API
 
@@ -156,9 +156,9 @@ defmodule JOSE.JWT do
   @doc """
   Merges map on right into map on left.
   """
-  def merge(left=%JOSE.JWT{}, right), do: merge(left |> to_record, right)
-  def merge(left, right=%JOSE.JWT{}), do: merge(left, right |> to_record)
-  def merge(left, right), do: :jose_jwt.merge(left, right) |> from_record
+  def merge(left=%JOSE.JWT{}, right), do: merge(left |> to_record(), right)
+  def merge(left, right=%JOSE.JWT{}), do: merge(left, right |> to_record())
+  def merge(left, right), do: :jose_jwt.merge(left, right) |> from_record()
 
   @doc """
   See `peek_payload/1`.

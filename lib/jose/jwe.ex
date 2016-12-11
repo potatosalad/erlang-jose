@@ -385,24 +385,24 @@ defmodule JOSE.JWE do
   """
   def from(list) when is_list(list), do: for element <- list, into: [], do: from(element)
   def from(jwe=%JOSE.JWE{}), do: from(to_record(jwe))
-  def from(any), do: :jose_jwe.from(any) |> from_record
+  def from(any), do: :jose_jwe.from(any) |> from_record()
 
   @doc """
   Converts a binary into a `JOSE.JWE`.
   """
   def from_binary(list) when is_list(list), do: for element <- list, into: [], do: from_binary(element)
-  def from_binary(binary), do: :jose_jwe.from_binary(binary) |> from_record
+  def from_binary(binary), do: :jose_jwe.from_binary(binary) |> from_record()
 
   @doc """
   Reads file and calls `from_binary/1` to convert into a `JOSE.JWE`.
   """
-  def from_file(file), do: :jose_jwe.from_file(file) |> from_record
+  def from_file(file), do: :jose_jwe.from_file(file) |> from_record()
 
   @doc """
   Converts a map into a `JOSE.JWE`.
   """
   def from_map(list) when is_list(list), do: for element <- list, into: [], do: from_map(element)
-  def from_map(map), do: :jose_jwe.from_map(map) |> from_record
+  def from_map(map), do: :jose_jwe.from_map(map) |> from_record()
 
   ## Encode API
 
