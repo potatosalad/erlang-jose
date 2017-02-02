@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.8.1 (2017-02-02)
+
+* Fixes
+  * Parentheses to remove ambiguity on Elixir 1.4 [#26](https://github.com/potatosalad/erlang-jose/pull/26), thanks [@alexandrubagu](https://github.com/alexandrubagu)
+
 ## 1.8.0 (2016-08-08)
 
 * Enhancements
