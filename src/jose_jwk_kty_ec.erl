@@ -188,7 +188,7 @@ sign(Message, JWSALG, ECPrivateKey=#'ECPrivateKey'{}) ->
 	#'ECDSA-Sig-Value'{ r = R, s = S } = public_key:der_decode('ECDSA-Sig-Value', DERSignature),
 	RBin = int_to_bin(R),
 	SBin = int_to_bin(S),
-	Size = max(byte_size(RBin), byte_size(SBin)),
+	Size = jws_alg_to_r_s_size(JWSALG),
 	RPad = pad(RBin, Size),
 	SPad = pad(SBin, Size),
 	Signature = << RPad/binary, SPad/binary >>,
@@ -353,6 +353,14 @@ jws_alg_to_digest_type({#'ECPoint'{}, {namedCurve, Parameters}}, ALG) ->
 	jws_alg_to_digest_type(parameters_to_crv(Parameters), ALG);
 jws_alg_to_digest_type(KeyOrCurve, ALG) ->
 	erlang:error({not_supported, [KeyOrCurve, ALG]}).
+
+%% @private
+jws_alg_to_r_s_size('ES256') ->
+  32;
+jws_alg_to_r_s_size('ES384') ->
+  48;
+jws_alg_to_r_s_size('ES512') ->
+  66.
 
 %% @private
 pad(Bin, Size) when byte_size(Bin) =:= Size ->
