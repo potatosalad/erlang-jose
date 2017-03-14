@@ -13,13 +13,16 @@ end
 defmodule JOSE.Poison.LexicalEncode do
   defmacro __using__(_) do
     quote do
+      @compile {:inline, encode_name: 1}
+
+      # Fast path encoding string keys
+      defp encode_name(value) when is_binary(value) do
+        value
+      end
+
       defp encode_name(value) do
-        cond do
-          is_binary(value) ->
-            value
-          is_atom(value) ->
-            Atom.to_string(value)
-          true ->
+        case String.Chars.impl_for(value) do
+          nil ->
             module =
               if Code.ensure_loaded?(Poison) do
                 Poison.EncodeError
@@ -27,7 +30,9 @@ defmodule JOSE.Poison.LexicalEncode do
                 JOSE.Poison.LexicalEncodeError
               end
             raise module, value: value,
-              message: "expected string or atom key, got: #{inspect value}"
+              message: "expected a String.Chars encodable value, got: #{inspect value}"
+          impl ->
+            impl.to_string(value)
         end
       end
     end
@@ -111,7 +116,9 @@ defimpl JOSE.Poison.LexicalEncoder, for: Map do
   def encode(map, _) when map_size(map) < 1, do: "{}"
 
   def encode(map, options) do
-    encode(map, pretty(options), options)
+    map
+    |> strict_keys(Keyword.get(options, :strict_keys, false))
+    |> encode(pretty(options), options)
   end
 
   def encode(map, true, options) do
@@ -128,6 +135,24 @@ defimpl JOSE.Poison.LexicalEncoder, for: Map do
     fun = &[?,, LexicalEncoder.BitString.encode(encode_name(&1), options), ?:,
                 LexicalEncoder.encode(:maps.get(&1, map), options) | &2]
     [?{, tl(:lists.foldr(fun, [], :maps.keys(map))), ?}]
+  end
+
+  defp strict_keys(map, false), do: map
+  defp strict_keys(map, true) do
+    Enum.each(map, fn {key, _value} ->
+      name = encode_name(key)
+      if Map.has_key?(map, name) do
+        module =
+          if Code.ensure_loaded?(Poison) do
+            Poison.EncodeError
+          else
+            JOSE.Poison.LexicalEncodeError
+          end
+        raise module, value: name,
+          message: "duplicate key found: #{inspect key}"
+      end
+    end)
+    map
   end
 end
 
@@ -189,40 +214,42 @@ defimpl JOSE.Poison.LexicalEncoder, for: [Range, Stream, MapSet, HashSet] do
   end
 end
 
-defimpl JOSE.Poison.LexicalEncoder, for: HashDict do
-  alias JOSE.Poison.LexicalEncoder
+if Application.get_env(:poison, :enable_hashdict) do
+  defimpl JOSE.Poison.LexicalEncoder, for: HashDict do
+    alias JOSE.Poison.LexicalEncoder
 
-  use JOSE.Poison.LexicalPretty
-  use JOSE.Poison.LexicalEncode
+    use JOSE.Poison.LexicalPretty
+    use JOSE.Poison.LexicalEncode
 
-  def encode(dict, options) do
-    if HashDict.size(dict) < 1 do
-      "{}"
-    else
-      encode(dict, pretty(options), options)
-    end
-  end
-
-  def encode(dict, false, options) do
-    fun = fn {key, value} ->
-      [?,, LexicalEncoder.BitString.encode(encode_name(key), options), ?:,
-           LexicalEncoder.encode(value, options)]
+    def encode(dict, options) do
+      if HashDict.size(dict) < 1 do
+        "{}"
+      else
+        encode(dict, pretty(options), options)
+      end
     end
 
-    [?{, tl(Enum.flat_map(dict, fun)), ?}]
-  end
+    def encode(dict, false, options) do
+      fun = fn {key, value} ->
+        [?,, LexicalEncoder.BitString.encode(encode_name(key), options), ?:,
+             LexicalEncoder.encode(value, options)]
+      end
 
-  def encode(dict, true, options) do
-    indent = indent(options)
-    offset = offset(options) + indent
-    options = offset(options, offset)
-
-    fun = fn {key, value} ->
-      [",\n", spaces(offset), LexicalEncoder.BitString.encode(encode_name(key), options), ": ",
-                              LexicalEncoder.encode(value, options)]
+      [?{, tl(Enum.flat_map(dict, fun)), ?}]
     end
 
-    ["{\n", tl(Enum.flat_map(dict, fun)), ?\n, spaces(offset - indent), ?}]
+    def encode(dict, true, options) do
+      indent = indent(options)
+      offset = offset(options) + indent
+      options = offset(options, offset)
+
+      fun = fn {key, value} ->
+        [",\n", spaces(offset), LexicalEncoder.BitString.encode(encode_name(key), options), ": ",
+                                LexicalEncoder.encode(value, options)]
+      end
+
+      ["{\n", tl(Enum.flat_map(dict, fun)), ?\n, spaces(offset - indent), ?}]
+    end
   end
 end
 
