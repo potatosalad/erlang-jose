@@ -93,6 +93,11 @@ defmodule JOSE.JWK do
   def from_file(password, file), do: :jose_jwk.from_file(password, file) |> from_encrypted_record()
 
   @doc """
+  Converts Firebase certificate public keys into a map of `JOSE.JWK`.
+  """
+  def from_firebase(any), do: :maps.fold(fn (k, v, a) -> :maps.put(k, from_record(v), a) end, %{}, :jose_jwk.from_firebase(any))
+
+  @doc """
   Converts Erlang records for `:ECPrivateKey`, `:ECPublicKey`, `:RSAPrivateKey`, and `:RSAPublicKey` into a `JOSE.JWK`.
   """
   def from_key(list) when is_list(list), do: for element <- list, into: [], do: from_key(element)

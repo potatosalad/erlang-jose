@@ -45,6 +45,7 @@
 -export([from_binary/2]).
 -export([from_file/1]).
 -export([from_file/2]).
+-export([from_firebase/1]).
 -export([from_key/1]).
 -export([from_map/1]).
 -export([from_map/2]).
@@ -189,6 +190,20 @@ from_file(Key, {Modules, File}) when is_map(Modules) andalso (is_binary(File) or
 	end;
 from_file(Key, File) when is_binary(File) orelse is_list(File) ->
 	from_file(Key, {#{}, File}).
+
+from_firebase(Binary) when is_binary(Binary) ->
+	from_firebase({#{}, Binary});
+from_firebase({Modules, Binary}) when is_map(Modules) andalso is_binary(Binary) ->
+	Map = jose:decode(Binary),
+	from_firebase({Modules, Map});
+from_firebase(Map) when is_map(Map) ->
+	from_firebase({#{}, Map});
+from_firebase({Modules, Map}) when is_map(Modules) andalso is_map(Map) ->
+	Folder = fun (Key, Val, Acc) ->
+		JWK = jose_jwk:merge(jose_jwk:from_pem({Modules, Val}), #{ <<"kid">> => Key }),
+		Acc#{ Key => JWK }
+	end,
+	maps:fold(Folder, #{}, Map).
 
 from_key(List) when is_list(List) ->
 	[from_key(Element) || Element <- List];
