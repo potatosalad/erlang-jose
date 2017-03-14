@@ -88,7 +88,7 @@ defmodule JOSE do
   defdelegate decode(binary), to: :jose
 
   @doc """
-  Decode a term to JSON using the module returned by `json_module/0`.
+  Encode a term to JSON using the module returned by `json_module/0`.
   """
   defdelegate encode(term), to: :jose
 
