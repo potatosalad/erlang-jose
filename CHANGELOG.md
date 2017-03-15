@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.8.2 (2017-03-15)
+
+* Enhancements
+  * Add support for decoding firebase certificate public keys (thanks to [@noizu](https://github.com/noizu), see [#30](https://github.com/potatosalad/erlang-jose/issues/30))
+
+* Fixes
+  * Fix cross-platform issues with EC signatures (specifically S and R sizes, thanks to [@alexandrejbr](https://github.com/alexandrejbr), see [#32](https://github.com/potatosalad/erlang-jose/pull/32))
+  * Typo in documentation for `JOSE.encode/1` (thanks to [@DaveLampton](https://github.com/DaveLampton), see [#31](https://github.com/potatosalad/erlang-jose/issues/31))
+
+* Tests
+  * Tested against OTP 19.3, Elixir 1.4.x, and Poison 3.x
+
 ## 1.8.1 (2017-02-02)
 
 * Fixes
