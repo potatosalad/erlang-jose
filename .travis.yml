@@ -10,12 +10,12 @@ notifications:
 
 env:
   - OTP_VERSION=18.3 ELIXIR_VERSION=1.2.6
-  - OTP_VERSION=19.3 ELIXIR_VERSION=1.4.2
+  - OTP_VERSION=19.3 ELIXIR_VERSION=1.4.1
 
 cache:
   directories:
     - docker-otp-18.3-elixir-1.2.6
-    - docker-otp-19.3-elixir-1.4.2
+    - docker-otp-19.3-elixir-1.4.1
     - test/cavp_SUITE_data/186-3rsatestvectors
     - test/cavp_SUITE_data/aesmmt
     - test/cavp_SUITE_data/archive
