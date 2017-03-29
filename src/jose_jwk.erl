@@ -201,7 +201,7 @@ from_firebase(Map) when is_map(Map) ->
 from_firebase({Modules, Map}) when is_map(Modules) andalso is_map(Map) ->
 	Folder = fun (Key, Val, Acc) ->
 		JWK = jose_jwk:merge(jose_jwk:from_pem({Modules, Val}), #{ <<"kid">> => Key }),
-		Acc#{ Key => JWK }
+		maps:put(Key, JWK, Acc)
 	end,
 	maps:fold(Folder, #{}, Map).
 
