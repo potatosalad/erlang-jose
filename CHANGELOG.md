@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.8.3 (2017-03-30)
+
+* Fixes
+  * Regression fix from 1.8.2 for OTP-17 (thanks to [@alexandrejbr](https://github.com/alexandrejbr), see [#35](https://github.com/potatosalad/erlang-jose/issues/35) and [#36](https://github.com/potatosalad/erlang-jose/pull/36))
+
 ## 1.8.2 (2017-03-15)
 
 * Enhancements
