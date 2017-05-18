@@ -38,7 +38,7 @@ Add `jose` to your project's dependencies in your `Makefile` for [`erlang.mk`](h
 
 #### JSON Encoder/Decoder
 
-You will also need to specify either [jiffy](https://github.com/davisp/jiffy), [jsone](https://github.com/sile/jsone), [jsx](https://github.com/talentdeficit/jsx), or [Poison](https://github.com/devinus/poison) as a dependency.
+You will also need to specify either [jiffy](https://github.com/davisp/jiffy), [jsone](https://github.com/sile/jsone), [jsx](https://github.com/talentdeficit/jsx), [ojson](https://github.com/potatosalad/erlang-ojson), or [Poison](https://github.com/devinus/poison) as a dependency.
 
 For example, with Elixir and `mix.exs`
 
@@ -46,7 +46,7 @@ For example, with Elixir and `mix.exs`
 defp deps do
   [
     {:jose, "~> 1.8"},
-    {:poison, "~> 2.2"}
+    {:ojson, "~> 1.0"}
   ]
 end
 ```
@@ -56,11 +56,11 @@ Or with Erlang and `rebar.config`
 ```erlang
 {deps, [
   {jose, ".*", {git, "git://github.com/potatosalad/erlang-jose.git", {branch, "master"}}},
-  {jsx, ".*", {git, "git://github.com/talentdeficit/jsx.git", {branch, "master"}}}
+  {ojson, ".*", {git, "git://github.com/potatosalad/erlang-ojson.git", {branch, "master"}}}
 ]}.
 ```
 
-`jose` will attempt to find a suitable JSON encoder/decoder and will default to Poison on Elixir and jiffy, jsone, or jsx on Erlang.  If more than one are present, it will default to Poison.
+`jose` will attempt to find a suitable JSON encoder/decoder and will try to use (in order) ojson, Poison, jiffy, jsone, or jsx. 
 
 You may also specify a different `json_module` as an application environment variable to `jose` or by using `jose:json_module/1` or `JOSE.json_module/1`.
 
