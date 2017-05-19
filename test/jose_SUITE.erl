@@ -3,6 +3,7 @@
 -module(jose_SUITE).
 
 -include_lib("common_test/include/ct.hrl").
+-include_lib("jose/include/jose_public_key.hrl").
 -include_lib("public_key/include/public_key.hrl").
 
 -include("jose.hrl").
@@ -143,9 +144,12 @@ jose_cfrg_curves_a_1(Config) ->
 	A_1_JWK = jose_jwk:from_file(data_file("jose_cfrg_curves/a.1.jwk+json", Config)),
 	A_1_Secret = hex:hex_to_bin(?config("a.1.secret", C)),
 	A_1_PK = hex:hex_to_bin(?config("a.1.pk", C)),
-	A_1_SK = << A_1_Secret/binary, A_1_PK/binary >>,
-	{_, A_1_SK} = jose_jwk:to_key(A_1_JWK),
-	{_, A_1_PK} = jose_jwk:to_public_key(A_1_JWK),
+	% A_1_SK = << A_1_Secret/binary, A_1_PK/binary >>,
+	{_, #'jose_EdDSA25519PrivateKey'{
+		publicKey=#'jose_EdDSA25519PublicKey'{publicKey=A_1_PK},
+		privateKey=A_1_Secret
+	}} = jose_jwk:to_key(A_1_JWK),
+	{_, #'jose_EdDSA25519PublicKey'{publicKey=A_1_PK}} = jose_jwk:to_public_key(A_1_JWK),
 	ok.
 
 % CFRG ECDH and signatures in JOSE
@@ -242,12 +246,18 @@ jose_cfrg_curves_a_6(Config) ->
 	A_6_EPK_SK = << A_6_EPK_Secret/binary, A_6_EPK_PK/binary >>,
 	A_6_BOB_S_JWK = jose_jwk:from_okp({'X25519', A_6_BOB_SK}),
 	A_6_EPK_S_JWK = jose_jwk:from_okp({'X25519', A_6_EPK_SK}),
-	{_, A_6_BOB_SK} = jose_jwk:to_key(A_6_BOB_S_JWK),
-	{_, A_6_BOB_PK} = jose_jwk:to_public_key(A_6_BOB_S_JWK),
-	{_, A_6_BOB_PK} = jose_jwk:to_key(A_6_BOB_JWK),
-	{_, A_6_EPK_SK} = jose_jwk:to_key(A_6_EPK_S_JWK),
-	{_, A_6_EPK_PK} = jose_jwk:to_public_key(A_6_EPK_S_JWK),
-	{_, A_6_EPK_PK} = jose_jwk:to_key(A_6_EPK_JWK),
+	{_, #'jose_X25519PrivateKey'{
+		publicKey=#'jose_X25519PublicKey'{publicKey=A_6_BOB_PK},
+		privateKey=A_6_BOB_Secret
+	}} = jose_jwk:to_key(A_6_BOB_S_JWK),
+	{_, #'jose_X25519PublicKey'{publicKey=A_6_BOB_PK}} = jose_jwk:to_public_key(A_6_BOB_S_JWK),
+	{_, #'jose_X25519PublicKey'{publicKey=A_6_BOB_PK}} = jose_jwk:to_key(A_6_BOB_JWK),
+	{_, #'jose_X25519PrivateKey'{
+		publicKey=#'jose_X25519PublicKey'{publicKey=A_6_EPK_PK},
+		privateKey=A_6_EPK_Secret
+	}} = jose_jwk:to_key(A_6_EPK_S_JWK),
+	{_, #'jose_X25519PublicKey'{publicKey=A_6_EPK_PK}} = jose_jwk:to_public_key(A_6_EPK_S_JWK),
+	{_, #'jose_X25519PublicKey'{publicKey=A_6_EPK_PK}} = jose_jwk:to_key(A_6_EPK_JWK),
 	A_6_Z = jose_jwk:shared_secret(A_6_BOB_JWK, A_6_EPK_S_JWK),
 	A_6_Z = jose_jwk:shared_secret(A_6_EPK_JWK, A_6_BOB_S_JWK),
 	A_6_TEXT = <<"Example of X25519 encryption">>,
@@ -276,12 +286,18 @@ jose_cfrg_curves_a_7(Config) ->
 	A_7_EPK_SK = << A_7_EPK_Secret/binary, A_7_EPK_PK/binary >>,
 	A_7_BOB_S_JWK = jose_jwk:from_okp({'X448', A_7_BOB_SK}),
 	A_7_EPK_S_JWK = jose_jwk:from_okp({'X448', A_7_EPK_SK}),
-	{_, A_7_BOB_SK} = jose_jwk:to_key(A_7_BOB_S_JWK),
-	{_, A_7_BOB_PK} = jose_jwk:to_public_key(A_7_BOB_S_JWK),
-	{_, A_7_BOB_PK} = jose_jwk:to_key(A_7_BOB_JWK),
-	{_, A_7_EPK_SK} = jose_jwk:to_key(A_7_EPK_S_JWK),
-	{_, A_7_EPK_PK} = jose_jwk:to_public_key(A_7_EPK_S_JWK),
-	{_, A_7_EPK_PK} = jose_jwk:to_key(A_7_EPK_JWK),
+	{_, #'jose_X448PrivateKey'{
+		publicKey=#'jose_X448PublicKey'{publicKey=A_7_BOB_PK},
+		privateKey=A_7_BOB_Secret
+	}} = jose_jwk:to_key(A_7_BOB_S_JWK),
+	{_, #'jose_X448PublicKey'{publicKey=A_7_BOB_PK}} = jose_jwk:to_public_key(A_7_BOB_S_JWK),
+	{_, #'jose_X448PublicKey'{publicKey=A_7_BOB_PK}} = jose_jwk:to_key(A_7_BOB_JWK),
+	{_, #'jose_X448PrivateKey'{
+		publicKey=#'jose_X448PublicKey'{publicKey=A_7_EPK_PK},
+		privateKey=A_7_EPK_Secret
+	}} = jose_jwk:to_key(A_7_EPK_S_JWK),
+	{_, #'jose_X448PublicKey'{publicKey=A_7_EPK_PK}} = jose_jwk:to_public_key(A_7_EPK_S_JWK),
+	{_, #'jose_X448PublicKey'{publicKey=A_7_EPK_PK}} = jose_jwk:to_key(A_7_EPK_JWK),
 	A_7_Z = jose_jwk:shared_secret(A_7_BOB_JWK, A_7_EPK_S_JWK),
 	A_7_Z = jose_jwk:shared_secret(A_7_EPK_JWK, A_7_BOB_S_JWK),
 	A_7_TEXT = <<"Example of X448 encryption">>,

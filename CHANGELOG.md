@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.4 (2017-05-18)
+
+* Enhancements
+  * Add support for reading and writing PEM files for Ed25519, Ed448, X25519, and X448 keys based on [draft-ietf-curdle-pkix](https://tools.ietf.org/html/draft-ietf-curdle-pkix).
+  * Add support for [ojson](https://github.com/potatosalad/erlang-json) adapter for encoding/decoding JSON.
+
 ## 1.8.3 (2017-03-30)
 
 * Fixes
