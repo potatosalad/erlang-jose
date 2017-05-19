@@ -2,7 +2,7 @@
 %% vim: ts=4 sw=4 ft=erlang noet
 -module(jose_jwk_kty_okp_ed448_props).
 
--include_lib("public_key/include/public_key.hrl").
+-include_lib("jose/include/jose_public_key.hrl").
 
 -include_lib("triq/include/triq.hrl").
 
@@ -22,8 +22,10 @@ ed448_secret() ->
 	binary(57).
 
 ed448_keypair(Secret) ->
-	{PK, SK} = jose_curve448:eddsa_keypair(Secret),
-	{SK, PK}.
+	{PK, << S:57/binary, _:57/binary >>} = jose_curve448:eddsa_keypair(Secret),
+	PublicKey = #'jose_EdDSA448PublicKey'{publicKey=PK},
+	SecretKey = #'jose_EdDSA448PrivateKey'{publicKey=PublicKey, privateKey=S},
+	{SecretKey, PublicKey}.
 
 jwk_map() ->
 	?LET({AliceSecret, BobSecret},
@@ -31,7 +33,7 @@ jwk_map() ->
 		begin
 			AliceKeys = {AlicePrivateKey, _} = ed448_keypair(AliceSecret),
 			BobKeys = ed448_keypair(BobSecret),
-			AlicePrivateJWK = jose_jwk:from_okp({'Ed448', AlicePrivateKey}),
+			AlicePrivateJWK = jose_jwk:from_key(AlicePrivateKey),
 			{_, AlicePrivateJWKMap} = jose_jwk:to_map(AlicePrivateJWK),
 			Keys = {AliceKeys, BobKeys},
 			{Keys, AlicePrivateJWKMap}
@@ -57,6 +59,23 @@ prop_from_map_and_to_map() ->
 			andalso AlicePublicKey =:= element(2, jose_jwk:to_public_key(AlicePrivateJWK))
 			andalso AlicePublicJWKMap =:= element(2, jose_jwk:to_public_map(AlicePrivateJWK))
 			andalso AlicePublicThumbprint =:= jose_jwk:thumbprint(AlicePrivateJWK)
+		end).
+
+prop_from_pem_and_to_pem() ->
+	?FORALL({_Keys, AlicePrivateJWK, Password},
+		?LET({{Keys, AlicePrivateJWK}, Bytes},
+			{jwk_gen(), binary()},
+			{Keys, AlicePrivateJWK, base64url:encode(Bytes)}),
+		begin
+			AlicePrivatePEM = element(2, jose_jwk:to_pem(AlicePrivateJWK)),
+			EncryptedAlicePrivatePEM = element(2, jose_jwk:to_pem(Password, AlicePrivateJWK)),
+			AlicePublicJWK = jose_jwk:to_public(AlicePrivateJWK),
+			AlicePublicPEM = element(2, jose_jwk:to_pem(AlicePublicJWK)),
+			EncryptedAlicePublicPEM = element(2, jose_jwk:to_pem(Password, AlicePublicJWK)),
+			AlicePrivateJWK =:= jose_jwk:from_pem(AlicePrivatePEM)
+			andalso AlicePrivateJWK =:= jose_jwk:from_pem(Password, EncryptedAlicePrivatePEM)
+			andalso AlicePublicJWK =:= jose_jwk:from_pem(AlicePublicPEM)
+			andalso AlicePublicJWK =:= jose_jwk:from_pem(Password, EncryptedAlicePublicPEM)
 		end).
 
 prop_sign_and_verify() ->

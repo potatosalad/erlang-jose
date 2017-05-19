@@ -10,7 +10,7 @@
 %%%-------------------------------------------------------------------
 -module(jose_jwk_kty).
 
--include_lib("public_key/include/public_key.hrl").
+-include_lib("jose_public_key.hrl").
 
 -callback generate_key(Parameters) -> KTY
 	when
@@ -53,6 +53,22 @@ from_key(ECPrivateKey=#'ECPrivateKey'{}) ->
 	{?KTY_EC_MODULE, ?KTY_EC_MODULE:from_key(ECPrivateKey)};
 from_key(ECPublicKey={#'ECPoint'{}, _}) ->
 	{?KTY_EC_MODULE, ?KTY_EC_MODULE:from_key(ECPublicKey)};
+from_key(EdDSA25519PrivateKey=#'jose_EdDSA25519PrivateKey'{}) ->
+	{?KTY_OKP_Ed25519_MODULE, ?KTY_OKP_Ed25519_MODULE:from_key(EdDSA25519PrivateKey)};
+from_key(EdDSA25519PublicKey=#'jose_EdDSA25519PublicKey'{}) ->
+	{?KTY_OKP_Ed25519_MODULE, ?KTY_OKP_Ed25519_MODULE:from_key(EdDSA25519PublicKey)};
+from_key(EdDSA448PrivateKey=#'jose_EdDSA448PrivateKey'{}) ->
+	{?KTY_OKP_Ed448_MODULE, ?KTY_OKP_Ed448_MODULE:from_key(EdDSA448PrivateKey)};
+from_key(EdDSA448PublicKey=#'jose_EdDSA448PublicKey'{}) ->
+	{?KTY_OKP_Ed448_MODULE, ?KTY_OKP_Ed448_MODULE:from_key(EdDSA448PublicKey)};
+from_key(X25519PrivateKey=#'jose_X25519PrivateKey'{}) ->
+	{?KTY_OKP_X25519_MODULE, ?KTY_OKP_X25519_MODULE:from_key(X25519PrivateKey)};
+from_key(X25519PublicKey=#'jose_X25519PublicKey'{}) ->
+	{?KTY_OKP_X25519_MODULE, ?KTY_OKP_X25519_MODULE:from_key(X25519PublicKey)};
+from_key(X448PrivateKey=#'jose_X448PrivateKey'{}) ->
+	{?KTY_OKP_X448_MODULE, ?KTY_OKP_X448_MODULE:from_key(X448PrivateKey)};
+from_key(X448PublicKey=#'jose_X448PublicKey'{}) ->
+	{?KTY_OKP_X448_MODULE, ?KTY_OKP_X448_MODULE:from_key(X448PublicKey)};
 from_key(RSAPrivateKey=#'RSAPrivateKey'{}) ->
 	{?KTY_RSA_MODULE, ?KTY_RSA_MODULE:from_key(RSAPrivateKey)};
 from_key(RSAPublicKey=#'RSAPublicKey'{}) ->

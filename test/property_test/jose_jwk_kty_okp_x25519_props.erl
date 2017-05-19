@@ -2,7 +2,7 @@
 %% vim: ts=4 sw=4 ft=erlang noet
 -module(jose_jwk_kty_okp_x25519_props).
 
--include_lib("public_key/include/public_key.hrl").
+-include_lib("jose/include/jose_public_key.hrl").
 
 -include_lib("triq/include/triq.hrl").
 
@@ -22,8 +22,10 @@ x25519_secret() ->
 	binary(32).
 
 x25519_keypair(Secret) ->
-	{PK, Secret} = jose_curve25519:x25519_keypair(Secret),
-	{<< Secret/binary, PK/binary >>, PK}.
+	{PK, S} = jose_curve25519:x25519_keypair(Secret),
+	PublicKey = #'jose_X25519PublicKey'{publicKey=PK},
+	SecretKey = #'jose_X25519PrivateKey'{publicKey=PublicKey, privateKey=S},
+	{SecretKey, PublicKey}.
 
 jwk_map() ->
 	?LET({AliceSecret, BobSecret},
@@ -31,7 +33,7 @@ jwk_map() ->
 		begin
 			AliceKeys = {AlicePrivateKey, _} = x25519_keypair(AliceSecret),
 			BobKeys = x25519_keypair(BobSecret),
-			AlicePrivateJWK = jose_jwk:from_okp({'X25519', AlicePrivateKey}),
+			AlicePrivateJWK = jose_jwk:from_key(AlicePrivateKey),
 			{_, AlicePrivateJWKMap} = jose_jwk:to_map(AlicePrivateJWK),
 			Keys = {AliceKeys, BobKeys},
 			{Keys, AlicePrivateJWKMap}
@@ -59,12 +61,29 @@ prop_from_map_and_to_map() ->
 			andalso AlicePublicThumbprint =:= jose_jwk:thumbprint(AlicePrivateJWK)
 		end).
 
+prop_from_pem_and_to_pem() ->
+	?FORALL({_Keys, AlicePrivateJWK, Password},
+		?LET({{Keys, AlicePrivateJWK}, Bytes},
+			{jwk_gen(), binary()},
+			{Keys, AlicePrivateJWK, base64url:encode(Bytes)}),
+		begin
+			AlicePrivatePEM = element(2, jose_jwk:to_pem(AlicePrivateJWK)),
+			EncryptedAlicePrivatePEM = element(2, jose_jwk:to_pem(Password, AlicePrivateJWK)),
+			AlicePublicJWK = jose_jwk:to_public(AlicePrivateJWK),
+			AlicePublicPEM = element(2, jose_jwk:to_pem(AlicePublicJWK)),
+			EncryptedAlicePublicPEM = element(2, jose_jwk:to_pem(Password, AlicePublicJWK)),
+			AlicePrivateJWK =:= jose_jwk:from_pem(AlicePrivatePEM)
+			andalso AlicePrivateJWK =:= jose_jwk:from_pem(Password, EncryptedAlicePrivatePEM)
+			andalso AlicePublicJWK =:= jose_jwk:from_pem(AlicePublicPEM)
+			andalso AlicePublicJWK =:= jose_jwk:from_pem(Password, EncryptedAlicePublicPEM)
+		end).
+
 prop_box_encrypt_and_box_decrypt() ->
 	?FORALL({{{_, {BobPrivateKey, BobPublicKey}}, AlicePrivateJWK}, PlainText},
 		{jwk_gen(), binary()},
 		begin
-			BobPrivateJWK = jose_jwk:from_okp({'X25519', BobPrivateKey}),
-			BobPublicJWK = jose_jwk:from_okp({'X25519', BobPublicKey}),
+			BobPrivateJWK = jose_jwk:from_key(BobPrivateKey),
+			BobPublicJWK = jose_jwk:from_key(BobPublicKey),
 			Encrypted = jose_jwk:box_encrypt(PlainText, BobPublicJWK, AlicePrivateJWK),
 			CompactEncrypted = jose_jwe:compact(Encrypted),
 			Decrypted = {_, JWE} = jose_jwk:box_decrypt(Encrypted, BobPrivateJWK),

@@ -24,16 +24,20 @@
 -export([kty_oct_block_encrypt_and_block_decrypt/1]).
 -export([kty_oct_sign_and_verify/1]).
 -export([kty_okp_ed25519_from_map_and_to_map/1]).
+-export([kty_okp_ed25519_from_pem_and_to_pem/1]).
 -export([kty_okp_ed25519_sign_and_verify/1]).
 -export([kty_okp_ed25519ph_from_map_and_to_map/1]).
 -export([kty_okp_ed25519ph_sign_and_verify/1]).
 -export([kty_okp_ed448_from_map_and_to_map/1]).
+-export([kty_okp_ed448_from_pem_and_to_pem/1]).
 -export([kty_okp_ed448_sign_and_verify/1]).
 -export([kty_okp_ed448ph_from_map_and_to_map/1]).
 -export([kty_okp_ed448ph_sign_and_verify/1]).
 -export([kty_okp_x25519_from_map_and_to_map/1]).
+-export([kty_okp_x25519_from_pem_and_to_pem/1]).
 -export([kty_okp_x25519_box_encrypt_and_box_decrypt/1]).
 -export([kty_okp_x448_from_map_and_to_map/1]).
+-export([kty_okp_x448_from_pem_and_to_pem/1]).
 -export([kty_okp_x448_box_encrypt_and_box_decrypt/1]).
 -export([kty_rsa_convert_sfm_to_crt/1]).
 -export([kty_rsa_from_map_and_to_map/1]).
@@ -75,6 +79,7 @@ groups() ->
 		]},
 		{jose_jwk_kty_okp_ed25519, [parallel], [
 			kty_okp_ed25519_from_map_and_to_map,
+			kty_okp_ed25519_from_pem_and_to_pem,
 			kty_okp_ed25519_sign_and_verify
 		]},
 		{jose_jwk_kty_okp_ed25519ph, [parallel], [
@@ -83,6 +88,7 @@ groups() ->
 		]},
 		{jose_jwk_kty_okp_ed448, [parallel], [
 			kty_okp_ed448_from_map_and_to_map,
+			kty_okp_ed448_from_pem_and_to_pem,
 			kty_okp_ed448_sign_and_verify
 		]},
 		{jose_jwk_kty_okp_ed448ph, [parallel], [
@@ -91,10 +97,12 @@ groups() ->
 		]},
 		{jose_jwk_kty_okp_x25519, [parallel], [
 			kty_okp_x25519_from_map_and_to_map,
+			kty_okp_x25519_from_pem_and_to_pem,
 			kty_okp_x25519_box_encrypt_and_box_decrypt
 		]},
 		{jose_jwk_kty_okp_x448, [parallel], [
 			kty_okp_x448_from_map_and_to_map,
+			kty_okp_x448_from_pem_and_to_pem,
 			kty_okp_x448_box_encrypt_and_box_decrypt
 		]},
 		{jose_jwk_kty_rsa, [parallel], [
@@ -176,6 +184,11 @@ kty_okp_ed25519_from_map_and_to_map(Config) ->
 		jose_jwk_kty_okp_ed25519_props:prop_from_map_and_to_map(),
 		Config).
 
+kty_okp_ed25519_from_pem_and_to_pem(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwk_kty_okp_ed25519_props:prop_from_pem_and_to_pem(),
+		Config).
+
 kty_okp_ed25519_sign_and_verify(Config) ->
 	ct_property_test:quickcheck(
 		jose_jwk_kty_okp_ed25519_props:prop_sign_and_verify(),
@@ -194,6 +207,11 @@ kty_okp_ed25519ph_sign_and_verify(Config) ->
 kty_okp_ed448_from_map_and_to_map(Config) ->
 	ct_property_test:quickcheck(
 		jose_jwk_kty_okp_ed448_props:prop_from_map_and_to_map(),
+		Config).
+
+kty_okp_ed448_from_pem_and_to_pem(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwk_kty_okp_ed448_props:prop_from_pem_and_to_pem(),
 		Config).
 
 kty_okp_ed448_sign_and_verify(Config) ->
@@ -216,6 +234,11 @@ kty_okp_x25519_from_map_and_to_map(Config) ->
 		jose_jwk_kty_okp_x25519_props:prop_from_map_and_to_map(),
 		Config).
 
+kty_okp_x25519_from_pem_and_to_pem(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwk_kty_okp_x25519_props:prop_from_pem_and_to_pem(),
+		Config).
+
 kty_okp_x25519_box_encrypt_and_box_decrypt(Config) ->
 	ct_property_test:quickcheck(
 		jose_jwk_kty_okp_x25519_props:prop_box_encrypt_and_box_decrypt(),
@@ -224,6 +247,11 @@ kty_okp_x25519_box_encrypt_and_box_decrypt(Config) ->
 kty_okp_x448_from_map_and_to_map(Config) ->
 	ct_property_test:quickcheck(
 		jose_jwk_kty_okp_x448_props:prop_from_map_and_to_map(),
+		Config).
+
+kty_okp_x448_from_pem_and_to_pem(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwk_kty_okp_x448_props:prop_from_pem_and_to_pem(),
 		Config).
 
 kty_okp_x448_box_encrypt_and_box_decrypt(Config) ->
