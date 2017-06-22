@@ -572,7 +572,7 @@ defmodule JOSE.JWE do
 
       # let's define our jwk and cek (or decrypted_key)
       jwk = JOSE.JWK.from(%{"k" => "idN_YyeYZqEE7BkpexhA2Q", "kty" => "oct"})            # JOSE.JWK.generate_key({:oct, 16})
-      cek = <<134, 82, 15, 176, 181, 115, 173, 19, 13, 44, 189, 185, 187, 125, 28, 240>> # :crypto.rand_bytes(16)
+      cek = <<134, 82, 15, 176, 181, 115, 173, 19, 13, 44, 189, 185, 187, 125, 28, 240>> # :crypto.strong_rand_bytes(16)
 
       iex> JOSE.JWE.key_encrypt(jwk, cek, %{ "alg" => "A128KW", "enc" => "A128CBC-HS256" })
       {<<27, 123, 126, 121, 56, 105, 105, 81, 140, 76, 30, 2, 14, 92, 231, 174, 203, 196, 110, 204, 57, 238, 248, 73>>,
