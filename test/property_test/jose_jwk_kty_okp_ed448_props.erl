@@ -2,7 +2,7 @@
 %% vim: ts=4 sw=4 ft=erlang noet
 -module(jose_jwk_kty_okp_ed448_props).
 
--include_lib("jose/include/jose_public_key.hrl").
+-include("jose_public_key.hrl").
 
 -include_lib("triq/include/triq.hrl").
 

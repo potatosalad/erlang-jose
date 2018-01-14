@@ -3,7 +3,7 @@
 -module(jose_SUITE).
 
 -include_lib("common_test/include/ct.hrl").
--include_lib("jose/include/jose_public_key.hrl").
+-include("jose_public_key.hrl").
 -include_lib("public_key/include/public_key.hrl").
 
 -include("jose.hrl").
