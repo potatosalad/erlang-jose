@@ -35,6 +35,7 @@ defmodule JOSE.Mixfile do
      {:libsodium, "~> 0.0.10", only: [:dev, :test]},
      {:ojson, "~> 1.0", only: [:dev, :test]},
      {:poison, "~> 3.1", only: [:dev, :test]},
+     {:jason, "~> 1.0", only: [:dev, :test]},
      {:ex_doc, "~> 0.15", only: :docs},
      {:earmark, "~> 1.2", only: :docs}]
   end
