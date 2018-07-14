@@ -12,6 +12,10 @@
 
 -include("jose_public_key.hrl").
 
+-ifdef(OTP_RELEASE).
+-compile({nowarn_deprecated_function, [{erlang, get_stacktrace, 0}]}).
+-endif.
+
 %% API
 -export([der_decode/2]).
 -export([der_encode/2]).
