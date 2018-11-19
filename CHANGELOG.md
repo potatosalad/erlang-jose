@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.8.5 (2018-11-19)
+
+* Enhancements
+  * Add macro so the application compiles without warnings after erlang:get_stacktrace/0 has been deprecated.
+
 ## 1.8.4 (2017-05-18)
 
 * Enhancements

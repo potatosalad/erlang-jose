@@ -1,6 +1,6 @@
 PROJECT = jose
 PROJECT_DESCRIPTION = JSON Object Signing and Encryption (JOSE) for Erlang and Elixir.
-PROJECT_VERSION = 1.8.4
+PROJECT_VERSION = 1.8.5
 
 DEPS = base64url
 
