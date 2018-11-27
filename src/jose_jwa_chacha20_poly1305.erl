@@ -1,12 +1,12 @@
 %% -*- mode: erlang; tab-width: 4; indent-tabs-mode: 1; st-rulers: [70] -*-
 %% vim: ts=4 sw=4 ft=erlang noet
 %%%-------------------------------------------------------------------
-%%% @author Andrew Bennett <andrew@pixid.com>
+%%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2016, Andrew Bennett
 %%% @doc ChaCha20 and Poly1305 for IETF Protocols
 %%% See https://tools.ietf.org/html/rfc7539
 %%% @end
-%%% Created :  08 Aug 2016 by Andrew Bennett <andrew@pixid.com>
+%%% Created :  08 Aug 2016 by Andrew Bennett <potatosaladx@gmail.com>
 %%%-------------------------------------------------------------------
 -module(jose_jwa_chacha20_poly1305).
 

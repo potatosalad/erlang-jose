@@ -1,12 +1,12 @@
 %% -*- mode: erlang; tab-width: 4; indent-tabs-mode: 1; st-rulers: [70] -*-
 %% vim: ts=4 sw=4 ft=erlang noet
 %%%-------------------------------------------------------------------
-%%% @author Andrew Bennett <andrew@pixid.com>
+%%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2016, Andrew Bennett
 %%% @doc Elliptic Curves for Security - X25519
 %%% See https://tools.ietf.org/html/rfc7748
 %%% @end
-%%% Created :  06 Jan 2016 by Andrew Bennett <andrew@pixid.com>
+%%% Created :  06 Jan 2016 by Andrew Bennett <potatosaladx@gmail.com>
 %%%-------------------------------------------------------------------
 -module(jose_jwa_x25519).
 

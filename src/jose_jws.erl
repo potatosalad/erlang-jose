@@ -1,13 +1,13 @@
 %% -*- mode: erlang; tab-width: 4; indent-tabs-mode: 1; st-rulers: [70] -*-
 %% vim: ts=4 sw=4 ft=erlang noet
 %%%-------------------------------------------------------------------
-%%% @author Andrew Bennett <andrew@pixid.com>
+%%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2015, Andrew Bennett
 %%% @doc JSON Web Signature (JWS)
 %%% See RFC 7515: https://tools.ietf.org/html/rfc7515
 %%% See RFC 7797: https://tools.ietf.org/html/rfc7797
 %%% @end
-%%% Created :  21 Jul 2015 by Andrew Bennett <andrew@pixid.com>
+%%% Created :  21 Jul 2015 by Andrew Bennett <potatosaladx@gmail.com>
 %%%-------------------------------------------------------------------
 -module(jose_jws).
 

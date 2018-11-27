@@ -1,7 +1,7 @@
 %% -*- mode: erlang; tab-width: 4; indent-tabs-mode: 1; st-rulers: [70] -*-
 %% vim: ts=4 sw=4 ft=erlang noet
 %%%-------------------------------------------------------------------
-%%% @author Andrew Bennett <andrew@pixid.com>
+%%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2015, Andrew Bennett
 %%% @doc Advanced Encryption Standard (AES)
 %%% Cipher Block Chaining (CBC), as defined in NIST.800-38A
@@ -10,7 +10,7 @@
 %%% See NIST.800-38A: http://csrc.nist.gov/publications/nistpubs/800-38a/sp800-38a.pdf
 %%% See NIST.800-38D: http://csrc.nist.gov/publications/nistpubs/800-38D/SP-800-38D.pdf
 %%% @end
-%%% Created :  28 Jul 2015 by Andrew Bennett <andrew@pixid.com>
+%%% Created :  28 Jul 2015 by Andrew Bennett <potatosaladx@gmail.com>
 %%%-------------------------------------------------------------------
 -module(jose_jwa_aes).
 -behaviour(jose_block_encryptor).
