@@ -16,7 +16,6 @@
 		Fields :: map(),
 		JWEMap :: map().
 
--ifdef(optional_callbacks).
 -callback decrypt_private(CipherText, Options, KTY) -> PlainText
 	when
 		CipherText :: iodata(),
@@ -43,7 +42,6 @@
 -optional_callbacks([derive_key/1]).
 -optional_callbacks([derive_key/2]).
 -optional_callbacks([encrypt_public/3]).
--endif.
 
 %%====================================================================
 %% API functions

@@ -28,8 +28,6 @@
 		Signature :: iodata(),
 		ALG       :: any().
 
--ifdef(optional_callbacks).
-
 -callback presign(Key, ALG) -> NewALG
 	when
 		Key    :: any(),
@@ -37,8 +35,6 @@
 		NewALG :: any().
 
 -optional_callbacks([presign/2]).
-
--endif.
 
 %% API
 -export([generate_key/2]).

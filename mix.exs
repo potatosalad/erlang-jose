@@ -1,7 +1,7 @@
 defmodule JOSE.Mixfile do
   use Mix.Project
 
-  def project do
+  def project() do
     [
       app: :jose,
       version: "1.8.4",
@@ -21,11 +21,11 @@ defmodule JOSE.Mixfile do
     ]
   end
 
-  def application do
+  def application() do
     [mod: {:jose_app, []}, applications: [:crypto, :asn1, :public_key, :base64url]]
   end
 
-  defp deps do
+  defp deps() do
     [
       {:base64url, "~> 0.0.1"},
       {:cutkey, github: "potatosalad/cutkey", only: [:dev, :test]},
@@ -42,29 +42,17 @@ defmodule JOSE.Mixfile do
     ]
   end
 
-  defp description do
+  defp description() do
     "JSON Object Signing and Encryption (JOSE) for Erlang and Elixir."
   end
 
-  def erlc_options do
-    extra_options =
-      try do
-        case :erlang.list_to_integer(:erlang.system_info(:otp_release)) do
-          v when v >= 18 ->
-            [{:d, :optional_callbacks}]
-
-          _ ->
-            []
-        end
-      catch
-        _ ->
-          []
-      end
+  def erlc_options() do
+    extra_options = []
 
     [:debug_info | if(Mix.env() == :prod, do: [], else: [:warnings_as_errors]) ++ extra_options]
   end
 
-  defp package do
+  defp package() do
     [
       maintainers: ["Andrew Bennett"],
       files: [

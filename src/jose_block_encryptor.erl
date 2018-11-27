@@ -10,8 +10,6 @@
 %%%-------------------------------------------------------------------
 -module(jose_block_encryptor).
 
--ifdef(optional_callbacks).
-
 -callback block_decrypt(Cipher, Key, CipherText) -> PlainText | error
 	when
 		Cipher     :: {atom(), pos_integer()},
@@ -27,8 +25,6 @@
 
 -optional_callbacks([block_decrypt/3]).
 -optional_callbacks([block_encrypt/3]).
-
--endif.
 
 -callback block_decrypt(Cipher, Key, IV, CipherText) -> PlainText | error
 	when
