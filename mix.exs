@@ -31,14 +31,14 @@ defmodule JOSE.Mixfile do
       {:cutkey, github: "potatosalad/cutkey", only: [:dev, :test]},
       {:jason, "~> 1.1", only: [:dev, :test]},
       {:jsone, "~> 1.4", only: [:dev, :test]},
-      {:jsx, "~> 2.8", only: [:dev, :test]},
+      {:jsx, "~> 2.9", only: [:dev, :test]},
       # {:keccakf1600, "~> 2.0.0", only: [:dev, :test]},
       {:libdecaf, "~> 0.0.4", only: [:dev, :test]},
       {:libsodium, "~> 0.0.10", only: [:dev, :test]},
       {:ojson, "~> 1.0", only: [:dev, :test]},
-      {:poison, "~> 3.1", only: [:dev, :test]},
-      {:ex_doc, "~> 0.15", only: :dev},
-      {:earmark, "~> 1.2", only: :dev}
+      {:poison, "~> 4.0", only: [:dev, :test]},
+      {:ex_doc, "~> 0.19", only: :dev},
+      {:earmark, "~> 1.3", only: :dev}
     ]
   end
 
