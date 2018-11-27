@@ -6,9 +6,9 @@ defmodule JOSE.JWK do
   """
 
   record = Record.extract(:jose_jwk, from_lib: "jose/include/jose_jwk.hrl")
-  keys   = :lists.map(&elem(&1, 0), record)
-  vals   = :lists.map(&{&1, [], nil}, keys)
-  pairs  = :lists.zip(keys, vals)
+  keys = :lists.map(&elem(&1, 0), record)
+  vals = :lists.map(&{&1, [], nil}, keys)
+  pairs = :lists.zip(keys, vals)
 
   defstruct keys
   @type t :: %__MODULE__{}
@@ -19,16 +19,19 @@ defmodule JOSE.JWK do
   def to_record(%JOSE.JWK{unquote_splicing(pairs)}) do
     {:jose_jwk, unquote_splicing(vals)}
   end
-  def to_record(list) when is_list(list), do: for element <- list, into: [], do: to_record(element)
+
+  def to_record(list) when is_list(list), do: for(element <- list, into: [], do: to_record(element))
 
   @doc """
   Converts a `:jose_jwk` record into a `JOSE.JWK`.
   """
   def from_record(jose_jwk)
+
   def from_record({:jose_jwk, unquote_splicing(vals)}) do
     %JOSE.JWK{unquote_splicing(pairs)}
   end
-  def from_record(list) when is_list(list), do: for element <- list, into: [], do: from_record(element)
+
+  def from_record(list) when is_list(list), do: for(element <- list, into: [], do: from_record(element))
 
   ## Decode API
 
@@ -48,8 +51,8 @@ defmodule JOSE.JWK do
       %JOSE.JWK{fields: %{}, keys: :undefined, kty: {MyCustomKey, :state}}
 
   """
-  def from(list) when is_list(list), do: for element <- list, into: [], do: from(element)
-  def from(jwk=%JOSE.JWK{}), do: from(to_record(jwk))
+  def from(list) when is_list(list), do: for(element <- list, into: [], do: from(element))
+  def from(jwk = %JOSE.JWK{}), do: from(to_record(jwk))
   def from(any), do: :jose_jwk.from(any) |> from_record()
 
   @doc """
@@ -66,20 +69,20 @@ defmodule JOSE.JWK do
        %JOSE.JWK{fields: %{}, keys: :undefined, kty: {:jose_jwk_kty_oct, "secret"}}}
 
   """
-  def from(password, list) when is_list(list), do: for element <- list, into: [], do: from(password, element)
-  def from(password, jwk=%JOSE.JWK{}), do: from(password, to_record(jwk))
+  def from(password, list) when is_list(list), do: for(element <- list, into: [], do: from(password, element))
+  def from(password, jwk = %JOSE.JWK{}), do: from(password, to_record(jwk))
   def from(password, any), do: :jose_jwk.from(password, any) |> from_encrypted_record()
 
   @doc """
   Converts a binary into a `JOSE.JWK`.
   """
-  def from_binary(list) when is_list(list), do: for element <- list, into: [], do: from_binary(element)
+  def from_binary(list) when is_list(list), do: for(element <- list, into: [], do: from_binary(element))
   def from_binary(binary), do: :jose_jwk.from_binary(binary) |> from_record()
 
   @doc """
   Decrypts an encrypted binary into a `JOSE.JWK` using `password`.  See `from/2`.
   """
-  def from_binary(password, list) when is_list(list), do: for element <- list, into: [], do: from_binary(password, element)
+  def from_binary(password, list) when is_list(list), do: for(element <- list, into: [], do: from_binary(password, element))
   def from_binary(password, binary), do: :jose_jwk.from_binary(password, binary) |> from_encrypted_record()
 
   @doc """
@@ -95,36 +98,36 @@ defmodule JOSE.JWK do
   @doc """
   Converts Firebase certificate public keys into a map of `JOSE.JWK`.
   """
-  def from_firebase(any), do: :maps.fold(fn (k, v, a) -> :maps.put(k, from_record(v), a) end, %{}, :jose_jwk.from_firebase(any))
+  def from_firebase(any), do: :maps.fold(fn k, v, a -> :maps.put(k, from_record(v), a) end, %{}, :jose_jwk.from_firebase(any))
 
   @doc """
   Converts Erlang records for `:ECPrivateKey`, `:ECPublicKey`, `:RSAPrivateKey`, and `:RSAPublicKey` into a `JOSE.JWK`.
   """
-  def from_key(list) when is_list(list), do: for element <- list, into: [], do: from_key(element)
+  def from_key(list) when is_list(list), do: for(element <- list, into: [], do: from_key(element))
   def from_key(key), do: :jose_jwk.from_key(key) |> from_record()
 
   @doc """
   Converts a map into a `JOSE.JWK`.
   """
-  def from_map(list) when is_list(list), do: for element <- list, into: [], do: from_map(element)
+  def from_map(list) when is_list(list), do: for(element <- list, into: [], do: from_map(element))
   def from_map(map), do: :jose_jwk.from_map(map) |> from_record()
 
   @doc """
   Decrypts an encrypted map into a `JOSE.JWK` using `password`.  See `from/2`.
   """
-  def from_map(password, list) when is_list(list), do: for element <- list, into: [], do: from_map(password, element)
+  def from_map(password, list) when is_list(list), do: for(element <- list, into: [], do: from_map(password, element))
   def from_map(password, map), do: :jose_jwk.from_map(password, map) |> from_encrypted_record()
 
   @doc """
   Converts an arbitrary binary into a `JOSE.JWK` with `"kty"` of `"oct"`.
   """
-  def from_oct(list) when is_list(list), do: for element <- list, into: [], do: from_oct(element)
+  def from_oct(list) when is_list(list), do: for(element <- list, into: [], do: from_oct(element))
   def from_oct(oct), do: :jose_jwk.from_oct(oct) |> from_record()
 
   @doc """
   Decrypts an encrypted arbitrary binary into a `JOSE.JWK` with `"kty"` of `"oct"` using `password`.  See `from/2`.
   """
-  def from_oct(password, list) when is_list(list), do: for element <- list, into: [], do: from_oct(password, element)
+  def from_oct(password, list) when is_list(list), do: for(element <- list, into: [], do: from_oct(password, element))
   def from_oct(password, oct), do: :jose_jwk.from_oct(password, oct) |> from_encrypted_record()
 
   @doc """
@@ -140,13 +143,13 @@ defmodule JOSE.JWK do
   @doc """
   Converts an octet key pair into a `JOSE.JWK` with `"kty"` of `"OKP"`.
   """
-  def from_okp(list) when is_list(list), do: for element <- list, into: [], do: from_okp(element)
+  def from_okp(list) when is_list(list), do: for(element <- list, into: [], do: from_okp(element))
   def from_okp(okp), do: :jose_jwk.from_okp(okp) |> from_record()
 
   @doc """
   Converts an openssh key into a `JOSE.JWK` with `"kty"` of `"OKP"`.
   """
-  def from_openssh_key(list) when is_list(list), do: for element <- list, into: [], do: from_openssh_key(element)
+  def from_openssh_key(list) when is_list(list), do: for(element <- list, into: [], do: from_openssh_key(element))
   def from_openssh_key(openssh_key), do: :jose_jwk.from_openssh_key(openssh_key) |> from_record()
 
   @doc """
@@ -157,13 +160,13 @@ defmodule JOSE.JWK do
   @doc """
   Converts a PEM (Privacy Enhanced Email) binary into a `JOSE.JWK`.
   """
-  def from_pem(list) when is_list(list), do: for element <- list, into: [], do: from_pem(element)
+  def from_pem(list) when is_list(list), do: for(element <- list, into: [], do: from_pem(element))
   def from_pem(pem), do: :jose_jwk.from_pem(pem) |> from_record()
 
   @doc """
   Decrypts an encrypted PEM (Privacy Enhanced Email) binary into a `JOSE.JWK` using `password`.
   """
-  def from_pem(password, list) when is_list(list), do: for element <- list, into: [], do: from_pem(password, element)
+  def from_pem(password, list) when is_list(list), do: for(element <- list, into: [], do: from_pem(password, element))
   def from_pem(password, pem), do: :jose_jwk.from_pem(password, pem) |> from_record()
 
   @doc """
@@ -178,6 +181,7 @@ defmodule JOSE.JWK do
 
   defp from_encrypted_record({jwe, jwk}) when is_tuple(jwe) and is_tuple(jwk),
     do: {JOSE.JWE.from_record(jwe), from_record(jwk)}
+
   defp from_encrypted_record(any), do: any
 
   ## Encode API
@@ -185,155 +189,155 @@ defmodule JOSE.JWK do
   @doc """
   Converts a `JOSE.JWK` into a binary.
   """
-  def to_binary(list) when is_list(list), do: for element <- list, into: [], do: to_binary(element)
-  def to_binary(jwk=%JOSE.JWK{}), do: to_binary(to_record(jwk))
+  def to_binary(list) when is_list(list), do: for(element <- list, into: [], do: to_binary(element))
+  def to_binary(jwk = %JOSE.JWK{}), do: to_binary(to_record(jwk))
   def to_binary(jwk), do: :jose_jwk.to_binary(jwk)
 
   @doc """
   Encrypts a `JOSE.JWK` into a binary using `password` and the default `jwe` for the key type.  See `to_binary/3`.
   """
-  def to_binary(password, list) when is_list(list), do: for element <- list, into: [], do: to_binary(password, element)
-  def to_binary(password, jwk=%JOSE.JWK{}), do: to_binary(password, to_record(jwk))
+  def to_binary(password, list) when is_list(list), do: for(element <- list, into: [], do: to_binary(password, element))
+  def to_binary(password, jwk = %JOSE.JWK{}), do: to_binary(password, to_record(jwk))
   def to_binary(password, jwk), do: :jose_jwk.to_binary(password, jwk)
 
   @doc """
   Encrypts a `JOSE.JWK` into a binary using `password` and `jwe`.
   """
-  def to_binary(password, jwe=%JOSE.JWE{}, jwk), do: to_binary(password, JOSE.JWE.to_record(jwe), jwk)
-  def to_binary(password, jwe, jwk=%JOSE.JWK{}), do: to_binary(password, jwe, to_record(jwk))
+  def to_binary(password, jwe = %JOSE.JWE{}, jwk), do: to_binary(password, JOSE.JWE.to_record(jwe), jwk)
+  def to_binary(password, jwe, jwk = %JOSE.JWK{}), do: to_binary(password, jwe, to_record(jwk))
   def to_binary(password, jwe, jwk), do: :jose_jwk.to_binary(password, jwe, jwk)
 
   @doc """
   Calls `to_binary/1` on a `JOSE.JWK` and then writes the binary to file.
   """
-  def to_file(file, jwk=%JOSE.JWK{}), do: to_file(file, to_record(jwk))
+  def to_file(file, jwk = %JOSE.JWK{}), do: to_file(file, to_record(jwk))
   def to_file(file, jwk), do: :jose_jwk.to_file(file, jwk)
 
   @doc """
   Calls `to_binary/2` on a `JOSE.JWK` and then writes the encrypted binary to file.
   """
-  def to_file(password, file, jwk=%JOSE.JWK{}), do: to_file(password, file, to_record(jwk))
+  def to_file(password, file, jwk = %JOSE.JWK{}), do: to_file(password, file, to_record(jwk))
   def to_file(password, file, jwk), do: :jose_jwk.to_file(password, file, jwk)
 
   @doc """
   Calls `to_binary/3` on a `JOSE.JWK` and then writes the encrypted binary to file.
   """
-  def to_file(password, file, jwe=%JOSE.JWE{}, jwk), do: to_file(password, file, JOSE.JWE.to_record(jwe), jwk)
-  def to_file(password, file, jwe, jwk=%JOSE.JWK{}), do: to_file(password, file, jwe, to_record(jwk))
+  def to_file(password, file, jwe = %JOSE.JWE{}, jwk), do: to_file(password, file, JOSE.JWE.to_record(jwe), jwk)
+  def to_file(password, file, jwe, jwk = %JOSE.JWK{}), do: to_file(password, file, jwe, to_record(jwk))
   def to_file(password, file, jwe, jwk), do: :jose_jwk.to_file(password, file, jwe, jwk)
 
   @doc """
   Converts a `JOSE.JWK` into the raw key format.
   """
-  def to_key(list) when is_list(list), do: for element <- list, into: [], do: to_key(element)
-  def to_key(jwk=%JOSE.JWK{}), do: to_key(to_record(jwk))
+  def to_key(list) when is_list(list), do: for(element <- list, into: [], do: to_key(element))
+  def to_key(jwk = %JOSE.JWK{}), do: to_key(to_record(jwk))
   def to_key(jwk), do: :jose_jwk.to_key(jwk)
 
   @doc """
   Converts a `JOSE.JWK` into a map.
   """
-  def to_map(list) when is_list(list), do: for element <- list, into: [], do: to_map(element)
-  def to_map(jwk=%JOSE.JWK{}), do: to_map(to_record(jwk))
+  def to_map(list) when is_list(list), do: for(element <- list, into: [], do: to_map(element))
+  def to_map(jwk = %JOSE.JWK{}), do: to_map(to_record(jwk))
   def to_map(jwk), do: :jose_jwk.to_map(jwk)
 
   @doc """
   Encrypts a `JOSE.JWK` into a map using `password` and the default `jwe` for the key type.  See `to_map/3`.
   """
-  def to_map(password, list) when is_list(list), do: for element <- list, into: [], do: to_map(password, element)
-  def to_map(password, jwk=%JOSE.JWK{}), do: to_map(password, to_record(jwk))
+  def to_map(password, list) when is_list(list), do: for(element <- list, into: [], do: to_map(password, element))
+  def to_map(password, jwk = %JOSE.JWK{}), do: to_map(password, to_record(jwk))
   def to_map(password, jwk), do: :jose_jwk.to_map(password, jwk)
 
   @doc """
   Encrypts a `JOSE.JWK` into a map using `password` and `jwe`.
   """
-  def to_map(password, jwe=%JOSE.JWE{}, jwk), do: to_map(password, JOSE.JWE.to_record(jwe), jwk)
-  def to_map(password, jwe, jwk=%JOSE.JWK{}), do: to_map(password, jwe, to_record(jwk))
+  def to_map(password, jwe = %JOSE.JWE{}, jwk), do: to_map(password, JOSE.JWE.to_record(jwe), jwk)
+  def to_map(password, jwe, jwk = %JOSE.JWK{}), do: to_map(password, jwe, to_record(jwk))
   def to_map(password, jwe, jwk), do: :jose_jwk.to_map(password, jwe, jwk)
 
   @doc """
   Converts a `JOSE.JWK` into a raw binary octet.
   """
-  def to_oct(list) when is_list(list), do: for element <- list, into: [], do: to_oct(element)
-  def to_oct(jwk=%JOSE.JWK{}), do: to_oct(to_record(jwk))
+  def to_oct(list) when is_list(list), do: for(element <- list, into: [], do: to_oct(element))
+  def to_oct(jwk = %JOSE.JWK{}), do: to_oct(to_record(jwk))
   def to_oct(jwk), do: :jose_jwk.to_oct(jwk)
 
   @doc """
   Encrypts a `JOSE.JWK` into a raw binary octet using `password` and the default `jwe` for the key type.  See `to_oct/3`.
   """
-  def to_oct(password, list) when is_list(list), do: for element <- list, into: [], do: to_oct(password, element)
-  def to_oct(password, jwk=%JOSE.JWK{}), do: to_oct(password, to_record(jwk))
+  def to_oct(password, list) when is_list(list), do: for(element <- list, into: [], do: to_oct(password, element))
+  def to_oct(password, jwk = %JOSE.JWK{}), do: to_oct(password, to_record(jwk))
   def to_oct(password, jwk), do: :jose_jwk.to_oct(password, jwk)
 
   @doc """
   Encrypts a `JOSE.JWK` into a raw binary octet using `password` and `jwe`.
   """
-  def to_oct(password, jwe=%JOSE.JWE{}, jwk), do: to_oct(password, JOSE.JWE.to_record(jwe), jwk)
-  def to_oct(password, jwe, jwk=%JOSE.JWK{}), do: to_oct(password, jwe, to_record(jwk))
+  def to_oct(password, jwe = %JOSE.JWE{}, jwk), do: to_oct(password, JOSE.JWE.to_record(jwe), jwk)
+  def to_oct(password, jwe, jwk = %JOSE.JWK{}), do: to_oct(password, jwe, to_record(jwk))
   def to_oct(password, jwe, jwk), do: :jose_jwk.to_oct(password, jwe, jwk)
 
   @doc """
   Calls `to_oct/1` on a `JOSE.JWK` and then writes the binary to file.
   """
-  def to_oct_file(file, jwk=%JOSE.JWK{}), do: to_oct_file(file, to_record(jwk))
+  def to_oct_file(file, jwk = %JOSE.JWK{}), do: to_oct_file(file, to_record(jwk))
   def to_oct_file(file, jwk), do: :jose_jwk.to_oct_file(file, jwk)
 
   @doc """
   Calls `to_oct/2` on a `JOSE.JWK` and then writes the encrypted binary to file.
   """
-  def to_oct_file(password, file, jwk=%JOSE.JWK{}), do: to_oct_file(password, file, to_record(jwk))
+  def to_oct_file(password, file, jwk = %JOSE.JWK{}), do: to_oct_file(password, file, to_record(jwk))
   def to_oct_file(password, file, jwk), do: :jose_jwk.to_oct_file(password, file, jwk)
 
   @doc """
   Calls `to_oct/3` on a `JOSE.JWK` and then writes the encrypted binary to file.
   """
-  def to_oct_file(password, file, jwe=%JOSE.JWE{}, jwk), do: to_oct_file(password, file, JOSE.JWE.to_record(jwe), jwk)
-  def to_oct_file(password, file, jwe, jwk=%JOSE.JWK{}), do: to_oct_file(password, file, jwe, to_record(jwk))
+  def to_oct_file(password, file, jwe = %JOSE.JWE{}, jwk), do: to_oct_file(password, file, JOSE.JWE.to_record(jwe), jwk)
+  def to_oct_file(password, file, jwe, jwk = %JOSE.JWK{}), do: to_oct_file(password, file, jwe, to_record(jwk))
   def to_oct_file(password, file, jwe, jwk), do: :jose_jwk.to_oct_file(password, file, jwe, jwk)
 
   @doc """
   Converts a `JOSE.JWK` into an octet key pair.
   """
-  def to_okp(list) when is_list(list), do: for element <- list, into: [], do: to_okp(element)
-  def to_okp(jwk=%JOSE.JWK{}), do: to_okp(to_record(jwk))
+  def to_okp(list) when is_list(list), do: for(element <- list, into: [], do: to_okp(element))
+  def to_okp(jwk = %JOSE.JWK{}), do: to_okp(to_record(jwk))
   def to_okp(jwk), do: :jose_jwk.to_okp(jwk)
 
   @doc """
   Converts a `JOSE.JWK` into an OpenSSH key binary.
   """
-  def to_openssh_key(list) when is_list(list), do: for element <- list, into: [], do: to_openssh_key(element)
-  def to_openssh_key(jwk=%JOSE.JWK{}), do: to_openssh_key(to_record(jwk))
+  def to_openssh_key(list) when is_list(list), do: for(element <- list, into: [], do: to_openssh_key(element))
+  def to_openssh_key(jwk = %JOSE.JWK{}), do: to_openssh_key(to_record(jwk))
   def to_openssh_key(jwk), do: :jose_jwk.to_openssh_key(jwk)
 
   @doc """
   Calls `to_openssh_key/1` on a `JOSE.JWK` and then writes the binary to file.
   """
-  def to_openssh_key_file(file, jwk=%JOSE.JWK{}), do: to_openssh_key_file(file, to_record(jwk))
+  def to_openssh_key_file(file, jwk = %JOSE.JWK{}), do: to_openssh_key_file(file, to_record(jwk))
   def to_openssh_key_file(file, jwk), do: :jose_jwk.to_openssh_key_file(file, jwk)
 
   @doc """
   Converts a `JOSE.JWK` into a PEM (Privacy Enhanced Email) binary.
   """
-  def to_pem(list) when is_list(list), do: for element <- list, into: [], do: to_pem(element)
-  def to_pem(jwk=%JOSE.JWK{}), do: to_pem(to_record(jwk))
+  def to_pem(list) when is_list(list), do: for(element <- list, into: [], do: to_pem(element))
+  def to_pem(jwk = %JOSE.JWK{}), do: to_pem(to_record(jwk))
   def to_pem(jwk), do: :jose_jwk.to_pem(jwk)
 
   @doc """
   Encrypts a `JOSE.JWK` into a PEM (Privacy Enhanced Email) encrypted binary using `password`.
   """
-  def to_pem(password, list) when is_list(list), do: for element <- list, into: [], do: to_pem(password, element)
-  def to_pem(password, jwk=%JOSE.JWK{}), do: to_pem(password, to_record(jwk))
+  def to_pem(password, list) when is_list(list), do: for(element <- list, into: [], do: to_pem(password, element))
+  def to_pem(password, jwk = %JOSE.JWK{}), do: to_pem(password, to_record(jwk))
   def to_pem(password, jwk), do: :jose_jwk.to_pem(password, jwk)
 
   @doc """
   Calls `to_pem/1` on a `JOSE.JWK` and then writes the binary to file.
   """
-  def to_pem_file(file, jwk=%JOSE.JWK{}), do: to_pem_file(file, to_record(jwk))
+  def to_pem_file(file, jwk = %JOSE.JWK{}), do: to_pem_file(file, to_record(jwk))
   def to_pem_file(file, jwk), do: :jose_jwk.to_pem_file(file, jwk)
 
   @doc """
   Calls `to_pem/2` on a `JOSE.JWK` and then writes the encrypted binary to file.
   """
-  def to_pem_file(password, file, jwk=%JOSE.JWK{}), do: to_pem_file(password, file, to_record(jwk))
+  def to_pem_file(password, file, jwk = %JOSE.JWK{}), do: to_pem_file(password, file, to_record(jwk))
   def to_pem_file(password, file, jwk), do: :jose_jwk.to_pem_file(password, file, jwk)
 
   @doc """
@@ -359,35 +363,35 @@ defmodule JOSE.JWK do
          65537}}}
 
   """
-  def to_public(list) when is_list(list), do: for element <- list, into: [], do: to_public(element)
-  def to_public(jwk=%JOSE.JWK{}), do: to_public(to_record(jwk))
+  def to_public(list) when is_list(list), do: for(element <- list, into: [], do: to_public(element))
+  def to_public(jwk = %JOSE.JWK{}), do: to_public(to_record(jwk))
   def to_public(jwk), do: :jose_jwk.to_public(jwk) |> from_record()
 
   @doc """
   Calls `to_public/1` and then `to_file/2` on a `JOSE.JWK`.
   """
-  def to_public_file(file, jwk=%JOSE.JWK{}), do: to_public_file(file, to_record(jwk))
+  def to_public_file(file, jwk = %JOSE.JWK{}), do: to_public_file(file, to_record(jwk))
   def to_public_file(file, jwk), do: :jose_jwk.to_public_file(file, jwk)
 
   @doc """
   Calls `to_public/1` and then `to_key/1` on a `JOSE.JWK`.
   """
-  def to_public_key(list) when is_list(list), do: for element <- list, into: [], do: to_public_key(element)
-  def to_public_key(jwk=%JOSE.JWK{}), do: to_public_key(to_record(jwk))
+  def to_public_key(list) when is_list(list), do: for(element <- list, into: [], do: to_public_key(element))
+  def to_public_key(jwk = %JOSE.JWK{}), do: to_public_key(to_record(jwk))
   def to_public_key(jwk), do: :jose_jwk.to_public_key(jwk)
 
   @doc """
   Calls `to_public/1` and then `to_map/1` on a `JOSE.JWK`.
   """
-  def to_public_map(list) when is_list(list), do: for element <- list, into: [], do: to_public_map(element)
-  def to_public_map(jwk=%JOSE.JWK{}), do: to_public_map(to_record(jwk))
+  def to_public_map(list) when is_list(list), do: for(element <- list, into: [], do: to_public_map(element))
+  def to_public_map(jwk = %JOSE.JWK{}), do: to_public_map(to_record(jwk))
   def to_public_map(jwk), do: :jose_jwk.to_public_map(jwk)
 
   @doc """
   Converts a `JOSE.JWK` into a map that can be used by `thumbprint/1` and `thumbprint/2`.
   """
-  def to_thumbprint_map(list) when is_list(list), do: for element <- list, into: [], do: to_thumbprint_map(element)
-  def to_thumbprint_map(jwk=%JOSE.JWK{}), do: to_thumbprint_map(to_record(jwk))
+  def to_thumbprint_map(list) when is_list(list), do: for(element <- list, into: [], do: to_thumbprint_map(element))
+  def to_thumbprint_map(jwk = %JOSE.JWK{}), do: to_thumbprint_map(to_record(jwk))
   def to_thumbprint_map(jwk), do: :jose_jwk.to_thumbprint_map(jwk)
 
   ## API
@@ -395,13 +399,19 @@ defmodule JOSE.JWK do
   @doc """
   Decrypts the `encrypted` binary or map using the `jwk`.  See `JOSE.JWE.block_decrypt/2`.
   """
-  def block_decrypt(encrypted, jwk=%JOSE.JWK{}), do: block_decrypt(encrypted, to_record(jwk))
-  def block_decrypt(encrypted, {your_public_jwk=%JOSE.JWK{}, my_private_jwk}), do: block_decrypt(encrypted, {to_record(your_public_jwk), my_private_jwk})
-  def block_decrypt(encrypted, {your_public_jwk, my_private_jwk=%JOSE.JWK{}}), do: block_decrypt(encrypted, {your_public_jwk, to_record(my_private_jwk)})
+  def block_decrypt(encrypted, jwk = %JOSE.JWK{}), do: block_decrypt(encrypted, to_record(jwk))
+
+  def block_decrypt(encrypted, {your_public_jwk = %JOSE.JWK{}, my_private_jwk}),
+    do: block_decrypt(encrypted, {to_record(your_public_jwk), my_private_jwk})
+
+  def block_decrypt(encrypted, {your_public_jwk, my_private_jwk = %JOSE.JWK{}}),
+    do: block_decrypt(encrypted, {your_public_jwk, to_record(my_private_jwk)})
+
   def block_decrypt(encrypted, jwk) do
     case :jose_jwk.block_decrypt(encrypted, jwk) do
       {plain_text, jwe} when is_tuple(jwe) ->
         {plain_text, JOSE.JWE.from_record(jwe)}
+
       error ->
         error
     end
@@ -410,37 +420,53 @@ defmodule JOSE.JWK do
   @doc """
   Encrypts the `plain_text` using the `jwk` and the default `jwe` based on the key type.  See `block_encrypt/3`.
   """
-  def block_encrypt(plain_text, jwk=%JOSE.JWK{}), do: block_encrypt(plain_text, to_record(jwk))
-  def block_encrypt(plain_text, {your_public_jwk=%JOSE.JWK{}, my_private_jwk}), do: block_encrypt(plain_text, {to_record(your_public_jwk), my_private_jwk})
-  def block_encrypt(plain_text, {your_public_jwk, my_private_jwk=%JOSE.JWK{}}), do: block_encrypt(plain_text, {your_public_jwk, to_record(my_private_jwk)})
+  def block_encrypt(plain_text, jwk = %JOSE.JWK{}), do: block_encrypt(plain_text, to_record(jwk))
+
+  def block_encrypt(plain_text, {your_public_jwk = %JOSE.JWK{}, my_private_jwk}),
+    do: block_encrypt(plain_text, {to_record(your_public_jwk), my_private_jwk})
+
+  def block_encrypt(plain_text, {your_public_jwk, my_private_jwk = %JOSE.JWK{}}),
+    do: block_encrypt(plain_text, {your_public_jwk, to_record(my_private_jwk)})
+
   def block_encrypt(plain_text, jwk), do: :jose_jwk.block_encrypt(plain_text, jwk)
 
   @doc """
   Encrypts the `plain_text` using the `jwk` and algorithms specified by the `jwe`.  See `JOSE.JWE.block_encrypt/3`.
   """
-  def block_encrypt(plain_text, jwe=%JOSE.JWE{}, jwk), do: block_encrypt(plain_text, JOSE.JWE.to_record(jwe), jwk)
-  def block_encrypt(plain_text, jwe, jwk=%JOSE.JWK{}), do: block_encrypt(plain_text, jwe, to_record(jwk))
-  def block_encrypt(plain_text, jwe, {your_public_jwk=%JOSE.JWK{}, my_private_jwk}), do: block_encrypt(plain_text, jwe, {to_record(your_public_jwk), my_private_jwk})
-  def block_encrypt(plain_text, jwe, {your_public_jwk, my_private_jwk=%JOSE.JWK{}}), do: block_encrypt(plain_text, jwe, {your_public_jwk, to_record(my_private_jwk)})
+  def block_encrypt(plain_text, jwe = %JOSE.JWE{}, jwk), do: block_encrypt(plain_text, JOSE.JWE.to_record(jwe), jwk)
+  def block_encrypt(plain_text, jwe, jwk = %JOSE.JWK{}), do: block_encrypt(plain_text, jwe, to_record(jwk))
+
+  def block_encrypt(plain_text, jwe, {your_public_jwk = %JOSE.JWK{}, my_private_jwk}),
+    do: block_encrypt(plain_text, jwe, {to_record(your_public_jwk), my_private_jwk})
+
+  def block_encrypt(plain_text, jwe, {your_public_jwk, my_private_jwk = %JOSE.JWK{}}),
+    do: block_encrypt(plain_text, jwe, {your_public_jwk, to_record(my_private_jwk)})
+
   def block_encrypt(plain_text, jwe, jwk), do: :jose_jwk.block_encrypt(plain_text, jwe, jwk)
 
   @doc """
   Returns a block encryptor map for the key type.
   """
-  def block_encryptor(list) when is_list(list), do: for element <- list, into: [], do: block_encryptor(element)
-  def block_encryptor(jwk=%JOSE.JWK{}), do: block_encryptor(to_record(jwk))
+  def block_encryptor(list) when is_list(list), do: for(element <- list, into: [], do: block_encryptor(element))
+  def block_encryptor(jwk = %JOSE.JWK{}), do: block_encryptor(to_record(jwk))
   def block_encryptor(jwk), do: :jose_jwk.block_encryptor(jwk)
 
   @doc """
   Key Agreement decryption of the `encrypted` binary or map using `my_private_jwk`.  See `box_encrypt/2` and `JOSE.JWE.block_decrypt/2`.
   """
-  def box_decrypt(encrypted, my_private_jwk=%JOSE.JWK{}), do: box_decrypt(encrypted, to_record(my_private_jwk))
-  def box_decrypt(encrypted, {your_public_jwk=%JOSE.JWK{}, my_private_jwk}), do: box_decrypt(encrypted, {to_record(your_public_jwk), my_private_jwk})
-  def box_decrypt(encrypted, {your_public_jwk, my_private_jwk=%JOSE.JWK{}}), do: box_decrypt(encrypted, {your_public_jwk, to_record(my_private_jwk)})
+  def box_decrypt(encrypted, my_private_jwk = %JOSE.JWK{}), do: box_decrypt(encrypted, to_record(my_private_jwk))
+
+  def box_decrypt(encrypted, {your_public_jwk = %JOSE.JWK{}, my_private_jwk}),
+    do: box_decrypt(encrypted, {to_record(your_public_jwk), my_private_jwk})
+
+  def box_decrypt(encrypted, {your_public_jwk, my_private_jwk = %JOSE.JWK{}}),
+    do: box_decrypt(encrypted, {your_public_jwk, to_record(my_private_jwk)})
+
   def box_decrypt(encrypted, my_private_jwk) do
     case :jose_jwk.box_decrypt(encrypted, my_private_jwk) do
       {plain_text, jwe} when is_tuple(jwe) ->
         {plain_text, JOSE.JWE.from_record(jwe)}
+
       error ->
         error
     end
@@ -492,11 +518,13 @@ defmodule JOSE.JWK do
           :undefined, :undefined}}, fields: %{}, zip: :undefined}}
 
   """
-  def box_encrypt(plain_text, other_public_jwk=%JOSE.JWK{}), do: box_encrypt(plain_text, to_record(other_public_jwk))
+  def box_encrypt(plain_text, other_public_jwk = %JOSE.JWK{}), do: box_encrypt(plain_text, to_record(other_public_jwk))
+
   def box_encrypt(plain_text, other_public_jwk) do
     case :jose_jwk.box_encrypt(plain_text, other_public_jwk) do
       {encrypted, my_private_jwk} when is_tuple(my_private_jwk) ->
         {encrypted, from_record(my_private_jwk)}
+
       error ->
         error
     end
@@ -505,19 +533,31 @@ defmodule JOSE.JWK do
   @doc """
   Key Agreement encryption of `plain_text` using `my_private_jwk`, `other_public_jwk`, and the default `jwe` based on the key types.  See `box_encrypt/4`.
   """
-  def box_encrypt(plain_text, other_public_jwk=%JOSE.JWK{}, my_private_jwk), do: box_encrypt(plain_text, to_record(other_public_jwk), my_private_jwk)
-  def box_encrypt(plain_text, other_public_jwk, my_private_jwk=%JOSE.JWK{}), do: box_encrypt(plain_text, other_public_jwk, to_record(my_private_jwk))
-  def box_encrypt(plain_text, other_public_jwk, my_private_jwk), do: :jose_jwk.box_encrypt(plain_text, other_public_jwk, my_private_jwk)
+  def box_encrypt(plain_text, other_public_jwk = %JOSE.JWK{}, my_private_jwk),
+    do: box_encrypt(plain_text, to_record(other_public_jwk), my_private_jwk)
+
+  def box_encrypt(plain_text, other_public_jwk, my_private_jwk = %JOSE.JWK{}),
+    do: box_encrypt(plain_text, other_public_jwk, to_record(my_private_jwk))
+
+  def box_encrypt(plain_text, other_public_jwk, my_private_jwk),
+    do: :jose_jwk.box_encrypt(plain_text, other_public_jwk, my_private_jwk)
 
   @doc """
   Key Agreement encryption of `plain_text` using `my_private_jwk`, `other_public_jwk`, and the algorithms specified by the `jwe`.
 
       # let's 
   """
-  def box_encrypt(plain_text, jwe=%JOSE.JWE{}, other_public_jwk, my_private_jwk), do: box_encrypt(plain_text, JOSE.JWE.to_record(jwe), other_public_jwk, my_private_jwk)
-  def box_encrypt(plain_text, jwe, other_public_jwk=%JOSE.JWK{}, my_private_jwk), do: box_encrypt(plain_text, jwe, to_record(other_public_jwk), my_private_jwk)
-  def box_encrypt(plain_text, jwe, other_public_jwk, my_private_jwk=%JOSE.JWK{}), do: box_encrypt(plain_text, jwe, other_public_jwk, to_record(my_private_jwk))
-  def box_encrypt(plain_text, jwe, other_public_jwk, my_private_jwk), do: :jose_jwk.box_encrypt(plain_text, jwe, other_public_jwk, my_private_jwk)
+  def box_encrypt(plain_text, jwe = %JOSE.JWE{}, other_public_jwk, my_private_jwk),
+    do: box_encrypt(plain_text, JOSE.JWE.to_record(jwe), other_public_jwk, my_private_jwk)
+
+  def box_encrypt(plain_text, jwe, other_public_jwk = %JOSE.JWK{}, my_private_jwk),
+    do: box_encrypt(plain_text, jwe, to_record(other_public_jwk), my_private_jwk)
+
+  def box_encrypt(plain_text, jwe, other_public_jwk, my_private_jwk = %JOSE.JWK{}),
+    do: box_encrypt(plain_text, jwe, other_public_jwk, to_record(my_private_jwk))
+
+  def box_encrypt(plain_text, jwe, other_public_jwk, my_private_jwk),
+    do: :jose_jwk.box_encrypt(plain_text, jwe, other_public_jwk, my_private_jwk)
 
   @doc """
   Generates a new `JOSE.JWK` based on another `JOSE.JWK` or from initialization params provided.
@@ -537,91 +577,109 @@ defmodule JOSE.JWK do
     * `{:rsa, modulus_size} | {:rsa, modulus_size, exponent_size}` - generates an `"RSA"` key using the `modulus_size` and `exponent_size`
 
   """
-  def generate_key(jwk=%JOSE.JWK{}), do: jwk |> to_record() |> generate_key()
+  def generate_key(jwk = %JOSE.JWK{}), do: jwk |> to_record() |> generate_key()
   def generate_key(parameters), do: :jose_jwk.generate_key(parameters) |> from_record()
 
   @doc """
   Merges map on right into map on left.
   """
-  def merge(left=%JOSE.JWK{}, right), do: merge(left |> to_record(), right)
-  def merge(left, right=%JOSE.JWK{}), do: merge(left, right |> to_record())
+  def merge(left = %JOSE.JWK{}, right), do: merge(left |> to_record(), right)
+  def merge(left, right = %JOSE.JWK{}), do: merge(left, right |> to_record())
   def merge(left, right), do: :jose_jwk.merge(left, right) |> from_record()
 
   @doc """
   Computes the shared secret between two keys.  Currently only works for `"EC"` keys and `"OKP"` keys with `"crv"` set to `"X25519"` or `"X448"`.
   """
-  def shared_secret(your_jwk=%JOSE.JWK{}, my_jwk), do: shared_secret(to_record(your_jwk), my_jwk)
-  def shared_secret(your_jwk, my_jwk=%JOSE.JWK{}), do: shared_secret(your_jwk, to_record(my_jwk))
+  def shared_secret(your_jwk = %JOSE.JWK{}, my_jwk), do: shared_secret(to_record(your_jwk), my_jwk)
+  def shared_secret(your_jwk, my_jwk = %JOSE.JWK{}), do: shared_secret(your_jwk, to_record(my_jwk))
   def shared_secret(your_jwk, my_jwk), do: :jose_jwk.shared_secret(your_jwk, my_jwk)
 
   @doc """
   Signs the `plain_text` using the `jwk` and the default signer algorithm `jws` for the key type.  See `sign/3`.
   """
-  def sign(plain_text, jwk=%JOSE.JWK{}), do: sign(plain_text, to_record(jwk))
+  def sign(plain_text, jwk = %JOSE.JWK{}), do: sign(plain_text, to_record(jwk))
+
   def sign(plain_text, key_list) when is_list(key_list) do
-    keys = for key <- key_list, into: [] do
-      case key do
-        %JOSE.JWK{} ->
-          JOSE.JWK.to_record(key)
-        _ ->
-          key
+    keys =
+      for key <- key_list, into: [] do
+        case key do
+          %JOSE.JWK{} ->
+            JOSE.JWK.to_record(key)
+
+          _ ->
+            key
+        end
       end
-    end
+
     :jose_jwk.sign(plain_text, keys)
   end
+
   def sign(plain_text, jwk), do: :jose_jwk.sign(plain_text, jwk)
 
   @doc """
   Signs the `plain_text` using the `jwk` and the algorithm specified by the `jws`.  See `JOSE.JWS.sign/3`.
   """
-  def sign(plain_text, jws=%JOSE.JWS{}, jwk), do: sign(plain_text, JOSE.JWS.to_record(jws), jwk)
-  def sign(plain_text, jws, jwk=%JOSE.JWK{}), do: sign(plain_text, jws, to_record(jwk))
-  def sign(plain_text, signer_list, key_list) when is_list(signer_list) and is_list(key_list) and length(signer_list) === length(key_list) do
-    signers = for signer <- signer_list, into: [] do
-      case signer do
-        %JOSE.JWS{} ->
-          JOSE.JWS.to_record(signer)
-        _ ->
-          signer
+  def sign(plain_text, jws = %JOSE.JWS{}, jwk), do: sign(plain_text, JOSE.JWS.to_record(jws), jwk)
+  def sign(plain_text, jws, jwk = %JOSE.JWK{}), do: sign(plain_text, jws, to_record(jwk))
+
+  def sign(plain_text, signer_list, key_list)
+      when is_list(signer_list) and is_list(key_list) and length(signer_list) === length(key_list) do
+    signers =
+      for signer <- signer_list, into: [] do
+        case signer do
+          %JOSE.JWS{} ->
+            JOSE.JWS.to_record(signer)
+
+          _ ->
+            signer
+        end
       end
-    end
-    keys = for key <- key_list, into: [] do
-      case key do
-        %JOSE.JWK{} ->
-          JOSE.JWK.to_record(key)
-        _ ->
-          key
+
+    keys =
+      for key <- key_list, into: [] do
+        case key do
+          %JOSE.JWK{} ->
+            JOSE.JWK.to_record(key)
+
+          _ ->
+            key
+        end
       end
-    end
+
     :jose_jwk.sign(plain_text, signers, keys)
   end
+
   def sign(plain_text, jws, key_list) when is_list(key_list) and not is_list(jws) do
-    keys = for key <- key_list, into: [] do
-      case key do
-        %JOSE.JWK{} ->
-          JOSE.JWK.to_record(key)
-        _ ->
-          key
+    keys =
+      for key <- key_list, into: [] do
+        case key do
+          %JOSE.JWK{} ->
+            JOSE.JWK.to_record(key)
+
+          _ ->
+            key
+        end
       end
-    end
+
     :jose_jwk.sign(plain_text, jws, keys)
   end
+
   def sign(plain_text, jws, jwk), do: :jose_jwk.sign(plain_text, jws, jwk)
 
   @doc """
   Returns a signer map for the key type.
   """
-  def signer(list) when is_list(list), do: for element <- list, into: [], do: signer(element)
-  def signer(jwk=%JOSE.JWK{}), do: signer(to_record(jwk))
+  def signer(list) when is_list(list), do: for(element <- list, into: [], do: signer(element))
+  def signer(jwk = %JOSE.JWK{}), do: signer(to_record(jwk))
   def signer(jwk), do: :jose_jwk.signer(jwk)
 
   @doc """
   Returns the unique thumbprint for a `JOSE.JWK` using the `:sha256` digest type.  See `thumbprint/2`.
   """
-  def thumbprint(list) when is_list(list), do: for element <- list, into: [], do: thumbprint(element)
-  def thumbprint(jwk=%JOSE.JWK{}), do: thumbprint(to_record(jwk))
+  def thumbprint(list) when is_list(list), do: for(element <- list, into: [], do: thumbprint(element))
+  def thumbprint(jwk = %JOSE.JWK{}), do: thumbprint(to_record(jwk))
   def thumbprint(jwk), do: :jose_jwk.thumbprint(jwk)
-  
+
   @doc """
   Returns the unique thumbprint for a `JOSE.JWK` using the `digest_type`.
 
@@ -640,45 +698,55 @@ defmodule JOSE.JWK do
 
   See JSON Web Key (JWK) Thumbprint [RFC 7638](https://tools.ietf.org/html/rfc7638) for more information.
   """
-  def thumbprint(digest_type, list) when is_list(list), do: for element <- list, into: [], do: thumbprint(digest_type, element)
-  def thumbprint(digest_type, jwk=%JOSE.JWK{}), do: thumbprint(digest_type, to_record(jwk))
+  def thumbprint(digest_type, list) when is_list(list), do: for(element <- list, into: [], do: thumbprint(digest_type, element))
+  def thumbprint(digest_type, jwk = %JOSE.JWK{}), do: thumbprint(digest_type, to_record(jwk))
   def thumbprint(digest_type, jwk), do: :jose_jwk.thumbprint(digest_type, jwk)
 
   @doc """
   Returns a verifier algorithm list for the key type.
   """
-  def verifier(list) when is_list(list), do: for element <- list, into: [], do: verifier(element)
-  def verifier(jwk=%JOSE.JWK{}), do: verifier(to_record(jwk))
+  def verifier(list) when is_list(list), do: for(element <- list, into: [], do: verifier(element))
+  def verifier(jwk = %JOSE.JWK{}), do: verifier(to_record(jwk))
   def verifier(jwk), do: :jose_jwk.verifier(jwk)
 
   @doc """
   Verifies the `signed` using the `jwk`.  See `JOSE.JWS.verify_strict/3`.
   """
-  def verify(signed, jwk=%JOSE.JWK{}), do: verify(signed, to_record(jwk))
-  def verify(signed, jwk=[%JOSE.JWK{} | _]) do
-    verify(signed, for k <- jwk do
-      case k do
-        %JOSE.JWK{} ->
-          JOSE.JWK.to_record(k)
-        _ ->
-          k
+  def verify(signed, jwk = %JOSE.JWK{}), do: verify(signed, to_record(jwk))
+
+  def verify(signed, jwk = [%JOSE.JWK{} | _]) do
+    verify(
+      signed,
+      for k <- jwk do
+        case k do
+          %JOSE.JWK{} ->
+            JOSE.JWK.to_record(k)
+
+          _ ->
+            k
+        end
       end
-    end)
+    )
   end
+
   def verify(signed, jwk) do
     try do
       case :jose_jwk.verify(signed, jwk) do
         {verified, payload, jws} when is_tuple(jws) ->
           {verified, payload, JOSE.JWS.from_record(jws)}
+
         list when is_list(list) ->
           for {jwk, verifications} <- list do
-            {JOSE.JWK.from_record(jwk), Enum.map(verifications, fn
-              {verified, jwt, jws} when is_tuple(jwt) and is_tuple(jws) ->
-                {verified, from_record(jwt), JOSE.JWS.from_record(jws)}
-              other ->
-                other
-            end)}
+            {JOSE.JWK.from_record(jwk),
+             Enum.map(verifications, fn
+               {verified, jwt, jws} when is_tuple(jwt) and is_tuple(jws) ->
+                 {verified, from_record(jwt), JOSE.JWS.from_record(jws)}
+
+               other ->
+                 other
+             end)}
           end
+
         error ->
           error
       end
@@ -691,31 +759,42 @@ defmodule JOSE.JWK do
   @doc """
   Verifies the `signed` using the `jwk` and whitelists the `"alg"` using `allow`.  See `JOSE.JWS.verify/2`.
   """
-  def verify_strict(signed, allow, jwk=%JOSE.JWK{}), do: verify_strict(signed, allow, to_record(jwk))
-  def verify_strict(signed, allow, jwk=[%JOSE.JWK{} | _]) do
-    verify_strict(signed, allow, for k <- jwk do
-      case k do
-        %JOSE.JWK{} ->
-          JOSE.JWK.to_record(k)
-        _ ->
-          k
+  def verify_strict(signed, allow, jwk = %JOSE.JWK{}), do: verify_strict(signed, allow, to_record(jwk))
+
+  def verify_strict(signed, allow, jwk = [%JOSE.JWK{} | _]) do
+    verify_strict(
+      signed,
+      allow,
+      for k <- jwk do
+        case k do
+          %JOSE.JWK{} ->
+            JOSE.JWK.to_record(k)
+
+          _ ->
+            k
+        end
       end
-    end)
+    )
   end
+
   def verify_strict(signed, allow, jwk) do
     try do
       case :jose_jwk.verify_strict(signed, allow, jwk) do
         {verified, payload, jws} when is_tuple(jws) ->
           {verified, payload, JOSE.JWS.from_record(jws)}
+
         list when is_list(list) ->
           for {jwk, verifications} <- list do
-            {JOSE.JWK.from_record(jwk), Enum.map(verifications, fn
-              {verified, jwt, jws} when is_tuple(jwt) and is_tuple(jws) ->
-                {verified, from_record(jwt), JOSE.JWS.from_record(jws)}
-              other ->
-                other
-            end)}
+            {JOSE.JWK.from_record(jwk),
+             Enum.map(verifications, fn
+               {verified, jwt, jws} when is_tuple(jwt) and is_tuple(jws) ->
+                 {verified, from_record(jwt), JOSE.JWS.from_record(jws)}
+
+               other ->
+                 other
+             end)}
           end
+
         error ->
           error
       end
@@ -724,5 +803,4 @@ defmodule JOSE.JWK do
         {class, reason}
     end
   end
-
 end

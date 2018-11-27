@@ -51,7 +51,7 @@ defmodule JOSE do
   Gets the current Curve25519 module used by `jose_curve25519`, see `curve25519_module/1` for default.
   """
   defdelegate curve25519_module(), to: :jose
-  
+
   @doc """
   Sets the current Curve25519 module used by `jose_curve25519`.
 
@@ -69,7 +69,7 @@ defmodule JOSE do
   Gets the current Curve448 module used by `jose_curve448`, see `curve448_module/1` for default.
   """
   defdelegate curve448_module(), to: :jose
-  
+
   @doc """
   Sets the current Curve448 module used by `jose_curve448`.
 
@@ -96,7 +96,7 @@ defmodule JOSE do
   Gets the current JSON module used by `decode/1` and `encode/1`, see `json_module/1` for default.
   """
   defdelegate json_module(), to: :jose
-  
+
   @doc """
   Sets the current JSON module used by `decode/1` and `encode/1`.
 
@@ -116,7 +116,7 @@ defmodule JOSE do
   Gets the current SHA3 module used by `jose_sha3`, see `sha3_module/1` for default.
   """
   defdelegate sha3_module(), to: :jose
-  
+
   @doc """
   Sets the current SHA3 module used by `jose_sha3`.
 
@@ -143,5 +143,4 @@ defmodule JOSE do
   See [Critical vulnerabilities in JSON Web Token libraries](https://auth0.com/blog/2015/03/31/critical-vulnerabilities-in-json-web-token-libraries/) for more information.
   """
   defdelegate unsecured_signing(boolean), to: :jose
-
 end

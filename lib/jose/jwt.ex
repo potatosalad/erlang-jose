@@ -39,9 +39,9 @@ defmodule JOSE.JWT do
   """
 
   record = Record.extract(:jose_jwt, from_lib: "jose/include/jose_jwt.hrl")
-  keys   = :lists.map(&elem(&1, 0), record)
-  vals   = :lists.map(&{&1, [], nil}, keys)
-  pairs  = :lists.zip(keys, vals)
+  keys = :lists.map(&elem(&1, 0), record)
+  vals = :lists.map(&{&1, [], nil}, keys)
+  pairs = :lists.zip(keys, vals)
 
   defstruct keys
   @type t :: %__MODULE__{}
@@ -52,16 +52,19 @@ defmodule JOSE.JWT do
   def to_record(%JOSE.JWT{unquote_splicing(pairs)}) do
     {:jose_jwt, unquote_splicing(vals)}
   end
-  def to_record(list) when is_list(list), do: for element <- list, into: [], do: to_record(element)
+
+  def to_record(list) when is_list(list), do: for(element <- list, into: [], do: to_record(element))
 
   @doc """
   Converts a `:jose_jwt` record into a `JOSE.JWT`.
   """
   def from_record(jose_jwt)
+
   def from_record({:jose_jwt, unquote_splicing(vals)}) do
     %JOSE.JWT{unquote_splicing(pairs)}
   end
-  def from_record(list) when is_list(list), do: for element <- list, into: [], do: from_record(element)
+
+  def from_record(list) when is_list(list), do: for(element <- list, into: [], do: from_record(element))
 
   ## Decode API
 
@@ -74,14 +77,14 @@ defmodule JOSE.JWT do
       %JOSE.JWT{fields: %{"test" => true}}
 
   """
-  def from(list) when is_list(list), do: for element <- list, into: [], do: from(element)
-  def from(jwt=%JOSE.JWT{}), do: from(to_record(jwt))
+  def from(list) when is_list(list), do: for(element <- list, into: [], do: from(element))
+  def from(jwt = %JOSE.JWT{}), do: from(to_record(jwt))
   def from(any), do: :jose_jwt.from(any) |> from_record()
 
   @doc """
   Converts a binary into a `JOSE.JWT`.
   """
-  def from_binary(list) when is_list(list), do: for element <- list, into: [], do: from_binary(element)
+  def from_binary(list) when is_list(list), do: for(element <- list, into: [], do: from_binary(element))
   def from_binary(binary), do: :jose_jwt.from_binary(binary) |> from_record()
 
   @doc """
@@ -92,7 +95,7 @@ defmodule JOSE.JWT do
   @doc """
   Converts a map into a `JOSE.JWT`.
   """
-  def from_map(list) when is_list(list), do: for element <- list, into: [], do: from_map(element)
+  def from_map(list) when is_list(list), do: for(element <- list, into: [], do: from_map(element))
   def from_map(map), do: :jose_jwt.from_map(map) |> from_record()
 
   ## Encode API
@@ -100,21 +103,21 @@ defmodule JOSE.JWT do
   @doc """
   Converts a `JOSE.JWT` into a binary.
   """
-  def to_binary(list) when is_list(list), do: for element <- list, into: [], do: to_binary(element)
-  def to_binary(jwt=%JOSE.JWT{}), do: to_binary(to_record(jwt))
+  def to_binary(list) when is_list(list), do: for(element <- list, into: [], do: to_binary(element))
+  def to_binary(jwt = %JOSE.JWT{}), do: to_binary(to_record(jwt))
   def to_binary(any), do: :jose_jwt.to_binary(any)
 
   @doc """
   Calls `to_binary/1` on a `JOSE.JWT` and then writes the binary to file.
   """
-  def to_file(file, jwt=%JOSE.JWT{}), do: to_file(file, to_record(jwt))
+  def to_file(file, jwt = %JOSE.JWT{}), do: to_file(file, to_record(jwt))
   def to_file(file, any), do: :jose_jwt.to_file(file, any)
 
   @doc """
   Converts a `JOSE.JWT` into a map.
   """
-  def to_map(list) when is_list(list), do: for element <- list, into: [], do: to_map(element)
-  def to_map(jwt=%JOSE.JWT{}), do: to_map(to_record(jwt))
+  def to_map(list) when is_list(list), do: for(element <- list, into: [], do: to_map(element))
+  def to_map(jwt = %JOSE.JWT{}), do: to_map(to_record(jwt))
   def to_map(any), do: :jose_jwt.to_map(any)
 
   ## API
@@ -122,11 +125,13 @@ defmodule JOSE.JWT do
   @doc """
   Decrypts an encrypted `JOSE.JWT` using the `jwk`.  See `JOSE.JWE.block_decrypt/2`.
   """
-  def decrypt(jwk=%JOSE.JWK{}, encrypted), do: decrypt(JOSE.JWK.to_record(jwk), encrypted)
+  def decrypt(jwk = %JOSE.JWK{}, encrypted), do: decrypt(JOSE.JWK.to_record(jwk), encrypted)
+
   def decrypt(key, encrypted) do
     case :jose_jwt.decrypt(key, encrypted) do
       {jwe, jwt} when is_tuple(jwe) and is_tuple(jwt) ->
         {JOSE.JWE.from_record(jwe), from_record(jwt)}
+
       error ->
         error
     end
@@ -135,10 +140,15 @@ defmodule JOSE.JWT do
   @doc """
   Encrypts a `JOSE.JWT` using the `jwk` and the default block encryptor algorithm `jwe` for the key type.  See `encrypt/3`.
   """
-  def encrypt(jwk=%JOSE.JWK{}, jwt), do: encrypt(JOSE.JWK.to_record(jwk), jwt)
-  def encrypt({your_public_jwk=%JOSE.JWK{}, my_private_jwk}, jwt), do: encrypt({JOSE.JWK.to_record(your_public_jwk), my_private_jwk}, jwt)
-  def encrypt({your_public_jwk, my_private_jwk=%JOSE.JWK{}}, jwt), do: encrypt({your_public_jwk, JOSE.JWK.to_record(my_private_jwk)}, jwt)
-  def encrypt(jwk, jwt=%JOSE.JWT{}), do: encrypt(jwk, to_record(jwt))
+  def encrypt(jwk = %JOSE.JWK{}, jwt), do: encrypt(JOSE.JWK.to_record(jwk), jwt)
+
+  def encrypt({your_public_jwk = %JOSE.JWK{}, my_private_jwk}, jwt),
+    do: encrypt({JOSE.JWK.to_record(your_public_jwk), my_private_jwk}, jwt)
+
+  def encrypt({your_public_jwk, my_private_jwk = %JOSE.JWK{}}, jwt),
+    do: encrypt({your_public_jwk, JOSE.JWK.to_record(my_private_jwk)}, jwt)
+
+  def encrypt(jwk, jwt = %JOSE.JWT{}), do: encrypt(jwk, to_record(jwt))
   def encrypt(jwk, jwt), do: :jose_jwt.encrypt(jwk, jwt)
 
   @doc """
@@ -146,18 +156,23 @@ defmodule JOSE.JWT do
 
   If `"typ"` is not specified in the `jwe`, `%{ "typ" => "JWT" }` will be added.
   """
-  def encrypt(jwk=%JOSE.JWK{}, jwe, jwt), do: encrypt(JOSE.JWK.to_record(jwk), jwe, jwt)
-  def encrypt({your_public_jwk=%JOSE.JWK{}, my_private_jwk}, jwe, jwt), do: encrypt({JOSE.JWK.to_record(your_public_jwk), my_private_jwk}, jwe, jwt)
-  def encrypt({your_public_jwk, my_private_jwk=%JOSE.JWK{}}, jwe, jwt), do: encrypt({your_public_jwk, JOSE.JWK.to_record(my_private_jwk)}, jwe, jwt)
-  def encrypt(jwk, jwe=%JOSE.JWE{}, jwt), do: encrypt(jwk, JOSE.JWE.to_record(jwe), jwt)
-  def encrypt(jwk, jwe, jwt=%JOSE.JWT{}), do: encrypt(jwk, jwe, to_record(jwt))
+  def encrypt(jwk = %JOSE.JWK{}, jwe, jwt), do: encrypt(JOSE.JWK.to_record(jwk), jwe, jwt)
+
+  def encrypt({your_public_jwk = %JOSE.JWK{}, my_private_jwk}, jwe, jwt),
+    do: encrypt({JOSE.JWK.to_record(your_public_jwk), my_private_jwk}, jwe, jwt)
+
+  def encrypt({your_public_jwk, my_private_jwk = %JOSE.JWK{}}, jwe, jwt),
+    do: encrypt({your_public_jwk, JOSE.JWK.to_record(my_private_jwk)}, jwe, jwt)
+
+  def encrypt(jwk, jwe = %JOSE.JWE{}, jwt), do: encrypt(jwk, JOSE.JWE.to_record(jwe), jwt)
+  def encrypt(jwk, jwe, jwt = %JOSE.JWT{}), do: encrypt(jwk, jwe, to_record(jwt))
   def encrypt(jwk, jwe, jwt), do: :jose_jwt.encrypt(jwk, jwe, jwt)
 
   @doc """
   Merges map on right into map on left.
   """
-  def merge(left=%JOSE.JWT{}, right), do: merge(left |> to_record(), right)
-  def merge(left, right=%JOSE.JWT{}), do: merge(left, right |> to_record())
+  def merge(left = %JOSE.JWT{}, right), do: merge(left |> to_record(), right)
+  def merge(left, right = %JOSE.JWT{}), do: merge(left, right |> to_record())
   def merge(left, right), do: :jose_jwt.merge(left, right) |> from_record()
 
   @doc """
@@ -178,18 +193,24 @@ defmodule JOSE.JWT do
   @doc """
   Signs a `JOSE.JWT` using the `jwk` and the default signer algorithm `jws` for the key type.  See `sign/3`.
   """
-  def sign(jwk=%JOSE.JWK{}, jwt), do: sign(JOSE.JWK.to_record(jwk), jwt)
-  def sign(jwk, jwt=%JOSE.JWT{}), do: sign(jwk, to_record(jwt))
-  def sign(jwk=[%JOSE.JWK{} | _], jwt) do
-    sign(for k <- jwk do
-      case k do
-        %JOSE.JWK{} ->
-          JOSE.JWK.to_record(k)
-        _ ->
-          k
-      end
-    end, jwt)
+  def sign(jwk = %JOSE.JWK{}, jwt), do: sign(JOSE.JWK.to_record(jwk), jwt)
+  def sign(jwk, jwt = %JOSE.JWT{}), do: sign(jwk, to_record(jwt))
+
+  def sign(jwk = [%JOSE.JWK{} | _], jwt) do
+    sign(
+      for k <- jwk do
+        case k do
+          %JOSE.JWK{} ->
+            JOSE.JWK.to_record(k)
+
+          _ ->
+            k
+        end
+      end,
+      jwt
+    )
   end
+
   def sign(jwk, jwt), do: :jose_jwt.sign(jwk, jwt)
 
   @doc """
@@ -197,49 +218,66 @@ defmodule JOSE.JWT do
 
   If `"typ"` is not specified in the `jws`, `%{ "typ" => "JWT" }` will be added.
   """
-  def sign(jwk=%JOSE.JWK{}, jws, jwt), do: sign(JOSE.JWK.to_record(jwk), jws, jwt)
-  def sign(jwk, jws=%JOSE.JWS{}, jwt), do: sign(jwk, JOSE.JWS.to_record(jws), jwt)
-  def sign(jwk, jws, jwt=%JOSE.JWT{}), do: sign(jwk, jws, to_record(jwt))
-  def sign(jwk=[%JOSE.JWK{} | _], jws, jwt) do
-    sign(for k <- jwk do
-      case k do
-        %JOSE.JWK{} ->
-          JOSE.JWK.to_record(k)
-        _ ->
-          k
-      end
-    end, jws, jwt)
+  def sign(jwk = %JOSE.JWK{}, jws, jwt), do: sign(JOSE.JWK.to_record(jwk), jws, jwt)
+  def sign(jwk, jws = %JOSE.JWS{}, jwt), do: sign(jwk, JOSE.JWS.to_record(jws), jwt)
+  def sign(jwk, jws, jwt = %JOSE.JWT{}), do: sign(jwk, jws, to_record(jwt))
+
+  def sign(jwk = [%JOSE.JWK{} | _], jws, jwt) do
+    sign(
+      for k <- jwk do
+        case k do
+          %JOSE.JWK{} ->
+            JOSE.JWK.to_record(k)
+
+          _ ->
+            k
+        end
+      end,
+      jws,
+      jwt
+    )
   end
+
   def sign(jwk, jws, jwt), do: :jose_jwt.sign(jwk, jws, jwt)
 
   @doc """
   Verifies the `signed` using the `jwk` and calls `from/1` on the payload.  See `JOSE.JWS.verify/2`.
   """
-  def verify(jwk=%JOSE.JWK{}, signed), do: verify(JOSE.JWK.to_record(jwk), signed)
-  def verify(jwk=[%JOSE.JWK{} | _], signed) do
-    verify(for k <- jwk do
-      case k do
-        %JOSE.JWK{} ->
-          JOSE.JWK.to_record(k)
-        _ ->
-          k
-      end
-    end, signed)
+  def verify(jwk = %JOSE.JWK{}, signed), do: verify(JOSE.JWK.to_record(jwk), signed)
+
+  def verify(jwk = [%JOSE.JWK{} | _], signed) do
+    verify(
+      for k <- jwk do
+        case k do
+          %JOSE.JWK{} ->
+            JOSE.JWK.to_record(k)
+
+          _ ->
+            k
+        end
+      end,
+      signed
+    )
   end
+
   def verify(key, signed) do
     try do
       case :jose_jwt.verify(key, signed) do
         {verified, jwt, jws} when is_tuple(jwt) and is_tuple(jws) ->
           {verified, from_record(jwt), JOSE.JWS.from_record(jws)}
+
         list when is_list(list) ->
           for {jwk, verifications} <- list do
-            {JOSE.JWK.from_record(jwk), Enum.map(verifications, fn
-              {verified, jwt, jws} when is_tuple(jwt) and is_tuple(jws) ->
-                {verified, from_record(jwt), JOSE.JWS.from_record(jws)}
-              other ->
-                other
-            end)}
+            {JOSE.JWK.from_record(jwk),
+             Enum.map(verifications, fn
+               {verified, jwt, jws} when is_tuple(jwt) and is_tuple(jws) ->
+                 {verified, from_record(jwt), JOSE.JWS.from_record(jws)}
+
+               other ->
+                 other
+             end)}
           end
+
         error ->
           error
       end
@@ -252,31 +290,42 @@ defmodule JOSE.JWT do
   @doc """
   Verifies the `signed` using the `jwk`, whitelists the `"alg"` using `allow`, and calls `from/1` on the payload.  See `JOSE.JWS.verify_strict/3`.
   """
-  def verify_strict(jwk=%JOSE.JWK{}, allow, signed), do: verify_strict(JOSE.JWK.to_record(jwk), allow, signed)
-  def verify_strict(jwk=[%JOSE.JWK{} | _], allow, signed) do
-    verify_strict(for k <- jwk do
-      case k do
-        %JOSE.JWK{} ->
-          JOSE.JWK.to_record(k)
-        _ ->
-          k
-      end
-    end, allow, signed)
+  def verify_strict(jwk = %JOSE.JWK{}, allow, signed), do: verify_strict(JOSE.JWK.to_record(jwk), allow, signed)
+
+  def verify_strict(jwk = [%JOSE.JWK{} | _], allow, signed) do
+    verify_strict(
+      for k <- jwk do
+        case k do
+          %JOSE.JWK{} ->
+            JOSE.JWK.to_record(k)
+
+          _ ->
+            k
+        end
+      end,
+      allow,
+      signed
+    )
   end
+
   def verify_strict(key, allow, signed) do
     try do
       case :jose_jwt.verify_strict(key, allow, signed) do
         {verified, jwt, jws} when is_tuple(jwt) and is_tuple(jws) ->
           {verified, from_record(jwt), JOSE.JWS.from_record(jws)}
+
         list when is_list(list) ->
           for {jwk, verifications} <- list do
-            {JOSE.JWK.from_record(jwk), Enum.map(verifications, fn
-              {verified, jwt, jws} when is_tuple(jwt) and is_tuple(jws) ->
-                {verified, from_record(jwt), JOSE.JWS.from_record(jws)}
-              other ->
-                other
-            end)}
+            {JOSE.JWK.from_record(jwk),
+             Enum.map(verifications, fn
+               {verified, jwt, jws} when is_tuple(jwt) and is_tuple(jws) ->
+                 {verified, from_record(jwt), JOSE.JWS.from_record(jws)}
+
+               other ->
+                 other
+             end)}
           end
+
         error ->
           error
       end
@@ -285,5 +334,4 @@ defmodule JOSE.JWT do
         {class, reason}
     end
   end
-
 end

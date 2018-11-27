@@ -2,7 +2,7 @@ defmodule JOSE.Poison.LexicalEncodeError do
   defexception value: nil, message: nil
 
   def message(%{value: value, message: nil}) do
-    "unable to encode value: #{inspect value}"
+    "unable to encode value: #{inspect(value)}"
   end
 
   def message(%{message: message}) do
@@ -29,8 +29,11 @@ defmodule JOSE.Poison.LexicalEncode do
               else
                 JOSE.Poison.LexicalEncodeError
               end
-            raise module, value: value,
-              message: "expected a String.Chars encodable value, got: #{inspect value}"
+
+            raise module,
+              value: value,
+              message: "expected a String.Chars encodable value, got: #{inspect(value)}"
+
           impl ->
             impl.to_string(value)
         end
@@ -126,21 +129,31 @@ defimpl JOSE.Poison.LexicalEncoder, for: Map do
     offset = offset(options) + indent
     options = offset(options, offset)
 
-    fun = &[",\n", spaces(offset), LexicalEncoder.BitString.encode(encode_name(&1), options), ": ",
-                                   LexicalEncoder.encode(:maps.get(&1, map), options) | &2]
+    fun =
+      &[
+        ",\n",
+        spaces(offset),
+        LexicalEncoder.BitString.encode(encode_name(&1), options),
+        ": ",
+        LexicalEncoder.encode(:maps.get(&1, map), options) | &2
+      ]
+
     ["{\n", tl(:lists.foldr(fun, [], :maps.keys(map))), ?\n, spaces(offset - indent), ?}]
   end
 
   def encode(map, _, options) do
-    fun = &[?,, LexicalEncoder.BitString.encode(encode_name(&1), options), ?:,
-                LexicalEncoder.encode(:maps.get(&1, map), options) | &2]
+    fun =
+      &[?,, LexicalEncoder.BitString.encode(encode_name(&1), options), ?:, LexicalEncoder.encode(:maps.get(&1, map), options) | &2]
+
     [?{, tl(:lists.foldr(fun, [], :maps.keys(map))), ?}]
   end
 
   defp strict_keys(map, false), do: map
+
   defp strict_keys(map, true) do
     Enum.each(map, fn {key, _value} ->
       name = encode_name(key)
+
       if Map.has_key?(map, name) do
         module =
           if Code.ensure_loaded?(Poison) do
@@ -148,10 +161,13 @@ defimpl JOSE.Poison.LexicalEncoder, for: Map do
           else
             JOSE.Poison.LexicalEncodeError
           end
-        raise module, value: name,
-          message: "duplicate key found: #{inspect key}"
+
+        raise module,
+          value: name,
+          message: "duplicate key found: #{inspect(key)}"
       end
     end)
+
     map
   end
 end
@@ -231,8 +247,7 @@ if Application.get_env(:poison, :enable_hashdict) do
 
     def encode(dict, false, options) do
       fun = fn {key, value} ->
-        [?,, LexicalEncoder.BitString.encode(encode_name(key), options), ?:,
-             LexicalEncoder.encode(value, options)]
+        [?,, LexicalEncoder.BitString.encode(encode_name(key), options), ?:, LexicalEncoder.encode(value, options)]
       end
 
       [?{, tl(Enum.flat_map(dict, fun)), ?}]
@@ -244,8 +259,13 @@ if Application.get_env(:poison, :enable_hashdict) do
       options = offset(options, offset)
 
       fun = fn {key, value} ->
-        [",\n", spaces(offset), LexicalEncoder.BitString.encode(encode_name(key), options), ": ",
-                                LexicalEncoder.encode(value, options)]
+        [
+          ",\n",
+          spaces(offset),
+          LexicalEncoder.BitString.encode(encode_name(key), options),
+          ": ",
+          LexicalEncoder.encode(value, options)
+        ]
       end
 
       ["{\n", tl(Enum.flat_map(dict, fun)), ?\n, spaces(offset - indent), ?}]
@@ -253,7 +273,7 @@ if Application.get_env(:poison, :enable_hashdict) do
   end
 end
 
-if Version.match?(System.version, ">=1.3.0-rc.1") do
+if Version.match?(System.version(), ">=1.3.0-rc.1") do
   defimpl JOSE.Poison.LexicalEncoder, for: [Date, Time, NaiveDateTime, DateTime] do
     def encode(value, options) do
       JOSE.Poison.LexicalEncoder.BitString.encode(@for.to_iso8601(value), options)
@@ -270,15 +290,18 @@ defimpl JOSE.Poison.LexicalEncoder, for: Any do
     only = options[:only]
     except = options[:except]
 
-    extractor = cond do
-      only ->
-        quote(do: Map.take(struct, unquote(only)))
-      except ->
-        except = [:__struct__ | except]
-        quote(do: Map.drop(struct, unquote(except)))
-      true ->
-        quote(do: :maps.remove(:__struct__, struct))
-    end
+    extractor =
+      cond do
+        only ->
+          quote(do: Map.take(struct, unquote(only)))
+
+        except ->
+          except = [:__struct__ | except]
+          quote(do: Map.drop(struct, unquote(except)))
+
+        true ->
+          quote(do: :maps.remove(:__struct__, struct))
+      end
 
     quote do
       defimpl JOSE.Poison.LexicalEncoder, for: unquote(module) do
@@ -300,6 +323,7 @@ defimpl JOSE.Poison.LexicalEncoder, for: Any do
       else
         JOSE.Poison.LexicalEncodeError
       end
+
     raise module, value: value
   end
 end

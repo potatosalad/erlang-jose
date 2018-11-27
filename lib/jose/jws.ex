@@ -216,9 +216,9 @@ defmodule JOSE.JWS do
   """
 
   record = Record.extract(:jose_jws, from_lib: "jose/include/jose_jws.hrl")
-  keys   = :lists.map(&elem(&1, 0), record)
-  vals   = :lists.map(&{&1, [], nil}, keys)
-  pairs  = :lists.zip(keys, vals)
+  keys = :lists.map(&elem(&1, 0), record)
+  vals = :lists.map(&{&1, [], nil}, keys)
+  pairs = :lists.zip(keys, vals)
 
   defstruct keys
   @type t :: %__MODULE__{}
@@ -229,16 +229,19 @@ defmodule JOSE.JWS do
   def to_record(%JOSE.JWS{unquote_splicing(pairs)}) do
     {:jose_jws, unquote_splicing(vals)}
   end
-  def to_record(list) when is_list(list), do: for element <- list, into: [], do: to_record(element)
+
+  def to_record(list) when is_list(list), do: for(element <- list, into: [], do: to_record(element))
 
   @doc """
   Converts a `:jose_jws` record into a `JOSE.JWS`.
   """
   def from_record(jose_jws)
+
   def from_record({:jose_jws, unquote_splicing(vals)}) do
     %JOSE.JWS{unquote_splicing(pairs)}
   end
-  def from_record(list) when is_list(list), do: for element <- list, into: [], do: from_record(element)
+
+  def from_record(list) when is_list(list), do: for(element <- list, into: [], do: from_record(element))
 
   ## Decode API
 
@@ -257,14 +260,14 @@ defmodule JOSE.JWS do
 
   *Note:* `MyCustomAlgorithm` must implement the `:jose_jws` and `:jose_jws_alg` behaviours.
   """
-  def from(list) when is_list(list), do: for element <- list, into: [], do: from(element)
-  def from(jws=%JOSE.JWS{}), do: from(to_record(jws))
+  def from(list) when is_list(list), do: for(element <- list, into: [], do: from(element))
+  def from(jws = %JOSE.JWS{}), do: from(to_record(jws))
   def from(any), do: :jose_jws.from(any) |> from_record()
 
   @doc """
   Converts a binary into a `JOSE.JWS`.
   """
-  def from_binary(list) when is_list(list), do: for element <- list, into: [], do: from_binary(element)
+  def from_binary(list) when is_list(list), do: for(element <- list, into: [], do: from_binary(element))
   def from_binary(binary), do: :jose_jws.from_binary(binary) |> from_record()
 
   @doc """
@@ -275,7 +278,7 @@ defmodule JOSE.JWS do
   @doc """
   Converts a map into a `JOSE.JWS`.
   """
-  def from_map(list) when is_list(list), do: for element <- list, into: [], do: from_map(element)
+  def from_map(list) when is_list(list), do: for(element <- list, into: [], do: from_map(element))
   def from_map(map), do: :jose_jws.from_map(map) |> from_record()
 
   ## Encode API
@@ -283,21 +286,21 @@ defmodule JOSE.JWS do
   @doc """
   Converts a `JOSE.JWS` into a binary.
   """
-  def to_binary(list) when is_list(list), do: for element <- list, into: [], do: to_binary(element)
-  def to_binary(jws=%JOSE.JWS{}), do: to_binary(to_record(jws))
+  def to_binary(list) when is_list(list), do: for(element <- list, into: [], do: to_binary(element))
+  def to_binary(jws = %JOSE.JWS{}), do: to_binary(to_record(jws))
   def to_binary(any), do: :jose_jws.to_binary(any)
 
   @doc """
   Calls `to_binary/1` on a `JOSE.JWS` and then writes the binary to file.
   """
-  def to_file(file, jws=%JOSE.JWS{}), do: to_file(file, to_record(jws))
+  def to_file(file, jws = %JOSE.JWS{}), do: to_file(file, to_record(jws))
   def to_file(file, any), do: :jose_jws.to_file(file, any)
 
   @doc """
   Converts a `JOSE.JWS` into a map.
   """
-  def to_map(list) when is_list(list), do: for element <- list, into: [], do: to_map(element)
-  def to_map(jws=%JOSE.JWS{}), do: to_map(to_record(jws))
+  def to_map(list) when is_list(list), do: for(element <- list, into: [], do: to_map(element))
+  def to_map(jws = %JOSE.JWS{}), do: to_map(to_record(jws))
   def to_map(any), do: :jose_jws.to_map(any)
 
   ## API
@@ -356,15 +359,15 @@ defmodule JOSE.JWS do
         <<150, 71, 29, 79, 228, 32, 218, 4, 111, 250, 212, 129, 226, 173, 86, 205, 72, 48, 98, 100, 66, 68, 113, 13, 43, 60, 122, 248, 179, 44, 140, 24>>}}
 
   """
-  def generate_key(list) when is_list(list), do: for element <- list, into: [], do: generate_key(element)
-  def generate_key(jws=%JOSE.JWS{}), do: generate_key(to_record(jws))
+  def generate_key(list) when is_list(list), do: for(element <- list, into: [], do: generate_key(element))
+  def generate_key(jws = %JOSE.JWS{}), do: generate_key(to_record(jws))
   def generate_key(any), do: JOSE.JWK.from_record(:jose_jws.generate_key(any))
 
   @doc """
   Merges map on right into map on left.
   """
-  def merge(left=%JOSE.JWS{}, right), do: merge(left |> to_record(), right)
-  def merge(left, right=%JOSE.JWS{}), do: merge(left, right |> to_record())
+  def merge(left = %JOSE.JWS{}, right), do: merge(left |> to_record(), right)
+  def merge(left, right = %JOSE.JWS{}), do: merge(left, right |> to_record())
   def merge(left, right), do: :jose_jws.merge(left, right) |> from_record()
 
   @doc """
@@ -440,49 +443,66 @@ defmodule JOSE.JWS do
 
   *Note:* Signed maps with a `"header"` or other fields will have data loss when used with `compact/1`.
   """
-  def sign(jwk=%JOSE.JWK{}, plain_text, jws), do: sign(JOSE.JWK.to_record(jwk), plain_text, jws)
-  def sign(jwk, plain_text, jws=%JOSE.JWS{}), do: sign(jwk, plain_text, to_record(jws))
-  def sign(key_list, plain_text, signer_list) when is_list(key_list) and is_list(signer_list) and length(key_list) === length(signer_list) do
-    keys = for key <- key_list, into: [] do
-      case key do
-        %JOSE.JWK{} ->
-          JOSE.JWK.to_record(key)
-        _ ->
-          key
+  def sign(jwk = %JOSE.JWK{}, plain_text, jws), do: sign(JOSE.JWK.to_record(jwk), plain_text, jws)
+  def sign(jwk, plain_text, jws = %JOSE.JWS{}), do: sign(jwk, plain_text, to_record(jws))
+
+  def sign(key_list, plain_text, signer_list)
+      when is_list(key_list) and is_list(signer_list) and length(key_list) === length(signer_list) do
+    keys =
+      for key <- key_list, into: [] do
+        case key do
+          %JOSE.JWK{} ->
+            JOSE.JWK.to_record(key)
+
+          _ ->
+            key
+        end
       end
-    end
-    signers = for signer <- signer_list, into: [] do
-      case signer do
-        %JOSE.JWS{} ->
-          JOSE.JWS.to_record(signer)
-        _ ->
-          signer
+
+    signers =
+      for signer <- signer_list, into: [] do
+        case signer do
+          %JOSE.JWS{} ->
+            JOSE.JWS.to_record(signer)
+
+          _ ->
+            signer
+        end
       end
-    end
+
     :jose_jws.sign(keys, plain_text, signers)
   end
+
   def sign(key_list, plain_text, jws) when is_list(key_list) and not is_list(jws) do
-    keys = for key <- key_list, into: [] do
-      case key do
-        %JOSE.JWK{} ->
-          JOSE.JWK.to_record(key)
-        _ ->
-          key
+    keys =
+      for key <- key_list, into: [] do
+        case key do
+          %JOSE.JWK{} ->
+            JOSE.JWK.to_record(key)
+
+          _ ->
+            key
+        end
       end
-    end
+
     :jose_jws.sign(keys, plain_text, jws)
   end
+
   def sign(jwk, plain_text, signer_list) when is_list(signer_list) and not is_list(jwk) do
-    signers = for signer <- signer_list, into: [] do
-      case signer do
-        %JOSE.JWS{} ->
-          JOSE.JWS.to_record(signer)
-        _ ->
-          signer
+    signers =
+      for signer <- signer_list, into: [] do
+        case signer do
+          %JOSE.JWS{} ->
+            JOSE.JWS.to_record(signer)
+
+          _ ->
+            signer
+        end
       end
-    end
+
     :jose_jws.sign(jwk, plain_text, signers)
   end
+
   def sign(jwk, plain_text, jws), do: :jose_jws.sign(jwk, plain_text, jws)
 
   @doc """
@@ -499,72 +519,79 @@ defmodule JOSE.JWS do
 
   If the `jwk` has a `"kid"` assigned, it will be added to the `"header"` on the signed map.  See `sign/3`.
   """
-  def sign(jwk=%JOSE.JWK{}, plain_text, header, jws), do: sign(JOSE.JWK.to_record(jwk), plain_text, header, jws)
-  def sign(jwk, plain_text, header, jws=%JOSE.JWS{}), do: sign(jwk, plain_text, header, to_record(jws))
+  def sign(jwk = %JOSE.JWK{}, plain_text, header, jws), do: sign(JOSE.JWK.to_record(jwk), plain_text, header, jws)
+  def sign(jwk, plain_text, header, jws = %JOSE.JWS{}), do: sign(jwk, plain_text, header, to_record(jws))
+
   def sign(key_list, plain_text, header, signer)
-      when is_list(key_list)
-      and is_map(header)
-      and not is_list(signer) do
+      when is_list(key_list) and is_map(header) and not is_list(signer) do
     headers = for _ <- key_list, into: [], do: header
     signers = for _ <- key_list, into: [], do: signer
     sign(key_list, plain_text, headers, signers)
   end
+
   def sign(key_list, plain_text, header, signer_list)
-      when is_list(key_list)
-      and is_map(header)
-      and is_list(signer_list)
-      and length(key_list) === length(signer_list) do
+      when is_list(key_list) and is_map(header) and is_list(signer_list) and length(key_list) === length(signer_list) do
     headers = for _ <- key_list, into: [], do: header
     sign(key_list, plain_text, headers, signer_list)
   end
+
   def sign(key_list, plain_text, header_list, signer)
-      when is_list(key_list)
-      and is_list(header_list)
-      and not is_list(signer)
-      and length(key_list) === length(header_list) do
+      when is_list(key_list) and is_list(header_list) and not is_list(signer) and length(key_list) === length(header_list) do
     signers = for _ <- key_list, into: [], do: signer
     sign(key_list, plain_text, header_list, signers)
   end
+
   def sign(key_list, plain_text, header_list, signer_list)
-      when is_list(key_list)
-      and is_list(header_list)
-      and is_list(signer_list)
-      and length(key_list) === length(signer_list)
-      and length(key_list) === length(header_list) do
-    keys = for key <- key_list, into: [] do
-      case key do
-        %JOSE.JWK{} ->
-          JOSE.JWK.to_record(key)
-        _ ->
-          key
+      when is_list(key_list) and is_list(header_list) and is_list(signer_list) and length(key_list) === length(signer_list) and
+             length(key_list) === length(header_list) do
+    keys =
+      for key <- key_list, into: [] do
+        case key do
+          %JOSE.JWK{} ->
+            JOSE.JWK.to_record(key)
+
+          _ ->
+            key
+        end
       end
-    end
-    signers = for signer <- signer_list, into: [] do
-      case signer do
-        %JOSE.JWS{} ->
-          JOSE.JWS.to_record(signer)
-        _ ->
-          signer
+
+    signers =
+      for signer <- signer_list, into: [] do
+        case signer do
+          %JOSE.JWS{} ->
+            JOSE.JWS.to_record(signer)
+
+          _ ->
+            signer
+        end
       end
-    end
+
     :jose_jws.sign(keys, plain_text, header_list, signers)
   end
-  def sign(jwk=[%JOSE.JWK{} | _], plain_text, header, jws) do
-    sign(for k <- jwk do
-      case k do
-        %JOSE.JWK{} ->
-          JOSE.JWK.to_record(k)
-        _ ->
-          k
-      end
-    end, plain_text, header, jws)
+
+  def sign(jwk = [%JOSE.JWK{} | _], plain_text, header, jws) do
+    sign(
+      for k <- jwk do
+        case k do
+          %JOSE.JWK{} ->
+            JOSE.JWK.to_record(k)
+
+          _ ->
+            k
+        end
+      end,
+      plain_text,
+      header,
+      jws
+    )
   end
+
   def sign(jwk, plain_text, header, jws), do: :jose_jws.sign(jwk, plain_text, header, jws)
 
   @doc """
   Converts the `jws` to the `protected` argument used by `signing_input/3`.
   """
-  def signing_input(payload, jws=%JOSE.JWS{}), do: signing_input(payload, to_record(jws))
+  def signing_input(payload, jws = %JOSE.JWS{}), do: signing_input(payload, to_record(jws))
   def signing_input(payload, jws), do: :jose_jws.signing_input(payload, jws)
 
   @doc """
@@ -579,7 +606,7 @@ defmodule JOSE.JWS do
 
   See [JWS Unencoded Payload Option](https://tools.ietf.org/html/draft-ietf-jose-jws-signing-input-options-04) for more information.
   """
-  def signing_input(payload, protected, jws=%JOSE.JWS{}), do: signing_input(payload, protected, to_record(jws))
+  def signing_input(payload, protected, jws = %JOSE.JWS{}), do: signing_input(payload, protected, to_record(jws))
   def signing_input(payload, protected, jws), do: :jose_jws.signing_input(payload, protected, jws)
 
   @doc """
@@ -622,28 +649,37 @@ defmodule JOSE.JWS do
            fields: %{}}}]}]
 
   """
-  def verify(jwk=%JOSE.JWK{}, signed), do: verify(JOSE.JWK.to_record(jwk), signed)
-  def verify(jwk=[%JOSE.JWK{} | _], signed) do
-    verify(for k <- jwk do
-      case k do
-        %JOSE.JWK{} ->
-          JOSE.JWK.to_record(k)
-        _ ->
-          k
-      end
-    end, signed)
+  def verify(jwk = %JOSE.JWK{}, signed), do: verify(JOSE.JWK.to_record(jwk), signed)
+
+  def verify(jwk = [%JOSE.JWK{} | _], signed) do
+    verify(
+      for k <- jwk do
+        case k do
+          %JOSE.JWK{} ->
+            JOSE.JWK.to_record(k)
+
+          _ ->
+            k
+        end
+      end,
+      signed
+    )
   end
+
   def verify(key, signed) do
     try do
       case :jose_jws.verify(key, signed) do
         {verified, payload, jws} when is_tuple(jws) ->
           {verified, payload, from_record(jws)}
+
         list when is_list(list) ->
           for {jwk, verifications} <- list do
-            {JOSE.JWK.from_record(jwk), for {verified, payload, jws} <- verifications do
-              {verified, payload, from_record(jws)}
-            end}
+            {JOSE.JWK.from_record(jwk),
+             for {verified, payload, jws} <- verifications do
+               {verified, payload, from_record(jws)}
+             end}
           end
+
         error ->
           error
       end
@@ -673,28 +709,38 @@ defmodule JOSE.JWS do
       true
 
   """
-  def verify_strict(jwk=%JOSE.JWK{}, allow, signed), do: verify_strict(JOSE.JWK.to_record(jwk), allow, signed)
-  def verify_strict(jwk=[%JOSE.JWK{} | _], allow, signed) do
-    verify_strict(for k <- jwk do
-      case k do
-        %JOSE.JWK{} ->
-          JOSE.JWK.to_record(k)
-        _ ->
-          k
-      end
-    end, allow, signed)
+  def verify_strict(jwk = %JOSE.JWK{}, allow, signed), do: verify_strict(JOSE.JWK.to_record(jwk), allow, signed)
+
+  def verify_strict(jwk = [%JOSE.JWK{} | _], allow, signed) do
+    verify_strict(
+      for k <- jwk do
+        case k do
+          %JOSE.JWK{} ->
+            JOSE.JWK.to_record(k)
+
+          _ ->
+            k
+        end
+      end,
+      allow,
+      signed
+    )
   end
+
   def verify_strict(key, allow, signed) do
     try do
       case :jose_jws.verify_strict(key, allow, signed) do
         {verified, payload, jws} when is_tuple(jws) ->
           {verified, payload, from_record(jws)}
+
         list when is_list(list) ->
           for {jwk, verifications} <- list do
-            {JOSE.JWK.from_record(jwk), for {verified, payload, jws} <- verifications do
-              {verified, payload, from_record(jws)}
-            end}
+            {JOSE.JWK.from_record(jwk),
+             for {verified, payload, jws} <- verifications do
+               {verified, payload, from_record(jws)}
+             end}
           end
+
         error ->
           error
       end
@@ -703,5 +749,4 @@ defmodule JOSE.JWS do
         {class, reason}
     end
   end
-
 end

@@ -241,5 +241,4 @@ defmodule JOSE.JWA do
   See `JOSE.unsecured_signing/1`
   """
   defdelegate unsecured_signing(boolean), to: :jose_jwa
-
 end
