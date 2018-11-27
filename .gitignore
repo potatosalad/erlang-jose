@@ -1,3 +1,39 @@
+# The directory Mix will write compiled artifacts to.
+/_build/
+
+# If you run "mix test --cover", coverage assets end up here.
+/cover/
+
+# The directory Mix downloads your dependencies sources to.
+/deps/
+
+# Where 3rd-party dependencies like ExDoc output generated docs.
+/doc/
+
+# Ignore .fetch files in case you like to edit your project deps locally.
+/.fetch
+
+# If the VM crashes, it generates a dump, let's ignore it too.
+erl_crash.dump
+
+# Also ignore archive artifacts (built via "mix archive.build").
+*.ez
+
+# Ignore package tarball (built via "mix hex.build").
+jose-*.tar
+
+# erlang.mk exclusions.
+.erlang.mk.packages.*
+ct.coverdata
+_rel
+_deps
+_plugins
+_tdeps
+/.erlang.mk
+/jose.d
+
+# Rebar3 exclusions.
+.rebar3
 _*
 .eunit
 *.o
@@ -6,24 +42,18 @@ _*
 *.swp
 *.swo
 .erlang.cookie
-.erlang.mk.packages.*
 ebin
 log
-ct.coverdata
 erl_crash.dump
 .rebar
-.rebar3
-rebar3
-_rel
-_deps
-_plugins
-_tdeps
-deps
-doc
 logs
-test/ct.cover.spec
-/_build
-/cover
+_build
+.idea
+*.iml
+rebar3.crashdump
+/rebar3
+
+# Other test artifacts.
 /test/cavp_SUITE_data/*.zip
 /test/cavp_SUITE_data/186-3rsatestvectors
 /test/cavp_SUITE_data/aesmmt
@@ -34,6 +64,3 @@ test/ct.cover.spec
 /test/cavp_SUITE_data/kwtestvectors
 /test/cavp_SUITE_data/pkcs-1v2-1-vec
 /tmp
-*.ez
-/jose.d
-/.erlang.mk
