@@ -2,9 +2,9 @@
 %% vim: ts=4 sw=4 ft=erlang noet
 -module(jose_jwe_alg_pbes2_props).
 
--include_lib("triq/include/triq.hrl").
+-include_lib("proper/include/proper.hrl").
 
--compile(export_all).
+% -compile(export_all).
 
 base64url_binary() ->
 	?LET(Binary,
@@ -25,7 +25,7 @@ alg() ->
 
 alg_map() ->
 	?LET({ALG, P2C, P2S},
-		{alg(), int(1, 4096), binary()},
+		{alg(), integer(1, 4096), binary()},
 		#{
 			<<"alg">> => ALG,
 			<<"p2c">> => P2C,

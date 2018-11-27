@@ -2,9 +2,9 @@
 %% vim: ts=4 sw=4 ft=erlang noet
 -module(jose_jwa_props).
 
--include_lib("triq/include/triq.hrl").
+-include_lib("proper/include/proper.hrl").
 
--compile(export_all).
+% -compile(export_all).
 
 prop_constant_time_compare() ->
 	?FORALL(Binary,

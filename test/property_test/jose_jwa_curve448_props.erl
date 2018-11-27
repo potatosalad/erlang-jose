@@ -4,9 +4,9 @@
 
 -include_lib("public_key/include/public_key.hrl").
 
--include_lib("triq/include/triq.hrl").
+-include_lib("proper/include/proper.hrl").
 
--compile(export_all).
+% -compile(export_all).
 
 eddsa_secret() ->
 	binary(57).

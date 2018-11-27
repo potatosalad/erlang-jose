@@ -2,9 +2,9 @@
 %% vim: ts=4 sw=4 ft=erlang noet
 -module(jose_jwe_enc_chacha20_poly1305_props).
 
--include_lib("triq/include/triq.hrl").
+-include_lib("proper/include/proper.hrl").
 
--compile(export_all).
+% -compile(export_all).
 
 base64url_binary() ->
 	?LET(Binary,

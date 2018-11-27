@@ -1506,8 +1506,8 @@ fips_aes_gcm_encrypt_and_decrypt([
 			andalso bit_size(CT) =:= PTlen
 			andalso bit_size(AAD) =:= AADlen
 			andalso bit_size(Tag) =:= Taglen ->
-	case crypto:rand_uniform(0, ?config(one_in, Config)) of
-		0 ->
+	case rand:uniform(?config(one_in, Config)) of
+		1 ->
 			case jose_jwa_aes:block_decrypt(Cipher, Key, IV, {AAD, CT, Tag}) of
 				error ->
 					fips_aes_gcm_encrypt_and_decrypt(Vectors, {Cipher, decrypt, {Keylen, IVlen, PTlen, AADlen, Taglen, << Counts/binary, (integer_to_binary(Count))/binary, "..." >>}}, Config);
@@ -1534,8 +1534,8 @@ fips_aes_gcm_encrypt_and_decrypt([
 			andalso bit_size(AAD) =:= AADlen
 			andalso bit_size(Tag) =:= Taglen
 			andalso bit_size(PT) =:= PTlen ->
-	case crypto:rand_uniform(0, ?config(one_in, Config)) of
-		0 ->
+	case rand:uniform(?config(one_in, Config)) of
+		1 ->
 			case jose_jwa_aes:block_decrypt(Cipher, Key, IV, {AAD, CT, Tag}) of
 				PT ->
 					fips_aes_gcm_encrypt_and_decrypt(Vectors, {Cipher, decrypt, {Keylen, IVlen, PTlen, AADlen, Taglen, << Counts/binary, (integer_to_binary(Count))/binary, "..." >>}}, Config);
@@ -1563,8 +1563,8 @@ fips_aes_gcm_encrypt_and_decrypt([
 			andalso bit_size(AAD) =:= AADlen
 			andalso bit_size(CT) =:= PTlen
 			andalso bit_size(Tag) =:= Taglen ->
-	case crypto:rand_uniform(0, ?config(one_in, Config)) of
-		0 ->
+	case rand:uniform(?config(one_in, Config)) of
+		1 ->
 			case jose_jwa_aes:block_encrypt(Cipher, Key, IV, {AAD, PT}) of
 				{CT, << Tag:Taglen/bitstring, _/bitstring >>} ->
 					fips_aes_gcm_encrypt_and_decrypt(Vectors, {Cipher, encrypt, {Keylen, IVlen, PTlen, AADlen, Taglen, << Counts/binary, (integer_to_binary(Count))/binary, "..." >>}}, Config);
@@ -1616,8 +1616,8 @@ fips_aeskw_unwrap([
 			when is_integer(Len)
 			andalso bit_size(K) =:= Bits
 			andalso bit_size(P) =:= Len ->
-	case crypto:rand_uniform(0, ?config(one_in, Config)) of
-		0 ->
+	case rand:uniform(?config(one_in, Config)) of
+		1 ->
 			case jose_jwa_aes_kw:unwrap(C, K) of
 				P ->
 					fips_aeskw_unwrap(Vectors, {Bits, Len}, Config);
@@ -1637,8 +1637,8 @@ fips_aeskw_unwrap([
 		], {Bits, Len}, Config)
 			when is_integer(Len)
 			andalso bit_size(K) =:= Bits ->
-	case crypto:rand_uniform(0, ?config(one_in, Config)) of
-		0 ->
+	case rand:uniform(?config(one_in, Config)) of
+		1 ->
 			try jose_jwa_aes_kw:unwrap(C, K) of
 				Other ->
 					io:format("\t\tCOUNT = ~w", [Count]),
@@ -1676,8 +1676,8 @@ fips_aeskw_wrap([
 			when is_integer(Len)
 			andalso bit_size(K) =:= Bits
 			andalso bit_size(P) =:= Len ->
-	case crypto:rand_uniform(0, ?config(one_in, Config)) of
-		0 ->
+	case rand:uniform(?config(one_in, Config)) of
+		1 ->
 			case jose_jwa_aes_kw:wrap(P, K) of
 				C ->
 					fips_aeskw_wrap(Vectors, {Bits, Len}, Config);

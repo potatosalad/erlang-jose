@@ -4,9 +4,9 @@
 
 -include_lib("public_key/include/public_key.hrl").
 
--include_lib("triq/include/triq.hrl").
+-include_lib("proper/include/proper.hrl").
 
--compile(export_all).
+% -compile(export_all).
 
 base64url_binary() ->
 	?LET(Binary,
@@ -18,18 +18,16 @@ binary_map() ->
 		list({base64url_binary(), base64url_binary()}),
 		maps:from_list(List)).
 
-modulus_size()  -> int(256, 512). % int(256, 8192) | pos_integer().
+modulus_size()  -> integer(512, 768). % integer(256, 8192) | pos_integer().
 exponent_size() -> return(65537). % pos_integer().
 
 rsa_keypair(ModulusSize) ->
 	?LET(ExponentSize,
 		exponent_size(),
 		begin
-			case cutkey:rsa(ModulusSize, ExponentSize, [{return, key}]) of
-				{ok, PrivateKey=#'RSAPrivateKey'{modulus=Modulus, publicExponent=PublicExponent}} ->
-					{PrivateKey, #'RSAPublicKey'{modulus=Modulus, publicExponent=PublicExponent}};
-				{error, _} ->
-					erlang:error({badarg, [ModulusSize, ExponentSize, [{return, key}]]})
+			case public_key:generate_key({rsa, ModulusSize, ExponentSize}) of
+				PrivateKey=#'RSAPrivateKey'{modulus=Modulus, publicExponent=PublicExponent} ->
+					{PrivateKey, #'RSAPublicKey'{modulus=Modulus, publicExponent=PublicExponent}}
 			end
 		end).
 

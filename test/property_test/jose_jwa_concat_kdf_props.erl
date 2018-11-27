@@ -2,9 +2,9 @@
 %% vim: ts=4 sw=4 ft=erlang noet
 -module(jose_jwa_concat_kdf_props).
 
--include_lib("triq/include/triq.hrl").
+-include_lib("proper/include/proper.hrl").
 
--compile(export_all).
+% -compile(export_all).
 
 hash_fun() -> oneof([md5, sha, sha224, sha256, sha384, sha512, {hmac, md5, <<>>}, {hmac, sha, <<>>}, {hmac, sha224, <<>>}, {hmac, sha256, <<>>}, {hmac, sha384, <<>>}, {hmac, sha512, <<>>}]).
 
@@ -18,7 +18,7 @@ prop_kdf() ->
 
 prop_kdf_keylen() ->
 	?FORALL({Hash, Z, OtherInfo, KeyDataLen},
-		{hash_fun(), binary(), {binary(), binary(), binary()}, int(0, 1024)},
+		{hash_fun(), binary(), {binary(), binary(), binary()}, integer(0, 1024)},
 		begin
 			DerivedKey = jose_jwa_concat_kdf:kdf(Hash, Z, OtherInfo, KeyDataLen),
 			DerivedKey =:= jose_jwa_concat_kdf:kdf(Hash, Z, OtherInfo, KeyDataLen)

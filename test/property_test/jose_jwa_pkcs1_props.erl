@@ -4,25 +4,23 @@
 
 -include_lib("public_key/include/public_key.hrl").
 
--include_lib("triq/include/triq.hrl").
+-include_lib("proper/include/proper.hrl").
 
--compile(export_all).
+% -compile(export_all).
 
 digest_type()   -> oneof([md5, sha, sha224, sha256, sha384, sha512, {hmac, md5, <<>>}, {hmac, sha, <<>>}, {hmac, sha224, <<>>}, {hmac, sha256, <<>>}, {hmac, sha384, <<>>}, {hmac, sha512, <<>>}]).
 pkcs1_digest()  -> oneof([md5, sha, sha256, sha384, sha512]).
 salt_size()     -> non_neg_integer().
-modulus_size()  -> int(256, 2048). % int(256, 8192) | pos_integer().
+modulus_size()  -> integer(512, 2048). % integer(256, 8192) | pos_integer().
 exponent_size() -> return(65537).  % pos_integer().
 
 rsa_keypair(ModulusSize) ->
 	?LET(ExponentSize,
 		exponent_size(),
 		begin
-			case cutkey:rsa(ModulusSize, ExponentSize, [{return, key}]) of
-				{ok, PrivateKey=#'RSAPrivateKey'{modulus=Modulus, publicExponent=PublicExponent}} ->
-					{PrivateKey, #'RSAPublicKey'{modulus=Modulus, publicExponent=PublicExponent}};
-				{error, _} ->
-					erlang:error({badarg, [ModulusSize, ExponentSize, [{return, key}]]})
+			case public_key:generate_key({rsa, ModulusSize, ExponentSize}) of
+				PrivateKey=#'RSAPrivateKey'{modulus=Modulus, publicExponent=PublicExponent} ->
+					{PrivateKey, #'RSAPublicKey'{modulus=Modulus, publicExponent=PublicExponent}}
 			end
 		end).
 
