@@ -163,6 +163,8 @@ peek_protected(Signed) ->
 
 sign(JWK=#jose_jwk{}, JWT=#jose_jwt{}) ->
 	sign(JWK, jose_jwk:signer(JWK), JWT);
+sign([], JWTOther) ->
+	erlang:error({badarg, [[], JWTOther]});
 sign(JWKOther, JWTOther) ->
 	sign(jose_jwk:from(JWKOther), from(JWTOther)).
 
@@ -178,6 +180,8 @@ sign(JWKOther, {JWSModules, JWSMap0}, JWTOther) when is_map(JWSMap0) ->
 	sign(JWKOther, {JWSModules, JWSMap1}, JWTOther);
 sign(JWKOther, JWSMap, JWTOther) when is_map(JWSMap) ->
 	sign(JWKOther, {#{}, JWSMap}, JWTOther);
+sign([], JWSOther, JWTOther) ->
+	erlang:error({badarg, [[], JWSOther, JWTOther]});
 sign(JWKOther, JWSOther, JWTOther) ->
 	sign(jose_jwk:from(JWKOther), jose_jws:from(JWSOther), from(JWTOther)).
 
@@ -190,6 +194,8 @@ verify(Other, SignedMap) when is_map(SignedMap) ->
 	verify(Other, {#{}, SignedMap});
 verify(JWK=#jose_jwk{}, Signed) ->
 	erlang:error({badarg, [JWK, Signed]});
+verify([], Signed) ->
+	erlang:error({badarg, [[], Signed]});
 verify(Other, Signed) ->
 	verify(jose_jwk:from(Other), Signed).
 
@@ -202,6 +208,8 @@ verify_strict(Other, Allow, SignedMap) when is_map(SignedMap) ->
 	verify_strict(Other, Allow, {#{}, SignedMap});
 verify_strict(JWK=#jose_jwk{}, Allow, Signed) ->
 	erlang:error({badarg, [JWK, Allow, Signed]});
+verify_strict([], Allow, Signed) ->
+	erlang:error({badarg, [[], Allow, Signed]});
 verify_strict(Other, Allow, Signed) ->
 	verify_strict(jose_jwk:from(Other), Allow, Signed).
 
