@@ -23,7 +23,7 @@ decode(Binary) ->
 	jsone:decode(Binary).
 
 encode(Term) ->
-	jsone:encode(Term).
+	jsone:encode(Term, [canonical_form]).
 
 %%%-------------------------------------------------------------------
 %%% Internal functions

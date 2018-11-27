@@ -31,13 +31,13 @@ encode(Term) ->
 
 %% @private
 lexical_encode(Atom) when is_atom(Atom) ->
-	apply('Elixir.Poison.Encoder.Atom', 'encode', [Atom, []]);
+	apply('Elixir.Poison.Encoder.Atom', 'encode', [Atom, #{}]);
 lexical_encode(BitString) when is_bitstring(BitString) ->
-	apply('Elixir.Poison.Encoder.BitString', 'encode', [BitString, []]);
+	apply('Elixir.Poison.Encoder.BitString', 'encode', [BitString, #{}]);
 lexical_encode(Integer) when is_integer(Integer) ->
-	apply('Elixir.Poison.Encoder.Integer', 'encode', [Integer, []]);
+	apply('Elixir.Poison.Encoder.Integer', 'encode', [Integer, #{}]);
 lexical_encode(Float) when is_float(Float) ->
-	apply('Elixir.Poison.Encoder.Float', 'encode', [Float, []]);
+	apply('Elixir.Poison.Encoder.Float', 'encode', [Float, #{}]);
 lexical_encode(Struct = #{ '__struct__' := Type }) ->
 	lexical_encode_struct(Type, Struct);
 lexical_encode(Map) when is_map(Map) ->
@@ -68,7 +68,7 @@ lexical_encode_map(Map) when is_map(Map) ->
 	Folder = fun (Key, Acc) ->
 		[
 			$,,
-			apply('Elixir.Poison.Encoder.BitString', 'encode', [lexical_encode_name(Key), []]),
+			apply('Elixir.Poison.Encoder.BitString', 'encode', [lexical_encode_name(Key), #{}]),
 			$:,
 			lexical_encode(maps:get(Key, Map))
 			| Acc
@@ -76,7 +76,7 @@ lexical_encode_map(Map) when is_map(Map) ->
 	end,
 	[
 		${,
-		tl(lists:foldr(Folder, [], maps:keys(Map))),
+		tl(lists:foldr(Folder, [], lists:sort(maps:keys(Map)))),
 		$}
 	].
 
@@ -127,7 +127,7 @@ lexical_encode_struct('Elixir.HashDict', HashDict) ->
 			FlatMapper = fun ({Key, Value}) ->
 				[
 					$,,
-					apply('Elixir.Poison.Encoder.BitString', 'encode', [lexical_encode_name(Key), []]),
+					apply('Elixir.Poison.Encoder.BitString', 'encode', [lexical_encode_name(Key), #{}]),
 					$:,
 					lexical_encode(Value)
 				]
@@ -143,11 +143,11 @@ lexical_encode_struct(Type, Struct)
 		orelse Type == 'Elixir.Time'
 		orelse Type == 'Elixir.NaiveDateTime'
 		orelse Type == 'Elixir.DateTime' ->
-	apply('Elixir.Poison.Encoder.BitString', 'encode', [Type:'to_iso8601'(Struct), []]);
+	apply('Elixir.Poison.Encoder.BitString', 'encode', [Type:'to_iso8601'(Struct), #{}]);
 lexical_encode_struct(Type, Struct) ->
 	case find_encoder(Type) of
 		{true, Encoder} ->
-			apply(Encoder, 'encode', [Struct, []]);
+			apply(Encoder, 'encode', [Struct, #{}]);
 		false ->
 			lexical_encode_map('Elixir.Map':'from_struct'(Struct))
 	end.
