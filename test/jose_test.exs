@@ -157,6 +157,13 @@ defmodule JOSETest do
     assert binary == :erlang.element(2, JOSE.JWE.to_binary(jwe))
     assert jwe == JOSE.JWE.from_binary(binary)
     assert jwe == JOSE.JWE.from(jwe)
+    # Jason
+    JOSE.json_module(Jason)
+    assert :jose_json_jason == JOSE.json_module()
+    assert map == :erlang.element(2, JOSE.JWE.to_map(jwe))
+    assert binary == :erlang.element(2, JOSE.JWE.to_binary(jwe))
+    assert jwe == JOSE.JWE.from_binary(binary)
+    assert jwe == JOSE.JWE.from(jwe)
   end
 
   test "JOSE.JWK decode and encode" do
@@ -240,6 +247,17 @@ defmodule JOSETest do
     assert jwk == :erlang.element(2, JOSE.JWK.from_binary(password, JOSE.JWK.to_binary(password, jwk)))
     assert jwk == :erlang.element(2, JOSE.JWK.from_map(password, JOSE.JWK.to_map(password, jwk)))
     assert jwk == JOSE.JWK.from_pem(password, JOSE.JWK.to_pem(password, jwk))
+    # Jason
+    JOSE.json_module(Jason)
+    assert :jose_json_jason == JOSE.json_module()
+    assert map == :erlang.element(2, JOSE.JWK.to_map(jwk))
+    assert binary == :erlang.element(2, JOSE.JWK.to_binary(jwk))
+    assert jwk == JOSE.JWK.from_binary(binary)
+    assert jwk == JOSE.JWK.from(jwk)
+    assert jwk == JOSE.JWK.from_pem(JOSE.JWK.to_pem(jwk))
+    assert jwk == :erlang.element(2, JOSE.JWK.from_binary(password, JOSE.JWK.to_binary(password, jwk)))
+    assert jwk == :erlang.element(2, JOSE.JWK.from_map(password, JOSE.JWK.to_map(password, jwk)))
+    assert jwk == JOSE.JWK.from_pem(password, JOSE.JWK.to_pem(password, jwk))
   end
 
   test "JOSE.JWS decode and encode" do
@@ -291,6 +309,13 @@ defmodule JOSETest do
     assert binary == :erlang.element(2, JOSE.JWS.to_binary(jws))
     assert jws == JOSE.JWS.from_binary(binary)
     assert jws == JOSE.JWS.from(jws)
+    # Jason
+    JOSE.json_module(Jason)
+    assert :jose_json_jason == JOSE.json_module()
+    assert map == :erlang.element(2, JOSE.JWS.to_map(jws))
+    assert binary == :erlang.element(2, JOSE.JWS.to_binary(jws))
+    assert jws == JOSE.JWS.from_binary(binary)
+    assert jws == JOSE.JWS.from(jws)
   end
 
   test "JOSE.JWT decode and encode" do
@@ -322,7 +347,7 @@ defmodule JOSETest do
     assert binary == :erlang.element(2, JOSE.JWT.to_binary(jwt))
     assert jwt == JOSE.JWT.from_binary(binary)
     assert jwt == JOSE.JWT.from(jwt)
-    # jsx
+    # ojson
     JOSE.json_module(:ojson)
     assert :jose_json_ojson == JOSE.json_module()
     assert map == :erlang.element(2, JOSE.JWT.to_map(jwt))
@@ -338,6 +363,13 @@ defmodule JOSETest do
              :jose_json_poison_lexical_encoder
            ])
 
+    assert map == :erlang.element(2, JOSE.JWT.to_map(jwt))
+    assert binary == :erlang.element(2, JOSE.JWT.to_binary(jwt))
+    assert jwt == JOSE.JWT.from_binary(binary)
+    assert jwt == JOSE.JWT.from(jwt)
+    # Jason
+    JOSE.json_module(Jason)
+    assert :jose_json_jason == JOSE.json_module()
     assert map == :erlang.element(2, JOSE.JWT.to_map(jwt))
     assert binary == :erlang.element(2, JOSE.JWT.to_binary(jwt))
     assert jwt == JOSE.JWT.from_binary(binary)
@@ -398,6 +430,8 @@ defmodule JOSETest do
       assert :jose_json_poison_compat_encoder.decode(json) == term
       assert :jose_json_poison_lexical_encoder.encode(term) == json
       assert :jose_json_poison_lexical_encoder.decode(json) == term
+      assert :jose_json_jason.encode(term) == json
+      assert :jose_json_jason.decode(json) == term
     end
   end
 
@@ -410,15 +444,15 @@ defmodule JOSETest do
     jws_es256 = JOSE.JWS.from(%{"alg" => "ES256"})
     jwt = JOSE.JWT.from(%{"test" => true})
 
-    assert_raise ErlangError, "erlang error: {:not_supported, [:ES256]}", fn ->
+    assert_raise ErlangError, "Erlang error: {:not_supported, [:ES256]}", fn ->
       JOSE.JWT.sign(jwk_oct16, jws_es256, jwt)
     end
 
-    assert_raise ErlangError, "erlang error: {:not_supported, [\"P-256\", :HS256]}", fn ->
+    assert_raise ErlangError, "Erlang error: {:not_supported, [\"P-256\", :HS256]}", fn ->
       JOSE.JWT.sign(jwk_ec256, jws_hs256, jwt)
     end
 
-    assert_raise ErlangError, "erlang error: {:not_supported, [\"P-521\", :ES256]}", fn ->
+    assert_raise ErlangError, "Erlang error: {:not_supported, [\"P-521\", :ES256]}", fn ->
       JOSE.JWT.sign(jwk_ec521, jws_es256, jwt)
     end
 
