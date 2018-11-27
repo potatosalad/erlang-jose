@@ -145,21 +145,10 @@ generate_key({rsa, ModulusSize}) when is_integer(ModulusSize) ->
 generate_key({rsa, ModulusSize, ExponentSize})
 		when is_integer(ModulusSize)
 		andalso is_integer(ExponentSize) ->
-	case code:ensure_loaded(cutkey) of
-		{module, cutkey} ->
-			_ = application:ensure_all_started(cutkey),
-			try cutkey:rsa(ModulusSize, ExponentSize, [{return, key}]) of
-				{ok, Key=#'RSAPrivateKey'{}} ->
-					{Key, #{}};
-				{error, Reason} ->
-					erlang:error({cutkey_error, Reason})
-			catch
-				Class:Reason ->
-					erlang:error({cutkey_error, {Class, Reason}})
-			end;
-		Error ->
-			erlang:error({cutkey_missing, Error})
-	end.
+	try_generate_key([
+		public_key,
+		cutkey
+	], ModulusSize, ExponentSize).
 
 generate_key(KTY, Fields) ->
 	{NewKTY, OtherFields} = generate_key(KTY),
@@ -487,3 +476,42 @@ jws_alg_to_digest_type('RS512') ->
 	{rsa_pkcs1_padding, sha512};
 jws_alg_to_digest_type(ALG) ->
 	erlang:error({not_supported, [ALG]}).
+
+%% @private
+try_generate_key([public_key | Methods], ModulusSize, ExponentSize) ->
+	case code:ensure_loaded(public_key) of
+		{module, public_key} ->
+			_ = application:ensure_all_started(public_key),
+			case erlang:function_exported(crypto, generate_key, 2) andalso erlang:function_exported(crypto, generate_key, 3) of
+				true ->
+					try public_key:generate_key({rsa, ModulusSize, ExponentSize}) of
+						Key = #'RSAPrivateKey'{} ->
+							{Key, #{}}
+					catch
+						Class:Reason ->
+							erlang:error({public_key_error, {Class, Reason}})
+					end;
+				false ->
+					try_generate_key(Methods, ModulusSize, ExponentSize)
+			end;
+		_ ->
+			try_generate_key(Methods, ModulusSize, ExponentSize)
+	end;
+try_generate_key([cutkey | Methods], ModulusSize, ExponentSize) ->
+	case code:ensure_loaded(cutkey) of
+		{module, cutkey} ->
+			_ = application:ensure_all_started(cutkey),
+			try cutkey:rsa(ModulusSize, ExponentSize, [{return, key}]) of
+				{ok, Key=#'RSAPrivateKey'{}} ->
+					{Key, #{}};
+				{error, Reason} ->
+					erlang:error({cutkey_error, Reason})
+			catch
+				Class:Reason ->
+					erlang:error({cutkey_error, {Class, Reason}})
+			end;
+		_ ->
+			try_generate_key(Methods, ModulusSize, ExponentSize)
+	end;
+try_generate_key([], ModulusSize, ExponentSize) ->
+	erlang:error({not_supported, [{rsa, ModulusSize, ExponentSize}]}).
