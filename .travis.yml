@@ -9,11 +9,11 @@ notifications:
   email: false
 
 env:
-  - OTP_VERSION=19.3 ELIXIR_VERSION=1.4.2
+  - OTP_VERSION=21.1 ELIXIR_VERSION=1.7.4
 
 cache:
   directories:
-    - docker-otp-19.3-elixir-1.4.2
+    - docker-otp-21.1-elixir-1.7.4
     - test/cavp_SUITE_data/186-3rsatestvectors
     - test/cavp_SUITE_data/aesmmt
     - test/cavp_SUITE_data/archive
