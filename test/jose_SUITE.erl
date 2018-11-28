@@ -347,6 +347,7 @@ jwe_a_1(Config) ->
 	A_1_6_TAG = base64url:decode(A_1_6_TAG_B64),
 	% A.1.7
 	A_1_7_COMPACT = ?config("a.1.7.jwe+compact", C),
+	ct:log("jose_jwe:block_decrypt(~w, ~w).~n", [A_1_3_JWK, A_1_7_COMPACT]),
 	{A_1_TXT, A_1_1_JWE} = jose_jwe:block_decrypt(A_1_3_JWK, A_1_7_COMPACT),
 	% Roundtrip test
 	A_1_7_MAP = jose_jwe:block_encrypt(A_1_3_JWK, A_1_TXT, A_1_2_CEK, A_1_4_IV, A_1_1_JWE),
