@@ -1,12 +1,12 @@
 %% -*- mode: erlang; tab-width: 4; indent-tabs-mode: 1; st-rulers: [70] -*-
 %% vim: ts=4 sw=4 ft=erlang noet
 %%%-------------------------------------------------------------------
-%%% @author Andrew Bennett <andrew@pixid.com>
+%%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2017, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
-%%% Created :  12 May 2017 by Andrew Bennett <andrew@pixid.com>
+%%% Created :  12 May 2017 by Andrew Bennett <potatosaladx@gmail.com>
 %%%-------------------------------------------------------------------
 
 -ifndef(JOSE_PUBLIC_KEY_HRL).
