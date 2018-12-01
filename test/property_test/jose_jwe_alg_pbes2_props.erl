@@ -25,7 +25,7 @@ alg() ->
 
 alg_map() ->
 	?LET({ALG, P2C, P2S},
-		{alg(), integer(1, 4096), binary()},
+		{alg(), integer(1, 256), binary()},
 		#{
 			<<"alg">> => ALG,
 			<<"p2c">> => P2C,

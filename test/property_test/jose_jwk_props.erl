@@ -26,13 +26,13 @@ alg_map() ->
 		#{ <<"alg">> => <<"A192GCMKW">> },
 		#{ <<"alg">> => <<"A256GCMKW">> },
 		?LET({P2C, P2S},
-			{integer(1, 1024), binary()},
+			{integer(1, 256), binary()},
 			#{ <<"alg">> => <<"PBES2-HS256+A128KW">>, <<"p2c">> => P2C, <<"p2s">> => base64url:encode(P2S) }),
 		?LET({P2C, P2S},
-			{integer(1, 1024), binary()},
+			{integer(1, 256), binary()},
 			#{ <<"alg">> => <<"PBES2-HS384+A192KW">>, <<"p2c">> => P2C, <<"p2s">> => base64url:encode(P2S) }),
 		?LET({P2C, P2S},
-			{integer(1, 1024), binary()},
+			{integer(1, 256), binary()},
 			#{ <<"alg">> => <<"PBES2-HS512+A256KW">>, <<"p2c">> => P2C, <<"p2s">> => base64url:encode(P2S) })
 	]).
 
