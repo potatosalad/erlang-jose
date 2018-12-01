@@ -18,7 +18,7 @@ binary_map() ->
 		list({base64url_binary(), base64url_binary()}),
 		maps:from_list(List)).
 
-modulus_size()  -> integer(512, 768). % integer(256, 8192) | pos_integer().
+modulus_size()  -> integer(1024, 1280). % integer(256, 8192) | pos_integer().
 exponent_size() -> return(65537). % pos_integer().
 
 rsa_keypair(ModulusSize) ->

@@ -143,7 +143,7 @@ ec_keypair(CurveId) ->
 	ECPublicKey = {ECPoint, ECParameters},
 	{ECPrivateKey, ECPublicKey}.
 
-modulus_size()  -> integer(2048, 4096). % integer(256, 8192) | pos_integer().
+modulus_size()  -> integer(1024, 1280). % integer(256, 8192) | pos_integer().
 exponent_size() -> return(65537).   % pos_integer().
 
 rsa_keypair(ModulusSize) ->

@@ -11,7 +11,7 @@
 digest_type()   -> oneof([md5, sha, sha224, sha256, sha384, sha512, {hmac, md5, <<>>}, {hmac, sha, <<>>}, {hmac, sha224, <<>>}, {hmac, sha256, <<>>}, {hmac, sha384, <<>>}, {hmac, sha512, <<>>}]).
 pkcs1_digest()  -> oneof([md5, sha, sha256, sha384, sha512]).
 salt_size()     -> non_neg_integer().
-modulus_size()  -> integer(512, 768). % integer(256, 8192) | pos_integer().
+modulus_size()  -> integer(1024, 1280). % integer(256, 8192) | pos_integer().
 exponent_size() -> return(65537).  % pos_integer().
 
 rsa_keypair(ModulusSize) ->

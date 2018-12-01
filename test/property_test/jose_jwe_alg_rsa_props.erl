@@ -67,7 +67,7 @@ prop_from_map_and_to_map() ->
 	?FORALL(JWEMap,
 		?LET({{_JWKs, JWEMap}, Extras},
 			?LET(ModulusSize,
-				integer(512, 768),
+				integer(1024, 1280),
 				{jwk_jwe_maps(ModulusSize), binary_map()}),
 			maps:merge(Extras, JWEMap)),
 		begin
