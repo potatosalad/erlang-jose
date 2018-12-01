@@ -1,5 +1,7 @@
 language: generic
 
+dist: xenial
+
 sudo: required
 
 services:
