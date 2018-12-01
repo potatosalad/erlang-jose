@@ -15,7 +15,7 @@ env:
 
 cache:
   directories:
-    - /cache/docker-otp-21.1.3-elixir-1.7.4
+    - /home/travis/cache/docker-otp-21.1.3-elixir-1.7.4
     - test/cavp_SUITE_data/186-3rsatestvectors
     - test/cavp_SUITE_data/aesmmt
     - test/cavp_SUITE_data/archive
@@ -25,9 +25,9 @@ cache:
     - test/cavp_SUITE_data/pkcs-1v2-1-vec
 
 before_install:
-  - sudo rm -rf ./docker-otp-${OTP_VERSION}-elixir-${ELIXIR_VERSION}
-  - sudo mkdir -p /cache/docker-otp-${OTP_VERSION}-elixir-${ELIXIR_VERSION}
-  - ln -svf /cache/docker-otp-${OTP_VERSION}-elixir-${ELIXIR_VERSION} ./docker-otp-${OTP_VERSION}-elixir-${ELIXIR_VERSION}
+  - rm -rf ./docker-otp-${OTP_VERSION}-elixir-${ELIXIR_VERSION}
+  - mkdir -p /home/travis/cache/docker-otp-${OTP_VERSION}-elixir-${ELIXIR_VERSION}
+  - ln -svf /home/travis/cache/docker-otp-${OTP_VERSION}-elixir-${ELIXIR_VERSION} ./docker-otp-${OTP_VERSION}-elixir-${ELIXIR_VERSION}
   - make docker-setup DOCKER_OTP_VERSION=${OTP_VERSION} DOCKER_ELIXIR_VERSION=${ELIXIR_VERSION}
 
 script:
