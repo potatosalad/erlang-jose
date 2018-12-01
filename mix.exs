@@ -33,7 +33,7 @@ defmodule JOSE.Mixfile do
       {:jsone, "~> 1.4", only: [:dev, :test]},
       {:jsx, "~> 2.9", only: [:dev, :test]},
       # {:keccakf1600, "~> 2.0.0", only: [:dev, :test]},
-      {:libdecaf, "~> 0.0.4", only: [:dev, :test]},
+      {:libdecaf, "~> 1.0.0", only: [:dev, :test]},
       {:libsodium, "~> 0.0.10", only: [:dev, :test]},
       {:ojson, "~> 1.0", only: [:dev, :test]},
       {:poison, "~> 4.0", only: [:dev, :test]},
