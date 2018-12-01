@@ -66,7 +66,7 @@ defmodule JOSE.Mixfile do
         "rebar.config",
         "src"
       ],
-      licenses: ["Mozilla Public License Version 2.0"],
+      licenses: ["MIT"],
       links: %{"Github" => "https://github.com/potatosalad/erlang-jose", "Docs" => "https://hexdocs.pm/jose"}
     ]
   end

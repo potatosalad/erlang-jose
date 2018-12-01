@@ -16,7 +16,7 @@
 	]},
 	{modules, []},
 	{maintainers, ["Andrew Bennett"]},
-	{licenses, ["Mozilla Public License Version 2.0"]},
+	{licenses, ["MIT"]},
 	{links, [{"Github", "https://github.com/potatosalad/erlang-jose"}]},
 	{env, [{crypto_fallback, true}]}
 ]}.
