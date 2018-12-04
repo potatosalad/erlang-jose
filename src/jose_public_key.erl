@@ -40,8 +40,7 @@ pem_encode(PEMEntries) when is_list(PEMEntries) ->
 	try
 		public_key:pem_encode(PEMEntries)
 	catch
-		Class:Reason ->
-			ST = erlang:get_stacktrace(),
+		Class:Reason:ST ->
 			case pem_enc(PEMEntries) of
 				{true, PEMBinary} ->
 					PEMBinary;
@@ -56,8 +55,7 @@ pem_entry_decode(PEMEntry) ->
 		try
 			public_key:pem_entry_decode(PEMEntry)
 		catch
-			Class:Reason ->
-				ST = erlang:get_stacktrace(),
+			Class:Reason:ST ->
 				case pem_entry_dec(PEMEntry) of
 					{true, DecodedPEMEntry} ->
 						DecodedPEMEntry;
@@ -80,8 +78,7 @@ pem_entry_decode(PEMEntry, Password) ->
 		try
 			public_key:pem_entry_decode(PEMEntry, Password)
 		catch
-			Class:Reason ->
-				ST = erlang:get_stacktrace(),
+			Class:Reason:ST ->
 				case pem_entry_dec(PEMEntry) of
 					{true, DecodedPEMEntry} ->
 						DecodedPEMEntry;
@@ -103,8 +100,7 @@ pem_entry_encode(ASN1Type, Entity) ->
 	try
 		public_key:pem_entry_encode(ASN1Type, Entity)
 	catch
-		Class:Reason ->
-			ST = erlang:get_stacktrace(),
+		Class:Reason:ST ->
 			case pem_entry_enc(ASN1Type, Entity) of
 				{true, PEMEntry} ->
 					PEMEntry;
@@ -118,8 +114,7 @@ pem_entry_encode(ASN1Type, Entity, Password) ->
 	try
 		public_key:pem_entry_encode(ASN1Type, Entity, Password)
 	catch
-		Class:Reason ->
-			ST = erlang:get_stacktrace(),
+		Class:Reason:ST ->
 			case pem_entry_enc(ASN1Type, Entity, Password) of
 				{true, PEMEntry} ->
 					PEMEntry;
@@ -230,8 +225,7 @@ pem_entry_enc0(ASN1Type, Entry, Cipher) ->
 	try
 		public_key:pem_entry_encode(ASN1Type, Entry, Cipher)
 	catch
-		Class:Reason ->
-			ST = erlang:get_stacktrace(),
+		Class:Reason:ST ->
 			case pem_entry_enc1(ASN1Type, Entry, Cipher) of
 				{true, Encoded} ->
 					Encoded;
