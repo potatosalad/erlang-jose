@@ -21,7 +21,7 @@ include erlang.mk
 
 .PHONY: docker-build docker-load docker-setup docker-save docker-test
 
-DOCKER_OTP_VERSION ?= 21.1.3
+DOCKER_OTP_VERSION ?= 21.2
 DOCKER_ELIXIR_VERSION ?= 1.7.4
 
 docker-build::
