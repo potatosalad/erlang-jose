@@ -52,4 +52,4 @@ docker-setup::
 docker-test::
 	$(gen_verbose) docker run \
 		-v "$(shell pwd)":"/build/jose" "docker-otp-${DOCKER_OTP_VERSION}-elixir-${DOCKER_ELIXIR_VERSION}" \
-		sh -c 'cd jose && mix local.hex --force && mix local.rebar --force && mix deps.get && mix test && rm -rf _build deps ebin && make tests'
+		sh -c 'cd jose && mix local.hex --force && mix local.rebar --force && mix deps.get && mix test && rm -rf _build deps ebin && make ct'
