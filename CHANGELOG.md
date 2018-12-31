@@ -1,9 +1,17 @@
 # Changelog
 
-## Next
+## 1.9.0 (2018-12-31)
+
+* Enhancements
+  * Add support for [Jason](https://github.com/michalmuskala/jason) JSON encoding and decoding.
+  * Add support for Poison 4.x and lexical ordering.
+  * Use `public_key` over `cutkey` for RSA key generation if available.
+  * Drop support for older versions of OTP (19+ now required).
+  * Relicense library under MIT license.
 
 * Fixes
   * Add macro so the application compiles without warnings after `erlang:get_stacktrace/0` has been deprecated.
+  * Extra sanity check for RSA padding modes when falling back.
 
 ## 1.8.4 (2017-05-18)
 
