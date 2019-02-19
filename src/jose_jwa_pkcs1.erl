@@ -96,7 +96,7 @@ sign(Message, DigestType, RSAPrivateKey=#'RSAPrivateKey'{}, Options)
 		when is_list(Options) ->
 	Res = case proplists:get_value(rsa_padding, Options) of
 		rsa_pkcs1_pss_padding ->
-			SaltLen = proplists:get_value(rsa_pss_saltlen, Options, -2),
+			SaltLen = proplists:get_value(rsa_pss_saltlen, Options, -1),
 			rsassa_pss_sign(DigestType, Message, SaltLen, RSAPrivateKey);
 		rsa_pkcs1_padding ->
 			rsassa_pkcs1_sign(DigestType, Message, RSAPrivateKey);
