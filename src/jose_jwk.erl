@@ -570,7 +570,7 @@ to_openssh_key_file(File, Other) when is_binary(File) orelse is_list(File) ->
 to_pem(List) when is_list(List) ->
 	[to_pem(Element) || Element <- List];
 to_pem(#jose_jwk{kty={Module, KTY}}) ->
-	{#{ kty => Module }, Module:to_pem(KTY)};
+	Module:to_pem(KTY);
 to_pem(Other) ->
 	to_pem(from(Other)).
 
