@@ -9,7 +9,7 @@
 base64url_binary() ->
 	?LET(Binary,
 		binary(),
-		base64url:encode(Binary)).
+		jose_jwa_base64url:encode(Binary)).
 
 binary_map() ->
 	?LET(List,
@@ -30,7 +30,7 @@ jwk_jwe_maps() ->
 			Key = element(2, jose_jwk:to_oct(jose_jwe:generate_key(JWEMap))),
 			JWKMap = #{
 				<<"kty">> => <<"oct">>,
-				<<"k">> => base64url:encode(Key)
+				<<"k">> => jose_jwa_base64url:encode(Key)
 			},
 			{Key, JWKMap, JWEMap}
 		end).

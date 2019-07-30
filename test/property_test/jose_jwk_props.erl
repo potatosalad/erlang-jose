@@ -27,13 +27,13 @@ alg_map() ->
 		#{ <<"alg">> => <<"A256GCMKW">> },
 		?LET({P2C, P2S},
 			{integer(1, 256), binary()},
-			#{ <<"alg">> => <<"PBES2-HS256+A128KW">>, <<"p2c">> => P2C, <<"p2s">> => base64url:encode(P2S) }),
+			#{ <<"alg">> => <<"PBES2-HS256+A128KW">>, <<"p2c">> => P2C, <<"p2s">> => jose_jwa_base64url:encode(P2S) }),
 		?LET({P2C, P2S},
 			{integer(1, 256), binary()},
-			#{ <<"alg">> => <<"PBES2-HS384+A192KW">>, <<"p2c">> => P2C, <<"p2s">> => base64url:encode(P2S) }),
+			#{ <<"alg">> => <<"PBES2-HS384+A192KW">>, <<"p2c">> => P2C, <<"p2s">> => jose_jwa_base64url:encode(P2S) }),
 		?LET({P2C, P2S},
 			{integer(1, 256), binary()},
-			#{ <<"alg">> => <<"PBES2-HS512+A256KW">>, <<"p2c">> => P2C, <<"p2s">> => base64url:encode(P2S) })
+			#{ <<"alg">> => <<"PBES2-HS512+A256KW">>, <<"p2c">> => P2C, <<"p2s">> => jose_jwa_base64url:encode(P2S) })
 	]).
 
 enc_map() ->
@@ -68,31 +68,31 @@ jwk_encryptor_gen() ->
 						end);
 				{<<"A128KW">>, _} ->
 					K = crypto:strong_rand_bytes(16),
-					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => base64url:encode(K) })};
+					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => jose_jwa_base64url:encode(K) })};
 				{<<"A192KW">>, _} ->
 					K = crypto:strong_rand_bytes(24),
-					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => base64url:encode(K) })};
+					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => jose_jwa_base64url:encode(K) })};
 				{<<"A256KW">>, _} ->
 					K = crypto:strong_rand_bytes(32),
-					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => base64url:encode(K) })};
+					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => jose_jwa_base64url:encode(K) })};
 				{<<"dir">>, <<"A128CBC-HS256">>} ->
 					K = crypto:strong_rand_bytes(32),
-					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => base64url:encode(K) })};
+					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => jose_jwa_base64url:encode(K) })};
 				{<<"dir">>, <<"A192CBC-HS384">>} ->
 					K = crypto:strong_rand_bytes(48),
-					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => base64url:encode(K) })};
+					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => jose_jwa_base64url:encode(K) })};
 				{<<"dir">>, <<"A256CBC-HS512">>} ->
 					K = crypto:strong_rand_bytes(64),
-					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => base64url:encode(K) })};
+					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => jose_jwa_base64url:encode(K) })};
 				{<<"dir">>, <<"A128GCM">>} ->
 					K = crypto:strong_rand_bytes(16),
-					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => base64url:encode(K) })};
+					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => jose_jwa_base64url:encode(K) })};
 				{<<"dir">>, <<"A192GCM">>} ->
 					K = crypto:strong_rand_bytes(24),
-					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => base64url:encode(K) })};
+					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => jose_jwa_base64url:encode(K) })};
 				{<<"dir">>, <<"A256GCM">>} ->
 					K = crypto:strong_rand_bytes(32),
-					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => base64url:encode(K) })};
+					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => jose_jwa_base64url:encode(K) })};
 				{<<"ECDH-ES", _/binary>>, _} ->
 					?LET(CurveId,
 						ec_curve(),
@@ -107,19 +107,19 @@ jwk_encryptor_gen() ->
 						end);
 				{<<"A128GCMKW">>, _} ->
 					K = crypto:strong_rand_bytes(16),
-					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => base64url:encode(K) })};
+					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => jose_jwa_base64url:encode(K) })};
 				{<<"A192GCMKW">>, _} ->
 					K = crypto:strong_rand_bytes(24),
-					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => base64url:encode(K) })};
+					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => jose_jwa_base64url:encode(K) })};
 				{<<"A256GCMKW">>, _} ->
 					K = crypto:strong_rand_bytes(32),
-					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => base64url:encode(K) })};
+					{K, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => jose_jwa_base64url:encode(K) })};
 				{<<"PBES2", _/binary>>, _} ->
 					?LET(Key,
 						binary(),
 						begin
-							Password = base64url:encode(Key),
-							{Password, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => base64url:encode(Password) })}
+							Password = jose_jwa_base64url:encode(Key),
+							{Password, JWE, jose_jwk:from_map(#{ <<"kty">> => <<"oct">>, <<"k">> => jose_jwa_base64url:encode(Password) })}
 						end)
 			end
 		end).

@@ -109,7 +109,7 @@ wrap_supported() ->
 from_map_pbes2(F = #{ <<"p2c">> := P2C }, H) ->
 	from_map_pbes2(maps:remove(<<"p2c">>, F), H#jose_jwe_alg_pbes2{ iter = P2C });
 from_map_pbes2(F = #{ <<"p2s">> := P2S }, H) ->
-	from_map_pbes2(maps:remove(<<"p2s">>, F), H#jose_jwe_alg_pbes2{ salt = wrap_salt(base64url:decode(P2S), H) });
+	from_map_pbes2(maps:remove(<<"p2s">>, F), H#jose_jwe_alg_pbes2{ salt = wrap_salt(jose_jwa_base64url:decode(P2S), H) });
 from_map_pbes2(F, H) ->
 	{H, F}.
 
@@ -117,7 +117,7 @@ from_map_pbes2(F, H) ->
 to_map_pbes2(F, H=#jose_jwe_alg_pbes2{ iter = P2C, salt = P2S }) ->
 	F#{
 		<<"p2c">> => P2C,
-		<<"p2s">> => base64url:encode(unwrap_salt(P2S, H))
+		<<"p2s">> => jose_jwa_base64url:encode(unwrap_salt(P2S, H))
 	}.
 
 %% @private

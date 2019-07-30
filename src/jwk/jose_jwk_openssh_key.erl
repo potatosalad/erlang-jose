@@ -36,7 +36,7 @@ to_binary(List) when is_list(List) ->
 to_binary([KeyList | List], Acc) when is_list(KeyList) ->
 	to_binary(List, [write_keylist(lists:unzip(KeyList)) | Acc]);
 to_binary([], Acc) ->
-	iolist_to_binary([[?OPENSSH_HEAD, $\n, chunk(base64:encode(Keys), 70, []), ?OPENSSH_TAIL, $\n] || Keys <- lists:reverse(Acc)]).
+	iolist_to_binary([[?OPENSSH_HEAD, $\n, chunk(jose_base64:encode(Keys), 70, []), ?OPENSSH_TAIL, $\n] || Keys <- lists:reverse(Acc)]).
 
 chunk(Bin, Size, Chunks) when byte_size(Bin) > Size ->
 	<< Chunk:Size/binary, Rest/binary >> = Bin,
@@ -127,7 +127,7 @@ parse_key(<< W, Rest/binary >>, Body)
 		orelse W =:= $\t ->
 	parse_key(Rest, Body);
 parse_key(<< ?OPENSSH_TAIL, Rest/binary >>, Body) ->
-	case parse_key(base64:decode(Body)) of
+	case parse_key(jose_base64:decode(Body)) of
 		{true, Key} ->
 			{Key, Rest};
 		false ->

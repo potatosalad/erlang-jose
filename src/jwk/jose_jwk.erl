@@ -775,7 +775,7 @@ thumbprint(DigestType, List) when is_list(List) ->
 thumbprint(DigestType, JWK=#jose_jwk{}) ->
 	{_, ThumbprintMap} = to_thumbprint_map(JWK),
 	ThumbprintBinary = jose:encode(ThumbprintMap),
-	base64url:encode(crypto:hash(DigestType, ThumbprintBinary));
+	jose_jwa_base64url:encode(crypto:hash(DigestType, ThumbprintBinary));
 thumbprint(DigestType, Other) ->
 	thumbprint(DigestType, from(Other)).
 

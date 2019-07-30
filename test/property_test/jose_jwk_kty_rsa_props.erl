@@ -11,7 +11,7 @@
 base64url_binary() ->
 	?LET(Binary,
 		binary(),
-		base64url:encode(Binary)).
+		jose_jwa_base64url:encode(Binary)).
 
 binary_map() ->
 	?LET(List,
@@ -100,7 +100,7 @@ prop_from_pem_and_to_pem() ->
 	?FORALL({{_, PublicKey}, PrivateJWK, Password},
 		?LET({{Keys, PrivateJWK}, Bytes},
 			{jwk_gen(), binary()},
-			{Keys, PrivateJWK, base64url:encode(Bytes)}),
+			{Keys, PrivateJWK, jose_jwa_base64url:encode(Bytes)}),
 		begin
 			PublicJWK = jose_jwk:from_key(PublicKey),
 			PublicPEM = element(2, jose_jwk:to_pem(PublicJWK)),

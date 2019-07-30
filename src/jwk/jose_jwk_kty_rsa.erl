@@ -73,15 +73,15 @@ to_map(#'RSAPrivateKey'{
 		prime2 = Q,
 		coefficient = QI}, F) ->
 	F#{
-		<<"d">> => base64url:encode(int_to_bin(D)),
-		<<"dp">> => base64url:encode(int_to_bin(DP)),
-		<<"dq">> => base64url:encode(int_to_bin(DQ)),
-		<<"e">> => base64url:encode(int_to_bin(E)),
+		<<"d">> => jose_jwa_base64url:encode(int_to_bin(D)),
+		<<"dp">> => jose_jwa_base64url:encode(int_to_bin(DP)),
+		<<"dq">> => jose_jwa_base64url:encode(int_to_bin(DQ)),
+		<<"e">> => jose_jwa_base64url:encode(int_to_bin(E)),
 		<<"kty">> => <<"RSA">>,
-		<<"n">> => base64url:encode(int_to_bin(N)),
-		<<"p">> => base64url:encode(int_to_bin(P)),
-		<<"q">> => base64url:encode(int_to_bin(Q)),
-		<<"qi">> => base64url:encode(int_to_bin(QI))
+		<<"n">> => jose_jwa_base64url:encode(int_to_bin(N)),
+		<<"p">> => jose_jwa_base64url:encode(int_to_bin(P)),
+		<<"q">> => jose_jwa_base64url:encode(int_to_bin(Q)),
+		<<"qi">> => jose_jwa_base64url:encode(int_to_bin(QI))
 	};
 to_map(#'RSAPrivateKey'{
 		version = 'multi',
@@ -95,33 +95,33 @@ to_map(#'RSAPrivateKey'{
 		prime2 = Q,
 		coefficient = QI}, F) ->
 	F#{
-		<<"d">> => base64url:encode(int_to_bin(D)),
-		<<"dp">> => base64url:encode(int_to_bin(DP)),
-		<<"dq">> => base64url:encode(int_to_bin(DQ)),
-		<<"e">> => base64url:encode(int_to_bin(E)),
+		<<"d">> => jose_jwa_base64url:encode(int_to_bin(D)),
+		<<"dp">> => jose_jwa_base64url:encode(int_to_bin(DP)),
+		<<"dq">> => jose_jwa_base64url:encode(int_to_bin(DQ)),
+		<<"e">> => jose_jwa_base64url:encode(int_to_bin(E)),
 		<<"kty">> => <<"RSA">>,
-		<<"n">> => base64url:encode(int_to_bin(N)),
+		<<"n">> => jose_jwa_base64url:encode(int_to_bin(N)),
 		<<"oth">> => [begin
 			#{
-				<<"d">> => base64url:encode(int_to_bin(OD)),
-				<<"r">> => base64url:encode(int_to_bin(OR)),
-				<<"t">> => base64url:encode(int_to_bin(OT))
+				<<"d">> => jose_jwa_base64url:encode(int_to_bin(OD)),
+				<<"r">> => jose_jwa_base64url:encode(int_to_bin(OR)),
+				<<"t">> => jose_jwa_base64url:encode(int_to_bin(OT))
 			}
 		end || #'OtherPrimeInfo'{
 			prime = OR,
 			exponent = OD,
 			coefficient = OT} <- OTH],
-		<<"p">> => base64url:encode(int_to_bin(P)),
-		<<"q">> => base64url:encode(int_to_bin(Q)),
-		<<"qi">> => base64url:encode(int_to_bin(QI))
+		<<"p">> => jose_jwa_base64url:encode(int_to_bin(P)),
+		<<"q">> => jose_jwa_base64url:encode(int_to_bin(Q)),
+		<<"qi">> => jose_jwa_base64url:encode(int_to_bin(QI))
 	};
 to_map(#'RSAPublicKey'{
 		publicExponent = E,
 		modulus = N}, F) ->
 	F#{
-		<<"e">> => base64url:encode(int_to_bin(E)),
+		<<"e">> => jose_jwa_base64url:encode(int_to_bin(E)),
 		<<"kty">> => <<"RSA">>,
-		<<"n">> => base64url:encode(int_to_bin(N))
+		<<"n">> => jose_jwa_base64url:encode(int_to_bin(N))
 	}.
 
 to_public_map(K=#'RSAPrivateKey'{}, F) ->
@@ -364,27 +364,27 @@ convert_sfm_to_crt_mod_inverse(A, M) ->
 
 %% @private
 from_map_rsa_private_key(F = #{ <<"d">> := D }, Key) ->
-	from_map_rsa_private_key(maps:remove(<<"d">>, F), Key#'RSAPrivateKey'{ privateExponent = crypto:bytes_to_integer(base64url:decode(D)) });
+	from_map_rsa_private_key(maps:remove(<<"d">>, F), Key#'RSAPrivateKey'{ privateExponent = crypto:bytes_to_integer(jose_jwa_base64url:decode(D)) });
 from_map_rsa_private_key(F = #{ <<"dp">> := DP }, Key) ->
-	from_map_rsa_private_key(maps:remove(<<"dp">>, F), Key#'RSAPrivateKey'{ exponent1 = crypto:bytes_to_integer(base64url:decode(DP)) });
+	from_map_rsa_private_key(maps:remove(<<"dp">>, F), Key#'RSAPrivateKey'{ exponent1 = crypto:bytes_to_integer(jose_jwa_base64url:decode(DP)) });
 from_map_rsa_private_key(F = #{ <<"dq">> := DQ }, Key) ->
-	from_map_rsa_private_key(maps:remove(<<"dq">>, F), Key#'RSAPrivateKey'{ exponent2 = crypto:bytes_to_integer(base64url:decode(DQ)) });
+	from_map_rsa_private_key(maps:remove(<<"dq">>, F), Key#'RSAPrivateKey'{ exponent2 = crypto:bytes_to_integer(jose_jwa_base64url:decode(DQ)) });
 from_map_rsa_private_key(F = #{ <<"e">> := E }, Key) ->
-	from_map_rsa_private_key(maps:remove(<<"e">>, F), Key#'RSAPrivateKey'{ publicExponent = crypto:bytes_to_integer(base64url:decode(E)) });
+	from_map_rsa_private_key(maps:remove(<<"e">>, F), Key#'RSAPrivateKey'{ publicExponent = crypto:bytes_to_integer(jose_jwa_base64url:decode(E)) });
 from_map_rsa_private_key(F = #{ <<"n">> := N }, Key) ->
-	from_map_rsa_private_key(maps:remove(<<"n">>, F), Key#'RSAPrivateKey'{ modulus = crypto:bytes_to_integer(base64url:decode(N)) });
+	from_map_rsa_private_key(maps:remove(<<"n">>, F), Key#'RSAPrivateKey'{ modulus = crypto:bytes_to_integer(jose_jwa_base64url:decode(N)) });
 from_map_rsa_private_key(F = #{ <<"p">> := P }, Key) ->
-	from_map_rsa_private_key(maps:remove(<<"p">>, F), Key#'RSAPrivateKey'{ prime1 = crypto:bytes_to_integer(base64url:decode(P)) });
+	from_map_rsa_private_key(maps:remove(<<"p">>, F), Key#'RSAPrivateKey'{ prime1 = crypto:bytes_to_integer(jose_jwa_base64url:decode(P)) });
 from_map_rsa_private_key(F = #{ <<"q">> := Q }, Key) ->
-	from_map_rsa_private_key(maps:remove(<<"q">>, F), Key#'RSAPrivateKey'{ prime2 = crypto:bytes_to_integer(base64url:decode(Q)) });
+	from_map_rsa_private_key(maps:remove(<<"q">>, F), Key#'RSAPrivateKey'{ prime2 = crypto:bytes_to_integer(jose_jwa_base64url:decode(Q)) });
 from_map_rsa_private_key(F = #{ <<"qi">> := QI }, Key) ->
-	from_map_rsa_private_key(maps:remove(<<"qi">>, F), Key#'RSAPrivateKey'{ coefficient = crypto:bytes_to_integer(base64url:decode(QI)) });
+	from_map_rsa_private_key(maps:remove(<<"qi">>, F), Key#'RSAPrivateKey'{ coefficient = crypto:bytes_to_integer(jose_jwa_base64url:decode(QI)) });
 from_map_rsa_private_key(F = #{ <<"oth">> := OTH }, Key) ->
 	OtherPrimeInfos = [begin
 		#'OtherPrimeInfo'{
-			prime = crypto:bytes_to_integer(base64url:decode(OR)),
-			exponent = crypto:bytes_to_integer(base64url:decode(OD)),
-			coefficient = crypto:bytes_to_integer(base64url:decode(OT))}
+			prime = crypto:bytes_to_integer(jose_jwa_base64url:decode(OR)),
+			exponent = crypto:bytes_to_integer(jose_jwa_base64url:decode(OD)),
+			coefficient = crypto:bytes_to_integer(jose_jwa_base64url:decode(OT))}
 	end || #{ <<"d">> := OD, <<"r">> := OR, <<"t">> := OT } <- OTH],
 	from_map_rsa_private_key(maps:remove(<<"oth">>, F), Key#'RSAPrivateKey'{ version = 'multi', otherPrimeInfos = OtherPrimeInfos });
 from_map_rsa_private_key(F, Key0=#'RSAPrivateKey'{
@@ -429,9 +429,9 @@ from_map_rsa_private_key(F, Key) ->
 
 %% @private
 from_map_rsa_public_key(F = #{ <<"e">> := E }, Key) ->
-	from_map_rsa_public_key(maps:remove(<<"e">>, F), Key#'RSAPublicKey'{ publicExponent = crypto:bytes_to_integer(base64url:decode(E)) });
+	from_map_rsa_public_key(maps:remove(<<"e">>, F), Key#'RSAPublicKey'{ publicExponent = crypto:bytes_to_integer(jose_jwa_base64url:decode(E)) });
 from_map_rsa_public_key(F = #{ <<"n">> := N }, Key) ->
-	from_map_rsa_public_key(maps:remove(<<"n">>, F), Key#'RSAPublicKey'{ modulus = crypto:bytes_to_integer(base64url:decode(N)) });
+	from_map_rsa_public_key(maps:remove(<<"n">>, F), Key#'RSAPublicKey'{ modulus = crypto:bytes_to_integer(jose_jwa_base64url:decode(N)) });
 from_map_rsa_public_key(F, Key) ->
 	{Key, F}.
 

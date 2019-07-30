@@ -9,7 +9,7 @@
 base64url_binary() ->
 	?LET(Binary,
 		binary(),
-		base64url:encode(Binary)).
+		jose_jwa_base64url:encode(Binary)).
 
 binary_map() ->
 	?LET(List,
@@ -29,7 +29,7 @@ alg_map() ->
 		#{
 			<<"alg">> => ALG,
 			<<"p2c">> => P2C,
-			<<"p2s">> => base64url:encode(P2S)
+			<<"p2s">> => jose_jwa_base64url:encode(P2S)
 		}).
 
 enc() ->
@@ -45,7 +45,7 @@ jwk_jwe_maps() ->
 		begin
 			JWKMap = #{
 				<<"kty">> => <<"oct">>,
-				<<"k">> => base64url:encode(Password)
+				<<"k">> => jose_jwa_base64url:encode(Password)
 			},
 			JWEMap = maps:merge(#{ <<"enc">> => ENC }, ALGMap),
 			{Password, JWKMap, JWEMap}

@@ -22,12 +22,11 @@ defmodule JOSE.Mixfile do
   end
 
   def application() do
-    [mod: {:jose_app, []}, applications: [:crypto, :asn1, :public_key, :base64url]]
+    [mod: {:jose_app, []}, applications: [:crypto, :asn1, :public_key]]
   end
 
   defp deps() do
     [
-      {:base64url, "~> 0.0.1"},
       # {:cutkey, github: "potatosalad/cutkey", only: [:dev, :test]},
       {:jason, "~> 1.1", only: [:dev, :test]},
       {:jsone, "~> 1.4", only: [:dev, :test]},

@@ -164,9 +164,9 @@ algorithm(?ECDH_ES)        -> <<"ECDH-ES">>.
 from_map_ecdh_es(F = #{ <<"epk">> := EPK }, H) ->
 	from_map_ecdh_es(maps:remove(<<"epk">>, F), H#jose_jwe_alg_ecdh_es{ epk = jose_jwk:from_map(EPK) });
 from_map_ecdh_es(F = #{ <<"apu">> := APU }, H) ->
-	from_map_ecdh_es(maps:remove(<<"apu">>, F), H#jose_jwe_alg_ecdh_es{ apu = base64url:decode(APU) });
+	from_map_ecdh_es(maps:remove(<<"apu">>, F), H#jose_jwe_alg_ecdh_es{ apu = jose_jwa_base64url:decode(APU) });
 from_map_ecdh_es(F = #{ <<"apv">> := APV }, H) ->
-	from_map_ecdh_es(maps:remove(<<"apv">>, F), H#jose_jwe_alg_ecdh_es{ apv = base64url:decode(APV) });
+	from_map_ecdh_es(maps:remove(<<"apv">>, F), H#jose_jwe_alg_ecdh_es{ apv = jose_jwa_base64url:decode(APV) });
 from_map_ecdh_es(F, H) ->
 	{H, F}.
 
@@ -174,8 +174,8 @@ from_map_ecdh_es(F, H) ->
 to_map_ecdh_es(F, H=#jose_jwe_alg_ecdh_es{ epk = EPK = #jose_jwk{} }) ->
 	to_map_ecdh_es(F#{ <<"epk">> => element(2, jose_jwk:to_public_map(EPK)) }, H#jose_jwe_alg_ecdh_es{ epk = undefined });
 to_map_ecdh_es(F, H=#jose_jwe_alg_ecdh_es{ apu = APU }) when is_binary(APU) ->
-	to_map_ecdh_es(F#{ <<"apu">> => base64url:encode(APU) }, H#jose_jwe_alg_ecdh_es{ apu = undefined });
+	to_map_ecdh_es(F#{ <<"apu">> => jose_jwa_base64url:encode(APU) }, H#jose_jwe_alg_ecdh_es{ apu = undefined });
 to_map_ecdh_es(F, H=#jose_jwe_alg_ecdh_es{ apv = APV }) when is_binary(APV) ->
-	to_map_ecdh_es(F#{ <<"apv">> => base64url:encode(APV) }, H#jose_jwe_alg_ecdh_es{ apv = undefined });
+	to_map_ecdh_es(F#{ <<"apv">> => jose_jwa_base64url:encode(APV) }, H#jose_jwe_alg_ecdh_es{ apv = undefined });
 to_map_ecdh_es(F, _) ->
 	F.

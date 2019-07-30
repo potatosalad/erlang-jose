@@ -224,21 +224,21 @@ peek_payload({_Modules, Signed}) when is_binary(Signed) or is_map(Signed) ->
 peek_payload(SignedBinary) when is_binary(SignedBinary) ->
 	peek_payload(expand(SignedBinary));
 peek_payload(#{ <<"payload">> := Payload }) ->
-	base64url:decode(Payload).
+	jose_jwa_base64url:decode(Payload).
 
 peek_protected({_Modules, Signed}) when is_binary(Signed) or is_map(Signed) ->
 	peek_protected(Signed);
 peek_protected(SignedBinary) when is_binary(SignedBinary) ->
 	peek_protected(expand(SignedBinary));
 peek_protected(#{ <<"protected">> := Protected }) ->
-	base64url:decode(Protected).
+	jose_jwa_base64url:decode(Protected).
 
 peek_signature({_Modules, Signed}) when is_binary(Signed) or is_map(Signed) ->
 	peek_signature(Signed);
 peek_signature(SignedBinary) when is_binary(SignedBinary) ->
 	peek_signature(expand(SignedBinary));
 peek_signature(#{ <<"signature">> := Signature }) ->
-	base64url:decode(Signature).
+	jose_jwa_base64url:decode(Signature).
 
 sign(KeyList, PlainText, SignerList)
 		when is_list(KeyList)
@@ -287,7 +287,7 @@ sign(KeyList, PlainText, HeaderList, SignerList)
 		andalso length(KeyList) =:= length(HeaderList) ->
 	Keys = jose_jwk:from(KeyList),
 	Signers = from(SignerList),
-	Payload = base64url:encode(PlainText),
+	Payload = jose_jwa_base64url:encode(PlainText),
 	Signatures = map_signatures(Keys, PlainText, HeaderList, Signers, []),
 	{#{}, #{
 		<<"payload">> => Payload,
@@ -305,10 +305,10 @@ sign(Key=#jose_jwk{}, PlainText, Header, JWS=#jose_jws{alg={ALGModule, ALG}})
 	end,
 	NewJWS = JWS#jose_jws{alg={ALGModule, NewALG}},
 	{Modules, ProtectedBinary} = to_binary(NewJWS),
-	Protected = base64url:encode(ProtectedBinary),
-	Payload = base64url:encode(PlainText),
+	Protected = jose_jwa_base64url:encode(ProtectedBinary),
+	Payload = jose_jwa_base64url:encode(PlainText),
 	SigningInput = signing_input(PlainText, Protected, NewJWS),
-	Signature = base64url:encode(ALGModule:sign(Key, SigningInput, NewALG)),
+	Signature = jose_jwa_base64url:encode(ALGModule:sign(Key, SigningInput, NewALG)),
 	{Modules, maps:put(<<"payload">>, Payload, signature_to_map(Protected, Header, Key, Signature))};
 sign(Key=none, PlainText, Header, JWS=#jose_jws{alg={ALGModule, ALG}})
 		when is_binary(PlainText)
@@ -322,10 +322,10 @@ sign(Key=none, PlainText, Header, JWS=#jose_jws{alg={ALGModule, ALG}})
 	end,
 	NewJWS = JWS#jose_jws{alg={ALGModule, NewALG}},
 	{Modules, ProtectedBinary} = to_binary(NewJWS),
-	Protected = base64url:encode(ProtectedBinary),
-	Payload = base64url:encode(PlainText),
+	Protected = jose_jwa_base64url:encode(ProtectedBinary),
+	Payload = jose_jwa_base64url:encode(PlainText),
 	SigningInput = signing_input(PlainText, Protected, NewJWS),
-	Signature = base64url:encode(ALGModule:sign(Key, SigningInput, NewALG)),
+	Signature = jose_jwa_base64url:encode(ALGModule:sign(Key, SigningInput, NewALG)),
 	{Modules, maps:put(<<"payload">>, Payload, signature_to_map(Protected, Header, Key, Signature))};
 sign(KeyList, PlainText, HeaderList, SignerList)
 		when (is_list(KeyList)
@@ -349,7 +349,7 @@ sign(KeyOrKeyList, PlainText, Header, Other)
 %% See https://tools.ietf.org/html/rfc7797
 signing_input(Payload, JWS=#jose_jws{}) ->
 	{_, ProtectedBinary} = to_binary(JWS),
-	Protected = base64url:encode(ProtectedBinary),
+	Protected = jose_jwa_base64url:encode(ProtectedBinary),
 	signing_input(Payload, Protected, JWS);
 signing_input(Payload, Other) ->
 	signing_input(Payload, from(Other)).
@@ -357,7 +357,7 @@ signing_input(Payload, Other) ->
 signing_input(PlainText, Protected, #jose_jws{b64=B64})
 		when (B64 =:= true
 			orelse B64 =:= undefined) ->
-	Payload = base64url:encode(PlainText),
+	Payload = jose_jwa_base64url:encode(PlainText),
 	<< Protected/binary, $., Payload/binary >>;
 signing_input(Payload, Protected, #jose_jws{b64=false}) ->
 	<< Protected/binary, $., Payload/binary >>.
@@ -372,9 +372,9 @@ verify(Key, {Modules, #{
 		<<"payload">> := Payload,
 		<<"protected">> := Protected,
 		<<"signature">> := EncodedSignature}}) ->
-	JWS = #jose_jws{alg={ALGModule, ALG}} = from_binary({Modules, base64url:decode(Protected)}),
-	Signature = base64url:decode(EncodedSignature),
-	PlainText = base64url:decode(Payload),
+	JWS = #jose_jws{alg={ALGModule, ALG}} = from_binary({Modules, jose_jwa_base64url:decode(Protected)}),
+	Signature = jose_jwa_base64url:decode(EncodedSignature),
+	PlainText = jose_jwa_base64url:decode(Payload),
 	SigningInput = signing_input(PlainText, Protected, JWS),
 	{ALGModule:verify(Key, SigningInput, Signature, ALG), PlainText, JWS};
 verify(Keys = [_ | _], {Modules, Signed=#{
@@ -402,9 +402,9 @@ verify_strict(Key, Allow, {Modules, #{
 		<<"payload">> := Payload,
 		<<"protected">> := Protected,
 		<<"signature">> := EncodedSignature}}) ->
-	ProtectedMap = jose:decode(base64url:decode(Protected)),
-	Signature = base64url:decode(EncodedSignature),
-	PlainText = base64url:decode(Payload),
+	ProtectedMap = jose:decode(jose_jwa_base64url:decode(Protected)),
+	Signature = jose_jwa_base64url:decode(EncodedSignature),
+	PlainText = jose_jwa_base64url:decode(Payload),
 	case ProtectedMap of
 		#{ <<"alg">> := Algorithm } ->
 			case lists:member(Algorithm, Allow) of
@@ -476,9 +476,9 @@ map_signatures([Key | Keys], PlainText, [Header | Headers], [Signer=#jose_jws{al
 	end,
 	NewSigner = Signer#jose_jws{alg={ALGModule, NewALG}},
 	{_Modules, ProtectedBinary} = to_binary(NewSigner),
-	Protected = base64url:encode(ProtectedBinary),
+	Protected = jose_jwa_base64url:encode(ProtectedBinary),
 	SigningInput = signing_input(PlainText, Protected, NewSigner),
-	Signature = base64url:encode(ALGModule:sign(Key, SigningInput, NewALG)),
+	Signature = jose_jwa_base64url:encode(ALGModule:sign(Key, SigningInput, NewALG)),
 	map_signatures(Keys, PlainText, Headers, Signers, [signature_to_map(Protected, Header, Key, Signature) | Acc]);
 map_signatures([], _PlainText, [], [], Acc) ->
 	lists:reverse(Acc).

@@ -2,10 +2,6 @@ PROJECT = jose
 PROJECT_DESCRIPTION = JSON Object Signing and Encryption (JOSE) for Erlang and Elixir.
 PROJECT_VERSION = 1.9.0
 
-DEPS = base64url
-
-dep_base64url = git git://github.com/dvv/base64url.git master
-
 TEST_DEPS = jiffy jsone jsx libdecaf libsodium ojson proper
 
 dep_jiffy = git git://github.com/davisp/jiffy.git master
@@ -19,37 +15,74 @@ dep_proper = git git://github.com/proper-testing/proper.git v1.3
 
 include erlang.mk
 
-.PHONY: docker-build docker-load docker-setup docker-save docker-test
+.PHONY: docker-build docker-load docker-setup docker-save docker-shell docker-test
 
-DOCKER_OTP_VERSION ?= 21.2
-DOCKER_ELIXIR_VERSION ?= 1.7.4
+DOCKER_OTP_VERSION ?= 22.0
 
 docker-build::
 	$(gen_verbose) docker build \
-		-t docker-otp-${DOCKER_OTP_VERSION}-elixir-${DOCKER_ELIXIR_VERSION} \
-		-f priv/Dockerfile \
+		-t docker-otp-${DOCKER_OTP_VERSION} \
+		-f test/Dockerfile \
 		--build-arg OTP_VERSION=${DOCKER_OTP_VERSION} \
-		--build-arg ELIXIR_VERSION=${DOCKER_ELIXIR_VERSION} priv
+		test
 
 docker-load::
 	$(gen_verbose) docker load \
-		-i "docker-otp-${DOCKER_OTP_VERSION}-elixir-${DOCKER_ELIXIR_VERSION}/image.tar"
+		-i "docker-otp-${DOCKER_OTP_VERSION}/image.tar"
 
 docker-save::
-	$(verbose) mkdir -p "docker-otp-${DOCKER_OTP_VERSION}-elixir-${DOCKER_ELIXIR_VERSION}"
+	$(verbose) mkdir -p "docker-otp-${DOCKER_OTP_VERSION}"
 	$(gen_verbose) docker save \
-		-o "docker-otp-${DOCKER_OTP_VERSION}-elixir-${DOCKER_ELIXIR_VERSION}/image.tar" \
-		docker-otp-${DOCKER_OTP_VERSION}-elixir-${DOCKER_ELIXIR_VERSION}
+		-o "docker-otp-${DOCKER_OTP_VERSION}/image.tar" \
+		docker-otp-${DOCKER_OTP_VERSION}
 
 docker-setup::
-	$(verbose) if [ -f "docker-otp-${DOCKER_OTP_VERSION}-elixir-${DOCKER_ELIXIR_VERSION}/image.tar" ]; then \
+	$(verbose) if [ -f "docker-otp-${DOCKER_OTP_VERSION}/image.tar" ]; then \
 		$(MAKE) docker-load; \
 	else \
 		$(MAKE) docker-build; \
 		$(MAKE) docker-save; \
 	fi
 
+docker-shell::
+	$(verbose) docker run \
+		-v "$(shell pwd)":"/build/jose" --rm -it "docker-otp-${DOCKER_OTP_VERSION}" \
+		/bin/bash -l
+
 docker-test::
 	$(gen_verbose) docker run \
-		-v "$(shell pwd)":"/build/jose" "docker-otp-${DOCKER_OTP_VERSION}-elixir-${DOCKER_ELIXIR_VERSION}" \
-		sh -c 'cd jose && mix local.hex --force && mix local.rebar --force && mix deps.get && mix test && rm -rf _build deps ebin && make ct'
+		-v "$(shell pwd)":"/build/jose" "docker-otp-${DOCKER_OTP_VERSION}" \
+		sh -c 'cd jose && make tests'
+
+# DOCKER_OTP_VERSION ?= 21.2
+# DOCKER_ELIXIR_VERSION ?= 1.7.4
+
+# docker-build::
+# 	$(gen_verbose) docker build \
+# 		-t docker-otp-${DOCKER_OTP_VERSION}-elixir-${DOCKER_ELIXIR_VERSION} \
+# 		-f priv/Dockerfile \
+# 		--build-arg OTP_VERSION=${DOCKER_OTP_VERSION} \
+# 		--build-arg ELIXIR_VERSION=${DOCKER_ELIXIR_VERSION} priv
+
+# docker-load::
+# 	$(gen_verbose) docker load \
+# 		-i "docker-otp-${DOCKER_OTP_VERSION}-elixir-${DOCKER_ELIXIR_VERSION}/image.tar"
+
+# docker-save::
+# 	$(verbose) mkdir -p "docker-otp-${DOCKER_OTP_VERSION}-elixir-${DOCKER_ELIXIR_VERSION}"
+# 	$(gen_verbose) docker save \
+# 		-o "docker-otp-${DOCKER_OTP_VERSION}-elixir-${DOCKER_ELIXIR_VERSION}/image.tar" \
+# 		docker-otp-${DOCKER_OTP_VERSION}-elixir-${DOCKER_ELIXIR_VERSION}
+
+# docker-setup::
+# 	$(verbose) if [ -f "docker-otp-${DOCKER_OTP_VERSION}-elixir-${DOCKER_ELIXIR_VERSION}/image.tar" ]; then \
+# 		$(MAKE) docker-load; \
+# 	else \
+# 		$(MAKE) docker-build; \
+# 		$(MAKE) docker-save; \
+# 	fi
+
+# docker-test::
+# 	$(gen_verbose) docker run \
+# 		-v "$(shell pwd)":"/build/jose" "docker-otp-${DOCKER_OTP_VERSION}-elixir-${DOCKER_ELIXIR_VERSION}" \
+# 		sh -c 'cd jose && mix local.hex --force && mix local.rebar --force && mix deps.get && mix test && rm -rf _build deps ebin && make ct'

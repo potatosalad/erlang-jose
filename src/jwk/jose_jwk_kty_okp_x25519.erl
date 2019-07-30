@@ -8,10 +8,10 @@
 %%% @end
 %%% Created :  15 Jan 2016 by Andrew Bennett <potatosaladx@gmail.com>
 %%%-------------------------------------------------------------------
--module(jose_jwk_kty_okp_ed25519).
+-module(jose_jwk_kty_okp_x25519).
 -behaviour(jose_jwk).
 -behaviour(jose_jwk_kty).
--behaviour(jose_jwk_use_sig).
+-behaviour(jose_jwk_use_enc).
 
 -include_lib("jose_public_key.hrl").
 
@@ -25,11 +25,9 @@
 -export([generate_key/1]).
 -export([generate_key/2]).
 -export([key_encryptor/3]).
-%% jose_jwk_use_sig callbacks
--export([sign/3]).
--export([signer/2]).
--export([verifier/2]).
--export([verify/4]).
+%% jose_jwk_use_enc callbacks
+-export([block_encryptor/2]).
+-export([derive_key/2]).
 %% API
 -export([from_key/1]).
 -export([from_okp/1]).
@@ -42,7 +40,7 @@
 -export([to_pem/2]).
 
 %% Macros
--define(crv, <<"Ed25519">>).
+-define(crv, <<"X25519">>).
 -define(secretbytes, 32).
 -define(publickeybytes, 32).
 -define(secretkeybytes, 64).
@@ -59,19 +57,19 @@
 %%====================================================================
 
 from_map(F = #{ <<"kty">> := <<"OKP">>, <<"crv">> := ?crv, <<"d">> := D, <<"x">> := X }) ->
-	<< Secret:?secretbytes/binary >> = base64url:decode(D),
-	<< PK:?publickeybytes/binary >> = base64url:decode(X),
+	<< Secret:?secretbytes/binary >> = jose_jwa_base64url:decode(D),
+	<< PK:?publickeybytes/binary >> = jose_jwa_base64url:decode(X),
 	SK = << Secret/binary, PK/binary >>,
 	{SK, maps:without([<<"crv">>, <<"d">>, <<"kty">>, <<"x">>], F)};
 from_map(F = #{ <<"kty">> := <<"OKP">>, <<"crv">> := ?crv, <<"x">> := X }) ->
-	<< PK:?publickeybytes/binary >> = base64url:decode(X),
+	<< PK:?publickeybytes/binary >> = jose_jwa_base64url:decode(X),
 	{PK, maps:without([<<"crv">>, <<"kty">>, <<"x">>], F)}.
 
 to_key(<< PublicKey:?publickeybytes/binary >>) ->
-	#'jose_EdDSA25519PublicKey'{ publicKey = PublicKey };
+	#'jose_X25519PublicKey'{ publicKey = PublicKey };
 to_key(<< PrivateKey:?secretbytes/binary, PublicKey:?publickeybytes/binary >>) ->
-	#'jose_EdDSA25519PrivateKey'{
-		publicKey = #'jose_EdDSA25519PublicKey'{ publicKey = PublicKey },
+	#'jose_X25519PrivateKey'{
+		publicKey = #'jose_X25519PublicKey'{ publicKey = PublicKey },
 		privateKey = PrivateKey
 	}.
 
@@ -79,14 +77,14 @@ to_map(PK = << _:?publickeybytes/binary >>, F) ->
 	F#{
 		<<"crv">> => ?crv,
 		<<"kty">> => <<"OKP">>,
-		<<"x">> => base64url:encode(PK)
+		<<"x">> => jose_jwa_base64url:encode(PK)
 	};
 to_map(<< Secret:?secretbytes/binary, PK:?publickeybytes/binary >>, F) ->
 	F#{
 		<<"crv">> => ?crv,
-		<<"d">> => base64url:encode(Secret),
+		<<"d">> => jose_jwa_base64url:encode(Secret),
 		<<"kty">> => <<"OKP">>,
-		<<"x">> => base64url:encode(PK)
+		<<"x">> => jose_jwa_base64url:encode(PK)
 	}.
 
 to_public_map(PK = << _:?publickeybytes/binary >>, F) ->
@@ -102,76 +100,78 @@ to_thumbprint_map(K, F) ->
 %%====================================================================
 
 generate_key(Seed = << _:?secretbytes/binary >>) ->
-	{_PK, SK} = jose_curve25519:eddsa_keypair(Seed),
-	{SK, #{}};
-generate_key({okp, 'Ed25519', Seed = << _:?secretbytes/binary >>}) ->
+	{PK, SK} = jose_curve25519:x25519_keypair(Seed),
+	{<< SK/binary, PK/binary >>, #{}};
+generate_key({okp, 'X25519', Seed = << _:?secretbytes/binary >>}) ->
 	generate_key(Seed);
-generate_key({okp, 'Ed25519'}) ->
-	{_PK, SK} = jose_curve25519:eddsa_keypair(),
-	{SK, #{}}.
+generate_key({okp, 'X25519'}) ->
+	{PK, SK} = jose_curve25519:x25519_keypair(),
+	{<< SK/binary, PK/binary >>, #{}}.
 
 generate_key(KTY, Fields)
 		when is_binary(KTY)
 		andalso (byte_size(KTY) =:= ?publickeybytes
 			orelse byte_size(KTY) =:= ?secretkeybytes) ->
-	{NewKTY, OtherFields} = generate_key({okp, 'Ed25519'}),
+	{NewKTY, OtherFields} = generate_key({okp, 'X25519'}),
 	{NewKTY, maps:merge(maps:remove(<<"kid">>, Fields), OtherFields)}.
 
 key_encryptor(KTY, Fields, Key) ->
 	jose_jwk_kty:key_encryptor(KTY, Fields, Key).
 
 %%====================================================================
-%% jose_jwk_use_sig callbacks
+%% jose_jwk_use_enc callbacks
 %%====================================================================
 
-sign(Message, ALG, SK = << _:?secretkeybytes/binary >>)
-		when ALG =:= 'Ed25519' orelse ALG =:= 'EdDSA' ->
-	jose_curve25519:ed25519_sign(Message, SK).
+block_encryptor(_KTY, Fields=#{ <<"alg">> := ALG, <<"enc">> := ENC, <<"use">> := <<"enc">> }) ->
+	Folder = fun
+		(K, V, F)
+				when K =:= <<"apu">>
+				orelse K =:= <<"apv">>
+				orelse K =:= <<"epk">> ->
+			maps:put(K, V, F);
+		(_K, _V, F) ->
+			F
+	end,
+	maps:fold(Folder, #{
+		<<"alg">> => ALG,
+		<<"enc">> => ENC
+	}, Fields);
+block_encryptor(KTY, Fields) ->
+	block_encryptor(KTY, maps:merge(Fields, #{
+		<<"alg">> => <<"ECDH-ES">>,
+		<<"enc">> => case jose_jwa:is_block_cipher_supported({aes_gcm, 128}) of
+			false -> <<"A128CBC-HS256">>;
+			true  -> <<"A128GCM">>
+		end,
+		<<"use">> => <<"enc">>
+	})).
 
-signer(<< _:?secretkeybytes/binary >>, #{ <<"alg">> := ALG, <<"use">> := <<"sig">> }) ->
-	#{
-		<<"alg">> => ALG
-	};
-signer(<< _:?secretkeybytes/binary >>, _Fields) ->
-	#{
-		<<"alg">> => <<"EdDSA">>
-	}.
-
-verifier(<< _:?publickeybytes/binary >>, #{ <<"alg">> := ALG, <<"use">> := <<"sig">> }) ->
-	[ALG];
-verifier(<< _:?secretbytes/binary, PK:?publickeybytes/binary >>, Fields) ->
-	verifier(PK, Fields);
-verifier(<< _:?publickeybytes/binary >>, _Fields) ->
-	[?crv, <<"EdDSA">>].
-
-verify(Message, ALG, Signature, << _:?secretbytes/binary, PK:?publickeybytes/binary >>)
-		when ALG =:= 'Ed25519' orelse ALG =:= 'EdDSA' ->
-	verify(Message, ALG, Signature, PK);
-verify(Message, ALG, Signature, PK = << _:?publickeybytes/binary >>)
-		when ALG =:= 'Ed25519' orelse ALG =:= 'EdDSA' ->
-	jose_curve25519:ed25519_verify(Signature, Message, PK).
+derive_key(<< _:?secretbytes/binary, PK:?publickeybytes/binary >>, SK = << _:?secretkeybytes/binary >>) ->
+	derive_key(PK, SK);
+derive_key(PK = << _:?publickeybytes/binary >>, << Secret:?secretbytes/binary, _:?publickeybytes/binary >>) ->
+	jose_curve25519:x25519_shared_secret(Secret, PK).
 
 %%====================================================================
 %% API functions
 %%====================================================================
 
-from_key(#'jose_EdDSA25519PrivateKey'{publicKey=#'jose_EdDSA25519PublicKey'{publicKey=Public}, privateKey=Secret}) ->
+from_key(#'jose_X25519PrivateKey'{publicKey=#'jose_X25519PublicKey'{publicKey=Public}, privateKey=Secret}) ->
 	{<< Secret/binary, Public/binary >>, #{}};
-from_key(#'jose_EdDSA25519PublicKey'{publicKey=Public}) ->
+from_key(#'jose_X25519PublicKey'{publicKey=Public}) ->
 	{Public, #{}}.
 
-from_okp({'Ed25519', SK = << Secret:?secretbytes/binary, PK:?publickeybytes/binary >>}) ->
-	case jose_curve25519:eddsa_secret_to_public(Secret) of
+from_okp({'X25519', SK = << Secret:?secretbytes/binary, PK:?publickeybytes/binary >>}) ->
+	case jose_curve25519:x25519_secret_to_public(Secret) of
 		PK ->
 			{SK, #{}};
 		_ ->
 			erlang:error(badarg)
 	end;
-from_okp({'Ed25519', PK = << _:?publickeybytes/binary >>}) ->
+from_okp({'X25519', PK = << _:?publickeybytes/binary >>}) ->
 	{PK, #{}}.
 
-from_openssh_key({<<"ssh-ed25519">>, _PK, SK, Comment}) ->
-	{KTY, OtherFields} = from_okp({'Ed25519', SK}),
+from_openssh_key({<<"ssh-x25519">>, _PK, SK, Comment}) ->
+	{KTY, OtherFields} = from_okp({'X25519', SK}),
 	case Comment of
 		<<>> ->
 			{KTY, OtherFields};
@@ -196,29 +196,29 @@ from_pem(Password, PEMBinary) when is_binary(PEMBinary) ->
 	end.
 
 to_okp(SK = << _:?secretkeybytes/binary >>) ->
-	{'Ed25519', SK};
+	{'X25519', SK};
 to_okp(PK = << _:?publickeybytes/binary >>) ->
-	{'Ed25519', PK}.
+	{'X25519', PK}.
 
 to_openssh_key(SK = << _:?secretbytes/binary, PK:?publickeybytes/binary >>, F) ->
 	Comment = maps:get(<<"kid">>, F, <<>>),
-	jose_jwk_openssh_key:to_binary([[{{<<"ssh-ed25519">>, PK}, {<<"ssh-ed25519">>, PK, SK, Comment}}]]).
+	jose_jwk_openssh_key:to_binary([[{{<<"ssh-x25519">>, PK}, {<<"ssh-x25519">>, PK, SK, Comment}}]]).
 
 to_pem(SK = << _:?secretkeybytes/binary >>) ->
-	EdDSA25519PrivateKey = to_key(SK),
-	PEMEntry = jose_public_key:pem_entry_encode('EdDSA25519PrivateKey', EdDSA25519PrivateKey),
+	X25519PrivateKey = to_key(SK),
+	PEMEntry = jose_public_key:pem_entry_encode('X25519PrivateKey', X25519PrivateKey),
 	jose_public_key:pem_encode([PEMEntry]);
 to_pem(PK = << _:?publickeybytes/binary >>) ->
-	EdDSA25519PublicKey = to_key(PK),
-	PEMEntry = jose_public_key:pem_entry_encode('EdDSA25519PublicKey', EdDSA25519PublicKey),
+	X25519PublicKey = to_key(PK),
+	PEMEntry = jose_public_key:pem_entry_encode('X25519PublicKey', X25519PublicKey),
 	jose_public_key:pem_encode([PEMEntry]).
 
 to_pem(Password, SK = << _:?secretkeybytes/binary >>) ->
-	EdDSA25519PrivateKey = to_key(SK),
-	jose_jwk_pem:to_binary(Password, 'EdDSA25519PrivateKey', EdDSA25519PrivateKey);
+	X25519PrivateKey = to_key(SK),
+	jose_jwk_pem:to_binary(Password, 'X25519PrivateKey', X25519PrivateKey);
 to_pem(Password, PK = << _:?publickeybytes/binary >>) ->
-	EdDSA25519PublicKey = to_key(PK),
-	jose_jwk_pem:to_binary(Password, 'EdDSA25519PublicKey', EdDSA25519PublicKey).
+	X25519PublicKey = to_key(PK),
+	jose_jwk_pem:to_binary(Password, 'X25519PublicKey', X25519PublicKey).
 
 %%%-------------------------------------------------------------------
 %%% Internal functions

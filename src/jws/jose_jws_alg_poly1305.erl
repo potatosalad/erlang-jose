@@ -43,7 +43,7 @@ from_map(F = #{ <<"alg">> := <<"Poly1305">> }) ->
 to_map(#'Poly1305'{nonce=undefined}, F) ->
 	F#{ <<"alg">> => <<"Poly1305">> };
 to_map(#'Poly1305'{nonce=Nonce}, F) ->
-	F#{ <<"alg">> => <<"Poly1305">>, <<"nonce">> => base64url:encode(Nonce) }.
+	F#{ <<"alg">> => <<"Poly1305">>, <<"nonce">> => jose_jwa_base64url:encode(Nonce) }.
 
 %%====================================================================
 %% jose_jws_alg callbacks
@@ -78,6 +78,6 @@ verify(#jose_jwk{kty={KTYModule, KTY}}, Message, Signature, ALG=#'Poly1305'{nonc
 
 %% @private
 from_map(F = #{ <<"nonce">> := Nonce }, ALG) ->
-	from_map(maps:remove(<<"nonce">>, F), ALG#'Poly1305'{nonce=base64url:decode(Nonce)});
+	from_map(maps:remove(<<"nonce">>, F), ALG#'Poly1305'{nonce=jose_jwa_base64url:decode(Nonce)});
 from_map(F, ALG) ->
 	{ALG, F}.

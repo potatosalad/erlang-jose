@@ -9,7 +9,7 @@
 base64url_binary() ->
 	?LET(Binary,
 		binary(),
-		base64url:encode(Binary)).
+		jose_jwa_base64url:encode(Binary)).
 
 binary_map() ->
 	?LET(List,
@@ -31,7 +31,7 @@ jwk_jwe_maps() ->
 			ENC = list_to_binary("A" ++ integer_to_list(KeySize) ++ "GCM"),
 			JWKMap = #{
 				<<"kty">> => <<"oct">>,
-				<<"k">> => base64url:encode(Key)
+				<<"k">> => jose_jwa_base64url:encode(Key)
 			},
 			JWEMap = #{
 				<<"alg">> => ALG,

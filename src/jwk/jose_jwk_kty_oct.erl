@@ -47,13 +47,13 @@
 %%====================================================================
 
 from_map(F = #{ <<"kty">> := <<"oct">>, <<"k">> := K }) ->
-	{base64url:decode(K), maps:without([<<"k">>, <<"kty">>], F)}.
+	{jose_jwa_base64url:decode(K), maps:without([<<"k">>, <<"kty">>], F)}.
 
 to_key(Key) ->
 	Key.
 
 to_map(K, F) ->
-	F#{ <<"kty">> => <<"oct">>, <<"k">> => base64url:encode(K) }.
+	F#{ <<"kty">> => <<"oct">>, <<"k">> => jose_jwa_base64url:encode(K) }.
 
 to_public_map(K, F) ->
 	to_map(K, F).

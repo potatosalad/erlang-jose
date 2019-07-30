@@ -175,7 +175,7 @@ jose_cfrg_curves_a_3(Config) ->
 	% A.3
 	A_3_JWK = jose_jwk:from_binary(?config("a.3.jwk+json", C)),
 	A_3_THUMBPRINT_HEX = ?config("a.3.thumbprint+hex", C),
-	A_3_THUMBPRINT = base64url:encode(hex:hex_to_bin(A_3_THUMBPRINT_HEX)),
+	A_3_THUMBPRINT = jose_jwa_base64url:encode(hex:hex_to_bin(A_3_THUMBPRINT_HEX)),
 	A_3_THUMBPRINT = ?config("a.3.thumbprint+b64", C),
 	A_3_THUMBPRINT = jose_jwk:thumbprint(A_1_JWK),
 	A_3_THUMBPRINT = jose_jwk:thumbprint(A_2_JWK),
@@ -199,14 +199,14 @@ jose_cfrg_curves_a_4(Config) ->
 	A_4_SIG = hex:hex_to_bin(?config("a.4.sig+hex", C)),
 	A_4_SIG_B64 = ?config("a.4.sig+b64", C),
 	A_4_SIG_COMPACT = ?config("a.4.sig+compact", C),
-	A_4_TXT_B64 = base64url:encode(A_4_TXT),
+	A_4_TXT_B64 = jose_jwa_base64url:encode(A_4_TXT),
 	A_4_SIGNINGINPUT = << A_4_JWS_B64/binary, $., A_4_TXT_B64/binary >>,
 	A_4_SIGNINGINPUT = jose_jws:signing_input(A_4_TXT, A_4_JWS),
 	%% Forcing the Protected header to be A_4_PROTECTED
 	A_4_MAP=#{
 		<<"signature">> := A_4_SIG_B64
 	} = force_sign(A_1_JWK, A_4_TXT, A_4_PROTECTED, A_4_JWS),
-	A_4_SIG = base64url:decode(A_4_SIG_B64),
+	A_4_SIG = jose_jwa_base64url:decode(A_4_SIG_B64),
 	{_, A_4_SIG_COMPACT} = jose_jws:compact(A_4_MAP),
 	ok.
 
@@ -320,7 +320,7 @@ jwe_a_1(Config) ->
 	A_1_1_JWE = jose_jwe:from_binary(A_1_1_JWE_DATA),
 	{_, A_1_1_JWE_MAP} = jose_jwe:to_map(A_1_1_JWE),
 	A_1_1_JWE_DATA_B64 = ?config("a.1.1.jwe+json.b64", C),
-	A_1_1_JWE_DATA_B64 = base64url:encode(element(2, jose_jwe:to_binary(A_1_1_JWE))),
+	A_1_1_JWE_DATA_B64 = jose_jwa_base64url:encode(element(2, jose_jwe:to_binary(A_1_1_JWE))),
 	% A.1.2
 	A_1_2_CEK = ?config("a.1.2.cek", C),
 	% A.1.3
@@ -330,11 +330,11 @@ jwe_a_1(Config) ->
 	{_, A_1_3_JWK_MAP} = jose_jwk:to_map(A_1_3_JWK),
 	A_1_3_CEK_ENCRYPTED = ?config("a.1.3.cek.encrypted", C),
 	A_1_3_CEK_ENCRYPTED_B64 = ?config("a.1.3.cek.encrypted.b64", C),
-	A_1_3_CEK_ENCRYPTED_B64 = base64url:encode(A_1_3_CEK_ENCRYPTED),
+	A_1_3_CEK_ENCRYPTED_B64 = jose_jwa_base64url:encode(A_1_3_CEK_ENCRYPTED),
 	% A.1.4
 	A_1_4_IV = ?config("a.1.4.iv", C),
 	A_1_4_IV_B64 = ?config("a.1.4.iv.b64", C),
-	A_1_4_IV_B64 = base64url:encode(A_1_4_IV),
+	A_1_4_IV_B64 = jose_jwa_base64url:encode(A_1_4_IV),
 	% A.1.5
 	A_1_5_AAD = ?config("a.1.5.aad", C),
 	A_1_1_JWE_DATA_B64 = A_1_5_AAD,
@@ -343,8 +343,8 @@ jwe_a_1(Config) ->
 	A_1_6_TAG = ?config("a.1.6.txt.tag", C),
 	A_1_6_CIPHER_B64 = ?config("a.1.6.txt.cipher.b64", C),
 	A_1_6_TAG_B64 = ?config("a.1.6.txt.tag.b64", C),
-	A_1_6_CIPHER = base64url:decode(A_1_6_CIPHER_B64),
-	A_1_6_TAG = base64url:decode(A_1_6_TAG_B64),
+	A_1_6_CIPHER = jose_jwa_base64url:decode(A_1_6_CIPHER_B64),
+	A_1_6_TAG = jose_jwa_base64url:decode(A_1_6_TAG_B64),
 	% A.1.7
 	A_1_7_COMPACT = ?config("a.1.7.jwe+compact", C),
 	{A_1_TXT, A_1_1_JWE} = jose_jwe:block_decrypt(A_1_3_JWK, A_1_7_COMPACT),
@@ -366,7 +366,7 @@ jwe_a_2(Config) ->
 	A_2_1_JWE = jose_jwe:from_binary(A_2_1_JWE_DATA),
 	{_, A_2_1_JWE_MAP} = jose_jwe:to_map(A_2_1_JWE),
 	A_2_1_JWE_DATA_B64 = ?config("a.2.1.jwe+json.b64", C),
-	A_2_1_JWE_DATA_B64 = base64url:encode(element(2, jose_jwe:to_binary(A_2_1_JWE))),
+	A_2_1_JWE_DATA_B64 = jose_jwa_base64url:encode(element(2, jose_jwe:to_binary(A_2_1_JWE))),
 	% A.2.2
 	A_2_2_CEK = ?config("a.2.2.cek", C),
 	% A.2.3
@@ -376,11 +376,11 @@ jwe_a_2(Config) ->
 	{_, A_2_3_JWK_MAP} = jose_jwk:to_map(A_2_3_JWK),
 	A_2_3_CEK_ENCRYPTED = ?config("a.2.3.cek.encrypted", C),
 	A_2_3_CEK_ENCRYPTED_B64 = ?config("a.2.3.cek.encrypted.b64", C),
-	A_2_3_CEK_ENCRYPTED_B64 = base64url:encode(A_2_3_CEK_ENCRYPTED),
+	A_2_3_CEK_ENCRYPTED_B64 = jose_jwa_base64url:encode(A_2_3_CEK_ENCRYPTED),
 	% A.2.4
 	A_2_4_IV = ?config("a.2.4.iv", C),
 	A_2_4_IV_B64 = ?config("a.2.4.iv.b64", C),
-	A_2_4_IV_B64 = base64url:encode(A_2_4_IV),
+	A_2_4_IV_B64 = jose_jwa_base64url:encode(A_2_4_IV),
 	% A.2.5
 	A_2_5_AAD = ?config("a.2.5.aad", C),
 	A_2_1_JWE_DATA_B64 = A_2_5_AAD,
@@ -389,8 +389,8 @@ jwe_a_2(Config) ->
 	A_2_6_TAG = ?config("a.2.6.txt.tag", C),
 	A_2_6_CIPHER_B64 = ?config("a.2.6.txt.cipher.b64", C),
 	A_2_6_TAG_B64 = ?config("a.2.6.txt.tag.b64", C),
-	A_2_6_CIPHER = base64url:decode(A_2_6_CIPHER_B64),
-	A_2_6_TAG = base64url:decode(A_2_6_TAG_B64),
+	A_2_6_CIPHER = jose_jwa_base64url:decode(A_2_6_CIPHER_B64),
+	A_2_6_TAG = jose_jwa_base64url:decode(A_2_6_TAG_B64),
 	% A.2.7
 	A_2_7_COMPACT = ?config("a.2.7.jwe+compact", C),
 	{A_2_TXT, A_2_1_JWE} = jose_jwe:block_decrypt(A_2_3_JWK, A_2_7_COMPACT),
@@ -412,7 +412,7 @@ jwe_a_3(Config) ->
 	A_3_1_JWE = jose_jwe:from_binary(A_3_1_JWE_DATA),
 	{_, A_3_1_JWE_MAP} = jose_jwe:to_map(A_3_1_JWE),
 	A_3_1_JWE_DATA_B64 = ?config("a.3.1.jwe+json.b64", C),
-	A_3_1_JWE_DATA_B64 = base64url:encode(element(2, jose_jwe:to_binary(A_3_1_JWE))),
+	A_3_1_JWE_DATA_B64 = jose_jwa_base64url:encode(element(2, jose_jwe:to_binary(A_3_1_JWE))),
 	% A.3.2
 	A_3_2_CEK = ?config("a.3.2.cek", C),
 	% A.3.3
@@ -422,11 +422,11 @@ jwe_a_3(Config) ->
 	{_, A_3_3_JWK_MAP} = jose_jwk:to_map(A_3_3_JWK),
 	A_3_3_CEK_ENCRYPTED = ?config("a.3.3.cek.encrypted", C),
 	A_3_3_CEK_ENCRYPTED_B64 = ?config("a.3.3.cek.encrypted.b64", C),
-	A_3_3_CEK_ENCRYPTED_B64 = base64url:encode(A_3_3_CEK_ENCRYPTED),
+	A_3_3_CEK_ENCRYPTED_B64 = jose_jwa_base64url:encode(A_3_3_CEK_ENCRYPTED),
 	% A.3.4
 	A_3_4_IV = ?config("a.3.4.iv", C),
 	A_3_4_IV_B64 = ?config("a.3.4.iv.b64", C),
-	A_3_4_IV_B64 = base64url:encode(A_3_4_IV),
+	A_3_4_IV_B64 = jose_jwa_base64url:encode(A_3_4_IV),
 	% A.3.5
 	A_3_5_AAD = ?config("a.3.5.aad", C),
 	A_3_1_JWE_DATA_B64 = A_3_5_AAD,
@@ -435,8 +435,8 @@ jwe_a_3(Config) ->
 	A_3_6_TAG = ?config("a.3.6.txt.tag", C),
 	A_3_6_CIPHER_B64 = ?config("a.3.6.txt.cipher.b64", C),
 	A_3_6_TAG_B64 = ?config("a.3.6.txt.tag.b64", C),
-	A_3_6_CIPHER = base64url:decode(A_3_6_CIPHER_B64),
-	A_3_6_TAG = base64url:decode(A_3_6_TAG_B64),
+	A_3_6_CIPHER = jose_jwa_base64url:decode(A_3_6_CIPHER_B64),
+	A_3_6_TAG = jose_jwa_base64url:decode(A_3_6_TAG_B64),
 	% A.3.7
 	A_3_7_COMPACT = ?config("a.3.7.jwe+compact", C),
 	{A_3_TXT, A_3_1_JWE} = jose_jwe:block_decrypt(A_3_3_JWK, A_3_7_COMPACT),
@@ -461,13 +461,13 @@ jwk_c(Config) ->
 	C_2_JWE = jose_jwe:from_file(data_file("jwk/c.2.jwe+json", Config)),
 	{_, C_2_JSON} = jose_jwe:to_map(C_2_JWE),
 	C_2_B64_DATA = ?config("c.2.b64", C),
-	C_2_B64_DATA = base64url:encode(C_2_JSON_DATA),
+	C_2_B64_DATA = jose_jwa_base64url:encode(C_2_JSON_DATA),
 	% C.3
 	C_3_CEK = ?config("c.3.cek", C),
 	% C.4
 	C_4_TXT = ?config("c.4.txt", C),
 	C_4_SALT = ?config("c.4.salt", C),
-	C_4_SALT = << (maps:get(<<"alg">>, C_2_JSON))/binary, 0, (base64url:decode(maps:get(<<"p2s">>, C_2_JSON)))/binary >>,
+	C_4_SALT = << (maps:get(<<"alg">>, C_2_JSON))/binary, 0, (jose_jwa_base64url:decode(maps:get(<<"p2s">>, C_2_JSON)))/binary >>,
 	C_4_DKEY = ?config("c.4.derivedkey", C),
 	{ok, C_4_DKEY} = jose_jwa_pkcs5:pbkdf2({hmac, sha256}, C_4_TXT, C_4_SALT, maps:get(<<"p2c">>, C_2_JSON), 16),
 	% C.5
@@ -486,8 +486,8 @@ jwk_c(Config) ->
 		<<"ciphertext">> := C_8_CIPHER_TXT_B64,
 		<<"tag">> := C_8_CIPHER_TAG_B64
 	} = force_block_encrypt(C_4_TXT, C_1_JSON_DATA, C_3_CEK, C_6_IV, C_7_AAD, C_2_JWE),
-	C_8_CIPHER_TXT = base64url:decode(C_8_CIPHER_TXT_B64),
-	C_8_CIPHER_TAG = base64url:decode(C_8_CIPHER_TAG_B64),
+	C_8_CIPHER_TXT = jose_jwa_base64url:decode(C_8_CIPHER_TXT_B64),
+	C_8_CIPHER_TAG = jose_jwa_base64url:decode(C_8_CIPHER_TAG_B64),
 	% C.9
 	C_9_DATA = ?config("c.9.jwe+txt", C),
 	{_, C_9_DATA} = jose_jwe:compact(C_8_ENC_MAP),
@@ -533,10 +533,10 @@ jws_a_1(Config) ->
 	A_1_1_JWS = jose_jws:from_file(data_file("jws/a.1.1.jws+json", Config)),
 	{_, A_1_1_JSON} = jose_jws:to_map(A_1_1_JWS),
 	A_1_1_B64_DATA = ?config("a.1.1.b64", C),
-	A_1_1_B64_DATA = base64url:encode(A_1_1_JSON_DATA),
+	A_1_1_B64_DATA = jose_jwa_base64url:encode(A_1_1_JSON_DATA),
 	A_1_1_PAYLOAD_DATA = ?config("a.1.1.payload", C),
 	A_1_1_B64_PAYLOAD_DATA = ?config("a.1.1.payload-b64", C),
-	A_1_1_B64_PAYLOAD_DATA = base64url:encode(A_1_1_PAYLOAD_DATA),
+	A_1_1_B64_PAYLOAD_DATA = jose_jwa_base64url:encode(A_1_1_PAYLOAD_DATA),
 	A_1_1_SIGNING_INPUT_DATA = ?config("a.1.1.signing-input", C),
 	A_1_1_SIGNING_INPUT_DATA = << A_1_1_B64_DATA/binary, $., A_1_1_B64_PAYLOAD_DATA/binary >>,
 	A_1_1_JWK = jose_jwk:from_file(data_file("jws/a.1.1.jwk+json", Config)),
@@ -565,10 +565,10 @@ jws_a_2(Config) ->
 	A_2_1_JWS = jose_jws:from_file(data_file("jws/a.2.1.jws+json", Config)),
 	{_, A_2_1_JSON} = jose_jws:to_map(A_2_1_JWS),
 	A_2_1_B64_DATA = ?config("a.2.1.b64", C),
-	A_2_1_B64_DATA = base64url:encode(A_2_1_JSON_DATA),
+	A_2_1_B64_DATA = jose_jwa_base64url:encode(A_2_1_JSON_DATA),
 	A_2_1_PAYLOAD_DATA = ?config("a.2.1.payload", C),
 	A_2_1_B64_PAYLOAD_DATA = ?config("a.2.1.payload-b64", C),
-	A_2_1_B64_PAYLOAD_DATA = base64url:encode(A_2_1_PAYLOAD_DATA),
+	A_2_1_B64_PAYLOAD_DATA = jose_jwa_base64url:encode(A_2_1_PAYLOAD_DATA),
 	A_2_1_SIGNING_INPUT_DATA = ?config("a.2.1.signing-input", C),
 	A_2_1_SIGNING_INPUT_DATA = << A_2_1_B64_DATA/binary, $., A_2_1_B64_PAYLOAD_DATA/binary >>,
 	A_2_1_JWK = jose_jwk:from_file(data_file("jws/a.2.1.jwk+json", Config)),
@@ -597,10 +597,10 @@ jws_a_3(Config) ->
 	A_3_1_JWS = jose_jws:from_file(data_file("jws/a.3.1.jws+json", Config)),
 	{_, A_3_1_JSON} = jose_jws:to_map(A_3_1_JWS),
 	A_3_1_B64_DATA = ?config("a.3.1.b64", C),
-	A_3_1_B64_DATA = base64url:encode(A_3_1_JSON_DATA),
+	A_3_1_B64_DATA = jose_jwa_base64url:encode(A_3_1_JSON_DATA),
 	A_3_1_PAYLOAD_DATA = ?config("a.3.1.payload", C),
 	A_3_1_B64_PAYLOAD_DATA = ?config("a.3.1.payload-b64", C),
-	A_3_1_B64_PAYLOAD_DATA = base64url:encode(A_3_1_PAYLOAD_DATA),
+	A_3_1_B64_PAYLOAD_DATA = jose_jwa_base64url:encode(A_3_1_PAYLOAD_DATA),
 	A_3_1_SIGNING_INPUT_DATA = ?config("a.3.1.signing-input", C),
 	A_3_1_SIGNING_INPUT_DATA = << A_3_1_B64_DATA/binary, $., A_3_1_B64_PAYLOAD_DATA/binary >>,
 	A_3_1_JWK = jose_jwk:from_file(data_file("jws/a.3.1.jwk+json", Config)),
@@ -631,10 +631,10 @@ jws_a_4(Config) ->
 	A_4_1_JWS = jose_jws:from_file(data_file("jws/a.4.1.jws+json", Config)),
 	{_, A_4_1_JSON} = jose_jws:to_map(A_4_1_JWS),
 	A_4_1_B64_DATA = ?config("a.4.1.b64", C),
-	A_4_1_B64_DATA = base64url:encode(A_4_1_JSON_DATA),
+	A_4_1_B64_DATA = jose_jwa_base64url:encode(A_4_1_JSON_DATA),
 	A_4_1_PAYLOAD_DATA = ?config("a.4.1.payload", C),
 	A_4_1_B64_PAYLOAD_DATA = ?config("a.4.1.payload-b64", C),
-	A_4_1_B64_PAYLOAD_DATA = base64url:encode(A_4_1_PAYLOAD_DATA),
+	A_4_1_B64_PAYLOAD_DATA = jose_jwa_base64url:encode(A_4_1_PAYLOAD_DATA),
 	A_4_1_SIGNING_INPUT_DATA = ?config("a.4.1.signing-input", C),
 	A_4_1_SIGNING_INPUT_DATA = << A_4_1_B64_DATA/binary, $., A_4_1_B64_PAYLOAD_DATA/binary >>,
 	A_4_1_JWK = jose_jwk:from_file(data_file("jws/a.4.1.jwk+json", Config)),
@@ -665,10 +665,10 @@ jws_a_5(Config) ->
 	A_5_JWS = jose_jws:from_file(data_file("jws/a.5.jws+json", Config)),
 	{_, A_5_JSON} = jose_jws:to_map(A_5_JWS),
 	A_5_B64_DATA = ?config("a.5.b64", C),
-	A_5_B64_DATA = base64url:encode(A_5_JSON_DATA),
+	A_5_B64_DATA = jose_jwa_base64url:encode(A_5_JSON_DATA),
 	A_5_PAYLOAD_DATA = ?config("a.5.payload", C),
 	A_5_B64_PAYLOAD_DATA = ?config("a.5.payload-b64", C),
-	A_5_B64_PAYLOAD_DATA = base64url:encode(A_5_PAYLOAD_DATA),
+	A_5_B64_PAYLOAD_DATA = jose_jwa_base64url:encode(A_5_PAYLOAD_DATA),
 	A_5_SIGNING_INPUT_DATA = ?config("a.5.signing-input", C),
 	A_5_SIGNING_INPUT_DATA = << A_5_B64_DATA/binary, $., A_5_B64_PAYLOAD_DATA/binary >>,
 	%% Forcing the Protected header to be A_5_JSON_DATA
@@ -693,19 +693,19 @@ rfc7520_5_9(Config) ->
 	V_5_9_1_JWK = jose_jwk:from_binary(?config("figure.151", C)),
 	% 5.9.2
 	V_5_9_2_COMPRESSED_PLAIN_TEXT = ?config("figure.162", C),
-	V_5_9_1_PLAIN_TEXT = jose_jwe_zip:uncompress(base64url:decode(V_5_9_2_COMPRESSED_PLAIN_TEXT), zlib),
-	V_5_9_2_COMPRESSED_PLAIN_TEXT = base64url:encode(jose_jwe_zip:compress(V_5_9_1_PLAIN_TEXT, zlib)),
+	V_5_9_1_PLAIN_TEXT = jose_jwe_zip:uncompress(jose_jwa_base64url:decode(V_5_9_2_COMPRESSED_PLAIN_TEXT), zlib),
+	V_5_9_2_COMPRESSED_PLAIN_TEXT = jose_jwa_base64url:encode(jose_jwe_zip:compress(V_5_9_1_PLAIN_TEXT, zlib)),
 	V_5_9_2_CEK = ?config("figure.163", C),
 	V_5_9_2_IV = ?config("figure.164", C),
 	% 5.9.3
 	V_5_9_3_ENCRYPTED_KEY = ?config("figure.165", C),
 	{ALG, _} = jose_jwe_alg_aes_kw:from_map(#{<<"alg">> => <<"A128KW">>}),
-	V_5_9_3_ENCRYPTED_KEY = base64url:encode(element(1, jose_jwe_alg_aes_kw:key_encrypt(V_5_9_1_JWK, base64url:decode(V_5_9_2_CEK), ALG))),
-	V_5_9_2_CEK = base64url:encode(jose_jwe_alg_aes_kw:key_decrypt(V_5_9_1_JWK, {undefined, undefined, base64url:decode(V_5_9_3_ENCRYPTED_KEY)}, ALG)),
+	V_5_9_3_ENCRYPTED_KEY = jose_jwa_base64url:encode(element(1, jose_jwe_alg_aes_kw:key_encrypt(V_5_9_1_JWK, jose_jwa_base64url:decode(V_5_9_2_CEK), ALG))),
+	V_5_9_2_CEK = jose_jwa_base64url:encode(jose_jwe_alg_aes_kw:key_decrypt(V_5_9_1_JWK, {undefined, undefined, jose_jwa_base64url:decode(V_5_9_3_ENCRYPTED_KEY)}, ALG)),
 	% 5.9.4
     V_5_9_4_JWE = jose_jwe:from_binary(?config("figure.166", C)),
     V_5_9_4_JWE_PROTECTED = ?config("figure.167", C),
-    V_5_9_4_JWE = jose_jwe:from_binary(base64url:decode(V_5_9_4_JWE_PROTECTED)),
+    V_5_9_4_JWE = jose_jwe:from_binary(jose_jwa_base64url:decode(V_5_9_4_JWE_PROTECTED)),
     V_5_9_4_CIPHER_TEXT = ?config("figure.168", C),
     V_5_9_4_CIPHER_TAG = ?config("figure.169", C),
     % 5.9.5
@@ -716,7 +716,7 @@ rfc7520_5_9(Config) ->
     {V_5_9_1_PLAIN_TEXT, V_5_9_4_JWE} = jose_jwe:block_decrypt(V_5_9_1_JWK, V_5_9_5_JWE_COMPACT),
     {V_5_9_1_PLAIN_TEXT, V_5_9_4_JWE} = jose_jwe:block_decrypt(V_5_9_1_JWK, V_5_9_5_JWE_MAP),
     % Roundtrip test
-    {_, CIPHER_TEXT} = jose_jwe:compact(jose_jwe:block_encrypt(V_5_9_1_JWK, V_5_9_1_PLAIN_TEXT, base64url:decode(V_5_9_2_CEK), base64url:decode(V_5_9_2_IV), V_5_9_4_JWE)),
+    {_, CIPHER_TEXT} = jose_jwe:compact(jose_jwe:block_encrypt(V_5_9_1_JWK, V_5_9_1_PLAIN_TEXT, jose_jwa_base64url:decode(V_5_9_2_CEK), jose_jwa_base64url:decode(V_5_9_2_IV), V_5_9_4_JWE)),
     {V_5_9_1_PLAIN_TEXT, V_5_9_4_JWE} = jose_jwe:block_decrypt(V_5_9_1_JWK, CIPHER_TEXT),
     ok.
 
@@ -727,22 +727,22 @@ rfc7520_5_9(Config) ->
 %% @private
 force_block_encrypt(Key, PlainText, CEK, IV, OverrideProtected, JWE=#jose_jwe{alg={ALGModule, ALG}, enc={ENCModule, ENC}}) ->
 	{EncryptedKey, _} = ALGModule:key_encrypt(Key, CEK, ALG),
-	Protected = base64url:encode(OverrideProtected),
+	Protected = jose_jwa_base64url:encode(OverrideProtected),
 	{CipherText, CipherTag} = ENCModule:block_encrypt({Protected, maybe_compress(PlainText, JWE)}, CEK, IV, ENC),
 	#{
 		<<"protected">> => Protected,
-		<<"encrypted_key">> => base64url:encode(EncryptedKey),
-		<<"iv">> => base64url:encode(IV),
-		<<"ciphertext">> => base64url:encode(CipherText),
-		<<"tag">> => base64url:encode(CipherTag)
+		<<"encrypted_key">> => jose_jwa_base64url:encode(EncryptedKey),
+		<<"iv">> => jose_jwa_base64url:encode(IV),
+		<<"ciphertext">> => jose_jwa_base64url:encode(CipherText),
+		<<"tag">> => jose_jwa_base64url:encode(CipherTag)
 	}.
 
 %% @private
 force_sign(Key, PlainText, OverrideProtected, #jose_jws{alg={ALGModule, ALG}}) ->
-	Protected = base64url:encode(OverrideProtected),
-	Payload = base64url:encode(PlainText),
+	Protected = jose_jwa_base64url:encode(OverrideProtected),
+	Payload = jose_jwa_base64url:encode(PlainText),
 	Message = << Protected/binary, $., Payload/binary >>,
-	Signature = base64url:encode(ALGModule:sign(Key, Message, ALG)),
+	Signature = jose_jwa_base64url:encode(ALGModule:sign(Key, Message, ALG)),
 	#{
 		<<"payload">> => Payload,
 		<<"protected">> => Protected,

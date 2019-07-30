@@ -8,7 +8,7 @@
 %%% @end
 %%% Created :  15 Jan 2016 by Andrew Bennett <potatosaladx@gmail.com>
 %%%-------------------------------------------------------------------
--module(jose_jwk_kty_okp_ed448ph).
+-module(jose_jwk_kty_okp_ed25519ph).
 -behaviour(jose_jwk).
 -behaviour(jose_jwk_kty).
 -behaviour(jose_jwk_use_sig).
@@ -35,14 +35,14 @@
 -export([to_openssh_key/2]).
 
 %% Macros
--define(crv, <<"Ed448ph">>).
--define(secretbytes, 57).
--define(publickeybytes, 57).
--define(secretkeybytes, 114).
+-define(crv, <<"Ed25519ph">>).
+-define(secretbytes, 32).
+-define(publickeybytes, 32).
+-define(secretkeybytes, 64).
 
 %% Types
--type publickey() :: << _:456 >>.
--type secretkey() :: << _:912 >>.
+-type publickey() :: << _:256 >>.
+-type secretkey() :: << _:512 >>.
 -type key() :: publickey() | secretkey().
 
 -export_type([key/0]).
@@ -52,12 +52,12 @@
 %%====================================================================
 
 from_map(F = #{ <<"kty">> := <<"OKP">>, <<"crv">> := ?crv, <<"d">> := D, <<"x">> := X }) ->
-	<< Secret:?secretbytes/binary >> = base64url:decode(D),
-	<< PK:?publickeybytes/binary >> = base64url:decode(X),
+	<< Secret:?secretbytes/binary >> = jose_jwa_base64url:decode(D),
+	<< PK:?publickeybytes/binary >> = jose_jwa_base64url:decode(X),
 	SK = << Secret/binary, PK/binary >>,
 	{SK, maps:without([<<"crv">>, <<"d">>, <<"kty">>, <<"x">>], F)};
 from_map(F = #{ <<"kty">> := <<"OKP">>, <<"crv">> := ?crv, <<"x">> := X }) ->
-	<< PK:?publickeybytes/binary >> = base64url:decode(X),
+	<< PK:?publickeybytes/binary >> = jose_jwa_base64url:decode(X),
 	{PK, maps:without([<<"crv">>, <<"kty">>, <<"x">>], F)}.
 
 to_key(PK = << _:?publickeybytes/binary >>) ->
@@ -69,14 +69,14 @@ to_map(PK = << _:?publickeybytes/binary >>, F) ->
 	F#{
 		<<"crv">> => ?crv,
 		<<"kty">> => <<"OKP">>,
-		<<"x">> => base64url:encode(PK)
+		<<"x">> => jose_jwa_base64url:encode(PK)
 	};
 to_map(<< Secret:?secretbytes/binary, PK:?publickeybytes/binary >>, F) ->
 	F#{
 		<<"crv">> => ?crv,
-		<<"d">> => base64url:encode(Secret),
+		<<"d">> => jose_jwa_base64url:encode(Secret),
 		<<"kty">> => <<"OKP">>,
-		<<"x">> => base64url:encode(PK)
+		<<"x">> => jose_jwa_base64url:encode(PK)
 	}.
 
 to_public_map(PK = << _:?publickeybytes/binary >>, F) ->
@@ -92,19 +92,19 @@ to_thumbprint_map(K, F) ->
 %%====================================================================
 
 generate_key(Seed = << _:?secretbytes/binary >>) ->
-	{_PK, SK} = jose_curve448:eddsa_keypair(Seed),
+	{_PK, SK} = jose_curve25519:eddsa_keypair(Seed),
 	{SK, #{}};
-generate_key({okp, 'Ed448ph', Seed = << _:?secretbytes/binary >>}) ->
+generate_key({okp, 'Ed25519ph', Seed = << _:?secretbytes/binary >>}) ->
 	generate_key(Seed);
-generate_key({okp, 'Ed448ph'}) ->
-	{_PK, SK} = jose_curve448:eddsa_keypair(),
+generate_key({okp, 'Ed25519ph'}) ->
+	{_PK, SK} = jose_curve25519:eddsa_keypair(),
 	{SK, #{}}.
 
 generate_key(KTY, Fields)
 		when is_binary(KTY)
 		andalso (byte_size(KTY) =:= ?publickeybytes
 			orelse byte_size(KTY) =:= ?secretkeybytes) ->
-	{NewKTY, OtherFields} = generate_key({okp, 'Ed448ph'}),
+	{NewKTY, OtherFields} = generate_key({okp, 'Ed25519ph'}),
 	{NewKTY, maps:merge(maps:remove(<<"kid">>, Fields), OtherFields)}.
 
 key_encryptor(KTY, Fields, Key) ->
@@ -115,8 +115,8 @@ key_encryptor(KTY, Fields, Key) ->
 %%====================================================================
 
 sign(Message, ALG, SK = << _:?secretkeybytes/binary >>)
-		when ALG =:= 'Ed448ph' orelse ALG =:= 'EdDSA' ->
-	jose_curve448:ed448ph_sign(Message, SK).
+		when ALG =:= 'Ed25519ph' orelse ALG =:= 'EdDSA' ->
+	jose_curve25519:ed25519ph_sign(Message, SK).
 
 signer(<< _:?secretkeybytes/binary >>, #{ <<"alg">> := ALG, <<"use">> := <<"sig">> }) ->
 	#{
@@ -135,28 +135,28 @@ verifier(<< _:?publickeybytes/binary >>, _Fields) ->
 	[?crv, <<"EdDSA">>].
 
 verify(Message, ALG, Signature, << _:?secretbytes/binary, PK:?publickeybytes/binary >>)
-		when ALG =:= 'Ed448ph' orelse ALG =:= 'EdDSA' ->
+		when ALG =:= 'Ed25519ph' orelse ALG =:= 'EdDSA' ->
 	verify(Message, ALG, Signature, PK);
 verify(Message, ALG, Signature, PK = << _:?publickeybytes/binary >>)
-		when ALG =:= 'Ed448ph' orelse ALG =:= 'EdDSA' ->
-	jose_curve448:ed448ph_verify(Signature, Message, PK).
+		when ALG =:= 'Ed25519ph' orelse ALG =:= 'EdDSA' ->
+	jose_curve25519:ed25519ph_verify(Signature, Message, PK).
 
 %%====================================================================
 %% API functions
 %%====================================================================
 
-from_okp({'Ed448ph', SK = << Secret:?secretbytes/binary, PK:?publickeybytes/binary >>}) ->
-	case jose_curve448:eddsa_secret_to_public(Secret) of
+from_okp({'Ed25519ph', SK = << Secret:?secretbytes/binary, PK:?publickeybytes/binary >>}) ->
+	case jose_curve25519:eddsa_secret_to_public(Secret) of
 		PK ->
 			{SK, #{}};
 		_ ->
 			erlang:error(badarg)
 	end;
-from_okp({'Ed448ph', PK = << _:?publickeybytes/binary >>}) ->
+from_okp({'Ed25519ph', PK = << _:?publickeybytes/binary >>}) ->
 	{PK, #{}}.
 
-from_openssh_key({<<"ssh-ed448ph">>, _PK, SK, Comment}) ->
-	{KTY, OtherFields} = from_okp({'Ed448ph', SK}),
+from_openssh_key({<<"ssh-ed25519ph">>, _PK, SK, Comment}) ->
+	{KTY, OtherFields} = from_okp({'Ed25519ph', SK}),
 	case Comment of
 		<<>> ->
 			{KTY, OtherFields};
@@ -165,13 +165,13 @@ from_openssh_key({<<"ssh-ed448ph">>, _PK, SK, Comment}) ->
 	end.
 
 to_okp(SK = << _:?secretkeybytes/binary >>) ->
-	{'Ed448ph', SK};
+	{'Ed25519ph', SK};
 to_okp(PK = << _:?publickeybytes/binary >>) ->
-	{'Ed448ph', PK}.
+	{'Ed25519ph', PK}.
 
 to_openssh_key(SK = << _:?secretbytes/binary, PK:?publickeybytes/binary >>, F) ->
 	Comment = maps:get(<<"kid">>, F, <<>>),
-	jose_jwk_openssh_key:to_binary([[{{<<"ssh-ed448ph">>, PK}, {<<"ssh-ed448ph">>, PK, SK, Comment}}]]).
+	jose_jwk_openssh_key:to_binary([[{{<<"ssh-ed25519ph">>, PK}, {<<"ssh-ed25519ph">>, PK, SK, Comment}}]]).
 
 %%%-------------------------------------------------------------------
 %%% Internal functions

@@ -121,9 +121,9 @@ next_cek(_Key, {ENCModule, ENC}, ALG=#jose_jwe_alg_aes_kw{}) ->
 
 %% @private
 from_map_aes_gcm(A, F=#{ <<"iv">> := IV }) ->
-	from_map_aes_gcm(A#jose_jwe_alg_aes_kw{ iv = base64url:decode(IV) }, maps:remove(<<"iv">>, F));
+	from_map_aes_gcm(A#jose_jwe_alg_aes_kw{ iv = jose_jwa_base64url:decode(IV) }, maps:remove(<<"iv">>, F));
 from_map_aes_gcm(A, F=#{ <<"tag">> := TAG }) ->
-	from_map_aes_gcm(A#jose_jwe_alg_aes_kw{ tag = base64url:decode(TAG) }, maps:remove(<<"tag">>, F));
+	from_map_aes_gcm(A#jose_jwe_alg_aes_kw{ tag = jose_jwa_base64url:decode(TAG) }, maps:remove(<<"tag">>, F));
 from_map_aes_gcm(A, F) ->
 	{A, F}.
 
@@ -131,6 +131,6 @@ from_map_aes_gcm(A, F) ->
 to_map_aes_gcm(#jose_jwe_alg_aes_kw{ iv = undefined, tag = undefined }, F) ->
 	F;
 to_map_aes_gcm(A=#jose_jwe_alg_aes_kw{ iv = IV }, F) when is_binary(IV) ->
-	to_map_aes_gcm(A#jose_jwe_alg_aes_kw{ iv = undefined }, F#{ <<"iv">> => base64url:encode(IV) });
+	to_map_aes_gcm(A#jose_jwe_alg_aes_kw{ iv = undefined }, F#{ <<"iv">> => jose_jwa_base64url:encode(IV) });
 to_map_aes_gcm(A=#jose_jwe_alg_aes_kw{ tag = TAG }, F) when is_binary(TAG) ->
-	to_map_aes_gcm(A#jose_jwe_alg_aes_kw{ tag = undefined }, F#{ <<"tag">> => base64url:encode(TAG) }).
+	to_map_aes_gcm(A#jose_jwe_alg_aes_kw{ tag = undefined }, F#{ <<"tag">> => jose_jwa_base64url:encode(TAG) }).

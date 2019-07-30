@@ -11,8 +11,7 @@
 		stdlib,
 		crypto,
 		asn1,
-		public_key,
-		base64url
+		public_key
 	]},
 	{modules, []},
 	{maintainers, ["Andrew Bennett"]},

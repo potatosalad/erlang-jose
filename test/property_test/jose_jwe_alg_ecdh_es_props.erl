@@ -11,7 +11,7 @@
 base64url_binary() ->
 	?LET(Binary,
 		binary(),
-		base64url:encode(Binary)).
+		jose_jwa_base64url:encode(Binary)).
 
 binary_map() ->
 	?LET(List,
@@ -31,8 +31,8 @@ alg_map() ->
 		{alg(), binary(), binary()},
 		#{
 			<<"alg">> => ALG,
-			<<"apu">> => base64url:encode(APU),
-			<<"apv">> => base64url:encode(APV)
+			<<"apu">> => jose_jwa_base64url:encode(APU),
+			<<"apv">> => jose_jwa_base64url:encode(APV)
 		}).
 
 ec_curve() ->
