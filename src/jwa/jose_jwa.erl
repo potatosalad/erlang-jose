@@ -34,6 +34,7 @@
 -export([is_chacha20_poly1305_supported/0]).
 -export([is_rsa_crypt_supported/1]).
 -export([is_rsa_sign_supported/1]).
+-export([is_xchacha20_poly1305_supported/0]).
 -export([supports/0]).
 -export([unsecured_signing/0]).
 -export([unsecured_signing/1]).
@@ -241,6 +242,14 @@ is_rsa_sign_supported(Padding) ->
 			false
 	end.
 
+is_xchacha20_poly1305_supported() ->
+	case catch ?MAYBE_START_JOSE(ets:lookup_element(?TAB, xchacha20_poly1305_module, 2)) of
+		jose_xchacha20_poly1305_unsupported ->
+			false;
+		_ ->
+			true
+	end.
+
 supports() ->
 	Supports = crypto_supports(),
 	JWEALG = support_check([
@@ -269,7 +278,9 @@ supports() ->
 		{<<"A128GCM">>, ciphers, {aes_gcm, 128}},
 		{<<"A192GCM">>, ciphers, {aes_gcm, 192}},
 		{<<"A256GCM">>, ciphers, {aes_gcm, 256}},
-		{<<"ChaCha20/Poly1305">>, ciphers, {chacha20_poly1305, 256}}
+		{<<"C20P">>, ciphers, {chacha20_poly1305, 256}},
+		{<<"ChaCha20/Poly1305">>, ciphers, {chacha20_poly1305, 256}},
+		{<<"XC20P">>, ciphers, {xchacha20_poly1305, 256}}
 	], Supports, []),
 	JWEZIP = support_check([
 		<<"DEF">>

@@ -69,6 +69,24 @@ block(Key, Counter, Nonce)
 	WS2 = add(WS1, WS0),
 	serialize(WS2).
 
+encrypt(Key, Counter, Nonce, Plaintext) ->
+	encrypt(Key, Counter, Nonce, Plaintext, 0, <<>>).
+
+encrypt(_Key, _Counter, _Nonce, <<>>, _J, EncryptedMessage) ->
+	EncryptedMessage;
+encrypt(Key, Counter, Nonce, << Block:64/binary, Rest/binary >>, J, EncryptedMessage) ->
+	KeyStream = block(Key, Counter + J, Nonce),
+	encrypt(Key, Counter, Nonce, Rest, J + 1, << EncryptedMessage/binary, (crypto:exor(Block, KeyStream))/binary >>);
+encrypt(Key, Counter, Nonce, Block, J, EncryptedMessage) ->
+	BlockBytes = byte_size(Block),
+	<< KeyStream:BlockBytes/binary, _/binary >> = block(Key, Counter + J, Nonce),
+	<< EncryptedMessage/binary, (crypto:exor(Block, KeyStream))/binary >>.
+
+%%%-------------------------------------------------------------------
+%%% Internal functions
+%%%-------------------------------------------------------------------
+
+%% @private
 inner_block(State0)
 		when is_tuple(State0)
 		andalso tuple_size(State0) =:= 16 ->
@@ -76,6 +94,7 @@ inner_block(State0)
 	State2 = diagonal_round(State1),
 	State2.
 
+%% @private
 rounds(S, 0) ->
 	S;
 rounds(S, N)
@@ -83,10 +102,12 @@ rounds(S, N)
 		andalso N > 0 ->
 	rounds(inner_block(S), N - 1).
 
+%% @private
 add({X00, X01, X02, X03, X04, X05, X06, X07, X08, X09, X10, X11, X12, X13, X14, X15},
 	{Y00, Y01, Y02, Y03, Y04, Y05, Y06, Y07, Y08, Y09, Y10, Y11, Y12, Y13, Y14, Y15}) ->
 	{X00 + Y00, X01 + Y01, X02 + Y02, X03 + Y03, X04 + Y04, X05 + Y05, X06 + Y06, X07 + Y07, X08 + Y08, X09 + Y09, X10 + Y10, X11 + Y11, X12 + Y12, X13 + Y13, X14 + Y14, X15 + Y15}.
 
+%% @private
 serialize({Z00, Z01, Z02, Z03, Z04, Z05, Z06, Z07, Z08, Z09, Z10, Z11, Z12, Z13, Z14, Z15}) ->
 	<<
 		Z00:32/unsigned-little-integer-unit:1,
@@ -106,20 +127,3 @@ serialize({Z00, Z01, Z02, Z03, Z04, Z05, Z06, Z07, Z08, Z09, Z10, Z11, Z12, Z13,
 		Z14:32/unsigned-little-integer-unit:1,
 		Z15:32/unsigned-little-integer-unit:1
 	>>.
-
-encrypt(Key, Counter, Nonce, Plaintext) ->
-	encrypt(Key, Counter, Nonce, Plaintext, 0, <<>>).
-
-encrypt(_Key, _Counter, _Nonce, <<>>, _J, EncryptedMessage) ->
-	EncryptedMessage;
-encrypt(Key, Counter, Nonce, << Block:64/binary, Rest/binary >>, J, EncryptedMessage) ->
-	KeyStream = block(Key, Counter + J, Nonce),
-	encrypt(Key, Counter, Nonce, Rest, J + 1, << EncryptedMessage/binary, (crypto:exor(Block, KeyStream))/binary >>);
-encrypt(Key, Counter, Nonce, Block, J, EncryptedMessage) ->
-	BlockBytes = byte_size(Block),
-	<< KeyStream:BlockBytes/binary, _/binary >> = block(Key, Counter + J, Nonce),
-	<< EncryptedMessage/binary, (crypto:exor(Block, KeyStream))/binary >>.
-
-%%%-------------------------------------------------------------------
-%%% Internal functions
-%%%-------------------------------------------------------------------

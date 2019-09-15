@@ -23,6 +23,7 @@
 -export([curve448_module/1]).
 -export([json_module/1]).
 -export([sha3_module/1]).
+-export([xchacha20_poly1305_module/1]).
 
 %% gen_server callbacks
 -export([init/1]).
@@ -59,11 +60,11 @@ start_link() ->
 config_change() ->
 	gen_server:call(?SERVER, config_change).
 
-curve25519_module(Curve25519Module) when is_atom(Curve25519Module) ->
-	gen_server:call(?SERVER, {curve25519_module, Curve25519Module}).
-
 chacha20_poly1305_module(ChaCha20Poly1305Module) when is_atom(ChaCha20Poly1305Module) ->
 	gen_server:call(?SERVER, {chacha20_poly1305_module, ChaCha20Poly1305Module}).
+
+curve25519_module(Curve25519Module) when is_atom(Curve25519Module) ->
+	gen_server:call(?SERVER, {curve25519_module, Curve25519Module}).
 
 curve448_module(Curve448Module) when is_atom(Curve448Module) ->
 	gen_server:call(?SERVER, {curve448_module, Curve448Module}).
@@ -73,6 +74,9 @@ json_module(JSONModule) when is_atom(JSONModule) ->
 
 sha3_module(SHA3Module) when is_atom(SHA3Module) ->
 	gen_server:call(?SERVER, {sha3_module, SHA3Module}).
+
+xchacha20_poly1305_module(XChaCha20Poly1305Module) when is_atom(XChaCha20Poly1305Module) ->
+	gen_server:call(?SERVER, {xchacha20_poly1305_module, XChaCha20Poly1305Module}).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -114,6 +118,12 @@ handle_call({sha3_module, M}, _From, State) ->
 	SHA3Module = check_sha3_module(M),
 	true = ets:insert(?TAB, {sha3_module, SHA3Module}),
 	{reply, ok, State};
+handle_call({xchacha20_poly1305_module, M}, _From, State) ->
+	XChaCha20Poly1305Module = check_xchacha20_poly1305_module(M),
+	Entries = lists:flatten(check_crypto(?CRYPTO_FALLBACK, [{xchacha20_poly1305_module, XChaCha20Poly1305Module}])),
+	_ = ets:select_delete(?TAB, [{{{cipher, '_'}, '_'}, [], [true]}]),
+	true = ets:insert(?TAB, Entries),
+	{reply, ok, State};
 handle_call(_Request, _From, State) ->
 	{reply, ignore, State}.
 
@@ -145,6 +155,7 @@ support_check() ->
 	end, [], [
 		fun check_ec_key_mode/2,
 		fun check_chacha20_poly1305/2,
+		fun check_xchacha20_poly1305/2,
 		fun check_curve25519/2,
 		fun check_curve448/2,
 		fun check_json/2,
@@ -475,7 +486,7 @@ check_crypto(Fallback, Entries) ->
 		192,
 		256
 	],
-	CipherEntries = [begin
+	CipherEntries0 = [begin
 		case has_cipher(Cipher, KeySize) of
 			false ->
 				{{cipher, {Cipher, KeySize}}, {Fallback, {Cipher, KeySize}}};
@@ -483,12 +494,21 @@ check_crypto(Fallback, Entries) ->
 				{{cipher, {Cipher, KeySize}}, {crypto, CryptoCipher}}
 		end
 	end || Cipher <- Ciphers, KeySize <- KeySizes],
-	case lists:keyfind(chacha20_poly1305_module, 1, Entries) of
-		{chacha20_poly1305_module, jose_chacha20_poly1305_unsupported} ->
-			[CipherEntries ++ [{{cipher, {chacha20_poly1305, 256}}, {Fallback, {chacha20_poly1305, 256}}}] | Entries];
-		_ ->
-			[CipherEntries ++ [{{cipher, {chacha20_poly1305, 256}}, {jose_chacha20_poly1305, {chacha20_poly1305, 256}}}] | Entries]
-	end.
+	CipherEntries1 = 
+		case lists:keyfind(chacha20_poly1305_module, 1, Entries) of
+			{chacha20_poly1305_module, jose_chacha20_poly1305_unsupported} ->
+				CipherEntries0 ++ [{{cipher, {chacha20_poly1305, 256}}, {Fallback, {chacha20_poly1305, 256}}}];
+			_ ->
+				CipherEntries0 ++ [{{cipher, {chacha20_poly1305, 256}}, {jose_chacha20_poly1305, {chacha20_poly1305, 256}}}]
+		end,
+	CipherEntries2 =
+		case lists:keyfind(xchacha20_poly1305_module, 1, Entries) of
+			{xchacha20_poly1305_module, jose_xchacha20_poly1305_unsupported} ->
+				CipherEntries1 ++ [{{cipher, {xchacha20_poly1305, 256}}, {Fallback, {xchacha20_poly1305, 256}}}];
+			_ ->
+				CipherEntries1 ++ [{{cipher, {xchacha20_poly1305, 256}}, {jose_xchacha20_poly1305, {xchacha20_poly1305, 256}}}]
+		end,
+	[CipherEntries2 | Entries].
 
 %% @private
 check_public_key(Fallback, Entries) ->
@@ -555,6 +575,66 @@ check_rsa_sign(Fallback) ->
 		end
 	end || Padding <- Paddings],
 	SignEntries.
+
+%% @private
+check_xchacha20_poly1305(false, Entries) ->
+	check_xchacha20_poly1305(jose_xchacha20_poly1305_unsupported, Entries);
+check_xchacha20_poly1305(true, Entries) ->
+	check_xchacha20_poly1305(jose_jwa_xchacha20_poly1305, Entries);
+check_xchacha20_poly1305(Fallback, Entries) ->
+	true = ets:delete_object(?TAB, {xchacha20_poly1305_module, jose_jwa_xchacha20_poly1305}),
+	true = ets:delete_object(?TAB, {xchacha20_poly1305_module, jose_xchacha20_poly1305_unsupported}),
+	ChaCha20Poly1305Module = case ets:lookup(?TAB, xchacha20_poly1305_module) of
+		[{xchacha20_poly1305_module, M}] when is_atom(M) ->
+			M;
+		[] ->
+			case application:get_env(jose, xchacha20_poly1305_module, undefined) of
+				undefined ->
+					check_xchacha20_poly1305_modules(Fallback, [crypto]);
+				M when is_atom(M) ->
+					check_xchacha20_poly1305_module(M)
+			end
+	end,
+	[{xchacha20_poly1305_module, ChaCha20Poly1305Module} | Entries].
+
+%% @private
+check_xchacha20_poly1305_module(crypto) ->
+	jose_xchacha20_poly1305_crypto;
+check_xchacha20_poly1305_module(Module) when is_atom(Module) ->
+	Module.
+
+%% @private
+check_xchacha20_poly1305_modules(Fallback, [Module | Modules]) ->
+	case code:ensure_loaded(Module) of
+		{module, Module} ->
+			_ = application:ensure_all_started(Module),
+			M = check_xchacha20_poly1305_module(Module),
+			PT = crypto:strong_rand_bytes(8),
+			CEK = crypto:strong_rand_bytes(32),
+			IV = crypto:strong_rand_bytes(24),
+			AAD = <<>>,
+			try M:encrypt(PT, AAD, IV, CEK) of
+				{CT, TAG} when is_binary(CT) andalso is_binary(TAG) ->
+					try M:decrypt(CT, TAG, AAD, IV, CEK) of
+						PT ->
+							M;
+						_ ->
+							check_xchacha20_poly1305_modules(Fallback, Modules)
+					catch
+						_:_ ->
+							check_xchacha20_poly1305_modules(Fallback, Modules)
+					end;
+				_ ->
+					check_xchacha20_poly1305_modules(Fallback, Modules)
+			catch
+				_:_ ->
+					check_xchacha20_poly1305_modules(Fallback, Modules)
+			end;
+		_ ->
+			check_xchacha20_poly1305_modules(Fallback, Modules)
+	end;
+check_xchacha20_poly1305_modules(Fallback, []) ->
+	Fallback.
 
 %% @private
 has_cipher(aes_cbc, KeySize) ->

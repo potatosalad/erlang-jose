@@ -6,36 +6,30 @@
 %%% @doc
 %%%
 %%% @end
-%%% Created :  08 Aug 2016 by Andrew Bennett <potatosaladx@gmail.com>
+%%% Created :  14 Sep 2019 by Andrew Bennett <potatosaladx@gmail.com>
 %%%-------------------------------------------------------------------
--module(jose_chacha20_poly1305_crypto).
+-module(jose_xchacha20_poly1305_crypto).
 
--behaviour(jose_chacha20_poly1305).
+-behaviour(jose_xchacha20_poly1305).
 
-%% jose_chacha20_poly1305 callbacks
+%% jose_xchacha20_poly1305 callbacks
 -export([decrypt/5]).
 -export([encrypt/4]).
 -export([authenticate/3]).
 -export([verify/4]).
 
 %%====================================================================
-%% jose_chacha20_poly1305 callbacks
+%% jose_xchacha20_poly1305 callbacks
 %%====================================================================
 
 decrypt(CipherText, CipherTag, AAD, IV, CEK) ->
-	crypto:block_decrypt(chacha20_poly1305, CEK, IV, {AAD, CipherText, CipherTag}).
+	crypto:block_decrypt(xchacha20_poly1305, CEK, IV, {AAD, CipherText, CipherTag}).
 
 encrypt(PlainText, AAD, IV, CEK) ->
-	crypto:block_encrypt(chacha20_poly1305, CEK, IV, {AAD, PlainText}).
+	crypto:block_encrypt(xchacha20_poly1305, CEK, IV, {AAD, PlainText}).
 
 authenticate(Message, Key, Nonce) ->
-	OTK = jose_jwa_chacha20_poly1305:poly1305_key_gen(Key, Nonce),
-	crypto:poly1305(OTK, Message).
+	jose_jwa_xchacha20_poly1305:authenticate(Message, Key, Nonce).
 
 verify(MAC, Message, Key, Nonce) ->
-	Challenge = jose_jwa_chacha20_poly1305:authenticate(Message, Key, Nonce),
-	jose_jwa:constant_time_compare(MAC, Challenge).
-
-%%%-------------------------------------------------------------------
-%%% Internal functions
-%%%-------------------------------------------------------------------
+	jose_jwa_xchacha20_poly1305:verify(MAC, Message, Key, Nonce).

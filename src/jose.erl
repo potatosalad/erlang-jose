@@ -27,6 +27,8 @@
 -export([sha3_module/1]).
 -export([unsecured_signing/0]).
 -export([unsecured_signing/1]).
+-export([xchacha20_poly1305_module/0]).
+-export([xchacha20_poly1305_module/1]).
 %% Private API
 -export([start/0]).
 
@@ -93,6 +95,12 @@ unsecured_signing() ->
 
 unsecured_signing(Boolean) when is_boolean(Boolean) ->
 	jose_jwa:unsecured_signing(Boolean).
+
+xchacha20_poly1305_module() ->
+	?MAYBE_START_JOSE(ets:lookup_element(?TAB, xchacha20_poly1305_module, 2)).
+
+xchacha20_poly1305_module(XChaCha20Poly1305Module) when is_atom(XChaCha20Poly1305Module) ->
+	?MAYBE_START_JOSE(jose_server:xchacha20_poly1305_module(XChaCha20Poly1305Module)).
 
 %%====================================================================
 %% Private API functions
