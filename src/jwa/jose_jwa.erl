@@ -279,7 +279,6 @@ supports() ->
 		{<<"A192GCM">>, ciphers, {aes_gcm, 192}},
 		{<<"A256GCM">>, ciphers, {aes_gcm, 256}},
 		{<<"C20P">>, ciphers, {chacha20_poly1305, 256}},
-		{<<"ChaCha20/Poly1305">>, ciphers, {chacha20_poly1305, 256}},
 		{<<"XC20P">>, ciphers, {xchacha20_poly1305, 256}}
 	], Supports, []),
 	JWEZIP = support_check([

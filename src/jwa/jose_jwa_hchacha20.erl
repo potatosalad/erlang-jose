@@ -3,8 +3,8 @@
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2019, Andrew Bennett
-%%% @doc ChaCha20 and Poly1305 for IETF Protocols
-%%% See https://tools.ietf.org/html/rfc7539
+%%% @doc XChaCha: eXtended-nonce ChaCha and AEAD_XChaCha20_Poly1305
+%%% See https://tools.ietf.org/html/draft-irtf-cfrg-xchacha
 %%% @end
 %%% Created :  14 Sep 2019 by Andrew Bennett <potatosaladx@gmail.com>
 %%%-------------------------------------------------------------------

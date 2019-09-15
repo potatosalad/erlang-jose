@@ -2,13 +2,13 @@
 %% vim: ts=4 sw=4 ft=erlang noet
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2016, Andrew Bennett
+%%% @copyright 2014-2019, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  31 May 2016 by Andrew Bennett <potatosaladx@gmail.com>
 %%%-------------------------------------------------------------------
--module(jose_jwe_enc_chacha20_poly1305).
+-module(jose_jwe_enc_c20p).
 -behaviour(jose_jwe).
 -behaviour(jose_jwe_enc).
 
@@ -37,17 +37,17 @@
 %% jose_jwe callbacks
 %%====================================================================
 
-from_map(F = #{ <<"enc">> := <<"ChaCha20/Poly1305">> }) ->
+from_map(F = #{ <<"enc">> := <<"C20P">> }) ->
 	{?CHACHA20_POLY1305, maps:remove(<<"enc">>, F)}.
 
 to_map(?CHACHA20_POLY1305, F) ->
-	F#{ <<"enc">> => <<"ChaCha20/Poly1305">> }.
+	F#{ <<"enc">> => <<"C20P">> }.
 
 %%====================================================================
 %% jose_jwe_enc callbacks
 %%====================================================================
 
-algorithm(?CHACHA20_POLY1305) -> <<"ChaCha20/Poly1305">>.
+algorithm(?CHACHA20_POLY1305) -> <<"C20P">>.
 
 bits(?CHACHA20_POLY1305) -> 256.
 

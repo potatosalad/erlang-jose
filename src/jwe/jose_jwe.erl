@@ -48,15 +48,17 @@
 -export([next_iv/1]).
 -export([uncompress/2]).
 
--define(ALG_AES_KW_MODULE,  jose_jwe_alg_aes_kw).
--define(ALG_DIR_MODULE,     jose_jwe_alg_dir).
--define(ALG_ECDH_ES_MODULE, jose_jwe_alg_ecdh_es).
--define(ALG_PBES2_MODULE,   jose_jwe_alg_pbes2).
--define(ALG_RSA_MODULE,     jose_jwe_alg_rsa).
--define(ENC_AES_MODULE,     jose_jwe_enc_aes).
--define(ZIP_MODULE,         jose_jwe_zip).
-
--define(ENC_CHACHA20_POLY1305_MODULE, jose_jwe_enc_chacha20_poly1305).
+-define(ALG_AES_KW_MODULE,   jose_jwe_alg_aes_kw).
+-define(ALG_C20P_KW_MODULE,  jose_jwe_alg_c20p_kw).
+-define(ALG_XC20P_KW_MODULE, jose_jwe_alg_xc20p_kw).
+-define(ALG_DIR_MODULE,      jose_jwe_alg_dir).
+-define(ALG_ECDH_ES_MODULE,  jose_jwe_alg_ecdh_es).
+-define(ALG_PBES2_MODULE,    jose_jwe_alg_pbes2).
+-define(ALG_RSA_MODULE,      jose_jwe_alg_rsa).
+-define(ENC_AES_MODULE,      jose_jwe_enc_aes).
+-define(ENC_C20P_MODULE,     jose_jwe_enc_c20p).
+-define(ENC_XC20P_MODULE,    jose_jwe_enc_xc20p).
+-define(ZIP_MODULE,          jose_jwe_zip).
 
 %%====================================================================
 %% Decode API functions
@@ -103,6 +105,8 @@ from_map({JWE, Modules, Map=#{ <<"alg">> := << "A", _, _, _, "GCMKW", _/binary >
 	from_map({JWE, Modules#{ alg => ?ALG_AES_KW_MODULE }, Map});
 from_map({JWE, Modules, Map=#{ <<"alg">> := << "A", _, _, _, "KW", _/binary >> }}) ->
 	from_map({JWE, Modules#{ alg => ?ALG_AES_KW_MODULE }, Map});
+from_map({JWE, Modules, Map=#{ <<"alg">> := << "C20PKW" >> }}) ->
+	from_map({JWE, Modules#{ alg => ?ALG_C20P_KW_MODULE }, Map});
 from_map({JWE, Modules, Map=#{ <<"alg">> := << "dir", _/binary >> }}) ->
 	from_map({JWE, Modules#{ alg => ?ALG_DIR_MODULE }, Map});
 from_map({JWE, Modules, Map=#{ <<"alg">> := << "ECDH-ES", _/binary >> }}) ->
@@ -111,11 +115,15 @@ from_map({JWE, Modules, Map=#{ <<"alg">> := << "PBES2", _/binary >> }}) ->
 	from_map({JWE, Modules#{ alg => ?ALG_PBES2_MODULE }, Map});
 from_map({JWE, Modules, Map=#{ <<"alg">> := << "RSA", _/binary >> }}) ->
 	from_map({JWE, Modules#{ alg => ?ALG_RSA_MODULE }, Map});
+from_map({JWE, Modules, Map=#{ <<"alg">> := << "XC20PKW" >> }}) ->
+	from_map({JWE, Modules#{ alg => ?ALG_XC20P_KW_MODULE }, Map});
 from_map({JWE, Modules, Map=#{ <<"enc">> := << "A", _/binary >> }}) ->
 	from_map({JWE, Modules#{ enc => ?ENC_AES_MODULE }, Map});
-from_map({JWE, Modules, Map=#{ <<"enc">> := << "ChaCha20/Poly1305" >> }}) ->
-	from_map({JWE, Modules#{ enc => ?ENC_CHACHA20_POLY1305_MODULE }, Map});
-from_map({JWE, Modules, Map=#{ <<"zip">> := <<"DEF">> }}) ->
+from_map({JWE, Modules, Map=#{ <<"enc">> := << "C20P" >> }}) ->
+	from_map({JWE, Modules#{ enc => ?ENC_C20P_MODULE }, Map});
+from_map({JWE, Modules, Map=#{ <<"enc">> := << "XC20P" >> }}) ->
+	from_map({JWE, Modules#{ enc => ?ENC_XC20P_MODULE }, Map});
+from_map({JWE, Modules, Map=#{ <<"zip">> := << "DEF" >> }}) ->
 	from_map({JWE, Modules#{ zip => ?ZIP_MODULE }, Map});
 from_map({#jose_jwe{ alg = undefined, enc = undefined }, _Modules, _Map}) ->
 	{error, {missing_required_keys, [<<"alg">>, <<"enc">>]}};
@@ -171,9 +179,13 @@ block_decrypt(Key, {Modules, EncryptedMap=#{
 			IV = jose_jwa_base64url:decode(EncodedIV),
 			CipherText = jose_jwa_base64url:decode(EncodedCipherText),
 			CipherTag = jose_jwa_base64url:decode(EncodedCipherTag),
-			CEK = key_decrypt(Key, EncryptedKey, JWE),
-			PlainText = uncompress(ENCModule:block_decrypt({Protected, CipherText, CipherTag}, CEK, IV, ENC), JWE),
-			{PlainText, JWE};
+			case key_decrypt(Key, EncryptedKey, JWE) of
+				error ->
+					{error, JWE};
+				CEK when is_binary(CEK) ->
+					PlainText = uncompress(ENCModule:block_decrypt({Protected, CipherText, CipherTag}, CEK, IV, ENC), JWE),
+					{PlainText, JWE}
+			end;
 		true ->
 			EncodedAAD = maps:get(<<"aad">>, EncryptedMap),
 			ConcatAAD = << Protected/binary, $., EncodedAAD/binary >>,
@@ -182,9 +194,13 @@ block_decrypt(Key, {Modules, EncryptedMap=#{
 			IV = jose_jwa_base64url:decode(EncodedIV),
 			CipherText = jose_jwa_base64url:decode(EncodedCipherText),
 			CipherTag = jose_jwa_base64url:decode(EncodedCipherTag),
-			CEK = key_decrypt(Key, EncryptedKey, JWE),
-			PlainText = uncompress(ENCModule:block_decrypt({ConcatAAD, CipherText, CipherTag}, CEK, IV, ENC), JWE),
-			{PlainText, JWE}
+			case key_decrypt(Key, EncryptedKey, JWE) of
+				error ->
+					{error, JWE};
+				CEK when is_binary(CEK) ->
+					PlainText = uncompress(ENCModule:block_decrypt({ConcatAAD, CipherText, CipherTag}, CEK, IV, ENC), JWE),
+					{PlainText, JWE}
+			end
 	end.
 
 block_encrypt(Key, Block, JWE0=#jose_jwe{}) ->
