@@ -52,7 +52,7 @@ docker-shell::
 docker-test::
 	$(gen_verbose) docker run \
 		-v "$(shell pwd)":"/build/jose" "docker-otp-${DOCKER_OTP_VERSION}" \
-		sh -c 'cd jose && make tests'
+		sh -c 'cd jose && make ct'
 
 # DOCKER_OTP_VERSION ?= 21.2
 # DOCKER_ELIXIR_VERSION ?= 1.7.4
