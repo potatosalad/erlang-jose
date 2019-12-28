@@ -17,6 +17,8 @@
 %% Tests.
 -export([alg_aes_kw_from_map_and_to_map/1]).
 -export([alg_aes_kw_key_encrypt_and_key_decrypt/1]).
+-export([alg_c20p_kw_from_map_and_to_map/1]).
+-export([alg_c20p_kw_key_encrypt_and_key_decrypt/1]).
 -export([alg_dir_from_map_and_to_map/1]).
 -export([alg_dir_key_decrypt/1]).
 -export([alg_dir_key_encrypt/1]).
@@ -27,10 +29,14 @@
 -export([alg_pbes2_key_encrypt_and_key_decrypt/1]).
 -export([alg_rsa_from_map_and_to_map/1]).
 -export([alg_rsa_key_encrypt_and_key_decrypt/1]).
+-export([alg_xc20p_kw_from_map_and_to_map/1]).
+-export([alg_xc20p_kw_key_encrypt_and_key_decrypt/1]).
 -export([enc_aes_from_map_and_to_map/1]).
 -export([enc_aes_block_encrypt_and_block_decrypt/1]).
--export([enc_chacha20_poly1305_from_map_and_to_map/1]).
--export([enc_chacha20_poly1305_block_encrypt_and_block_decrypt/1]).
+-export([enc_c20p_from_map_and_to_map/1]).
+-export([enc_c20p_block_encrypt_and_block_decrypt/1]).
+-export([enc_xc20p_from_map_and_to_map/1]).
+-export([enc_xc20p_block_encrypt_and_block_decrypt/1]).
 -export([zip_from_map_and_to_map/1]).
 -export([zip_block_encrypt_and_block_decrypt/1]).
 -export([zip_compress_and_uncompress/1]).
@@ -38,12 +44,15 @@
 all() ->
 	[
 		{group, jose_jwe_alg_aes_kw},
+		{group, jose_jwe_alg_c20p_kw},
 		{group, jose_jwe_alg_dir},
 		{group, jose_jwe_alg_ecdh_es},
 		{group, jose_jwe_alg_pbes2},
 		{group, jose_jwe_alg_rsa},
+		{group, jose_jwe_alg_xc20p_kw},
 		{group, jose_jwe_enc_aes},
-		{group, jose_jwe_enc_chacha20_poly1305},
+		{group, jose_jwe_enc_c20p},
+		{group, jose_jwe_enc_xc20p},
 		{group, jose_jwe_zip}
 	].
 
@@ -52,6 +61,10 @@ groups() ->
 		{jose_jwe_alg_aes_kw, [parallel], [
 			alg_aes_kw_from_map_and_to_map,
 			alg_aes_kw_key_encrypt_and_key_decrypt
+		]},
+		{jose_jwe_alg_c20p_kw, [parallel], [
+			alg_c20p_kw_from_map_and_to_map,
+			alg_c20p_kw_key_encrypt_and_key_decrypt
 		]},
 		{jose_jwe_alg_dir, [parallel], [
 			alg_dir_from_map_and_to_map,
@@ -71,13 +84,21 @@ groups() ->
 			alg_rsa_from_map_and_to_map,
 			alg_rsa_key_encrypt_and_key_decrypt
 		]},
+		{jose_jwe_alg_xc20p_kw, [parallel], [
+			alg_xc20p_kw_from_map_and_to_map,
+			alg_xc20p_kw_key_encrypt_and_key_decrypt
+		]},
 		{jose_jwe_enc_aes, [parallel], [
 			enc_aes_from_map_and_to_map,
 			enc_aes_block_encrypt_and_block_decrypt
 		]},
-		{jose_jwe_enc_chacha20_poly1305, [parallel], [
-			enc_chacha20_poly1305_from_map_and_to_map,
-			enc_chacha20_poly1305_block_encrypt_and_block_decrypt
+		{jose_jwe_enc_c20p, [parallel], [
+			enc_c20p_from_map_and_to_map,
+			enc_c20p_block_encrypt_and_block_decrypt
+		]},
+		{jose_jwe_enc_xc20p, [parallel], [
+			enc_xc20p_from_map_and_to_map,
+			enc_xc20p_block_encrypt_and_block_decrypt
 		]},
 		{jose_jwe_zip, [parallel], [
 			zip_from_map_and_to_map,
@@ -115,6 +136,16 @@ alg_aes_kw_from_map_and_to_map(Config) ->
 alg_aes_kw_key_encrypt_and_key_decrypt(Config) ->
 	ct_property_test:quickcheck(
 		jose_jwe_alg_aes_kw_props:prop_key_encrypt_and_key_decrypt(),
+		Config).
+
+alg_c20p_kw_from_map_and_to_map(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwe_alg_c20p_kw_props:prop_from_map_and_to_map(),
+		Config).
+
+alg_c20p_kw_key_encrypt_and_key_decrypt(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwe_alg_c20p_kw_props:prop_key_encrypt_and_key_decrypt(),
 		Config).
 
 alg_dir_from_map_and_to_map(Config) ->
@@ -167,6 +198,16 @@ alg_rsa_key_encrypt_and_key_decrypt(Config) ->
 		jose_jwe_alg_rsa_props:prop_key_encrypt_and_key_decrypt(),
 		Config).
 
+alg_xc20p_kw_from_map_and_to_map(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwe_alg_xc20p_kw_props:prop_from_map_and_to_map(),
+		Config).
+
+alg_xc20p_kw_key_encrypt_and_key_decrypt(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwe_alg_xc20p_kw_props:prop_key_encrypt_and_key_decrypt(),
+		Config).
+
 enc_aes_from_map_and_to_map(Config) ->
 	ct_property_test:quickcheck(
 		jose_jwe_enc_aes_props:prop_from_map_and_to_map(),
@@ -177,14 +218,24 @@ enc_aes_block_encrypt_and_block_decrypt(Config) ->
 		jose_jwe_enc_aes_props:prop_block_encrypt_and_block_decrypt(),
 		Config).
 
-enc_chacha20_poly1305_from_map_and_to_map(Config) ->
+enc_c20p_from_map_and_to_map(Config) ->
 	ct_property_test:quickcheck(
-		jose_jwe_enc_chacha20_poly1305_props:prop_from_map_and_to_map(),
+		jose_jwe_enc_c20p_props:prop_from_map_and_to_map(),
 		Config).
 
-enc_chacha20_poly1305_block_encrypt_and_block_decrypt(Config) ->
+enc_c20p_block_encrypt_and_block_decrypt(Config) ->
 	ct_property_test:quickcheck(
-		jose_jwe_enc_chacha20_poly1305_props:prop_block_encrypt_and_block_decrypt(),
+		jose_jwe_enc_c20p_props:prop_block_encrypt_and_block_decrypt(),
+		Config).
+
+enc_xc20p_from_map_and_to_map(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwe_enc_xc20p_props:prop_from_map_and_to_map(),
+		Config).
+
+enc_xc20p_block_encrypt_and_block_decrypt(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwe_enc_xc20p_props:prop_block_encrypt_and_block_decrypt(),
 		Config).
 
 zip_from_map_and_to_map(Config) ->

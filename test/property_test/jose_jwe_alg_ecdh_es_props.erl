@@ -23,7 +23,9 @@ alg() ->
 		<<"ECDH-ES">>,
 		<<"ECDH-ES+A128KW">>,
 		<<"ECDH-ES+A192KW">>,
-		<<"ECDH-ES+A256KW">>
+		<<"ECDH-ES+A256KW">>,
+		<<"ECDH-ES+C20PKW">>,
+		<<"ECDH-ES+XC20PKW">>
 	]).
 
 alg_map() ->
@@ -78,7 +80,9 @@ enc() ->
 	oneof([
 		<<"A128GCM">>,
 		<<"A192GCM">>,
-		<<"A256GCM">>
+		<<"A256GCM">>,
+		<<"C20P">>,
+		<<"XC20P">>
 	]).
 
 jwk_jwe_maps() ->

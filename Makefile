@@ -17,7 +17,7 @@ include erlang.mk
 
 .PHONY: docker-build docker-load docker-setup docker-save docker-shell docker-test
 
-DOCKER_OTP_VERSION ?= 22.0
+DOCKER_OTP_VERSION ?= 22.2.1
 
 docker-build::
 	$(gen_verbose) docker build \

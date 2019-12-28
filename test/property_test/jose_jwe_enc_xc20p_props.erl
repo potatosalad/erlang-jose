@@ -1,6 +1,6 @@
 %% -*- mode: erlang; tab-width: 4; indent-tabs-mode: 1; st-rulers: [70] -*-
 %% vim: ts=4 sw=4 ft=erlang noet
--module(jose_jwe_zip_props).
+-module(jose_jwe_enc_xc20p_props).
 
 -include_lib("proper/include/proper.hrl").
 
@@ -17,29 +17,20 @@ binary_map() ->
 		maps:from_list(List)).
 
 enc() ->
-	oneof([
-		<<"A128GCM">>,
-		<<"A192GCM">>,
-		<<"A256GCM">>,
-		<<"C20P">>,
-		<<"XC20P">>
-	]).
+	return(<<"XC20P">>).
 
 jwk_jwe_maps() ->
 	?LET(ENC,
 		enc(),
 		begin
-			FakeJWEMap = #{ <<"alg">> => <<"RSA1_5">>, <<"enc">> => ENC },
-			FakeJWE = jose_jwe:from_map(FakeJWEMap),
-			{Key, _} = jose_jwe:next_cek(undefined, FakeJWE),
+			JWEMap = #{
+				<<"alg">> => <<"dir">>,
+				<<"enc">> => ENC
+			},
+			Key = element(2, jose_jwk:to_oct(jose_jwe:generate_key(JWEMap))),
 			JWKMap = #{
 				<<"kty">> => <<"oct">>,
 				<<"k">> => jose_jwa_base64url:encode(Key)
-			},
-			JWEMap = #{
-				<<"alg">> => <<"dir">>,
-				<<"enc">> => ENC,
-				<<"zip">> => <<"DEF">>
 			},
 			{Key, JWKMap, JWEMap}
 		end).
@@ -68,12 +59,4 @@ prop_block_encrypt_and_block_decrypt() ->
 			Encrypted = jose_jwe:block_encrypt(JWK, PlainText, CEK, IV, JWE),
 			CompactEncrypted = jose_jwe:compact(Encrypted),
 			PlainText =:= element(1, jose_jwe:block_decrypt(JWK, CompactEncrypted))
-		end).
-
-prop_compress_and_uncompress() ->
-	?FORALL({{_CEK, _JWK, JWE}, PlainText},
-		{jwk_jwe_gen(), binary()},
-		begin
-			CipherText = jose_jwe:compress(PlainText, JWE),
-			CipherText =/= PlainText andalso PlainText =:= jose_jwe:uncompress(CipherText, JWE)
 		end).

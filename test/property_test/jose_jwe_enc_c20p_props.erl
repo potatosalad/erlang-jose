@@ -1,6 +1,6 @@
 %% -*- mode: erlang; tab-width: 4; indent-tabs-mode: 1; st-rulers: [70] -*-
 %% vim: ts=4 sw=4 ft=erlang noet
--module(jose_jwe_enc_chacha20_poly1305_props).
+-module(jose_jwe_enc_c20p_props).
 
 -include_lib("proper/include/proper.hrl").
 
@@ -17,7 +17,7 @@ binary_map() ->
 		maps:from_list(List)).
 
 enc() ->
-	return(<<"ChaCha20/Poly1305">>).
+	return(<<"C20P">>).
 
 jwk_jwe_maps() ->
 	?LET(ENC,
