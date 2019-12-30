@@ -21,6 +21,9 @@ binary_map() ->
 alg() ->
 	oneof([
 		<<"ECDH-ES">>,
+		<<"ECDH-ES+A128GCMKW">>,
+		<<"ECDH-ES+A192GCMKW">>,
+		<<"ECDH-ES+A256GCMKW">>,
 		<<"ECDH-ES+A128KW">>,
 		<<"ECDH-ES+A192KW">>,
 		<<"ECDH-ES+A256KW">>,
