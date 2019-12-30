@@ -84,9 +84,9 @@ prop_box_encrypt_and_box_decrypt() ->
 		begin
 			BobPrivateJWK = jose_jwk:from_key(BobPrivateKey),
 			BobPublicJWK = jose_jwk:from_key(BobPublicKey),
-			Encrypted = jose_jwk:box_encrypt(PlainText, BobPublicJWK, AlicePrivateJWK),
+			Encrypted = jose_jwk:box_encrypt_ecdh_es(PlainText, BobPublicJWK, AlicePrivateJWK),
 			CompactEncrypted = jose_jwe:compact(Encrypted),
-			Decrypted = {_, JWE} = jose_jwk:box_decrypt(Encrypted, BobPrivateJWK),
+			Decrypted = {_, JWE} = jose_jwk:box_decrypt_ecdh_es(Encrypted, BobPrivateJWK),
 			{PlainText, JWE} =:= Decrypted
 			andalso {PlainText, JWE} =:= jose_jwk:block_decrypt(CompactEncrypted, BobPrivateJWK)
 		end).
