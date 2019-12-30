@@ -24,6 +24,7 @@
 -export([jose_cfrg_curves_a_5/1]).
 -export([jose_cfrg_curves_a_6/1]).
 -export([jose_cfrg_curves_a_7/1]).
+-export([jose_ecdh_1pu_a/1]).
 -export([jwe_a_1/1]).
 -export([jwe_a_2/1]).
 -export([jwe_a_3/1]).
@@ -48,6 +49,7 @@
 all() ->
 	[
 		{group, jose_cfrg_curves},
+		{group, jose_ecdh_1pu},
 		{group, jose_jwe},
 		{group, jose_jwk},
 		{group, jose_jws},
@@ -64,6 +66,9 @@ groups() ->
 			jose_cfrg_curves_a_5,
 			jose_cfrg_curves_a_6,
 			jose_cfrg_curves_a_7
+		]},
+		{jose_ecdh_1pu, [parallel], [
+			jose_ecdh_1pu_a
 		]},
 		{jose_jwe, [parallel], [
 			jwe_a_1,
@@ -106,6 +111,9 @@ init_per_group(G=jose_cfrg_curves, Config) ->
 	[{jose_cfrg_curves_a_1, A1}, {jose_cfrg_curves_a_3, A3},
 	 {jose_cfrg_curves_a_4, A4}, {jose_cfrg_curves_a_5, A5},
 	 {jose_cfrg_curves_a_6, A6}, {jose_cfrg_curves_a_7, A7} | jose_ct:start(G, Config)];
+init_per_group(G=jose_ecdh_1pu, Config) ->
+	{ok, A} = file:consult(data_file("jose_ecdh_1pu/a.config", Config)),
+	[{jose_ecdh_1pu_a, A} | jose_ct:start(G, Config)];
 init_per_group(G=jose_jwe, Config) ->
 	{ok, A1} = file:consult(data_file("jwe/a.1.config", Config)),
 	{ok, A2} = file:consult(data_file("jwe/a.2.config", Config)),
@@ -305,6 +313,27 @@ jose_cfrg_curves_a_7(Config) ->
 	{_, A_7_ENC_COMPACT} = jose_jwe:compact(A_7_ENC_MAP),
 	{A_7_TEXT, A_7_JWE} = jose_jwe:block_decrypt(A_7_BOB_S_JWK, A_7_ENC_MAP),
 	{A_7_TEXT, A_7_JWE} = jose_jwe:block_decrypt(A_7_BOB_S_JWK, A_7_ENC_COMPACT),
+	ok.
+
+% Public Key Authenticated Encryption for JOSE: ECDH-1PU
+% A.  Example ECDH-1PU Key Agreement Computation with A256GCM
+% [https://tools.ietf.org/html/draft-madden-jose-ecdh-1pu-02#appendix-A]
+jose_ecdh_1pu_a(Config) ->
+	C = ?config(jose_ecdh_1pu_a, Config),
+	A_USSK_JWK = jose_jwk:from_binary(?config("a.ussk.jwk+json", C)),
+	A_VSSK_JWK = jose_jwk:from_binary(?config("a.vssk.jwk+json", C)),
+	A_UESK_JWK = jose_jwk:from_binary(?config("a.uesk.jwk+json", C)),
+	A_JWE = jose_jwe:from_binary(?config("a.jwe+json", C)),
+	A_ZE = hex:hex_to_bin(?config("a.ze+hex", C)),
+	A_ZS = hex:hex_to_bin(?config("a.zs+hex", C)),
+	A_Z = hex:hex_to_bin(?config("a.z+hex", C)),
+	A_CEK = hex:hex_to_bin(?config("a.cek+hex", C)),
+	A_ZE = jose_jwk:shared_secret(A_VSSK_JWK, A_UESK_JWK),
+	A_ZS = jose_jwk:shared_secret(A_VSSK_JWK, A_USSK_JWK),
+	A_ZS = jose_jwk:shared_secret(A_USSK_JWK, A_VSSK_JWK),
+	A_Z = <<A_ZE/binary, A_ZS/binary>>,
+	{A_CEK, _} = jose_jwe:next_cek({A_VSSK_JWK, A_USSK_JWK, A_UESK_JWK}, A_JWE),
+	A_CEK = jose_jwe:key_decrypt({A_USSK_JWK, A_VSSK_JWK, A_UESK_JWK}, <<>>, A_JWE),
 	ok.
 
 % JSON Web Encryption (JWE)
