@@ -66,7 +66,7 @@ all() ->
 		{group, jose_jwa_curve25519},
 		{group, jose_jwa_curve448},
 		{group, jose_jwa_pkcs1},
-		{group, jose_jwa_pkcs5},
+		% {group, jose_jwa_pkcs5},
 		{group, jose_jwa_pkcs7}
 	].
 
