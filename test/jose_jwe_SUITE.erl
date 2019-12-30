@@ -23,6 +23,8 @@
 -export([alg_dir_key_decrypt/1]).
 -export([alg_dir_key_encrypt/1]).
 -export([alg_dir_next_cek/1]).
+-export([alg_ecdh_1pu_from_map_and_to_map/1]).
+-export([alg_ecdh_1pu_key_encrypt_and_key_decrypt/1]).
 -export([alg_ecdh_es_from_map_and_to_map/1]).
 -export([alg_ecdh_es_key_encrypt_and_key_decrypt/1]).
 -export([alg_pbes2_from_map_and_to_map/1]).
@@ -46,6 +48,7 @@ all() ->
 		{group, jose_jwe_alg_aes_kw},
 		{group, jose_jwe_alg_c20p_kw},
 		{group, jose_jwe_alg_dir},
+		{group, jose_jwe_alg_ecdh_1pu},
 		{group, jose_jwe_alg_ecdh_es},
 		{group, jose_jwe_alg_pbes2},
 		{group, jose_jwe_alg_rsa},
@@ -71,6 +74,10 @@ groups() ->
 			alg_dir_key_decrypt,
 			alg_dir_key_encrypt,
 			alg_dir_next_cek
+		]},
+		{jose_jwe_alg_ecdh_1pu, [parallel], [
+			alg_ecdh_1pu_from_map_and_to_map,
+			alg_ecdh_1pu_key_encrypt_and_key_decrypt
 		]},
 		{jose_jwe_alg_ecdh_es, [parallel], [
 			alg_ecdh_es_from_map_and_to_map,
@@ -166,6 +173,16 @@ alg_dir_key_encrypt(Config) ->
 alg_dir_next_cek(Config) ->
 	ct_property_test:quickcheck(
 		jose_jwe_alg_dir_props:prop_next_cek(),
+		Config).
+
+alg_ecdh_1pu_from_map_and_to_map(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwe_alg_ecdh_1pu_props:prop_from_map_and_to_map(),
+		Config).
+
+alg_ecdh_1pu_key_encrypt_and_key_decrypt(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwe_alg_ecdh_1pu_props:prop_key_encrypt_and_key_decrypt(),
 		Config).
 
 alg_ecdh_es_from_map_and_to_map(Config) ->

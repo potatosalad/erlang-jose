@@ -1,6 +1,6 @@
 %% -*- mode: erlang; tab-width: 4; indent-tabs-mode: 1; st-rulers: [70] -*-
 %% vim: ts=4 sw=4 ft=erlang noet
--module(jose_jwe_alg_ecdh_es_props).
+-module(jose_jwe_alg_ecdh_1pu_props).
 
 -include_lib("public_key/include/public_key.hrl").
 
@@ -20,15 +20,15 @@ binary_map() ->
 
 alg() ->
 	oneof([
-		<<"ECDH-ES">>,
-		<<"ECDH-ES+A128GCMKW">>,
-		<<"ECDH-ES+A192GCMKW">>,
-		<<"ECDH-ES+A256GCMKW">>,
-		<<"ECDH-ES+A128KW">>,
-		<<"ECDH-ES+A192KW">>,
-		<<"ECDH-ES+A256KW">>,
-		<<"ECDH-ES+C20PKW">>,
-		<<"ECDH-ES+XC20PKW">>
+		<<"ECDH-1PU">>,
+		<<"ECDH-1PU+A128GCMKW">>,
+		<<"ECDH-1PU+A192GCMKW">>,
+		<<"ECDH-1PU+A256GCMKW">>,
+		<<"ECDH-1PU+A128KW">>,
+		<<"ECDH-1PU+A192KW">>,
+		<<"ECDH-1PU+A256KW">>,
+		<<"ECDH-1PU+C20PKW">>,
+		<<"ECDH-1PU+XC20PKW">>
 	]).
 
 alg_map() ->
@@ -101,20 +101,22 @@ enc() ->
 	]).
 
 jwk_jwe_maps() ->
-	?LET({ALGMap, ENC, {BobPrivateKey, BobPublicKey}, {AlicePrivateKey, AlicePublicKey}},
+	?LET({ALGMap, ENC, {VStaticSecret, VStaticPublic}, {UStaticSecret, UStaticPublic}, {UEphemeralSecret, UEphemeralPublic}},
 		?LET(CurveId,
 			ec_curve(),
-			{alg_map(), enc(), ec_keypair(CurveId), ec_keypair(CurveId)}),
+			{alg_map(), enc(), ec_keypair(CurveId), ec_keypair(CurveId), ec_keypair(CurveId)}),
 		begin
-			BobPrivateJWK = jose_jwk:from_key(BobPrivateKey),
-			BobPublicJWK = jose_jwk:from_key(BobPublicKey),
-			AlicePrivateJWK = jose_jwk:from_key(AlicePrivateKey),
-			AlicePublicJWK = jose_jwk:from_key(AlicePublicKey),
-			{_, AlicePublicJWKMap} = jose_jwk:to_public_map(AlicePrivateJWK),
-			BobBox = {AlicePublicJWK, BobPrivateJWK},
-			AliceBox = {BobPublicJWK, AlicePrivateJWK},
-			JWKs = {BobBox, AliceBox},
-			JWEMap = maps:merge(#{ <<"enc">> => ENC, <<"epk">> => AlicePublicJWKMap }, ALGMap),
+			VStaticSecretKey = jose_jwk:from_key(VStaticSecret),
+			VStaticPublicKey = jose_jwk:from_key(VStaticPublic),
+			UStaticSecretKey = jose_jwk:from_key(UStaticSecret),
+			UStaticPublicKey = jose_jwk:from_key(UStaticPublic),
+			UEphemeralSecretKey = jose_jwk:from_key(UEphemeralSecret),
+			UEphemeralPublicKey = jose_jwk:from_key(UEphemeralPublic),
+			{_, UEphemeralPublicKeyMap} = jose_jwk:to_public_map(UEphemeralPublicKey),
+			VBox = {UStaticPublicKey, VStaticSecretKey},
+			UBox = {VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey},
+			JWKs = {VBox, UBox},
+			JWEMap = maps:merge(#{ <<"enc">> => ENC, <<"epk">> => UEphemeralPublicKeyMap }, ALGMap),
 			{JWKs, JWEMap}
 		end).
 
@@ -134,10 +136,10 @@ prop_from_map_and_to_map() ->
 		end).
 
 prop_key_encrypt_and_key_decrypt() ->
-	?FORALL({{BobBox, AliceBox}, JWE},
+	?FORALL({{VBox, UBox}, JWE},
 		jwk_jwe_gen(),
 		begin
-			{DecKey, DecJWE} = jose_jwe:next_cek(AliceBox, JWE),
-			{EncKey, EncJWE} = jose_jwe:key_encrypt(AliceBox, DecKey, DecJWE),
-			DecKey =:= jose_jwe:key_decrypt(BobBox, EncKey, EncJWE)
+			{DecKey, DecJWE} = jose_jwe:next_cek(UBox, JWE),
+			{EncKey, EncJWE} = jose_jwe:key_encrypt(UBox, DecKey, DecJWE),
+			DecKey =:= jose_jwe:key_decrypt(VBox, EncKey, EncJWE)
 		end).
