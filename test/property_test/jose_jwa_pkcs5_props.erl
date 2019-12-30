@@ -19,7 +19,7 @@ prop_pbkdf1() ->
 
 prop_pbkdf1_iterations() ->
 	?FORALL({Hash, Password, Salt, Iterations},
-		{hash_fun(), binary(), binary(), integer(1, 256)},
+		{hash_fun(), binary(), binary(), integer(1, 10)},
 		begin
 			{ok, DerivedKey} = jose_jwa_pkcs5:pbkdf1(Hash, Password, Salt, Iterations),
 			DerivedKey =:= element(2, jose_jwa_pkcs5:pbkdf1(Hash, Password, Salt, Iterations))
@@ -35,7 +35,7 @@ prop_pbkdf2() ->
 
 prop_pbkdf2_iterations() ->
 	?FORALL({Mac, Password, Salt, Iterations},
-		{mac_fun(), binary(), binary(), integer(1, 256)},
+		{mac_fun(), binary(), binary(), integer(1, 10)},
 		begin
 			{ok, DerivedKey} = jose_jwa_pkcs5:pbkdf2(Mac, Password, Salt, Iterations),
 			DerivedKey =:= element(2, jose_jwa_pkcs5:pbkdf2(Mac, Password, Salt, Iterations))
@@ -43,7 +43,7 @@ prop_pbkdf2_iterations() ->
 
 prop_pbkdf2_iterations_keylen() ->
 	?FORALL({Mac, Password, Salt, Iterations, KeyLen},
-		{mac_fun(), binary(), binary(), integer(1, 256), integer(0, 128)},
+		{mac_fun(), binary(), binary(), integer(1, 10), integer(0, 128)},
 		begin
 			{ok, DerivedKey} = jose_jwa_pkcs5:pbkdf2(Mac, Password, Salt, Iterations, KeyLen),
 			DerivedKey =:= element(2, jose_jwa_pkcs5:pbkdf2(Mac, Password, Salt, Iterations, KeyLen))
