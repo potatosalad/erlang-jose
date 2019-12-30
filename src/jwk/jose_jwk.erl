@@ -98,6 +98,18 @@
 -export([box_encrypt/2]).
 -export([box_encrypt/3]).
 -export([box_encrypt/4]).
+-deprecated([{box_decrypt, 2, next_major_release}]).
+-deprecated([{box_encrypt, 2, next_major_release}]).
+-deprecated([{box_encrypt, 3, next_major_release}]).
+-deprecated([{box_encrypt, 4, next_major_release}]).
+-export([box_decrypt_ecdh_1pu/3]).
+-export([box_encrypt_ecdh_1pu/3]).
+-export([box_encrypt_ecdh_1pu/4]).
+-export([box_encrypt_ecdh_1pu/5]).
+-export([box_decrypt_ecdh_es/2]).
+-export([box_encrypt_ecdh_es/2]).
+-export([box_encrypt_ecdh_es/3]).
+-export([box_encrypt_ecdh_es/4]).
 -export([generate_key/1]).
 -export([merge/2]).
 -export([shared_secret/2]).
@@ -106,6 +118,8 @@
 -export([signer/1]).
 -export([thumbprint/1]).
 -export([thumbprint/2]).
+-export([thumbprint_concat/1]).
+-export([thumbprint_concat/2]).
 -export([verifier/1]).
 -export([verify/2]).
 -export([verify_strict/3]).
@@ -660,39 +674,93 @@ block_encryptor(#jose_jwk{kty={Module, KTY}, fields=Fields}) ->
 block_encryptor(Other) ->
 	block_encryptor(from(Other)).
 
-box_decrypt(Encrypted, MyPrivateJWK=#jose_jwk{}) ->
-	jose_jwe:block_decrypt(MyPrivateJWK, Encrypted);
-box_decrypt(Encrypted, Other) ->
-	box_decrypt(Encrypted, from(Other)).
+box_decrypt(Encrypted, VStaticSecretKey) ->
+	box_decrypt_ecdh_es(Encrypted, VStaticSecretKey).
 
-%% @doc Generates an ephemeral private key based on other public key curve.
-box_encrypt(PlainText, OtherPublicJWK=#jose_jwk{}) ->
-	MyPrivateJWK = generate_key(OtherPublicJWK),
-	{box_encrypt(PlainText, OtherPublicJWK, MyPrivateJWK), MyPrivateJWK};
-box_encrypt(PlainText, JWKOtherPublic) ->
-	box_encrypt(PlainText, from(JWKOtherPublic)).
+%% @doc Generates an ephemeral private key based on receiver public key curve.
+box_encrypt(PlainText, VStaticPublicKey=#jose_jwk{}) ->
+	box_encrypt_ecdh_es(PlainText, VStaticPublicKey).
 
-box_encrypt(PlainText, OtherPublicJWK=#jose_jwk{}, MyPrivateJWK=#jose_jwk{}) ->
-	MyPublicJWK0 = #jose_jwk{fields=Fields0} = to_public(MyPrivateJWK),
-	Fields = maps:put(Fields0, <<"epk">>, element(2, to_map(MyPublicJWK0))),
-	MyPublicJWK = MyPublicJWK0#jose_jwk{fields=Fields},
-	JWEFields = block_encryptor(MyPublicJWK),
-	box_encrypt(PlainText, JWEFields, OtherPublicJWK, MyPrivateJWK);
-box_encrypt(PlainText, JWKOtherPublic, JWKMyPrivate) ->
-	box_encrypt(PlainText, from(JWKOtherPublic), from(JWKMyPrivate)).
+box_encrypt(PlainText, VStaticPublicKey, UEphemeralSecretKey) ->
+	box_encrypt_ecdh_es(PlainText, VStaticPublicKey, UEphemeralSecretKey).
 
-box_encrypt(PlainText, JWE=#jose_jwe{}, OtherPublicJWK=#jose_jwk{}, MyPrivateJWK=#jose_jwk{}) ->
-	jose_jwe:block_encrypt({OtherPublicJWK, MyPrivateJWK}, PlainText, JWE);
-box_encrypt(PlainText, {JWEModules, JWEMap=#{ <<"apu">> := _, <<"apv">> := _, <<"epk">> := _ }}, OtherPublicJWK=#jose_jwk{}, MyPrivateJWK=#jose_jwk{}) ->
-	box_encrypt(PlainText, jose_jwe:from({JWEModules, JWEMap}), OtherPublicJWK, MyPrivateJWK);
-box_encrypt(PlainText, {JWEModules, JWEMap0}, OtherPublicJWK=#jose_jwk{}, MyPrivateJWK=#jose_jwk{}) ->
+box_encrypt(PlainText, JWE, VStaticPublicKey, UEphemeralSecretKey) ->
+	box_encrypt_ecdh_es(PlainText, JWE, VStaticPublicKey, UEphemeralSecretKey).
+
+box_decrypt_ecdh_1pu(Encrypted, UStaticPublicKey=#jose_jwk{}, VStaticSecretKey=#jose_jwk{}) ->
+	jose_jwe:block_decrypt({UStaticPublicKey, VStaticSecretKey}, Encrypted);
+box_decrypt_ecdh_1pu(Encrypted, UStaticPublicKey, VStaticSecretKey) ->
+	box_decrypt_ecdh_1pu(Encrypted, from(UStaticPublicKey), from(VStaticSecretKey)).
+
+%% @doc Generates an ephemeral private key based on receiver public key curve.
+box_encrypt_ecdh_1pu(PlainText, VStaticPublicKey=#jose_jwk{}, UStaticSecretKey=#jose_jwk{}) ->
+	UEphemeralSecretKey = generate_key(VStaticPublicKey),
+	{box_encrypt_ecdh_1pu(PlainText, VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey), UEphemeralSecretKey};
+box_encrypt_ecdh_1pu(PlainText, VStaticPublicKey, UStaticSecretKey) ->
+	box_encrypt_ecdh_1pu(PlainText, from(VStaticPublicKey), from(UStaticSecretKey)).
+
+box_encrypt_ecdh_1pu(PlainText, VStaticPublicKey=#jose_jwk{}, UStaticSecretKey=#jose_jwk{}, UEphemeralSecretKey=#jose_jwk{}) ->
+	UEphemeralPublicKey0 = #jose_jwk{fields=Fields0} = to_public(UEphemeralSecretKey),
+	Fields1 = maps:put(<<"epk">>, element(2, to_map(UEphemeralPublicKey0)), Fields0),
+	Fields2 =
+		case Fields1 of
+			#{ <<"alg">> := _ } ->
+				Fields1;
+			_ ->
+				maps:put(<<"alg">>, <<"ECDH-1PU">>, Fields1)
+		end,
+	UEphemeralPublicKey = UEphemeralPublicKey0#jose_jwk{fields=Fields2},
+	JWEFields = block_encryptor(UEphemeralPublicKey),
+	box_encrypt_ecdh_1pu(PlainText, JWEFields, VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey);
+box_encrypt_ecdh_1pu(PlainText, VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey) ->
+	box_encrypt_ecdh_1pu(PlainText, from(VStaticPublicKey), from(UStaticSecretKey), from(UEphemeralSecretKey)).
+
+box_encrypt_ecdh_1pu(PlainText, JWE=#jose_jwe{}, VStaticPublicKey=#jose_jwk{}, UStaticSecretKey=#jose_jwk{}, UEphemeralSecretKey=#jose_jwk{}) ->
+	jose_jwe:block_encrypt({VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey}, PlainText, JWE);
+box_encrypt_ecdh_1pu(PlainText, {JWEModules, JWEMap=#{ <<"apu">> := _, <<"apv">> := _, <<"epk">> := _, <<"skid">> := _ }}, VStaticPublicKey=#jose_jwk{}, UStaticSecretKey=#jose_jwk{}, UEphemeralSecretKey=#jose_jwk{}) ->
+	box_encrypt_ecdh_1pu(PlainText, jose_jwe:from({JWEModules, JWEMap}), VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey);
+box_encrypt_ecdh_1pu(PlainText, {JWEModules, JWEMap0}, VStaticPublicKey=#jose_jwk{}, UStaticSecretKey=#jose_jwk{}, UEphemeralSecretKey=#jose_jwk{}) ->
+	Keys = [<<"apu">>, <<"apv">>, <<"epk">>, <<"skid">>] -- maps:keys(JWEMap0),
+	JWEMap1 = normalize_ecdh_1pu(Keys, JWEMap0, VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey),
+	box_encrypt_ecdh_1pu(PlainText, {JWEModules, JWEMap1}, VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey);
+box_encrypt_ecdh_1pu(PlainText, JWEMap, VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey) when is_map(JWEMap) ->
+	box_encrypt_ecdh_1pu(PlainText, {#{}, JWEMap}, VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey);
+box_encrypt_ecdh_1pu(PlainText, JWE, VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey) ->
+	box_encrypt_ecdh_1pu(PlainText, JWE, from(VStaticPublicKey), from(UStaticSecretKey), from(UEphemeralSecretKey)).
+
+box_decrypt_ecdh_es(Encrypted, VStaticSecretKey=#jose_jwk{}) ->
+	jose_jwe:block_decrypt(VStaticSecretKey, Encrypted);
+box_decrypt_ecdh_es(Encrypted, VStaticSecretKey) ->
+	box_decrypt_ecdh_es(Encrypted, from(VStaticSecretKey)).
+
+%% @doc Generates an ephemeral private key based on receiver public key curve.
+box_encrypt_ecdh_es(PlainText, VStaticPublicKey=#jose_jwk{}) ->
+	UEphemeralSecretKey = generate_key(VStaticPublicKey),
+	{box_encrypt_ecdh_es(PlainText, VStaticPublicKey, UEphemeralSecretKey), UEphemeralSecretKey};
+box_encrypt_ecdh_es(PlainText, VStaticPublicKey) ->
+	box_encrypt_ecdh_es(PlainText, from(VStaticPublicKey)).
+
+box_encrypt_ecdh_es(PlainText, VStaticPublicKey=#jose_jwk{}, UEphemeralSecretKey=#jose_jwk{}) ->
+	UEphemeralPublicKey0 = #jose_jwk{fields=Fields0} = to_public(UEphemeralSecretKey),
+	Fields1 = maps:put(<<"epk">>, element(2, to_map(UEphemeralPublicKey0)), Fields0),
+	UEphemeralPublicKey = UEphemeralPublicKey0#jose_jwk{fields=Fields1},
+	JWEFields = block_encryptor(UEphemeralPublicKey),
+	box_encrypt_ecdh_es(PlainText, JWEFields, VStaticPublicKey, UEphemeralSecretKey);
+box_encrypt_ecdh_es(PlainText, VStaticPublicKey, UEphemeralSecretKey) ->
+	box_encrypt_ecdh_es(PlainText, from(VStaticPublicKey), from(UEphemeralSecretKey)).
+
+box_encrypt_ecdh_es(PlainText, JWE=#jose_jwe{}, VStaticPublicKey=#jose_jwk{}, UEphemeralSecretKey=#jose_jwk{}) ->
+	jose_jwe:block_encrypt({VStaticPublicKey, UEphemeralSecretKey}, PlainText, JWE);
+box_encrypt_ecdh_es(PlainText, {JWEModules, JWEMap=#{ <<"apu">> := _, <<"apv">> := _, <<"epk">> := _ }}, VStaticPublicKey=#jose_jwk{}, UEphemeralSecretKey=#jose_jwk{}) ->
+	box_encrypt_ecdh_es(PlainText, jose_jwe:from({JWEModules, JWEMap}), VStaticPublicKey, UEphemeralSecretKey);
+box_encrypt_ecdh_es(PlainText, {JWEModules, JWEMap0}, VStaticPublicKey=#jose_jwk{}, UEphemeralSecretKey=#jose_jwk{}) ->
 	Keys = [<<"apu">>, <<"apv">>, <<"epk">>] -- maps:keys(JWEMap0),
-	JWEMap1 = normalize_box(Keys, JWEMap0, OtherPublicJWK, MyPrivateJWK),
-	box_encrypt(PlainText, {JWEModules, JWEMap1}, OtherPublicJWK, MyPrivateJWK);
-box_encrypt(PlainText, JWEMap, OtherPublicJWK, MyPrivateJWK) when is_map(JWEMap) ->
-	box_encrypt(PlainText, {#{}, JWEMap}, OtherPublicJWK, MyPrivateJWK);
-box_encrypt(PlainText, JWE, JWKOtherPublic, JWKMyPrivate) ->
-	box_encrypt(PlainText, JWE, from(JWKOtherPublic), from(JWKMyPrivate)).
+	JWEMap1 = normalize_ecdh_es(Keys, JWEMap0, VStaticPublicKey, UEphemeralSecretKey),
+	box_encrypt_ecdh_es(PlainText, {JWEModules, JWEMap1}, VStaticPublicKey, UEphemeralSecretKey);
+box_encrypt_ecdh_es(PlainText, JWEMap, VStaticPublicKey, UEphemeralSecretKey) when is_map(JWEMap) ->
+	box_encrypt_ecdh_es(PlainText, {#{}, JWEMap}, VStaticPublicKey, UEphemeralSecretKey);
+box_encrypt_ecdh_es(PlainText, JWE, VStaticPublicKey, UEphemeralSecretKey) ->
+	box_encrypt_ecdh_es(PlainText, JWE, from(VStaticPublicKey), from(UEphemeralSecretKey)).
 
 generate_key(#jose_jwk{kty={Module, KTY}, fields=Fields}) ->
 	{NewKTY, NewFields} = Module:generate_key(KTY, Fields),
@@ -779,6 +847,12 @@ thumbprint(DigestType, JWK=#jose_jwk{}) ->
 thumbprint(DigestType, Other) ->
 	thumbprint(DigestType, from(Other)).
 
+thumbprint_concat(List) when is_list(List) ->
+	thumbprint_concat(sha256, List).
+
+thumbprint_concat(DigestType, List) when is_list(List) ->
+	jose_jwa_base64url:encode(crypto:hash(DigestType, do_thumbprint_concat(List))).
+
 verifier(List) when is_list(List) ->
 	[verifier(Element) || Element <- List];
 verifier(#jose_jwk{kty={Module, KTY}, fields=Fields}) ->
@@ -801,18 +875,48 @@ verify_strict(Signed, Allow, Other) ->
 %%%-------------------------------------------------------------------
 
 %% @private
-normalize_box([<<"apu">> | Keys], Map, OtherPublicJWK, MyPrivateJWK=#jose_jwk{fields=#{ <<"kid">> := KID }}) ->
-	normalize_box(Keys, Map#{ <<"apu">> => KID }, OtherPublicJWK, MyPrivateJWK);
-normalize_box([<<"apu">> | Keys], Map, OtherPublicJWK, MyPrivateJWK) ->
-	normalize_box(Keys, Map#{ <<"apu">> => thumbprint(MyPrivateJWK) }, OtherPublicJWK, MyPrivateJWK);
-normalize_box([<<"apv">> | Keys], Map, OtherPublicJWK=#jose_jwk{fields=#{ <<"kid">> := KID }}, MyPrivateJWK) ->
-	normalize_box(Keys, Map#{ <<"apv">> => KID }, OtherPublicJWK, MyPrivateJWK);
-normalize_box([<<"apv">> | Keys], Map, OtherPublicJWK, MyPrivateJWK) ->
-	normalize_box(Keys, Map#{ <<"apv">> => thumbprint(OtherPublicJWK) }, OtherPublicJWK, MyPrivateJWK);
-normalize_box([<<"epk">> | Keys], Map, OtherPublicJWK, MyPrivateJWK) ->
-	{_, MyPublicMap} = to_public_map(MyPrivateJWK),
-	normalize_box(Keys, Map#{ <<"epk">> => MyPublicMap }, OtherPublicJWK, MyPrivateJWK);
-normalize_box([], Map, _, _) ->
+do_thumbprint_concat([]) ->
+	[];
+do_thumbprint_concat([H | T]) ->
+	{_, ThumbprintMap} = to_thumbprint_map(H),
+	ThumbprintBinary = jose:encode(ThumbprintMap),
+	[ThumbprintBinary | do_thumbprint_concat(T)].
+
+%% @private
+normalize_ecdh_1pu([<<"apu">> | Keys], Map, VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey) ->
+	APU = thumbprint_concat([UStaticSecretKey, UEphemeralSecretKey]),
+	normalize_ecdh_1pu(Keys, Map#{ <<"apu">> => APU }, VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey);
+normalize_ecdh_1pu([<<"apv">> | Keys], Map, VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey) ->
+	APV = thumbprint(VStaticPublicKey),
+	normalize_ecdh_1pu(Keys, Map#{ <<"apv">> => APV }, VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey);
+normalize_ecdh_1pu([<<"epk">> | Keys], Map, VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey) ->
+	{_, UEphemeralPublicKeyMap} = to_public_map(UEphemeralSecretKey),
+	normalize_ecdh_1pu(Keys, Map#{ <<"epk">> => UEphemeralPublicKeyMap }, VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey);
+normalize_ecdh_1pu([<<"skid">> | Keys], Map, VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey) ->
+	SenderKeyId =
+		case UStaticSecretKey of
+			#jose_jwk{fields=#{ <<"kid">> := KID }} ->
+				KID;
+			_ ->
+				thumbprint(UStaticSecretKey)
+		end,
+	normalize_ecdh_1pu(Keys, Map#{ <<"skid">> => SenderKeyId }, VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey);
+normalize_ecdh_1pu([], Map, _, _, _) ->
+	Map.
+
+%% @private
+normalize_ecdh_es([<<"apu">> | Keys], Map, VStaticPublicKey, UEphemeralSecretKey=#jose_jwk{fields=#{ <<"kid">> := KID }}) ->
+	normalize_ecdh_es(Keys, Map#{ <<"apu">> => KID }, VStaticPublicKey, UEphemeralSecretKey);
+normalize_ecdh_es([<<"apu">> | Keys], Map, VStaticPublicKey, UEphemeralSecretKey) ->
+	normalize_ecdh_es(Keys, Map#{ <<"apu">> => thumbprint(UEphemeralSecretKey) }, VStaticPublicKey, UEphemeralSecretKey);
+normalize_ecdh_es([<<"apv">> | Keys], Map, VStaticPublicKey=#jose_jwk{fields=#{ <<"kid">> := KID }}, UEphemeralSecretKey) ->
+	normalize_ecdh_es(Keys, Map#{ <<"apv">> => KID }, VStaticPublicKey, UEphemeralSecretKey);
+normalize_ecdh_es([<<"apv">> | Keys], Map, VStaticPublicKey, UEphemeralSecretKey) ->
+	normalize_ecdh_es(Keys, Map#{ <<"apv">> => thumbprint(VStaticPublicKey) }, VStaticPublicKey, UEphemeralSecretKey);
+normalize_ecdh_es([<<"epk">> | Keys], Map, VStaticPublicKey, UEphemeralSecretKey) ->
+	{_, UEphemeralPublicKeyMap} = to_public_map(UEphemeralSecretKey),
+	normalize_ecdh_es(Keys, Map#{ <<"epk">> => UEphemeralPublicKeyMap }, VStaticPublicKey, UEphemeralSecretKey);
+normalize_ecdh_es([], Map, _, _) ->
 	Map.
 
 %% @private

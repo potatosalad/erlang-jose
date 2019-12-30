@@ -127,7 +127,8 @@ block_encryptor(_KTY, Fields=#{ <<"alg">> := ALG, <<"enc">> := ENC, <<"use">> :=
 		(K, V, F)
 				when K =:= <<"apu">>
 				orelse K =:= <<"apv">>
-				orelse K =:= <<"epk">> ->
+				orelse K =:= <<"epk">>
+				orelse K =:= <<"skid">> ->
 			maps:put(K, V, F);
 		(_K, _V, F) ->
 			F
@@ -136,6 +137,14 @@ block_encryptor(_KTY, Fields=#{ <<"alg">> := ALG, <<"enc">> := ENC, <<"use">> :=
 		<<"alg">> => ALG,
 		<<"enc">> => ENC
 	}, Fields);
+block_encryptor(KTY, Fields=#{ <<"alg">> := <<"ECDH-1PU", _/binary>> }) ->
+	block_encryptor(KTY, maps:merge(Fields, #{
+		<<"enc">> => case jose_jwa:is_block_cipher_supported({aes_gcm, 128}) of
+			false -> <<"A128CBC-HS256">>;
+			true  -> <<"A128GCM">>
+		end,
+		<<"use">> => <<"enc">>
+	}));
 block_encryptor(KTY, Fields) ->
 	block_encryptor(KTY, maps:merge(Fields, #{
 		<<"alg">> => <<"ECDH-ES">>,

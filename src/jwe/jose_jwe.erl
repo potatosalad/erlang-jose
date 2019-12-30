@@ -52,6 +52,7 @@
 -define(ALG_C20P_KW_MODULE,  jose_jwe_alg_c20p_kw).
 -define(ALG_XC20P_KW_MODULE, jose_jwe_alg_xc20p_kw).
 -define(ALG_DIR_MODULE,      jose_jwe_alg_dir).
+-define(ALG_ECDH_1PU_MODULE, jose_jwe_alg_ecdh_1pu).
 -define(ALG_ECDH_ES_MODULE,  jose_jwe_alg_ecdh_es).
 -define(ALG_PBES2_MODULE,    jose_jwe_alg_pbes2).
 -define(ALG_RSA_MODULE,      jose_jwe_alg_rsa).
@@ -109,6 +110,8 @@ from_map({JWE, Modules, Map=#{ <<"alg">> := << "C20PKW" >> }}) ->
 	from_map({JWE, Modules#{ alg => ?ALG_C20P_KW_MODULE }, Map});
 from_map({JWE, Modules, Map=#{ <<"alg">> := << "dir", _/binary >> }}) ->
 	from_map({JWE, Modules#{ alg => ?ALG_DIR_MODULE }, Map});
+from_map({JWE, Modules, Map=#{ <<"alg">> := << "ECDH-1PU", _/binary >> }}) ->
+	from_map({JWE, Modules#{ alg => ?ALG_ECDH_1PU_MODULE }, Map});
 from_map({JWE, Modules, Map=#{ <<"alg">> := << "ECDH-ES", _/binary >> }}) ->
 	from_map({JWE, Modules#{ alg => ?ALG_ECDH_ES_MODULE }, Map});
 from_map({JWE, Modules, Map=#{ <<"alg">> := << "PBES2", _/binary >> }}) ->

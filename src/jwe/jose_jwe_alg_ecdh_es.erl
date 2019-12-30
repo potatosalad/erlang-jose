@@ -34,7 +34,7 @@
 	epk  = undefined :: undefined | {ec_public_key(), map()},
 	apu  = undefined :: undefined | binary(),
 	apv  = undefined :: undefined | binary(),
-	wrap = undefined :: undefined | aes_kw | c20p_kw | xc20p_kw,
+	wrap = undefined :: undefined | aes_gcm_kw | aes_kw | c20p_kw | xc20p_kw,
 	bits = undefined :: undefined | 128 | 192 | 256,
 	iv   = undefined :: undefined | binary(),
 	tag  = undefined :: undefined | binary()
@@ -44,12 +44,15 @@
 
 -export_type([alg/0]).
 
--define(ECDH_ES,         #jose_jwe_alg_ecdh_es{}).
--define(ECDH_ES_A128KW,  #jose_jwe_alg_ecdh_es{wrap=aes_kw, bits=128}).
--define(ECDH_ES_A192KW,  #jose_jwe_alg_ecdh_es{wrap=aes_kw, bits=192}).
--define(ECDH_ES_A256KW,  #jose_jwe_alg_ecdh_es{wrap=aes_kw, bits=256}).
--define(ECDH_ES_C20PKW,  #jose_jwe_alg_ecdh_es{wrap=c20p_kw, bits=256}).
--define(ECDH_ES_XC20PKW, #jose_jwe_alg_ecdh_es{wrap=xc20p_kw, bits=256}).
+-define(ECDH_ES,           #jose_jwe_alg_ecdh_es{}).
+-define(ECDH_ES_A128GCMKW, #jose_jwe_alg_ecdh_es{wrap=aes_gcm_kw, bits=128}).
+-define(ECDH_ES_A192GCMKW, #jose_jwe_alg_ecdh_es{wrap=aes_gcm_kw, bits=192}).
+-define(ECDH_ES_A256GCMKW, #jose_jwe_alg_ecdh_es{wrap=aes_gcm_kw, bits=256}).
+-define(ECDH_ES_A128KW,    #jose_jwe_alg_ecdh_es{wrap=aes_kw, bits=128}).
+-define(ECDH_ES_A192KW,    #jose_jwe_alg_ecdh_es{wrap=aes_kw, bits=192}).
+-define(ECDH_ES_A256KW,    #jose_jwe_alg_ecdh_es{wrap=aes_kw, bits=256}).
+-define(ECDH_ES_C20PKW,    #jose_jwe_alg_ecdh_es{wrap=c20p_kw, bits=256}).
+-define(ECDH_ES_XC20PKW,   #jose_jwe_alg_ecdh_es{wrap=xc20p_kw, bits=256}).
 
 %%====================================================================
 %% jose_jwe callbacks
@@ -57,6 +60,12 @@
 
 from_map(F = #{ <<"alg">> := <<"ECDH-ES">> }) ->
 	from_map_ecdh_es(maps:remove(<<"alg">>, F), ?ECDH_ES);
+from_map(F = #{ <<"alg">> := <<"ECDH-ES+A128GCMKW">> }) ->
+	from_map_ecdh_es(maps:remove(<<"alg">>, F), ?ECDH_ES_A128GCMKW);
+from_map(F = #{ <<"alg">> := <<"ECDH-ES+A192GCMKW">> }) ->
+	from_map_ecdh_es(maps:remove(<<"alg">>, F), ?ECDH_ES_A192GCMKW);
+from_map(F = #{ <<"alg">> := <<"ECDH-ES+A256GCMKW">> }) ->
+	from_map_ecdh_es(maps:remove(<<"alg">>, F), ?ECDH_ES_A256GCMKW);
 from_map(F = #{ <<"alg">> := <<"ECDH-ES+A128KW">> }) ->
 	from_map_ecdh_es(maps:remove(<<"alg">>, F), ?ECDH_ES_A128KW);
 from_map(F = #{ <<"alg">> := <<"ECDH-ES+A192KW">> }) ->
@@ -68,6 +77,12 @@ from_map(F = #{ <<"alg">> := <<"ECDH-ES+C20PKW">> }) ->
 from_map(F = #{ <<"alg">> := <<"ECDH-ES+XC20PKW">> }) ->
 	from_map_ecdh_es(maps:remove(<<"alg">>, F), ?ECDH_ES_XC20PKW).
 
+to_map(A = ?ECDH_ES_A128GCMKW, F) ->
+	to_map_ecdh_es(F#{ <<"alg">> => <<"ECDH-ES+A128GCMKW">> }, A);
+to_map(A = ?ECDH_ES_A192GCMKW, F) ->
+	to_map_ecdh_es(F#{ <<"alg">> => <<"ECDH-ES+A192GCMKW">> }, A);
+to_map(A = ?ECDH_ES_A256GCMKW, F) ->
+	to_map_ecdh_es(F#{ <<"alg">> => <<"ECDH-ES+A256GCMKW">> }, A);
 to_map(A = ?ECDH_ES_A128KW, F) ->
 	to_map_ecdh_es(F#{ <<"alg">> => <<"ECDH-ES+A128KW">> }, A);
 to_map(A = ?ECDH_ES_A192KW, F) ->
@@ -90,25 +105,33 @@ generate_key(_Fields, {ENCModule, ENC}, ALG=#jose_jwe_alg_ecdh_es{epk=EphemeralP
 generate_key(_Fields, {ENCModule, ENC}, ALG=#jose_jwe_alg_ecdh_es{}) ->
 	jose_jwe_alg:generate_key({ec, <<"P-521">>}, maps:get(<<"alg">>, to_map(ALG, #{})), ENCModule:algorithm(ENC)).
 
-key_decrypt({OtherPublicJWK=#jose_jwk{}, MyPrivateJWK=#jose_jwk{}}, EncryptedKey, JWEECDHES=#jose_jwe_alg_ecdh_es{epk=EphemeralPublicJWK=#jose_jwk{}}) ->
-	case jose_jwk:thumbprint(OtherPublicJWK) =:= jose_jwk:thumbprint(EphemeralPublicJWK) of
+key_decrypt({UEphemeralKey=#jose_jwk{}, VStaticSecretKey=#jose_jwk{}}, EncryptedKey, JWEECDHES=#jose_jwe_alg_ecdh_es{epk=UEphemeralPublicKey=#jose_jwk{}}) ->
+	case jose_jwk:thumbprint(UEphemeralKey) =:= jose_jwk:thumbprint(UEphemeralPublicKey) of
 		true ->
-			key_decrypt(MyPrivateJWK, EncryptedKey, JWEECDHES);
+			key_decrypt(VStaticSecretKey, EncryptedKey, JWEECDHES);
 		false ->
 			error
 	end;
-key_decrypt(MyPrivateJWK=#jose_jwk{}, EncryptedKey, JWEECDHES=#jose_jwe_alg_ecdh_es{epk=EphemeralPublicJWK=#jose_jwk{}}) ->
-	DerivedKey = jose_jwk:shared_secret(EphemeralPublicJWK, MyPrivateJWK),
-	key_decrypt(DerivedKey, EncryptedKey, JWEECDHES);
-% key_decrypt({OtherPublicJWK=#jose_jwk{}, MyPrivateJWK=#jose_jwk{}}, EncryptedKey, JWEECDHES=#jose_jwe_alg_ecdh_es{epk=undefined}) ->
-% 	DerivedKey = jose_jwk:shared_secret(OtherPublicJWK, MyPrivateJWK),
-% 	key_decrypt(DerivedKey, EncryptedKey, JWEECDHES);
+key_decrypt({UEphemeralPublicKey=#jose_jwk{}, VStaticSecretKey=#jose_jwk{}}, EncryptedKey, JWEECDHES0=#jose_jwe_alg_ecdh_es{epk=undefined}) ->
+	JWEECDHES = JWEECDHES0#jose_jwe_alg_ecdh_es{epk=UEphemeralPublicKey},
+	key_decrypt(VStaticSecretKey, EncryptedKey, JWEECDHES);
+key_decrypt(VStaticSecretKey=#jose_jwk{}, EncryptedKey, JWEECDHES=#jose_jwe_alg_ecdh_es{epk=UEphemeralPublicKey=#jose_jwk{}}) ->
+	Z = jose_jwk:shared_secret(UEphemeralPublicKey, VStaticSecretKey),
+	key_decrypt(Z, EncryptedKey, JWEECDHES);
 key_decrypt(Z, {ENCModule, ENC, <<>>}, #jose_jwe_alg_ecdh_es{apu=APU, apv=APV, wrap=undefined, bits=undefined}) when is_binary(Z) ->
 	Algorithm = ENCModule:algorithm(ENC),
 	KeyDataLen = ENCModule:bits(ENC),
 	SuppPubInfo = << KeyDataLen:1/unsigned-big-integer-unit:32 >>,
 	DerivedKey = jose_jwa_concat_kdf:kdf(sha256, Z, {Algorithm, APU, APV, SuppPubInfo}, KeyDataLen),
 	DerivedKey;
+key_decrypt(Z, {_ENCModule, _ENC, EncryptedKey}, JWEECDHES=#jose_jwe_alg_ecdh_es{apu=APU, apv=APV, wrap=aes_gcm_kw, bits=KeyDataLen, iv=IV, tag=TAG})
+		when is_binary(Z)
+		andalso is_binary(IV)
+		andalso is_binary(TAG) ->
+	Algorithm = algorithm(JWEECDHES),
+	SuppPubInfo = << KeyDataLen:1/unsigned-big-integer-unit:32 >>,
+	DerivedKey = jose_jwa_concat_kdf:kdf(sha256, Z, {Algorithm, APU, APV, SuppPubInfo}, KeyDataLen),
+	jose_jwa:block_decrypt({aes_gcm, KeyDataLen}, DerivedKey, IV, {<<>>, EncryptedKey, TAG});
 key_decrypt(Z, {_ENCModule, _ENC, EncryptedKey}, JWEECDHES=#jose_jwe_alg_ecdh_es{apu=APU, apv=APV, wrap=aes_kw, bits=KeyDataLen}) when is_binary(Z) ->
 	Algorithm = algorithm(JWEECDHES),
 	SuppPubInfo = << KeyDataLen:1/unsigned-big-integer-unit:32 >>,
@@ -133,20 +156,29 @@ key_decrypt(Z, {_ENCModule, _ENC, EncryptedKey}, JWEECDHES=#jose_jwe_alg_ecdh_es
 
 key_encrypt(_Key, _DecryptedKey, JWEECDHES=#jose_jwe_alg_ecdh_es{wrap=undefined, bits=undefined}) ->
 	{<<>>, JWEECDHES};
-key_encrypt({OtherPublicJWK=#jose_jwk{}, MyPrivateJWK=#jose_jwk{}}, DecryptedKey, JWEECDHES=#jose_jwe_alg_ecdh_es{epk=EphemeralPublicJWK=#jose_jwk{}}) ->
-	case jose_jwk:thumbprint(MyPrivateJWK) =:= jose_jwk:thumbprint(EphemeralPublicJWK) of
+key_encrypt({VStaticPublicKey=#jose_jwk{}, UEphemeralSecretKey=#jose_jwk{}}, DecryptedKey, JWEECDHES=#jose_jwe_alg_ecdh_es{epk=UEphemeralPublicKey=#jose_jwk{}}) ->
+	case jose_jwk:thumbprint(UEphemeralSecretKey) =:= jose_jwk:thumbprint(UEphemeralPublicKey) of
 		true ->
-			DerivedKey = jose_jwk:shared_secret(OtherPublicJWK, MyPrivateJWK),
-			key_encrypt(DerivedKey, DecryptedKey, JWEECDHES);
+			Z = jose_jwk:shared_secret(VStaticPublicKey, UEphemeralSecretKey),
+			key_encrypt(Z, DecryptedKey, JWEECDHES);
 		false ->
 			error
 	end;
-key_encrypt({OtherPublicJWK=#jose_jwk{}, MyPrivateJWK=#jose_jwk{}}, DecryptedKey, JWEECDHES0=#jose_jwe_alg_ecdh_es{epk=undefined}) ->
-	JWEECDHES1 = JWEECDHES0#jose_jwe_alg_ecdh_es{epk=jose_jwk:to_public(MyPrivateJWK)},
-	key_encrypt({OtherPublicJWK, MyPrivateJWK}, DecryptedKey, JWEECDHES1);
+key_encrypt({VStaticPublicKey=#jose_jwk{}, UEphemeralSecretKey=#jose_jwk{}}, DecryptedKey, JWEECDHES0=#jose_jwe_alg_ecdh_es{epk=undefined}) ->
+	UEphemeralPublicKey = jose_jwk:to_public(UEphemeralSecretKey),
+	JWEECDHES1 = JWEECDHES0#jose_jwe_alg_ecdh_es{epk=UEphemeralPublicKey},
+	key_encrypt({VStaticPublicKey, UEphemeralSecretKey}, DecryptedKey, JWEECDHES1);
 key_encrypt(#jose_jwk{kty={KTYModule, KTY}}, DecryptedKey, JWEECDHES) ->
 	DerivedKey = KTYModule:derive_key(KTY),
 	key_encrypt(DerivedKey, DecryptedKey, JWEECDHES);
+key_encrypt(Z, DecryptedKey, JWEECDHES=#jose_jwe_alg_ecdh_es{apu=APU, apv=APV, wrap=aes_gcm_kw, bits=KeyDataLen, iv=IV})
+		when is_binary(Z)
+		andalso is_binary(IV) ->
+	Algorithm = algorithm(JWEECDHES),
+	SuppPubInfo = << KeyDataLen:1/unsigned-big-integer-unit:32 >>,
+	DerivedKey = jose_jwa_concat_kdf:kdf(sha256, Z, {Algorithm, APU, APV, SuppPubInfo}, KeyDataLen),
+	{CipherText, CipherTag} = jose_jwa:block_encrypt({aes_gcm, KeyDataLen}, DerivedKey, IV, {<<>>, DecryptedKey}),
+	{CipherText, JWEECDHES#jose_jwe_alg_ecdh_es{ tag = CipherTag }};
 key_encrypt(Z, DecryptedKey, JWEECDHES=#jose_jwe_alg_ecdh_es{apu=APU, apv=APV, wrap=aes_kw, bits=KeyDataLen}) when is_binary(Z) ->
 	Algorithm = algorithm(JWEECDHES),
 	SuppPubInfo = << KeyDataLen:1/unsigned-big-integer-unit:32 >>,
@@ -168,22 +200,25 @@ key_encrypt(Z, DecryptedKey, JWEECDHES=#jose_jwe_alg_ecdh_es{apu=APU, apv=APV, w
 	DerivedKey = jose_jwa_concat_kdf:kdf(sha256, Z, {Algorithm, APU, APV, SuppPubInfo}, KeyDataLen),
 	{CipherText, CipherTag} = jose_jwa:block_encrypt({xchacha20_poly1305, KeyDataLen}, DerivedKey, IV, {<<>>, DecryptedKey}),
 	{CipherText, JWEECDHES#jose_jwe_alg_ecdh_es{ tag = CipherTag }};
+key_encrypt(Z, DecryptedKey, JWEECDHES=#jose_jwe_alg_ecdh_es{wrap=aes_gcm_kw, iv=undefined}) when is_binary(Z) ->
+	key_encrypt(Z, DecryptedKey, JWEECDHES#jose_jwe_alg_ecdh_es{ iv = crypto:strong_rand_bytes(12) });
 key_encrypt(Z, DecryptedKey, JWEECDHES=#jose_jwe_alg_ecdh_es{wrap=c20p_kw, iv=undefined}) when is_binary(Z) ->
 	key_encrypt(Z, DecryptedKey, JWEECDHES#jose_jwe_alg_ecdh_es{ iv = crypto:strong_rand_bytes(12) });
 key_encrypt(Z, DecryptedKey, JWEECDHES=#jose_jwe_alg_ecdh_es{wrap=xc20p_kw, iv=undefined}) when is_binary(Z) ->
 	key_encrypt(Z, DecryptedKey, JWEECDHES#jose_jwe_alg_ecdh_es{ iv = crypto:strong_rand_bytes(24) }).
 
-next_cek({OtherPublicJWK=#jose_jwk{}, MyPrivateJWK=#jose_jwk{}}, {ENCModule, ENC}, JWEECDHES=#jose_jwe_alg_ecdh_es{bits=undefined, epk=EphemeralPublicJWK=#jose_jwk{}}) ->
-	case jose_jwk:thumbprint(MyPrivateJWK) =:= jose_jwk:thumbprint(EphemeralPublicJWK) of
+next_cek({VStaticPublicKey=#jose_jwk{}, UEphemeralSecretKey=#jose_jwk{}}, {ENCModule, ENC}, JWEECDHES=#jose_jwe_alg_ecdh_es{bits=undefined, epk=UEphemeralPublicKey=#jose_jwk{}}) ->
+	case jose_jwk:thumbprint(UEphemeralSecretKey) =:= jose_jwk:thumbprint(UEphemeralPublicKey) of
 		true ->
-			DerivedKey = jose_jwk:shared_secret(OtherPublicJWK, MyPrivateJWK),
-			next_cek(DerivedKey, {ENCModule, ENC}, JWEECDHES);
+			Z = jose_jwk:shared_secret(VStaticPublicKey, UEphemeralSecretKey),
+			next_cek(Z, {ENCModule, ENC}, JWEECDHES);
 		false ->
 			error
 	end;
-next_cek({OtherPublicJWK=#jose_jwk{}, MyPrivateJWK=#jose_jwk{}}, {ENCModule, ENC}, JWEECDHES0=#jose_jwe_alg_ecdh_es{wrap=undefined, bits=undefined, epk=undefined}) ->
-	JWEECDHES1 = JWEECDHES0#jose_jwe_alg_ecdh_es{epk=jose_jwk:to_public(MyPrivateJWK)},
-	next_cek({OtherPublicJWK, MyPrivateJWK}, {ENCModule, ENC}, JWEECDHES1);
+next_cek({VStaticPublicKey=#jose_jwk{}, UEphemeralSecretKey=#jose_jwk{}}, {ENCModule, ENC}, JWEECDHES0=#jose_jwe_alg_ecdh_es{wrap=undefined, bits=undefined, epk=undefined}) ->
+	UEphemeralPublicKey = jose_jwk:to_public(UEphemeralSecretKey),
+	JWEECDHES1 = JWEECDHES0#jose_jwe_alg_ecdh_es{epk=UEphemeralPublicKey},
+	next_cek({VStaticPublicKey, UEphemeralSecretKey}, {ENCModule, ENC}, JWEECDHES1);
 next_cek(#jose_jwk{kty={KTYModule, KTY}}, {ENC, ENCModule}, JWEECDHES=#jose_jwe_alg_ecdh_es{wrap=undefined, bits=undefined}) ->
 	DerivedKey = KTYModule:derive_key(KTY),
 	next_cek(DerivedKey, {ENCModule, ENC}, JWEECDHES);
@@ -200,12 +235,15 @@ next_cek(_Key, {ENCModule, ENC}, JWEECDHES=#jose_jwe_alg_ecdh_es{}) ->
 %% API functions
 %%====================================================================
 
-algorithm(?ECDH_ES_A128KW)  -> <<"ECDH-ES+A128KW">>;
-algorithm(?ECDH_ES_A192KW)  -> <<"ECDH-ES+A192KW">>;
-algorithm(?ECDH_ES_A256KW)  -> <<"ECDH-ES+A256KW">>;
-algorithm(?ECDH_ES_C20PKW)  -> <<"ECDH-ES+C20PKW">>;
-algorithm(?ECDH_ES_XC20PKW) -> <<"ECDH-ES+XC20PKW">>;
-algorithm(?ECDH_ES)         -> <<"ECDH-ES">>.
+algorithm(?ECDH_ES_A128GCMKW) -> <<"ECDH-ES+A128GCMKW">>;
+algorithm(?ECDH_ES_A192GCMKW) -> <<"ECDH-ES+A192GCMKW">>;
+algorithm(?ECDH_ES_A256GCMKW) -> <<"ECDH-ES+A256GCMKW">>;
+algorithm(?ECDH_ES_A128KW)    -> <<"ECDH-ES+A128KW">>;
+algorithm(?ECDH_ES_A192KW)    -> <<"ECDH-ES+A192KW">>;
+algorithm(?ECDH_ES_A256KW)    -> <<"ECDH-ES+A256KW">>;
+algorithm(?ECDH_ES_C20PKW)    -> <<"ECDH-ES+C20PKW">>;
+algorithm(?ECDH_ES_XC20PKW)   -> <<"ECDH-ES+XC20PKW">>;
+algorithm(?ECDH_ES)           -> <<"ECDH-ES">>.
 
 %%%-------------------------------------------------------------------
 %%% Internal functions
