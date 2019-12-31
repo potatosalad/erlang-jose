@@ -40,13 +40,28 @@ alg_map() ->
 		#{ <<"alg">> => <<"A256GCMKW">> },
 		?LET({P2C, P2S},
 			{integer(1, 256), binary()},
+			#{ <<"alg">> => <<"PBES2-HS256+A128GCMKW">>, <<"p2c">> => P2C, <<"p2s">> => jose_jwa_base64url:encode(P2S) }),
+		?LET({P2C, P2S},
+			{integer(1, 256), binary()},
+			#{ <<"alg">> => <<"PBES2-HS384+A192GCMKW">>, <<"p2c">> => P2C, <<"p2s">> => jose_jwa_base64url:encode(P2S) }),
+		?LET({P2C, P2S},
+			{integer(1, 256), binary()},
+			#{ <<"alg">> => <<"PBES2-HS512+A256GCMKW">>, <<"p2c">> => P2C, <<"p2s">> => jose_jwa_base64url:encode(P2S) }),
+		?LET({P2C, P2S},
+			{integer(1, 256), binary()},
 			#{ <<"alg">> => <<"PBES2-HS256+A128KW">>, <<"p2c">> => P2C, <<"p2s">> => jose_jwa_base64url:encode(P2S) }),
 		?LET({P2C, P2S},
 			{integer(1, 256), binary()},
 			#{ <<"alg">> => <<"PBES2-HS384+A192KW">>, <<"p2c">> => P2C, <<"p2s">> => jose_jwa_base64url:encode(P2S) }),
 		?LET({P2C, P2S},
 			{integer(1, 256), binary()},
-			#{ <<"alg">> => <<"PBES2-HS512+A256KW">>, <<"p2c">> => P2C, <<"p2s">> => jose_jwa_base64url:encode(P2S) })
+			#{ <<"alg">> => <<"PBES2-HS512+A256KW">>, <<"p2c">> => P2C, <<"p2s">> => jose_jwa_base64url:encode(P2S) }),
+		?LET({P2C, P2S},
+			{integer(1, 256), binary()},
+			#{ <<"alg">> => <<"PBES2-HS512+C20PKW">>, <<"p2c">> => P2C, <<"p2s">> => jose_jwa_base64url:encode(P2S) }),
+		?LET({P2C, P2S},
+			{integer(1, 256), binary()},
+			#{ <<"alg">> => <<"PBES2-HS512+XC20PKW">>, <<"p2c">> => P2C, <<"p2s">> => jose_jwa_base64url:encode(P2S) })
 	]).
 
 enc_map() ->

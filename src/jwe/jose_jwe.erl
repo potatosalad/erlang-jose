@@ -131,7 +131,16 @@ from_map({JWE, Modules, Map=#{ <<"zip">> := << "DEF" >> }}) ->
 from_map({#jose_jwe{ alg = undefined, enc = undefined }, _Modules, _Map}) ->
 	{error, {missing_required_keys, [<<"alg">>, <<"enc">>]}};
 from_map({JWE, _Modules, Fields}) ->
-	JWE#jose_jwe{ fields = Fields }.
+	case {maps:is_key(<<"alg">>, Fields), maps:is_key(<<"enc">>, Fields)} of
+		{true, true} ->
+			{error, {invalid_fields, [{<<"alg">>, maps:get(<<"alg">>, Fields)}, {<<"enc">>, maps:get(<<"enc">>, Fields)}]}};
+		{true, false} ->
+			{error, {invalid_fields, [{<<"alg">>, maps:get(<<"alg">>, Fields)}]}};
+		{false, true} ->
+			{error, {invalid_fields, [{<<"enc">>, maps:get(<<"enc">>, Fields)}]}};
+		{false, false} ->
+			JWE#jose_jwe{ fields = Fields }
+	end.
 
 %%====================================================================
 %% Encode API functions

@@ -18,9 +18,14 @@ binary_map() ->
 
 alg() ->
 	oneof([
+		<<"PBES2-HS256+A128GCMKW">>,
+		<<"PBES2-HS384+A192GCMKW">>,
+		<<"PBES2-HS512+A256GCMKW">>,
 		<<"PBES2-HS256+A128KW">>,
 		<<"PBES2-HS384+A192KW">>,
-		<<"PBES2-HS512+A256KW">>
+		<<"PBES2-HS512+A256KW">>,
+		<<"PBES2-HS512+C20PKW">>,
+		<<"PBES2-HS512+XC20PKW">>
 	]).
 
 alg_map() ->
