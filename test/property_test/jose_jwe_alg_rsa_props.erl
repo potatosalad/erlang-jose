@@ -18,7 +18,7 @@ binary_map() ->
 		list({base64url_binary(), base64url_binary()}),
 		maps:from_list(List)).
 
-modulus_size()  -> integer(1024, 1280). % integer(256, 8192) | pos_integer().
+modulus_size()  -> integer(1048, 1280). % integer(256, 8192) | pos_integer().
 exponent_size() -> return(65537).   % pos_integer().
 
 rsa_keypair(ModulusSize) ->
@@ -40,9 +40,14 @@ alg() ->
 
 enc() ->
 	oneof([
+		<<"A128CBC-HS256">>,
+		<<"A192CBC-HS384">>,
+		<<"A256CBC-HS512">>,
 		<<"A128GCM">>,
 		<<"A192GCM">>,
-		<<"A256GCM">>
+		<<"A256GCM">>,
+		<<"C20P">>,
+		<<"XC20P">>
 	]).
 
 jwk_jwe_maps(ModulusSize) ->
