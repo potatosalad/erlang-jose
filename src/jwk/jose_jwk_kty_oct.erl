@@ -55,11 +55,11 @@ to_key(Key) ->
 to_map(K, F) ->
 	F#{ <<"kty">> => <<"oct">>, <<"k">> => jose_jwa_base64url:encode(K) }.
 
-to_public_map(K, F) ->
-	to_map(K, F).
+to_public_map(_K, _F) ->
+	erlang:error({not_supported, [to_public_map]}).
 
 to_thumbprint_map(K, F) ->
-	maps:with([<<"k">>, <<"kty">>], to_public_map(K, F)).
+	maps:with([<<"k">>, <<"kty">>], to_map(K, F)).
 
 %%====================================================================
 %% jose_jwk_kty callbacks
