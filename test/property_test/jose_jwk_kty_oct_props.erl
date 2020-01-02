@@ -50,11 +50,16 @@ prop_from_map_and_to_map() ->
 			{Key, maps:merge(Extras, JWKMap)}),
 		begin
 			JWK = jose_jwk:from_map(JWKMap),
-			PublicJWK = jose_jwk:to_public(JWK),
-			PublicThumbprint = jose_jwk:thumbprint(PublicJWK),
+			Error =
+				try
+					jose_jwk:to_public(JWK)
+				catch error:Reason:_ ->
+					Reason
+				end,
+			PublicThumbprint = jose_jwk:thumbprint(JWK),
 			JWKMap =:= element(2, jose_jwk:to_map(JWK))
 			andalso Key =:= element(2, jose_jwk:to_key(JWK))
-			andalso JWKMap =:= element(2, jose_jwk:to_public_map(JWK))
+			andalso {not_supported, [to_public_map]} =:= Error
 			andalso PublicThumbprint =:= jose_jwk:thumbprint(JWK)
 		end).
 
