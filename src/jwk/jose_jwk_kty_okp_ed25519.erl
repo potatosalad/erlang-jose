@@ -32,12 +32,14 @@
 -export([verify/4]).
 %% API
 -export([from_der/1]).
+-export([from_der/2]).
 -export([from_key/1]).
 -export([from_okp/1]).
 -export([from_openssh_key/1]).
 -export([from_pem/1]).
 -export([from_pem/2]).
 -export([to_der/1]).
+-export([to_der/2]).
 -export([to_okp/1]).
 -export([to_openssh_key/2]).
 -export([to_pem/1]).
@@ -163,6 +165,12 @@ from_der(DERBinary) when is_binary(DERBinary) ->
 			{Key, Fields}
 	end.
 
+from_der(Password, DERBinary) when is_binary(DERBinary) ->
+	case jose_jwk_der:from_binary(Password, DERBinary) of
+		{?MODULE, {Key, Fields}} ->
+			{Key, Fields}
+	end.
+
 from_key(#'jose_EdDSA25519PrivateKey'{publicKey=#'jose_EdDSA25519PublicKey'{publicKey=Public}, privateKey=Secret}) ->
 	{<< Secret/binary, Public/binary >>, #{}};
 from_key(#'jose_EdDSA25519PublicKey'{publicKey=Public}) ->
@@ -203,6 +211,20 @@ from_pem(Password, PEMBinary) when is_binary(PEMBinary) ->
 			PEMError
 	end.
 
+to_der(SK = << _:?secretkeybytes/binary >>) ->
+	EdDSA25519PrivateKey = to_key(SK),
+	jose_public_key:der_encode('EdDSA25519PrivateKey', EdDSA25519PrivateKey);
+to_der(PK = << _:?publickeybytes/binary >>) ->
+	EdDSA25519PublicKey = to_key(PK),
+	jose_public_key:der_encode('EdDSA25519PublicKey', EdDSA25519PublicKey).
+
+to_der(Password, SK = << _:?secretkeybytes/binary >>) ->
+	EdDSA25519PrivateKey = to_key(SK),
+	jose_jwk_der:to_binary(Password, 'EdDSA25519PrivateKey', EdDSA25519PrivateKey);
+to_der(Password, PK = << _:?publickeybytes/binary >>) ->
+	EdDSA25519PublicKey = to_key(PK),
+	jose_jwk_der:to_binary(Password, 'EdDSA25519PublicKey', EdDSA25519PublicKey).
+
 to_okp(SK = << _:?secretkeybytes/binary >>) ->
 	{'Ed25519', SK};
 to_okp(PK = << _:?publickeybytes/binary >>) ->
@@ -211,13 +233,6 @@ to_okp(PK = << _:?publickeybytes/binary >>) ->
 to_openssh_key(SK = << _:?secretbytes/binary, PK:?publickeybytes/binary >>, F) ->
 	Comment = maps:get(<<"kid">>, F, <<>>),
 	jose_jwk_openssh_key:to_binary([[{{<<"ssh-ed25519">>, PK}, {<<"ssh-ed25519">>, PK, SK, Comment}}]]).
-
-to_der(SK = << _:?secretkeybytes/binary >>) ->
-	EdDSA25519PrivateKey = to_key(SK),
-	jose_public_key:der_encode('EdDSA25519PrivateKey', EdDSA25519PrivateKey);
-to_der(PK = << _:?publickeybytes/binary >>) ->
-	EdDSA25519PublicKey = to_key(PK),
-	jose_public_key:der_encode('EdDSA25519PublicKey', EdDSA25519PublicKey).
 
 to_pem(SK = << _:?secretkeybytes/binary >>) ->
 	EdDSA25519PrivateKey = to_key(SK),

@@ -31,11 +31,15 @@
 -export([verifier/2]).
 -export([verify/4]).
 %% API
+-export([from_der/1]).
+-export([from_der/2]).
 -export([from_key/1]).
 -export([from_okp/1]).
 -export([from_openssh_key/1]).
 -export([from_pem/1]).
 -export([from_pem/2]).
+-export([to_der/1]).
+-export([to_der/2]).
 -export([to_okp/1]).
 -export([to_openssh_key/2]).
 -export([to_pem/1]).
@@ -155,6 +159,18 @@ verify(Message, ALG, Signature, PK = << _:?publickeybytes/binary >>)
 %% API functions
 %%====================================================================
 
+from_der(DERBinary) when is_binary(DERBinary) ->
+	case jose_jwk_der:from_binary(DERBinary) of
+		{?MODULE, {Key, Fields}} ->
+			{Key, Fields}
+	end.
+
+from_der(Password, DERBinary) when is_binary(DERBinary) ->
+	case jose_jwk_der:from_binary(Password, DERBinary) of
+		{?MODULE, {Key, Fields}} ->
+			{Key, Fields}
+	end.
+
 from_key(#'jose_EdDSA448PrivateKey'{publicKey=#'jose_EdDSA448PublicKey'{publicKey=Public}, privateKey=Secret}) ->
 	{<< Secret/binary, Public/binary >>, #{}};
 from_key(#'jose_EdDSA448PublicKey'{publicKey=Public}) ->
@@ -194,6 +210,20 @@ from_pem(Password, PEMBinary) when is_binary(PEMBinary) ->
 		PEMError ->
 			PEMError
 	end.
+
+to_der(SK = << _:?secretkeybytes/binary >>) ->
+	EdDSA448PrivateKey = to_key(SK),
+	jose_public_key:der_encode('EdDSA448PrivateKey', EdDSA448PrivateKey);
+to_der(PK = << _:?publickeybytes/binary >>) ->
+	EdDSA448PublicKey = to_key(PK),
+	jose_public_key:der_encode('EdDSA448PublicKey', EdDSA448PublicKey).
+
+to_der(Password, SK = << _:?secretkeybytes/binary >>) ->
+	EdDSA448PrivateKey = to_key(SK),
+	jose_jwk_der:to_binary(Password, 'EdDSA448PrivateKey', EdDSA448PrivateKey);
+to_der(Password, PK = << _:?publickeybytes/binary >>) ->
+	EdDSA448PublicKey = to_key(PK),
+	jose_jwk_der:to_binary(Password, 'EdDSA448PublicKey', EdDSA448PublicKey).
 
 to_okp(SK = << _:?secretkeybytes/binary >>) ->
 	{'Ed448', SK};

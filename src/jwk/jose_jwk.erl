@@ -44,6 +44,9 @@
 -export([from_binary/1]).
 -export([from_binary/2]).
 -export([from_der/1]).
+-export([from_der/2]).
+-export([from_der_file/1]).
+-export([from_der_file/2]).
 -export([from_file/1]).
 -export([from_file/2]).
 -export([from_firebase/1]).
@@ -66,6 +69,9 @@
 -export([to_binary/2]).
 -export([to_binary/3]).
 -export([to_der/1]).
+-export([to_der/2]).
+-export([to_der_file/2]).
+-export([to_der_file/3]).
 -export([to_file/2]).
 -export([to_file/3]).
 -export([to_file/4]).
@@ -201,6 +207,41 @@ from_der({#{}, Binary}) when is_binary(Binary) ->
 	end;
 from_der(Binary) when is_binary(Binary) ->
 	from_der({#{}, Binary}).
+
+from_der(Key, List) when is_list(List) ->
+	[from_der(Key, Element) || Element <- List];
+from_der(Key, {#{ kty := Module }, Binary}) when is_binary(Binary) ->
+	{KTY, Fields} = Module:from_der(Key, Binary),
+	#jose_jwk{ kty = {Module, KTY}, fields = Fields };
+from_der(Key, {#{}, Binary}) when is_binary(Binary) ->
+	case jose_jwk_der:from_binary(Key, Binary) of
+		{Module, {KTY, Fields}} when Module =/= error ->
+			#jose_jwk{ kty = {Module, KTY}, fields = Fields };
+		PEMError ->
+			PEMError
+	end;
+from_der(Key, Binary) when is_binary(Binary) ->
+	from_der(Key, {#{}, Binary}).
+
+from_der_file({Modules, File}) when is_map(Modules) andalso (is_binary(File) orelse is_list(File)) ->
+	case file:read_file(File) of
+		{ok, Binary} ->
+			from_der({Modules, Binary});
+		ReadError ->
+			ReadError
+	end;
+from_der_file(File) when is_binary(File) orelse is_list(File) ->
+	from_der_file({#{}, File}).
+
+from_der_file(Key, {Modules, File}) when is_map(Modules) andalso (is_binary(File) orelse is_list(File)) ->
+	case file:read_file(File) of
+		{ok, Binary} ->
+			from_der(Key, {Modules, Binary});
+		ReadError ->
+			ReadError
+	end;
+from_der_file(Key, File) when is_binary(File) orelse is_list(File) ->
+	from_der_file(Key, {#{}, File}).
 
 from_file({Modules, File}) when is_map(Modules) andalso (is_binary(File) orelse is_list(File)) ->
 	case file:read_file(File) of
@@ -480,6 +521,33 @@ to_der(#jose_jwk{kty={Module, KTY}}) ->
 	{#{ kty => Module }, Module:to_der(KTY)};
 to_der(Other) ->
 	to_der(from(Other)).
+
+to_der(Key, #jose_jwk{kty={Module, KTY}}) ->
+	{#{ kty => Module }, Module:to_der(Key, KTY)};
+to_der(Key, Other) ->
+	to_der(Key, from(Other)).
+
+to_der_file(File, JWK=#jose_jwk{}) when is_binary(File) orelse is_list(File) ->
+	{Modules, Binary} = to_der(JWK),
+	case file:write_file(File, Binary) of
+		ok ->
+			{Modules, File};
+		WriteError ->
+			WriteError
+	end;
+to_der_file(File, Other) when is_binary(File) orelse is_list(File) ->
+	to_der_file(File, from(Other)).
+
+to_der_file(Key, File, JWK=#jose_jwk{}) when is_binary(File) orelse is_list(File) ->
+	{Modules, Binary} = to_der(Key, JWK),
+	case file:write_file(File, Binary) of
+		ok ->
+			{Modules, File};
+		WriteError ->
+			WriteError
+	end;
+to_der_file(Key, File, Other) when is_binary(File) orelse is_list(File) ->
+	to_der_file(Key, File, from(Other)).
 
 to_file(File, JWK=#jose_jwk{}) when is_binary(File) orelse is_list(File) ->
 	{Modules, Binary} = to_binary(JWK),

@@ -37,10 +37,12 @@
 -export([verify/4]).
 %% API
 -export([from_der/1]).
+-export([from_der/2]).
 -export([from_key/1]).
 -export([from_pem/1]).
 -export([from_pem/2]).
 -export([to_der/1]).
+-export([to_der/2]).
 -export([to_pem/1]).
 -export([to_pem/2]).
 
@@ -244,6 +246,14 @@ from_der(DERBinary) when is_binary(DERBinary) ->
 			{Key, Fields}
 	end.
 
+from_der(Password, PEMBinary) when is_binary(PEMBinary) ->
+	case jose_jwk_der:from_binary(Password, PEMBinary) of
+		{?MODULE, {Key, Fields}} ->
+			{Key, Fields};
+		PEMError ->
+			PEMError
+	end.
+
 from_key(RSAPrivateKey=#'RSAPrivateKey'{}) ->
 	{RSAPrivateKey, #{}};
 from_key(RSAPublicKey=#'RSAPublicKey'{}) ->
@@ -270,15 +280,20 @@ to_der(RSAPrivateKey=#'RSAPrivateKey'{}) ->
 to_der(RSAPublicKey=#'RSAPublicKey'{}) ->
 	jose_public_key:der_encode('RSAPublicKey', RSAPublicKey).
 
+to_der(Password, RSAPrivateKey=#'RSAPrivateKey'{}) ->
+	jose_jwk_der:to_binary(Password, 'PrivateKeyInfo', RSAPrivateKey);
+to_der(Password, RSAPublicKey=#'RSAPublicKey'{}) ->
+	jose_jwk_der:to_binary(Password, 'RSAPublicKey', RSAPublicKey).
+
 to_pem(RSAPrivateKey=#'RSAPrivateKey'{}) ->
-	PEMEntry = public_key:pem_entry_encode('RSAPrivateKey', RSAPrivateKey),
+	PEMEntry = public_key:pem_entry_encode('PrivateKeyInfo', RSAPrivateKey),
 	public_key:pem_encode([PEMEntry]);
 to_pem(RSAPublicKey=#'RSAPublicKey'{}) ->
 	PEMEntry = public_key:pem_entry_encode('RSAPublicKey', RSAPublicKey),
 	public_key:pem_encode([PEMEntry]).
 
 to_pem(Password, RSAPrivateKey=#'RSAPrivateKey'{}) ->
-	jose_jwk_pem:to_binary(Password, 'RSAPrivateKey', RSAPrivateKey);
+	jose_jwk_pem:to_binary(Password, 'PrivateKeyInfo', RSAPrivateKey);
 to_pem(Password, RSAPublicKey=#'RSAPublicKey'{}) ->
 	jose_jwk_pem:to_binary(Password, 'RSAPublicKey', RSAPublicKey).
 

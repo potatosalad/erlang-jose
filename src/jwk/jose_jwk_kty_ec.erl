@@ -36,10 +36,12 @@
 -export([verify/4]).
 %% API
 -export([from_der/1]).
+-export([from_der/2]).
 -export([from_key/1]).
 -export([from_pem/1]).
 -export([from_pem/2]).
 -export([to_der/1]).
+-export([to_der/2]).
 -export([to_pem/1]).
 -export([to_pem/2]).
 
@@ -275,6 +277,14 @@ from_der(DERBinary) when is_binary(DERBinary) ->
 			{Key, Fields}
 	end.
 
+from_der(Password, PEMBinary) when is_binary(PEMBinary) ->
+	case jose_jwk_der:from_binary(Password, PEMBinary) of
+		{?MODULE, {Key, Fields}} ->
+			{Key, Fields};
+		PEMError ->
+			PEMError
+	end.
+
 from_key(ECPrivateKey=#'ECPrivateKey'{}) ->
 	{ECPrivateKey, #{}};
 from_key(ECPublicKey={#'ECPoint'{}, _}) ->
@@ -300,6 +310,11 @@ to_der(ECPrivateKey=#'ECPrivateKey'{}) ->
 	jose_public_key:der_encode('PrivateKeyInfo', ECPrivateKey);
 to_der(ECPublicKey={#'ECPoint'{}, _ECParameters}) ->
 	jose_public_key:der_encode('SubjectPublicKeyInfo', ECPublicKey).
+
+to_der(Password, ECPrivateKey=#'ECPrivateKey'{}) ->
+	jose_jwk_der:to_binary(Password, 'PrivateKeyInfo', ECPrivateKey);
+to_der(Password, ECPublicKey={#'ECPoint'{}, _ECParameters}) ->
+	erlang:error({badarg, [Password, ECPublicKey]}).
 
 to_pem(ECPrivateKey=#'ECPrivateKey'{}) ->
 	PEMEntry = public_key:pem_entry_encode('ECPrivateKey', ECPrivateKey),
