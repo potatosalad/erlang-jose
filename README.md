@@ -145,8 +145,9 @@ JOSE.JWA.supports()
      "ECDH-1PU+A256KW", "ECDH-1PU+C20PKW", "ECDH-ES", "ECDH-ES+A128GCMKW",
      "ECDH-ES+A128KW", "ECDH-ES+A192GCMKW", "ECDH-ES+A192KW",
      "ECDH-ES+A256GCMKW", "ECDH-ES+A256KW", "ECDH-ES+C20PKW",
-     "PBES2-HS256+A128KW", "PBES2-HS384+A192KW", "PBES2-HS512+A256KW",
-     "RSA-OAEP", "RSA-OAEP-256", "RSA1_5", "dir"]},
+     "PBES2-HS256+A128GCMKW", "PBES2-HS256+A128KW", "PBES2-HS384+A192GCMKW",
+     "PBES2-HS384+A192KW", "PBES2-HS512+A256GCMKW", "PBES2-HS512+A256KW",
+     "PBES2-HS512+C20PKW", "RSA-OAEP", "RSA-OAEP-256", "RSA1_5", "dir"]},
    {:enc,
     ["A128CBC-HS256", "A128GCM", "A192CBC-HS384", "A192GCM", "A256CBC-HS512",
      "A256GCM", "C20P"]}, {:zip, ["DEF"]}},
@@ -162,6 +163,7 @@ JOSE.crypto_fallback(true)
 
 # additional algorithms are now available for use
 JOSE.JWA.supports()
+
 [
   {:jwe,
    {:alg,
@@ -171,9 +173,10 @@ JOSE.JWA.supports()
      "ECDH-1PU+A256KW", "ECDH-1PU+C20PKW", "ECDH-1PU+XC20PKW", "ECDH-ES",
      "ECDH-ES+A128GCMKW", "ECDH-ES+A128KW", "ECDH-ES+A192GCMKW",
      "ECDH-ES+A192KW", "ECDH-ES+A256GCMKW", "ECDH-ES+A256KW", "ECDH-ES+C20PKW",
-     "ECDH-ES+XC20PKW", "PBES2-HS256+A128KW", "PBES2-HS384+A192KW",
-     "PBES2-HS512+A256KW", "RSA-OAEP", "RSA-OAEP-256", "RSA1_5", "XC20PKW",
-     "dir"]},
+     "ECDH-ES+XC20PKW", "PBES2-HS256+A128GCMKW", "PBES2-HS256+A128KW",
+     "PBES2-HS384+A192GCMKW", "PBES2-HS384+A192KW", "PBES2-HS512+A256GCMKW",
+     "PBES2-HS512+A256KW", "PBES2-HS512+C20PKW", "PBES2-HS512+XC20PKW",
+     "RSA-OAEP", "RSA-OAEP-256", "RSA1_5", "XC20PKW", "dir"]},
    {:enc,
     ["A128CBC-HS256", "A128GCM", "A192CBC-HS384", "A192GCM", "A256CBC-HS512",
      "A256GCM", "C20P", "XC20P"]}, {:zip, ["DEF"]}},
@@ -480,9 +483,14 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 - [X] `ECDH-ES+A256KW`
 - [X] `ECDH-ES+C20PKW` <sup>[draft-amringer-jose-chacha](https://tools.ietf.org/html/draft-amringer-jose-chacha-01)</sup>
 - [X] `ECDH-ES+XC20PKW` <sup>[draft-amringer-jose-chacha](https://tools.ietf.org/html/draft-amringer-jose-chacha-01)</sup>
+- [X] `PBES2-HS256+A128GCMKW` <sup>non-standard</sup>
+- [X] `PBES2-HS384+A192GCMKW` <sup>non-standard</sup>
+- [X] `PBES2-HS512+A256GCMKW` <sup>non-standard</sup>
 - [X] `PBES2-HS256+A128KW`
 - [X] `PBES2-HS384+A192KW`
 - [X] `PBES2-HS512+A256KW`
+- [X] `PBES2-HS512+C20PKW` <sup>non-standard</sup>
+- [X] `PBES2-HS512+XC20PKW` <sup>non-standard</sup>
 - [X] `RSA1_5`
 - [X] `RSA-OAEP`
 - [X] `RSA-OAEP-256`

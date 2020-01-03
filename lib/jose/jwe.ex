@@ -16,9 +16,14 @@ defmodule JOSE.JWE do
     * `"A256KW"`
     * `"dir"`
     * `"ECDH-ES"`
+    * `"ECDH-ES+A128GCMKW"`
+    * `"ECDH-ES+A192GCMKW"`
+    * `"ECDH-ES+A256GCMKW"`
     * `"ECDH-ES+A128KW"`
     * `"ECDH-ES+A192KW"`
     * `"ECDH-ES+A256KW"`
+    * `"ECDH-ES+C20PKW"`
+    * `"ECDH-ES+XC20PKW"`
     * `"PBES2-HS256+A128KW"`
     * `"PBES2-HS384+A192KW"`
     * `"PBES2-HS512+A256KW"`
@@ -36,7 +41,8 @@ defmodule JOSE.JWE do
     * `"A128GCM"`
     * `"A192GCM"`
     * `"A256GCM"`
-    * `"ChaCha20/Poly1305"`
+    * `"C20P"`
+    * `"XC20P"`
 
   ## Compression Algorithms
 
@@ -302,14 +308,19 @@ defmodule JOSE.JWE do
       iex> JOSE.JWE.block_decrypt(jwk_oct256, encrypted_a256gcm) |> elem(0)
       "{}"
 
-  ### ChaCha20/Poly1305
+  ### ChaCha20/Poly1305 and XChaCha20/Poly1305
 
-  This is highly experimental and based on [RFC 7539](https://tools.ietf.org/html/rfc7539).
+  This is experimental and based on [RFC 7539](https://tools.ietf.org/html/rfc7539) and [draft-amringer-jose-chacha](https://tools.ietf.org/html/draft-amringer-jose-chacha-01).
 
-      # ChaCha20/Poly1305
-      iex> encrypted_chacha20_poly1305 = JOSE.JWE.block_encrypt(jwk_oct256, "{}", %{ "alg" => "dir", "enc" => "ChaCha20/Poly1305" }) |> JOSE.JWE.compact |> elem(1)
-      "eyJhbGciOiJkaXIiLCJlbmMiOiJDaGFDaGEyMC9Qb2x5MTMwNSJ9..gunc-Xr1t1jqZX1l.8Yc.yi9qKB4ANjfQCPjgYwf-zQ"
-      iex> JOSE.JWE.block_decrypt(jwk_oct256, encrypted_chacha20_poly1305) |> elem(0)
+      # C20P
+      iex> encrypted_c20p = JOSE.JWE.block_encrypt(jwk_oct256, "{}", %{ "alg" => "dir", "enc" => "C20P" }) |> JOSE.JWE.compact |> elem(1)
+      "eyJhbGciOiJkaXIiLCJlbmMiOiJDMjBQIn0..W3qFkCKCEJz5H5jt.Hag.2TUFobBK_TYdtC2auoiiKA"
+      iex> JOSE.JWE.block_decrypt(jwk_oct256, encrypted_c20p) |> elem(0)
+      "{}"
+      # XC20P
+      iex> encrypted_xc20p = JOSE.JWE.block_encrypt(jwk_oct256, "{}", %{ "alg" => "dir", "enc" => "XC20P" }) |> JOSE.JWE.compact |> elem(1)
+      "eyJhbGciOiJkaXIiLCJlbmMiOiJYQzIwUCJ9..aMrioLxn-KO8Dyy8LcYD2mSNY7yPE_yf.Wxg.PJgIuI0ZADBE6Gi5-f7Tfg"
+      iex> JOSE.JWE.block_decrypt(jwk_oct256, encrypted_xc20p) |> elem(0)
       "{}"
 
   ## Compression Examples
