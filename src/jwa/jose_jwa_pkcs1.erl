@@ -116,7 +116,7 @@ verify(Message, DigestType, Signature, RSAPublicKey=#'RSAPublicKey'{}, Options)
 		when is_list(Options) ->
 	case proplists:get_value(rsa_padding, Options) of
 		rsa_pkcs1_pss_padding ->
-			SaltLen = proplists:get_value(rsa_pss_saltlen, Options, -2),
+			SaltLen = proplists:get_value(rsa_pss_saltlen, Options, -1),
 			rsassa_pss_verify(DigestType, Message, Signature, SaltLen, RSAPublicKey);
 		rsa_pkcs1_padding ->
 			rsassa_pkcs1_verify(DigestType, Message, Signature, RSAPublicKey);
