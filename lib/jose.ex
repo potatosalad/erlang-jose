@@ -103,6 +103,7 @@ defmodule JOSE do
   Currently supported JSON modules (first found is used as default):
 
     * [`ojson`](https://github.com/potatosalad/erlang-ojson)
+    * [`Jason`](https://github.com/michalmuskala/jason)
     * [`Poison`](https://github.com/devinus/poison)
     * [`jiffy`](https://github.com/davisp/jiffy)
     * [`jsone`](https://github.com/sile/jsone)
