@@ -507,19 +507,24 @@ jws_alg_to_digest_type(ALG) ->
 
 %% @private
 try_generate_key([public_key | Methods], ModulusSize, ExponentSize) ->
-	case code:ensure_loaded(public_key) of
-		{module, public_key} ->
-			_ = application:ensure_all_started(public_key),
-			case erlang:function_exported(crypto, generate_key, 2) andalso erlang:function_exported(crypto, generate_key, 3) of
-				true ->
-					try public_key:generate_key({rsa, ModulusSize, ExponentSize}) of
-						Key = #'RSAPrivateKey'{} ->
-							{Key, #{}}
-					catch
-						Class:Reason ->
-							erlang:error({public_key_error, {Class, Reason}})
+	case code:ensure_loaded(crypto) of
+		{module, crypto} ->
+			case code:ensure_loaded(public_key) of
+				{module, public_key} ->
+					_ = application:ensure_all_started(public_key),
+					case erlang:function_exported(crypto, generate_key, 2) andalso erlang:function_exported(crypto, generate_key, 3) of
+						true ->
+							try public_key:generate_key({rsa, ModulusSize, ExponentSize}) of
+								Key = #'RSAPrivateKey'{} ->
+									{Key, #{}}
+							catch
+								Class:Reason ->
+									erlang:error({public_key_error, {Class, Reason}})
+							end;
+						false ->
+							try_generate_key(Methods, ModulusSize, ExponentSize)
 					end;
-				false ->
+				_ ->
 					try_generate_key(Methods, ModulusSize, ExponentSize)
 			end;
 		_ ->
