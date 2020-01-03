@@ -216,6 +216,14 @@ der_enc('X448PrivateKey', K=#'jose_X448PrivateKey'{}) ->
 der_enc('X448PublicKey', K=#'jose_X448PublicKey'{}) ->
 	EncodedDER = public_key:der_encode('SubjectPublicKeyInfo', k2i(K)),
 	{true, EncodedDER};
+der_enc('PrivateKeyInfo', K) ->
+	case K of
+		#'jose_EdDSA25519PrivateKey'{} -> der_enc('EdDSA25519PrivateKey', K);
+		#'jose_EdDSA448PrivateKey'{} -> der_enc('EdDSA448PrivateKey', K);
+		#'jose_X25519PrivateKey'{} -> der_enc('X25519PrivateKey', K);
+		#'jose_X448PrivateKey'{} -> der_enc('X448PrivateKey', K);
+		_ -> false
+	end;
 der_enc(_, _) ->
 	false.
 

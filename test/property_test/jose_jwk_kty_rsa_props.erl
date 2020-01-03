@@ -79,6 +79,21 @@ prop_convert_sfm_to_crt() ->
 			andalso ThumbprintCRT =:= ThumbprintSFM
 		end).
 
+prop_from_der_and_to_der() ->
+	?FORALL({{_, PublicKey}, PrivateJWK, Password},
+		?LET({{Keys, PrivateJWK}, Bytes},
+			{jwk_gen(), binary()},
+			{Keys, PrivateJWK, jose_jwa_base64url:encode(Bytes)}),
+		begin
+			PublicJWK = jose_jwk:from_key(PublicKey),
+			PublicDER = element(2, jose_jwk:to_der(PublicJWK)),
+			PrivateDER = element(2, jose_jwk:to_der(PrivateJWK)),
+			EncryptedPrivateDER = element(2, jose_jwk:to_der(Password, PrivateJWK)),
+			PrivateJWK =:= jose_jwk:from_der(PrivateDER)
+			andalso PrivateJWK =:= jose_jwk:from_der(Password, EncryptedPrivateDER)
+			andalso PublicJWK =:= jose_jwk:from_der(PublicDER)
+		end).
+
 prop_from_map_and_to_map() ->
 	?FORALL({{PrivateKey, PublicKey}, PrivateJWKMap},
 		?LET({{Keys, JWKMap}, Extras},

@@ -9,7 +9,7 @@ JSON Object Signing and Encryption (JOSE) for Erlang and Elixir.
 Add `jose` to your project's dependencies in `mix.exs`
 
 ```elixir
-defp deps do
+defp deps() do
   [
     {:jose, "~> 1.10"}
   ]
@@ -22,9 +22,11 @@ applications list in `mix.exs` to ensure they get compiled into your
 release:
 
 ```elixir
-def application do
-  [mod: {YourApp, []},
-   applications: [:jose]]
+def application() do
+  [
+    mod: {YourApp, []},
+    applications: [:jose]
+  ]
 end
 ```
 
@@ -128,50 +130,62 @@ See [ALGORITHMS.md](https://github.com/potatosalad/erlang-jose/blob/master/ALGOR
 
 By default, the algorithm fallback is disabled, but can be enabled by setting the `crypto_fallback` application environment variable for `jose` to `true` or by calling `jose:crypto_fallback/1` or `JOSE.crypto_fallback/1` with `true`.
 
-You may also review which algorithms are currently supported with the `jose_jwa:supports/0` or `JOSE.JWA.supports/0` functions.  For example, on Elixir 1.0.5 and OTP 18:
+You may also review which algorithms are currently supported with the `jose_jwa:supports/0` or `JOSE.JWA.supports/0` functions.  For example, on Elixir 1.9.4 and OTP 22:
 
 ```elixir
 # crypto_fallback defaults to false
 JOSE.JWA.supports()
 
-[{:jwe,
-  {:alg,
-   ["A128GCMKW", "A128KW", "A192GCMKW", "A192KW", "A256GCMKW", "A256KW",
-    "ECDH-ES", "ECDH-ES+A128KW", "ECDH-ES+A192KW", "ECDH-ES+A256KW",
-    "PBES2-HS256+A128KW", "PBES2-HS384+A192KW", "PBES2-HS512+A256KW",
-    "RSA-OAEP", "RSA1_5", "dir"]},
-  {:enc,
-   ["A128CBC-HS256", "A128GCM", "A192CBC-HS384", "A192GCM", "A256CBC-HS512",
-    "A256GCM"]}, {:zip, ["DEF"]}},
- {:jwk, {:kty, ["EC", "OKP", "RSA", "oct"]}, {:kty_OKP_crv, []}},
- {:jws,
-  {:alg,
-   ["ES256", "ES384", "ES512", "HS256", "HS384", "HS512", "RS256", "RS384",
-    "RS512"]}}]
+[
+  {:jwe,
+   {:alg,
+    ["A128GCMKW", "A128KW", "A192GCMKW", "A192KW", "A256GCMKW", "A256KW",
+     "C20PKW", "ECDH-1PU", "ECDH-1PU+A128GCMKW", "ECDH-1PU+A128KW",
+     "ECDH-1PU+A192GCMKW", "ECDH-1PU+A192KW", "ECDH-1PU+A256GCMKW",
+     "ECDH-1PU+A256KW", "ECDH-1PU+C20PKW", "ECDH-ES", "ECDH-ES+A128GCMKW",
+     "ECDH-ES+A128KW", "ECDH-ES+A192GCMKW", "ECDH-ES+A192KW",
+     "ECDH-ES+A256GCMKW", "ECDH-ES+A256KW", "ECDH-ES+C20PKW",
+     "PBES2-HS256+A128KW", "PBES2-HS384+A192KW", "PBES2-HS512+A256KW",
+     "RSA-OAEP", "RSA-OAEP-256", "RSA1_5", "dir"]},
+   {:enc,
+    ["A128CBC-HS256", "A128GCM", "A192CBC-HS384", "A192GCM", "A256CBC-HS512",
+     "A256GCM", "C20P"]}, {:zip, ["DEF"]}},
+  {:jwk, {:kty, ["EC", "OKP", "RSA", "oct"]}, {:kty_OKP_crv, []}},
+  {:jws,
+   {:alg,
+    ["ES256", "ES384", "ES512", "HS256", "HS384", "HS512", "PS256", "PS384",
+     "PS512", "Poly1305", "RS256", "RS384", "RS512"]}}
+]
 
 # setting crypto_fallback to true
 JOSE.crypto_fallback(true)
 
 # additional algorithms are now available for use
 JOSE.JWA.supports()
-
-[{:jwe,
-  {:alg,
-   ["A128GCMKW", "A128KW", "A192GCMKW", "A192KW", "A256GCMKW", "A256KW",
-    "ECDH-ES", "ECDH-ES+A128KW", "ECDH-ES+A192KW", "ECDH-ES+A256KW",
-    "PBES2-HS256+A128KW", "PBES2-HS384+A192KW", "PBES2-HS512+A256KW",
-    "RSA-OAEP", "RSA-OAEP-256", "RSA1_5", "dir"]},
-  {:enc,
-   ["A128CBC-HS256", "A128GCM", "A192CBC-HS384", "A192GCM", "A256CBC-HS512",
-    "A256GCM", "ChaCha20/Poly1305"]}, {:zip, ["DEF"]}},
- {:jwk, {:kty, ["EC", "OKP", "RSA", "oct"]},
-  {:kty_OKP_crv,
-   ["Ed25519", "Ed25519ph", "Ed448", "Ed448ph", "X25519", "X448"]}},
- {:jws,
-  {:alg,
-   ["ES256", "ES384", "ES512", "Ed25519", "Ed25519ph", "Ed448", "Ed448ph",
-    "HS256", "HS384", "HS512", "PS256", "PS384", "PS512", "Poly1305", "RS256",
-    "RS384", "RS512"]}}]
+[
+  {:jwe,
+   {:alg,
+    ["A128GCMKW", "A128KW", "A192GCMKW", "A192KW", "A256GCMKW", "A256KW",
+     "C20PKW", "ECDH-1PU", "ECDH-1PU+A128GCMKW", "ECDH-1PU+A128KW",
+     "ECDH-1PU+A192GCMKW", "ECDH-1PU+A192KW", "ECDH-1PU+A256GCMKW",
+     "ECDH-1PU+A256KW", "ECDH-1PU+C20PKW", "ECDH-1PU+XC20PKW", "ECDH-ES",
+     "ECDH-ES+A128GCMKW", "ECDH-ES+A128KW", "ECDH-ES+A192GCMKW",
+     "ECDH-ES+A192KW", "ECDH-ES+A256GCMKW", "ECDH-ES+A256KW", "ECDH-ES+C20PKW",
+     "ECDH-ES+XC20PKW", "PBES2-HS256+A128KW", "PBES2-HS384+A192KW",
+     "PBES2-HS512+A256KW", "RSA-OAEP", "RSA-OAEP-256", "RSA1_5", "XC20PKW",
+     "dir"]},
+   {:enc,
+    ["A128CBC-HS256", "A128GCM", "A192CBC-HS384", "A192GCM", "A256CBC-HS512",
+     "A256GCM", "C20P", "XC20P"]}, {:zip, ["DEF"]}},
+  {:jwk, {:kty, ["EC", "OKP", "RSA", "oct"]},
+   {:kty_OKP_crv,
+    ["Ed25519", "Ed25519ph", "Ed448", "Ed448ph", "X25519", "X448"]}},
+  {:jws,
+   {:alg,
+    ["ES256", "ES384", "ES512", "Ed25519", "Ed25519ph", "Ed448", "Ed448ph",
+     "HS256", "HS384", "HS512", "PS256", "PS384", "PS512", "Poly1305", "RS256",
+     "RS384", "RS512"]}}
+]
 ```
 
 #### Unsecured Signing Vulnerability
@@ -440,12 +454,12 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 
 #### `"alg"` [RFC 7518 Section 4](https://tools.ietf.org/html/rfc7518#section-4)
 
-- [X] `A128GCMKW` <sup>[OTP-17](#footnote-otp-17)</sup>
-- [X] `A192GCMKW` <sup>[OTP-17](#footnote-otp-17)</sup>
-- [X] `A256GCMKW` <sup>[OTP-17](#footnote-otp-17)</sup>
-- [X] `A128KW` <sup>[OTP-17](#footnote-otp-17)</sup>
-- [X] `A192KW` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18)</sup>
-- [X] `A256KW` <sup>[OTP-17](#footnote-otp-17)</sup>
+- [X] `A128GCMKW`
+- [X] `A192GCMKW`
+- [X] `A256GCMKW`
+- [X] `A128KW`
+- [X] `A192KW`
+- [X] `A256KW`
 - [X] `C20PKW` <sup>[draft-amringer-jose-chacha](https://tools.ietf.org/html/draft-amringer-jose-chacha-01)</sup>
 - [X] `dir`
 - [X] `ECDH-1PU`
@@ -466,22 +480,22 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 - [X] `ECDH-ES+A256KW`
 - [X] `ECDH-ES+C20PKW` <sup>[draft-amringer-jose-chacha](https://tools.ietf.org/html/draft-amringer-jose-chacha-01)</sup>
 - [X] `ECDH-ES+XC20PKW` <sup>[draft-amringer-jose-chacha](https://tools.ietf.org/html/draft-amringer-jose-chacha-01)</sup>
-- [X] `PBES2-HS256+A128KW` <sup>[OTP-17](#footnote-otp-17)</sup>
-- [X] `PBES2-HS384+A192KW` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18)</sup>
-- [X] `PBES2-HS512+A256KW` <sup>[OTP-17](#footnote-otp-17)</sup>
+- [X] `PBES2-HS256+A128KW`
+- [X] `PBES2-HS384+A192KW`
+- [X] `PBES2-HS512+A256KW`
 - [X] `RSA1_5`
 - [X] `RSA-OAEP`
-- [X] `RSA-OAEP-256` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18), [OTP-19](#footnote-otp-19)</sup>
+- [X] `RSA-OAEP-256`
 - [X] `XC20PKW` <sup>[draft-amringer-jose-chacha](https://tools.ietf.org/html/draft-amringer-jose-chacha-01)</sup>
 
 #### `"enc"` [RFC 7518 Section 5](https://tools.ietf.org/html/rfc7518#section-5)
 
 - [X] `A128CBC-HS256`
-- [X] `A192CBC-HS384` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18)</sup>
+- [X] `A192CBC-HS384`
 - [X] `A256CBC-HS512`
-- [X] `A128GCM` <sup>[OTP-17](#footnote-otp-17)</sup>
-- [X] `A192GCM` <sup>[OTP-17](#footnote-otp-17)</sup>
-- [X] `A256GCM` <sup>[OTP-17](#footnote-otp-17)</sup>
+- [X] `A128GCM`
+- [X] `A192GCM`
+- [X] `A256GCM`
 - [X] `C20P` <sup>[draft-amringer-jose-chacha](https://tools.ietf.org/html/draft-amringer-jose-chacha-01)</sup>
 - [X] `XC20P` <sup>[draft-amringer-jose-chacha](https://tools.ietf.org/html/draft-amringer-jose-chacha-01)</sup>
 
@@ -519,10 +533,10 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 - [X] `HS256`
 - [X] `HS384`
 - [X] `HS512`
-- [X] `Poly1305` <sup>experimental</sup>
-- [X] `PS256` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18), [OTP-19](#footnote-otp-19)</sup>
-- [X] `PS384` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18), [OTP-19](#footnote-otp-19)</sup>
-- [X] `PS512` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18), [OTP-19](#footnote-otp-19)</sup>
+- [X] `Poly1305` <sup>non-standard</sup>
+- [X] `PS256`
+- [X] `PS384`
+- [X] `PS512`
 - [X] `RS256`
 - [X] `RS384`
 - [X] `RS512`
@@ -532,11 +546,5 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 
 - [X] JSON Web Key (JWK) Thumbprint [RFC 7638](https://tools.ietf.org/html/rfc7638)
 - [X] JWS Unencoded Payload Option [RFC 7797](https://tools.ietf.org/html/rfc7797)
-
-<sup><a name="footnote-otp-17">OTP-17</a></sup> Native algorithm not supported by OTP-17.  Use the [`crypto_fallback`](#cryptographic-algorithm-fallback) setting to enable the non-native implementation.  See [ALGORITHMS.md](https://github.com/potatosalad/erlang-jose/blob/master/ALGORITHMS.md) for more information about algorithm support for specific OTP versions.
-
-<sup><a name="footnote-otp-18">OTP-18</a></sup> Native algorithm not supported by OTP-18.  Use the [`crypto_fallback`](#cryptographic-algorithm-fallback) setting to enable the non-native implementation.  See [ALGORITHMS.md](https://github.com/potatosalad/erlang-jose/blob/master/ALGORITHMS.md) for more information about algorithm support for specific OTP versions.
-
-<sup><a name="footnote-otp-19">OTP-19</a></sup> Native algorithm not supported by OTP-19.  Use the [`crypto_fallback`](#cryptographic-algorithm-fallback) setting to enable the non-native implementation.  See [ALGORITHMS.md](https://github.com/potatosalad/erlang-jose/blob/master/ALGORITHMS.md) for more information about algorithm support for specific OTP versions.
 
 <sup><a name="footnote-unsecured">unsecured</a></sup> This algorithm is disabled by default due to the unsecured signing vulnerability.  Use the [`unsecured_signing`](#unsecured-signing-vulnerability) setting to enable this algorithm.
