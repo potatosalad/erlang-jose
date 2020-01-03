@@ -43,6 +43,7 @@
 -export([from/2]).
 -export([from_binary/1]).
 -export([from_binary/2]).
+-export([from_der/1]).
 -export([from_file/1]).
 -export([from_file/2]).
 -export([from_firebase/1]).
@@ -64,6 +65,7 @@
 -export([to_binary/1]).
 -export([to_binary/2]).
 -export([to_binary/3]).
+-export([to_der/1]).
 -export([to_file/2]).
 -export([to_file/3]).
 -export([to_file/4]).
@@ -184,6 +186,21 @@ from_binary(Key, {Modules, Encrypted}) when is_map(Modules) andalso is_binary(En
 	{JWE, from_binary({Modules, JWKBinary})};
 from_binary(Key, Encrypted) when is_binary(Encrypted) ->
 	from_binary(Key, {#{}, Encrypted}).
+
+from_der(List) when is_list(List) ->
+	[from_der(Element) || Element <- List];
+from_der({#{ kty := Module }, Binary}) when is_binary(Binary) ->
+	{KTY, Fields} = Module:from_der(Binary),
+	#jose_jwk{ kty = {Module, KTY}, fields = Fields };
+from_der({#{}, Binary}) when is_binary(Binary) ->
+	case jose_jwk_der:from_binary(Binary) of
+		{Module, {KTY, Fields}} when Module =/= error ->
+			#jose_jwk{ kty = {Module, KTY}, fields = Fields };
+		PEMError ->
+			PEMError
+	end;
+from_der(Binary) when is_binary(Binary) ->
+	from_der({#{}, Binary}).
 
 from_file({Modules, File}) when is_map(Modules) andalso (is_binary(File) orelse is_list(File)) ->
 	case file:read_file(File) of
@@ -456,6 +473,13 @@ to_binary(Key, JWE=#jose_jwe{}, JWK=#jose_jwk{}) ->
 	{Modules, jose:encode(EncryptedMap)};
 to_binary(Key, JWEOther, JWKOther) ->
 	to_binary(Key, jose_jwe:from(JWEOther), from(JWKOther)).
+
+to_der(List) when is_list(List) ->
+	[to_der(Element) || Element <- List];
+to_der(#jose_jwk{kty={Module, KTY}}) ->
+	{#{ kty => Module }, Module:to_der(KTY)};
+to_der(Other) ->
+	to_der(from(Other)).
 
 to_file(File, JWK=#jose_jwk{}) when is_binary(File) orelse is_list(File) ->
 	{Modules, Binary} = to_binary(JWK),

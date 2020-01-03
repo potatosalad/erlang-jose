@@ -36,9 +36,11 @@
 -export([verifier/2]).
 -export([verify/4]).
 %% API
+-export([from_der/1]).
 -export([from_key/1]).
 -export([from_pem/1]).
 -export([from_pem/2]).
+-export([to_der/1]).
 -export([to_pem/1]).
 -export([to_pem/2]).
 
@@ -236,6 +238,12 @@ verify(Message, JWSALG, Signature, #'RSAPrivateKey'{modulus=Modulus, publicExpon
 %% API functions
 %%====================================================================
 
+from_der(DERBinary) when is_binary(DERBinary) ->
+	case jose_jwk_der:from_binary(DERBinary) of
+		{?MODULE, {Key, Fields}} ->
+			{Key, Fields}
+	end.
+
 from_key(RSAPrivateKey=#'RSAPrivateKey'{}) ->
 	{RSAPrivateKey, #{}};
 from_key(RSAPublicKey=#'RSAPublicKey'{}) ->
@@ -256,6 +264,11 @@ from_pem(Password, PEMBinary) when is_binary(PEMBinary) ->
 		PEMError ->
 			PEMError
 	end.
+
+to_der(RSAPrivateKey=#'RSAPrivateKey'{}) ->
+	jose_public_key:der_encode('PrivateKeyInfo', RSAPrivateKey);
+to_der(RSAPublicKey=#'RSAPublicKey'{}) ->
+	jose_public_key:der_encode('RSAPublicKey', RSAPublicKey).
 
 to_pem(RSAPrivateKey=#'RSAPrivateKey'{}) ->
 	PEMEntry = public_key:pem_entry_encode('RSAPrivateKey', RSAPrivateKey),

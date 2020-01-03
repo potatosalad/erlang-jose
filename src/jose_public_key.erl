@@ -14,6 +14,7 @@
 -include("jose_public_key.hrl").
 
 %% API
+-export([der_decode/1]).
 -export([der_decode/2]).
 -export([der_encode/2]).
 -export([pem_decode/1]).
@@ -27,11 +28,48 @@
 %% API functions
 %%====================================================================
 
+der_decode(DER) when is_binary(DER) ->
+	Result =
+		try_der_decode([
+			'Certificate',
+			'RSAPrivateKey',
+			'RSAPublicKey',
+			'SubjectPublicKeyInfo',
+			'DSAPrivateKey',
+			'DHParameter',
+			'PrivateKeyInfo',
+			'EncryptedPrivateKeyInfo',
+			'CertificationRequest',
+			'ContentInfo',
+			'CertificateList',
+			'EcpkParameters',
+			'ECPrivateKey',
+			{no_asn1, new_openssh} %% Temporarily in the prototype of this format
+		], DER),
+	case Result of
+		PrivateKeyInfo=#'PrivateKeyInfo'{} ->
+			i2k(PrivateKeyInfo);
+		SubjectPublicKeyInfo=#'SubjectPublicKeyInfo'{} ->
+			i2k(SubjectPublicKeyInfo);
+		Other ->
+			Other
+	end.
+
 der_decode(ASN1Type, DER) when is_atom(ASN1Type) andalso is_binary(DER) ->
 	public_key:der_decode(ASN1Type, DER).
 
 der_encode(ASN1Type, Entity) when is_atom(ASN1Type) ->
-	public_key:der_encode(ASN1Type, Entity).
+	try
+		public_key:der_encode(ASN1Type, Entity)
+	catch
+		?COMPAT_CATCH(Class, Reason, ST) ->
+			case der_enc(ASN1Type, Entity) of
+				{true, DERBinary} ->
+					DERBinary;
+				false ->
+					erlang:raise(Class, Reason, ?COMPAT_GET_STACKTRACE(ST))
+			end
+	end.
 
 pem_decode(PEMBinary) when is_binary(PEMBinary) ->
 	public_key:pem_decode(PEMBinary).
@@ -127,6 +165,59 @@ pem_entry_encode(ASN1Type, Entity, Password) ->
 %%%-------------------------------------------------------------------
 %%% Internal functions
 %%%-------------------------------------------------------------------
+
+%% @private
+try_der_decode([ASN1Type | Rest], DER) ->
+	try der_decode(ASN1Type, DER) of
+		Result ->
+			Result
+	catch
+		?COMPAT_CATCH(error, Reason={badmatch, _}, ST) ->
+			try_der_decode(Rest, DER, {error, Reason, ?COMPAT_GET_STACKTRACE(ST)})
+	end.
+
+%% @private
+try_der_decode([], _DER, {Class, Reason, Stacktrace}) ->
+	erlang:raise(Class, Reason, Stacktrace);
+try_der_decode([ASN1Type | Rest], DER, _) ->
+	try der_decode(ASN1Type, DER) of
+		Result ->
+			Result
+	catch
+		?COMPAT_CATCH(error, Reason={badmatch, _}, ST) ->
+			try_der_decode(Rest, DER, {error, Reason, ?COMPAT_GET_STACKTRACE(ST)})
+	end.
+
+%% @private
+der_enc('EdDSA25519PrivateKey', K=#'jose_EdDSA25519PrivateKey'{}) ->
+	EncodedDER = public_key:der_encode('PrivateKeyInfo', k2i(K)),
+	{true, EncodedDER};
+der_enc('EdDSA25519PublicKey', K=#'jose_EdDSA25519PublicKey'{}) ->
+	EncodedDER = public_key:der_encode('SubjectPublicKeyInfo', k2i(K)),
+	{true, EncodedDER};
+der_enc('EdDSA448PrivateKey', K=#'jose_EdDSA448PrivateKey'{}) ->
+	EncodedDER = public_key:der_encode('PrivateKeyInfo', k2i(K)),
+	{true, EncodedDER};
+der_enc('EdDSA448PublicKey', K=#'jose_EdDSA448PublicKey'{}) ->
+	EncodedDER = public_key:der_encode('SubjectPublicKeyInfo', k2i(K)),
+	{true, EncodedDER};
+der_enc('SubjectPublicKeyInfo', K)  ->
+	EncodedDER = public_key:der_encode('SubjectPublicKeyInfo', k2i(K)),
+	{true, EncodedDER};
+der_enc('X25519PrivateKey', K=#'jose_X25519PrivateKey'{}) ->
+	EncodedDER = public_key:der_encode('PrivateKeyInfo', k2i(K)),
+	{true, EncodedDER};
+der_enc('X25519PublicKey', K=#'jose_X25519PublicKey'{}) ->
+	EncodedDER = public_key:der_encode('SubjectPublicKeyInfo', k2i(K)),
+	{true, EncodedDER};
+der_enc('X448PrivateKey', K=#'jose_X448PrivateKey'{}) ->
+	EncodedDER = public_key:der_encode('PrivateKeyInfo', k2i(K)),
+	{true, EncodedDER};
+der_enc('X448PublicKey', K=#'jose_X448PublicKey'{}) ->
+	EncodedDER = public_key:der_encode('SubjectPublicKeyInfo', k2i(K)),
+	{true, EncodedDER};
+der_enc(_, _) ->
+	false.
 
 %% @private
 pem_enc(Entries) ->
@@ -282,6 +373,15 @@ pem_encrypt(Prev, Password, Salt, Count, Acc, Hash) ->
 	pem_encrypt(Result, Password, Salt, Count-1 , <<Acc/binary, Result/binary>>, Hash).
 
 %% @private
+i2k(#'SubjectPublicKeyInfo'{
+	algorithm =
+		#'AlgorithmIdentifier'{
+			algorithm = ?'id-ecPublicKey',
+			parameters = ECParameters
+		},
+	subjectPublicKey = ECPublicKey
+}) ->
+	{#'ECPoint'{point = ECPublicKey}, der_decode('EcpkParameters', ECParameters)};
 i2k(#'PrivateKeyInfo'{
 	privateKeyAlgorithm =
 		#'PrivateKeyInfo_privateKeyAlgorithm'{
@@ -370,6 +470,15 @@ i2k(Info) ->
 	Info.
 
 %% @private
+k2i({#'ECPoint'{point=ECPublicKey}, ECParameters}) ->
+	#'SubjectPublicKeyInfo'{
+		algorithm =
+			#'AlgorithmIdentifier'{
+				algorithm = ?'id-ecPublicKey',
+				parameters = der_encode('EcpkParameters', ECParameters)
+			},
+		subjectPublicKey = ECPublicKey
+	};
 k2i(#'jose_EdDSA25519PrivateKey'{privateKey=PrivateKey}) ->
 	#'PrivateKeyInfo'{
 		version = v1,
