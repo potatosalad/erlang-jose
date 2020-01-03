@@ -86,6 +86,28 @@ defmodule JOSE.JWK do
   def from_binary(password, binary), do: :jose_jwk.from_binary(password, binary) |> from_encrypted_record()
 
   @doc """
+  Converts a DER (Distinguished Encoding Rules)  binary into a `JOSE.JWK`.
+  """
+  def from_der(list) when is_list(list), do: for(element <- list, into: [], do: from_der(element))
+  def from_der(pem), do: :jose_jwk.from_der(pem) |> from_record()
+
+  @doc """
+  Decrypts an encrypted DER (Distinguished Encoding Rules)  binary into a `JOSE.JWK` using `password`.
+  """
+  def from_der(password, list) when is_list(list), do: for(element <- list, into: [], do: from_der(password, element))
+  def from_der(password, pem), do: :jose_jwk.from_der(password, pem) |> from_record()
+
+  @doc """
+  Reads file and calls `from_der/1` to convert into a `JOSE.JWK`.
+  """
+  def from_der_file(file), do: :jose_jwk.from_der_file(file) |> from_record()
+
+  @doc """
+  Reads encrypted file and calls `from_der/2` to convert into a `JOSE.JWK` using `password`.
+  """
+  def from_der_file(password, file), do: :jose_jwk.from_der_file(password, file) |> from_record()
+
+  @doc """
   Reads file and calls `from_binary/1` to convert into a `JOSE.JWK`.
   """
   def from_file(file), do: :jose_jwk.from_file(file) |> from_record()
@@ -170,7 +192,7 @@ defmodule JOSE.JWK do
   def from_pem(password, pem), do: :jose_jwk.from_pem(password, pem) |> from_record()
 
   @doc """
-  Reads file and calls `from_oct/1` to convert into a `JOSE.JWK`.
+  Reads file and calls `from_pem/1` to convert into a `JOSE.JWK`.
   """
   def from_pem_file(file), do: :jose_jwk.from_pem_file(file) |> from_record()
 
@@ -206,6 +228,32 @@ defmodule JOSE.JWK do
   def to_binary(password, jwe = %JOSE.JWE{}, jwk), do: to_binary(password, JOSE.JWE.to_record(jwe), jwk)
   def to_binary(password, jwe, jwk = %JOSE.JWK{}), do: to_binary(password, jwe, to_record(jwk))
   def to_binary(password, jwe, jwk), do: :jose_jwk.to_binary(password, jwe, jwk)
+
+  @doc """
+  Converts a `JOSE.JWK` into a DER (Distinguished Encoding Rules)  binary.
+  """
+  def to_der(list) when is_list(list), do: for(element <- list, into: [], do: to_der(element))
+  def to_der(jwk = %JOSE.JWK{}), do: to_der(to_record(jwk))
+  def to_der(jwk), do: :jose_jwk.to_der(jwk)
+
+  @doc """
+  Encrypts a `JOSE.JWK` into a DER (Distinguished Encoding Rules)  encrypted binary using `password`.
+  """
+  def to_der(password, list) when is_list(list), do: for(element <- list, into: [], do: to_der(password, element))
+  def to_der(password, jwk = %JOSE.JWK{}), do: to_der(password, to_record(jwk))
+  def to_der(password, jwk), do: :jose_jwk.to_der(password, jwk)
+
+  @doc """
+  Calls `to_der/1` on a `JOSE.JWK` and then writes the binary to file.
+  """
+  def to_der_file(file, jwk = %JOSE.JWK{}), do: to_der_file(file, to_record(jwk))
+  def to_der_file(file, jwk), do: :jose_jwk.to_der_file(file, jwk)
+
+  @doc """
+  Calls `to_der/2` on a `JOSE.JWK` and then writes the encrypted binary to file.
+  """
+  def to_der_file(password, file, jwk = %JOSE.JWK{}), do: to_der_file(password, file, to_record(jwk))
+  def to_der_file(password, file, jwk), do: :jose_jwk.to_der_file(password, file, jwk)
 
   @doc """
   Calls `to_binary/1` on a `JOSE.JWK` and then writes the binary to file.

@@ -219,7 +219,7 @@ defmodule JOSE.JWE do
         "alg" => "PBES2-HS256+A128KW",
         "enc" => "A128GCM",
         "p2i" => iterations,
-        "p2s" => :base64url.encode(salt)
+        "p2s" => :jose_base64url.encode(salt)
       }
       # PBES2-HS256+A128KW
       iex> encrypted_pbes2 = JOSE.JWE.block_encrypt(jwk_secret, "{}", jwe) |> JOSE.JWE.compact |> elem(1)

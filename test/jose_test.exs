@@ -466,7 +466,7 @@ defmodule JOSETest do
     refute(JOSE.JWT.verify(jwk_oct16, signed_es256) |> elem(0))
     {kty_module, kty} = jwk_oct16.kty
     bad_signed_input = JOSE.JWS.signing_input(JOSE.JWT.to_binary(jwt) |> elem(1), jws_es256)
-    bad_signature = kty_module.sign(bad_signed_input, :HS256, kty) |> :base64url.encode()
+    bad_signature = kty_module.sign(bad_signed_input, :HS256, kty) |> :jose_base64url.encode()
     bad_signed_hs256 = bad_signed_input <> "." <> bad_signature
     refute(JOSE.JWT.verify_strict(jwk_oct16, ["HS256"], bad_signed_hs256) |> elem(0))
     refute(JOSE.JWT.verify_strict(jwk_ec256, ["ES256"], bad_signed_hs256) |> elem(0))
@@ -478,7 +478,7 @@ defmodule JOSETest do
   test "handles invalid signed data without raising exception" do
     jwk = %{
       "kty" => "oct",
-      "k" => :base64url.encode("symmetric key")
+      "k" => :jose_base64url.encode("symmetric key")
     }
 
     assert({:error, _} = JOSE.JWT.verify(jwk, "invalid"))
@@ -489,7 +489,7 @@ defmodule JOSETest do
   test "handles nil signed data" do
     jwk = %{
       "kty" => "oct",
-      "k" => :base64url.encode("symmetric key")
+      "k" => :jose_base64url.encode("symmetric key")
     }
 
     assert({:error, _} = JOSE.JWT.verify(jwk, nil))
