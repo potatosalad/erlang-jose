@@ -114,7 +114,7 @@ defmodule JOSE.JWA do
   ## Options
 
     * `:rsa_padding` - one of `:rsa_pkcs1_pss_padding` or `:rsa_pkcs1_padding`
-    * `:rsa_pss_saltlen` - sets the salt length for `:rsa_pkcs1_pss_padding`, defaults to `-2`
+    * `:rsa_pss_saltlen` - sets the salt length for `:rsa_pkcs1_pss_padding`, defaults to `-1`
       * `-2` - automatically determine based on the PSS block structure
       * `-1` - use hash length for salt length
       * any number higher than `-1` is used as the actual salt length
