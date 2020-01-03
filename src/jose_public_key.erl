@@ -281,6 +281,14 @@ pem_entry_enc('X448PrivateKey', K=#'jose_X448PrivateKey'{}) ->
 pem_entry_enc('X448PublicKey', K=#'jose_X448PublicKey'{}) ->
 	EncodedPEMEntry = public_key:pem_entry_encode('SubjectPublicKeyInfo', k2i(K)),
 	{true, EncodedPEMEntry};
+pem_entry_enc('PrivateKeyInfo', K) ->
+	case K of
+		#'jose_EdDSA25519PrivateKey'{} -> pem_entry_enc('EdDSA25519PrivateKey', K);
+		#'jose_EdDSA448PrivateKey'{} -> pem_entry_enc('EdDSA448PrivateKey', K);
+		#'jose_X25519PrivateKey'{} -> pem_entry_enc('X25519PrivateKey', K);
+		#'jose_X448PrivateKey'{} -> pem_entry_enc('X448PrivateKey', K);
+		_ -> false
+	end;
 pem_entry_enc(_, _) ->
 	false.
 
@@ -309,6 +317,14 @@ pem_entry_enc('X448PrivateKey', K=#'jose_X448PrivateKey'{}, Password) ->
 pem_entry_enc('X448PublicKey', K=#'jose_X448PublicKey'{}, Password) ->
 	EncodedPEMEntry = pem_entry_enc0('SubjectPublicKeyInfo', k2i(K), Password),
 	{true, EncodedPEMEntry};
+pem_entry_enc('PrivateKeyInfo', K, Password) ->
+	case K of
+		#'jose_EdDSA25519PrivateKey'{} -> pem_entry_enc('EdDSA25519PrivateKey', K, Password);
+		#'jose_EdDSA448PrivateKey'{} -> pem_entry_enc('EdDSA448PrivateKey', K, Password);
+		#'jose_X25519PrivateKey'{} -> pem_entry_enc('X25519PrivateKey', K, Password);
+		#'jose_X448PrivateKey'{} -> pem_entry_enc('X448PrivateKey', K, Password);
+		_ -> false
+	end;
 pem_entry_enc(_, _, _) ->
 	false.
 

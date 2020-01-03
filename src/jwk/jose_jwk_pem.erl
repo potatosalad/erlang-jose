@@ -64,7 +64,7 @@ from_public_key_info(#'SubjectPublicKeyInfo'{algorithm=#'AlgorithmIdentifier'{}}
 from_public_key_info(PEMEntry={'SubjectPublicKeyInfo', DER, not_encrypted}) when is_binary(DER) ->
 	jose_jwk_kty:from_key(jose_public_key:pem_entry_decode(PEMEntry)).
 
-to_binary(Password, _KeyType, Key) ->
+to_binary(Password, 'PrivateKeyInfo', Key) ->
 	CipherInfo = {"AES-256-CBC", #'PBES2-params'{
 		keyDerivationFunc = #'PBES2-params_keyDerivationFunc'{
 			algorithm = ?'id-PBKDF2',
@@ -85,6 +85,12 @@ to_binary(Password, _KeyType, Key) ->
 	}},
 	PasswordString = binary_to_list(iolist_to_binary(Password)),
 	PEMEntry = jose_public_key:pem_entry_encode('PrivateKeyInfo', Key, {CipherInfo, PasswordString}),
+	jose_public_key:pem_encode([PEMEntry]);
+to_binary(Password, KeyType, Key) ->
+	CipherInfo = {"AES-256-CBC", crypto:strong_rand_bytes(16)},
+	% CipherInfo = {"DES-EDE3-CBC", crypto:strong_rand_bytes(8)},
+	PasswordString = binary_to_list(iolist_to_binary(Password)),
+	PEMEntry = jose_public_key:pem_entry_encode(KeyType, Key, {CipherInfo, PasswordString}),
 	jose_public_key:pem_encode([PEMEntry]).
 
 %%%-------------------------------------------------------------------

@@ -245,7 +245,7 @@ to_pem(PK = << _:?publickeybytes/binary >>) ->
 
 to_pem(Password, SK = << _:?secretkeybytes/binary >>) ->
 	EdDSA448PrivateKey = to_key(SK),
-	jose_jwk_pem:to_binary(Password, 'EdDSA448PrivateKey', EdDSA448PrivateKey);
+	jose_jwk_pem:to_binary(Password, 'PrivateKeyInfo', EdDSA448PrivateKey);
 to_pem(Password, PK = << _:?publickeybytes/binary >>) ->
 	EdDSA448PublicKey = to_key(PK),
 	jose_jwk_pem:to_binary(Password, 'EdDSA448PublicKey', EdDSA448PublicKey).

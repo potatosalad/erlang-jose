@@ -254,7 +254,7 @@ to_pem(PK = << _:?publickeybytes/binary >>) ->
 
 to_pem(Password, SK = << _:?secretkeybytes/binary >>) ->
 	X25519PrivateKey = to_key(SK),
-	jose_jwk_pem:to_binary(Password, 'X25519PrivateKey', X25519PrivateKey);
+	jose_jwk_pem:to_binary(Password, 'PrivateKeyInfo', X25519PrivateKey);
 to_pem(Password, PK = << _:?publickeybytes/binary >>) ->
 	X25519PublicKey = to_key(PK),
 	jose_jwk_pem:to_binary(Password, 'X25519PublicKey', X25519PublicKey).
