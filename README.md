@@ -11,7 +11,7 @@ Add `jose` to your project's dependencies in `mix.exs`
 ```elixir
 defp deps do
   [
-    {:jose, "~> 1.9"}
+    {:jose, "~> 1.10"}
   ]
 end
 ```
@@ -45,7 +45,7 @@ For example, with Elixir and `mix.exs`
 ```elixir
 defp deps do
   [
-    {:jose, "~> 1.9"},
+    {:jose, "~> 1.10"},
     {:ojson, "~> 1.0"}
   ]
 end
@@ -84,7 +84,7 @@ JOSE.chacha20_poly1305_module(:jose_jwa_chacha20_poly1305) # uses the pure Erlan
 
 #### Curve25519 and Curve448 Support
 
-Curve25519 and Curve448 and their associated signing/key exchange functions are experimentally supported while [CFRG ECDH and signatures in JOSE](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves) is still a draft.
+Curve25519 and Curve448 and their associated signing/key exchange functions are supported now that [RFC 8037](https://tools.ietf.org/html/rfc8037) has been published.
 
 Fallback support for `Ed25519`, `Ed25519ph`, `Ed448`, `Ed448ph`, `X25519`, and `X448` is provided.  See [`crypto_fallback`](#cryptographic-algorithm-fallback) below.
 
@@ -132,7 +132,7 @@ You may also review which algorithms are currently supported with the `jose_jwa:
 
 ```elixir
 # crypto_fallback defaults to false
-JOSE.JWA.supports
+JOSE.JWA.supports()
 
 [{:jwe,
   {:alg,
@@ -153,7 +153,7 @@ JOSE.JWA.supports
 JOSE.crypto_fallback(true)
 
 # additional algorithms are now available for use
-JOSE.JWA.supports
+JOSE.JWA.supports()
 
 [{:jwe,
   {:alg,
@@ -187,7 +187,7 @@ token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjEzMDA4MTkzODAsImh0dHA6Ly
 # JSON Web Key (JWK)
 jwk = %{
   "kty" => "oct",
-  "k" => :base64url.encode("symmetric key")
+  "k" => :jose_base64url.encode("symmetric key")
 }
 
 {verified, _, _} = JOSE.JWT.verify_strict(jwk, ["HS256"], token)
@@ -248,7 +248,7 @@ _Elixir_
 # JSON Web Key (JWK)
 jwk = %{
   "kty" => "oct",
-  "k" => :base64url.encode("symmetric key")
+  "k" => :jose_base64url.encode("symmetric key")
 }
 
 # JSON Web Signature (JWS)
@@ -290,7 +290,7 @@ _Erlang_
 % JSON Web Key (JWK)
 JWK = #{
   <<"kty">> => <<"oct">>,
-  <<"k">> => base64url:encode(<<"symmetric key">>)
+  <<"k">> => jose_base64url:encode(<<"symmetric key">>)
 }.
 
 % JSON Web Signature (JWS)
@@ -446,17 +446,33 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 - [X] `A128KW` <sup>[OTP-17](#footnote-otp-17)</sup>
 - [X] `A192KW` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18)</sup>
 - [X] `A256KW` <sup>[OTP-17](#footnote-otp-17)</sup>
+- [X] `C20PKW` <sup>[draft-amringer-jose-chacha](https://tools.ietf.org/html/draft-amringer-jose-chacha-01)</sup>
 - [X] `dir`
+- [X] `ECDH-1PU`
+- [X] `ECDH-1PU+A128GCMKW` <sup>non-standard, [draft-madden-jose-ecdh-1pu](https://tools.ietf.org/html/draft-madden-jose-ecdh-1pu-02)</sup>
+- [X] `ECDH-1PU+A192GCMKW` <sup>non-standard, [draft-madden-jose-ecdh-1pu](https://tools.ietf.org/html/draft-madden-jose-ecdh-1pu-02)</sup>
+- [X] `ECDH-1PU+A256GCMKW` <sup>non-standard, [draft-madden-jose-ecdh-1pu](https://tools.ietf.org/html/draft-madden-jose-ecdh-1pu-02)</sup>
+- [X] `ECDH-1PU+A128KW` <sup>[draft-madden-jose-ecdh-1pu](https://tools.ietf.org/html/draft-madden-jose-ecdh-1pu-02)</sup>
+- [X] `ECDH-1PU+A192KW` <sup>[draft-madden-jose-ecdh-1pu](https://tools.ietf.org/html/draft-madden-jose-ecdh-1pu-02)</sup>
+- [X] `ECDH-1PU+A256KW` <sup>[draft-madden-jose-ecdh-1pu](https://tools.ietf.org/html/draft-madden-jose-ecdh-1pu-02)</sup>
+- [X] `ECDH-1PU+C20PKW` <sup>[draft-amringer-jose-chacha](https://tools.ietf.org/html/draft-amringer-jose-chacha-01), [draft-madden-jose-ecdh-1pu](https://tools.ietf.org/html/draft-madden-jose-ecdh-1pu-02)</sup>
+- [X] `ECDH-1PU+XC20PKW` <sup>[draft-amringer-jose-chacha](https://tools.ietf.org/html/draft-amringer-jose-chacha-01), [draft-madden-jose-ecdh-1pu](https://tools.ietf.org/html/draft-madden-jose-ecdh-1pu-02)</sup>
 - [X] `ECDH-ES`
+- [X] `ECDH-ES+A128GCMKW` <sup>non-standard</sup>
+- [X] `ECDH-ES+A192GCMKW` <sup>non-standard</sup>
+- [X] `ECDH-ES+A256GCMKW` <sup>non-standard</sup>
 - [X] `ECDH-ES+A128KW`
 - [X] `ECDH-ES+A192KW`
 - [X] `ECDH-ES+A256KW`
+- [X] `ECDH-ES+C20PKW` <sup>[draft-amringer-jose-chacha](https://tools.ietf.org/html/draft-amringer-jose-chacha-01)</sup>
+- [X] `ECDH-ES+XC20PKW` <sup>[draft-amringer-jose-chacha](https://tools.ietf.org/html/draft-amringer-jose-chacha-01)</sup>
 - [X] `PBES2-HS256+A128KW` <sup>[OTP-17](#footnote-otp-17)</sup>
 - [X] `PBES2-HS384+A192KW` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18)</sup>
 - [X] `PBES2-HS512+A256KW` <sup>[OTP-17](#footnote-otp-17)</sup>
 - [X] `RSA1_5`
 - [X] `RSA-OAEP`
 - [X] `RSA-OAEP-256` <sup>[OTP-17](#footnote-otp-17), [OTP-18](#footnote-otp-18), [OTP-19](#footnote-otp-19)</sup>
+- [X] `XC20PKW` <sup>[draft-amringer-jose-chacha](https://tools.ietf.org/html/draft-amringer-jose-chacha-01)</sup>
 
 #### `"enc"` [RFC 7518 Section 5](https://tools.ietf.org/html/rfc7518#section-5)
 
@@ -466,7 +482,8 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 - [X] `A128GCM` <sup>[OTP-17](#footnote-otp-17)</sup>
 - [X] `A192GCM` <sup>[OTP-17](#footnote-otp-17)</sup>
 - [X] `A256GCM` <sup>[OTP-17](#footnote-otp-17)</sup>
-- [X] `ChaCha20/Poly1305` <sup>experimental</sup>
+- [X] `C20P` <sup>[draft-amringer-jose-chacha](https://tools.ietf.org/html/draft-amringer-jose-chacha-01)</sup>
+- [X] `XC20P` <sup>[draft-amringer-jose-chacha](https://tools.ietf.org/html/draft-amringer-jose-chacha-01)</sup>
 
 #### `"zip"` [RFC 7518 Section 7.3](https://tools.ietf.org/html/rfc7518#section-7.3)
 
@@ -478,24 +495,24 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 
 - [X] `EC`
 - [X] `oct`
-- [X] `OKP` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves)</sup>
-- [X] `OKP` with `{"crv":"Ed25519"}` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-eddsa](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.1)</sup>
-- [X] `OKP` with `{"crv":"Ed25519ph"}` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-eddsa](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.1)</sup>
-- [X] `OKP` with `{"crv":"Ed448"}` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-eddsa](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.2)</sup>
-- [X] `OKP` with `{"crv":"Ed448ph"}` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-eddsa](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.2)</sup>
-- [X] `OKP` with `{"crv":"X25519"}` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [RFC 7748](https://tools.ietf.org/html/rfc7748#section-5)</sup>
-- [X] `OKP` with `{"crv":"X448"}` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [RFC 7748](https://tools.ietf.org/html/rfc7748#section-5)</sup>
+- [X] `OKP` <sup>[RFC 8037](https://tools.ietf.org/html/rfc8037)</sup>
+- [X] `OKP` with `{"crv":"Ed25519"}` <sup>[RFC 8037](https://tools.ietf.org/html/rfc8037), [RFC 8032](https://tools.ietf.org/html/rfc8032#section-5.1)</sup>
+- [X] `OKP` with `{"crv":"Ed25519ph"}` <sup>[RFC 8037](https://tools.ietf.org/html/rfc8037), [RFC 8032](https://tools.ietf.org/html/rfc8032#section-5.1)</sup>
+- [X] `OKP` with `{"crv":"Ed448"}` <sup>[RFC 8037](https://tools.ietf.org/html/rfc8037), [RFC 8032](https://tools.ietf.org/html/rfc8032#section-5.2)</sup>
+- [X] `OKP` with `{"crv":"Ed448ph"}` <sup>[RFC 8037](https://tools.ietf.org/html/rfc8037), [RFC 8032](https://tools.ietf.org/html/rfc8032#section-5.2)</sup>
+- [X] `OKP` with `{"crv":"X25519"}` <sup>[RFC 8037](https://tools.ietf.org/html/rfc8037), [RFC 7748](https://tools.ietf.org/html/rfc7748#section-5)</sup>
+- [X] `OKP` with `{"crv":"X448"}` <sup>[RFC 8037](https://tools.ietf.org/html/rfc8037), [RFC 7748](https://tools.ietf.org/html/rfc7748#section-5)</sup>
 - [X] `RSA`
 
 ### JSON Web Signature (JWS) [RFC 7515](https://tools.ietf.org/html/rfc7515)
 
 #### `"alg"` [RFC 7518 Section 3](https://tools.ietf.org/html/rfc7518#section-3)
 
-- [X] `Ed25519` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-eddsa](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.1)</sup>
-- [X] `Ed25519ph` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-eddsa](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.1)</sup>
-- [X] `Ed448` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-eddsa](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.2)</sup>
-- [X] `Ed448ph` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-eddsa](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.2)</sup>
-- [X] `EdDSA` <sup>[draft-ietf-jose-cfrg-curves](https://tools.ietf.org/html/draft-ietf-jose-cfrg-curves), [draft-irtf-cfrg-eddsa](https://tools.ietf.org/html/draft-irtf-cfrg-eddsa)</sup>
+- [X] `Ed25519` <sup>[RFC 8037](https://tools.ietf.org/html/rfc8037), [RFC 8032](https://tools.ietf.org/html/rfc8032#section-5.1)</sup>
+- [X] `Ed25519ph` <sup>[RFC 8037](https://tools.ietf.org/html/rfc8037), [RFC 8032](https://tools.ietf.org/html/rfc8032#section-5.1)</sup>
+- [X] `Ed448` <sup>[RFC 8037](https://tools.ietf.org/html/rfc8037), [RFC 8032](https://tools.ietf.org/html/rfc8032#section-5.2)</sup>
+- [X] `Ed448ph` <sup>[RFC 8037](https://tools.ietf.org/html/rfc8037), [RFC 8032](https://tools.ietf.org/html/rfc8032#section-5.2)</sup>
+- [X] `EdDSA` <sup>[RFC 8037](https://tools.ietf.org/html/rfc8037), [RFC 8032](https://tools.ietf.org/html/rfc8032)</sup>
 - [X] `ES256`
 - [X] `ES384`
 - [X] `ES512`
@@ -514,7 +531,7 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 ### Additional Specifications
 
 - [X] JSON Web Key (JWK) Thumbprint [RFC 7638](https://tools.ietf.org/html/rfc7638)
-- [X] JWS Unencoded Payload Option [draft-ietf-jose-jws-signing-input-options-04](https://tools.ietf.org/html/draft-ietf-jose-jws-signing-input-options-04)
+- [X] JWS Unencoded Payload Option [RFC 7797](https://tools.ietf.org/html/rfc7797)
 
 <sup><a name="footnote-otp-17">OTP-17</a></sup> Native algorithm not supported by OTP-17.  Use the [`crypto_fallback`](#cryptographic-algorithm-fallback) setting to enable the non-native implementation.  See [ALGORITHMS.md](https://github.com/potatosalad/erlang-jose/blob/master/ALGORITHMS.md) for more information about algorithm support for specific OTP versions.
 
