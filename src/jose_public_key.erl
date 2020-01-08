@@ -747,15 +747,6 @@ encode_handle_open_type_wrapper(Type) ->
 	{asn1_OPENTYPE, Type}.
 
 %% @private
-i2k(#'SubjectPublicKeyInfo'{
-	algorithm =
-		#'AlgorithmIdentifier'{
-			algorithm = ?'id-ecPublicKey',
-			parameters = ECParameters
-		},
-	subjectPublicKey = ECPublicKey
-}) ->
-	{#'ECPoint'{point = ECPublicKey}, der_decode('EcpkParameters', ECParameters)};
 i2k(#'PrivateKeyInfo'{
 	privateKeyAlgorithm =
 		#'PrivateKeyInfo_privateKeyAlgorithm'{
@@ -840,6 +831,30 @@ i2k(#'SubjectPublicKeyInfo'{
 	subjectPublicKey = << PublicKey:56/binary >>
 }) ->
 	#'jose_X448PublicKey'{ publicKey = PublicKey };
+% public_key compat
+i2k(#'SubjectPublicKeyInfo'{
+	algorithm =
+		#'AlgorithmIdentifier'{
+			algorithm = ?'id-ecPublicKey',
+			parameters = ECParameters
+		},
+	subjectPublicKey = ECPublicKey
+}) ->
+	{#'ECPoint'{point = ECPublicKey}, der_decode('EcpkParameters', ECParameters)};
+i2k(PrivateKeyInfo=#'PrivateKeyInfo'{
+	privateKeyAlgorithm =
+		#'PrivateKeyInfo_privateKeyAlgorithm'{
+			algorithm = ?'id-ecPublicKey',
+			parameters = {asn1_OPENTYPE, EcpkParameters}
+		},
+	privateKey = PrivateKey
+}) ->
+	case der_decode('ECPrivateKey', PrivateKey) of
+		ECPrivateKey = #'ECPrivateKey'{parameters = asn1_NOVALUE} ->
+			ECPrivateKey#'ECPrivateKey'{parameters = der_decode('EcpkParameters', EcpkParameters)};
+		_ ->
+			PrivateKeyInfo
+	end;
 i2k(Info) ->
 	Info.
 
