@@ -13,6 +13,18 @@
 
 -include_lib("public_key/include/public_key.hrl").
 
+-ifndef('id-aes128-CBC').
+-define('id-aes128-CBC', {2,16,840,1,101,3,4,1,2}).
+-endif.
+
+-ifndef('id-aes192-CBC').
+-define('id-aes192-CBC', {2,16,840,1,101,3,4,1,22}).
+-endif.
+
+-ifndef('id-aes256-CBC').
+-define('id-aes256-CBC', {2,16,840,1,101,3,4,1,42}).
+-endif.
+
 -define('jose_id-X25519', {1,3,101,110}).
 -define('jose_id-X448', {1,3,101,111}).
 -define('jose_id-EdDSA25519', {1,3,101,112}).

@@ -317,14 +317,14 @@ to_der(Password, ECPublicKey={#'ECPoint'{}, _ECParameters}) ->
 	erlang:error({badarg, [Password, ECPublicKey]}).
 
 to_pem(ECPrivateKey=#'ECPrivateKey'{}) ->
-	PEMEntry = public_key:pem_entry_encode('ECPrivateKey', ECPrivateKey),
-	public_key:pem_encode([PEMEntry]);
+	PEMEntry = jose_public_key:pem_entry_encode('PrivateKeyInfo', ECPrivateKey),
+	jose_public_key:pem_encode([PEMEntry]);
 to_pem(ECPublicKey={#'ECPoint'{}, _ECParameters}) ->
 	PEMEntry = jose_public_key:pem_entry_encode('SubjectPublicKeyInfo', ECPublicKey),
-	public_key:pem_encode([PEMEntry]).
+	jose_public_key:pem_encode([PEMEntry]).
 
 to_pem(Password, ECPrivateKey=#'ECPrivateKey'{}) ->
-	jose_jwk_pem:to_binary(Password, 'ECPrivateKey', ECPrivateKey);
+	jose_jwk_pem:to_binary(Password, 'PrivateKeyInfo', ECPrivateKey);
 to_pem(Password, ECPublicKey={#'ECPoint'{}, _ECParameters}) ->
 	erlang:error({badarg, [Password, ECPublicKey]}).
 

@@ -10,7 +10,7 @@
 %%%-------------------------------------------------------------------
 -module(jose_jwk_pem).
 
--include_lib("public_key/include/public_key.hrl").
+-include_lib("jose_public_key.hrl").
 
 %% API
 -export([from_binary/1]).
@@ -88,7 +88,6 @@ to_binary(Password, 'PrivateKeyInfo', Key) ->
 	jose_public_key:pem_encode([PEMEntry]);
 to_binary(Password, KeyType, Key) ->
 	CipherInfo = {"AES-256-CBC", crypto:strong_rand_bytes(16)},
-	% CipherInfo = {"DES-EDE3-CBC", crypto:strong_rand_bytes(8)},
 	PasswordString = binary_to_list(iolist_to_binary(Password)),
 	PEMEntry = jose_public_key:pem_entry_encode(KeyType, Key, {CipherInfo, PasswordString}),
 	jose_public_key:pem_encode([PEMEntry]).

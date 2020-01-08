@@ -65,6 +65,10 @@ to_key(RSAPrivateKey=#'RSAPrivateKey'{}) ->
 to_key(RSAPublicKey=#'RSAPublicKey'{}) ->
 	RSAPublicKey.
 
+to_map(RSAPrivateKey=#'RSAPrivateKey'{version = 0}, F) ->
+	to_map(RSAPrivateKey#'RSAPrivateKey'{version = 'two-prime'}, F);
+to_map(RSAPrivateKey=#'RSAPrivateKey'{version = 1}, F) ->
+	to_map(RSAPrivateKey#'RSAPrivateKey'{version = 'multi'}, F);
 to_map(#'RSAPrivateKey'{
 		version = 'two-prime',
 		otherPrimeInfos = 'asn1_NOVALUE',
@@ -286,11 +290,11 @@ to_der(Password, RSAPublicKey=#'RSAPublicKey'{}) ->
 	jose_jwk_der:to_binary(Password, 'RSAPublicKey', RSAPublicKey).
 
 to_pem(RSAPrivateKey=#'RSAPrivateKey'{}) ->
-	PEMEntry = public_key:pem_entry_encode('PrivateKeyInfo', RSAPrivateKey),
-	public_key:pem_encode([PEMEntry]);
+	PEMEntry = jose_public_key:pem_entry_encode('PrivateKeyInfo', RSAPrivateKey),
+	jose_public_key:pem_encode([PEMEntry]);
 to_pem(RSAPublicKey=#'RSAPublicKey'{}) ->
-	PEMEntry = public_key:pem_entry_encode('RSAPublicKey', RSAPublicKey),
-	public_key:pem_encode([PEMEntry]).
+	PEMEntry = jose_public_key:pem_entry_encode('RSAPublicKey', RSAPublicKey),
+	jose_public_key:pem_encode([PEMEntry]).
 
 to_pem(Password, RSAPrivateKey=#'RSAPrivateKey'{}) ->
 	jose_jwk_pem:to_binary(Password, 'PrivateKeyInfo', RSAPrivateKey);

@@ -14,6 +14,10 @@
 -include("jose_public_key.hrl").
 
 %% API
+-export([cipher/3]).
+-export([decipher/2]).
+-export([encrypt_parameters/1]).
+-export([decrypt_parameters/1]).
 -export([der_decode/1]).
 -export([der_decode/2]).
 -export([der_encode/2]).
@@ -27,6 +31,87 @@
 %%====================================================================
 %% API functions
 %%====================================================================
+
+cipher(DecryptedDER, CipherInfo, Password) ->
+	try
+		pubkey_pem:cipher(DecryptedDER, CipherInfo, Password)
+	catch
+		?COMPAT_CATCH(Class, Reason, ST) ->
+			case pem_cipher(DecryptedDER, CipherInfo, Password) of
+				{true, EncryptedDER} ->
+					EncryptedDER;
+				false ->
+					erlang:raise(Class, Reason, ?COMPAT_GET_STACKTRACE(ST))
+			end
+	end.
+
+decipher(Encrypted = {_, EncryptedDER, CipherInfo}, Password) ->
+	try
+		pubkey_pem:decipher(Encrypted, Password)
+	catch
+		?COMPAT_CATCH(Class, Reason, ST) ->
+			case pem_decipher(EncryptedDER, CipherInfo, Password) of
+				{true, DecryptedDER} ->
+					DecryptedDER;
+				false ->
+					erlang:raise(Class, Reason, ?COMPAT_GET_STACKTRACE(ST))
+			end
+	end.
+
+encrypt_parameters(Arg = {Cipher, Params}) ->
+	try
+		pubkey_pbe:encrypt_parameters(Arg)
+	catch
+		?COMPAT_CATCH(Class, Reason, ST) ->
+			case encrypt_parameters(Cipher, Params) of
+				{true, Result} ->
+					Result;
+				false ->
+					erlang:raise(Class, Reason, ?COMPAT_GET_STACKTRACE(ST))
+			end
+	end.
+
+%% @private
+encrypt_parameters(_Cipher, #'PBES2-params'{} = Params) ->
+	{ok, Der} ='PKCS-FRAME':encode('PBES2-params', Params),
+	{true, #'EncryptedPrivateKeyInfo_encryptionAlgorithm'{algorithm = ?'id-PBES2', parameters = encode_handle_open_type_wrapper(Der)}};
+encrypt_parameters(_, _) ->
+	false.
+
+decrypt_parameters(Arg = #'EncryptedPrivateKeyInfo_encryptionAlgorithm'{algorithm = Oid, parameters = Param}) ->
+	try
+		pubkey_pbe:decrypt_parameters(Arg)
+	catch
+		?COMPAT_CATCH(Class, Reason, ST) ->
+			case decrypt_parameters(Oid, decode_handle_open_type_wrapper(Param)) of
+				{true, Result} ->
+					Result;
+				false ->
+					erlang:raise(Class, Reason, ?COMPAT_GET_STACKTRACE(ST))
+			end
+	end.
+
+%% @private
+decrypt_parameters(?'id-PBES2', DekParams) ->
+	{ok, Params} = 'PKCS-FRAME':decode('PBES2-params', DekParams),
+	case cipher(Params#'PBES2-params'.encryptionScheme) of
+		{true, Cipher} ->
+			{true, {Cipher, Params}};
+		false ->
+			false
+	end;
+decrypt_parameters(_, _) ->
+	false.
+
+%% @private
+cipher(#'PBES2-params_encryptionScheme'{algorithm = ?'id-aes128-CBC'}) ->
+	{true, "AES-128-CBC"};
+cipher(#'PBES2-params_encryptionScheme'{algorithm = ?'id-aes192-CBC'}) ->
+	{true, "AES-192-CBC"};
+cipher(#'PBES2-params_encryptionScheme'{algorithm = ?'id-aes256-CBC'}) ->
+	{true, "AES-256-CBC"};
+cipher(_) ->
+	false.
 
 der_decode(DER) when is_binary(DER) ->
 	Result =
@@ -72,10 +157,19 @@ der_encode(ASN1Type, Entity) when is_atom(ASN1Type) ->
 	end.
 
 pem_decode(PEMBinary) when is_binary(PEMBinary) ->
-	public_key:pem_decode(PEMBinary).
+	try
+		public_key:pem_decode(PEMBinary)
+	catch
+		?COMPAT_CATCH(Class, Reason, ST) ->
+			case pem_dec(PEMBinary) of
+				{true, PEMEntries} ->
+					PEMEntries;
+				false ->
+					erlang:raise(Class, Reason, ?COMPAT_GET_STACKTRACE(ST))
+			end
+	end.
 
 pem_encode(PEMEntries) when is_list(PEMEntries) ->
-	% public_key:pem_encode(PEMEntries).
 	try
 		public_key:pem_encode(PEMEntries)
 	catch
@@ -89,7 +183,6 @@ pem_encode(PEMEntries) when is_list(PEMEntries) ->
 	end.
 
 pem_entry_decode(PEMEntry) ->
-	% public_key:pem_entry_decode(PEMEntry).
 	Result =
 		try
 			public_key:pem_entry_decode(PEMEntry)
@@ -112,13 +205,12 @@ pem_entry_decode(PEMEntry) ->
 	end.
 
 pem_entry_decode(PEMEntry, Password) ->
-	% public_key:pem_entry_decode(PEMEntry, Password).
 	Result =
 		try
 			public_key:pem_entry_decode(PEMEntry, Password)
 		catch
 			?COMPAT_CATCH(Class, Reason, ST) ->
-				case pem_entry_dec(PEMEntry) of
+				case pem_entry_dec(PEMEntry, Password) of
 					{true, DecodedPEMEntry} ->
 						DecodedPEMEntry;
 					false ->
@@ -135,7 +227,6 @@ pem_entry_decode(PEMEntry, Password) ->
 	end.
 
 pem_entry_encode(ASN1Type, Entity) ->
-	% public_key:pem_entry_encode(ASN1Type, Entity).
 	try
 		public_key:pem_entry_encode(ASN1Type, Entity)
 	catch
@@ -149,7 +240,6 @@ pem_entry_encode(ASN1Type, Entity) ->
 	end.
 
 pem_entry_encode(ASN1Type, Entity, Password) ->
-	% public_key:pem_entry_encode(ASN1Type, Entity, Password).
 	try
 		public_key:pem_entry_encode(ASN1Type, Entity, Password)
 	catch
@@ -222,10 +312,150 @@ der_enc('PrivateKeyInfo', K) ->
 		#'jose_EdDSA448PrivateKey'{} -> der_enc('EdDSA448PrivateKey', K);
 		#'jose_X25519PrivateKey'{} -> der_enc('X25519PrivateKey', K);
 		#'jose_X448PrivateKey'{} -> der_enc('X448PrivateKey', K);
+		#'ECPrivateKey'{} -> der_enc('ECPrivateKey', K);
+		#'RSAPrivateKey'{} -> der_enc('RSAPrivateKey', K);
 		_ -> false
 	end;
+%% Compatibility between PKCS1 and PKCS8 versions of public_key
+der_enc('ECPrivateKey', K=#'ECPrivateKey'{}) ->
+	EncodedDER = public_key:der_encode('PrivateKeyInfo', k2i(K)),
+	{true, EncodedDER};
+der_enc('RSAPrivateKey', K=#'RSAPrivateKey'{}) ->
+	EncodedDER = public_key:der_encode('PrivateKeyInfo', k2i(K)),
+	{true, EncodedDER};
 der_enc(_, _) ->
 	false.
+
+%% @private
+pem_dec(PEMBinary) ->
+	pem_dec(pem_dec_split_bin(PEMBinary), []).
+
+%% @private
+pem_dec([], Entries) ->
+	{true, lists:reverse(Entries)};
+pem_dec([<<>>], Entries) ->
+	{true, lists:reverse(Entries)};
+pem_dec([<<>> | Lines], Entries) ->
+	pem_dec(Lines, Entries);
+pem_dec([Start| Lines], Entries) ->
+	case pem_end(Start) of
+		undefined ->
+			pem_dec(Lines, Entries);
+		_End ->
+			{Entry, RestLines} = pem_dec_join_entry(Lines, []),
+			case pem_dec_entry(Start, Entry) of
+				{true, Head} ->
+					pem_dec(RestLines, [Head | Entries]);
+				false ->
+					false
+			end
+	end.
+
+%% @private
+pem_dec_entry(Start, Lines) ->
+	Type = asn1_type(Start),
+	Cs = erlang:iolist_to_binary(Lines),
+	Decoded = base64:mime_decode(Cs),
+	case Type of
+		'EncryptedPrivateKeyInfo'->
+			decode_encrypted_private_keyinfo(Decoded);
+		_ ->
+			{true, {Type, Decoded, not_encrypted}}
+	end.
+
+%% @private
+decode_encrypted_private_keyinfo(Der) ->
+	#'EncryptedPrivateKeyInfo'{encryptionAlgorithm = AlgorithmInfo, encryptedData = Data} = der_decode('EncryptedPrivateKeyInfo', Der),
+	DecryptParams = decrypt_parameters(AlgorithmInfo), 
+	{true, {'PrivateKeyInfo', Data, DecryptParams}}.
+
+%% @private
+%% Ignore white space at end of line
+pem_dec_join_entry([<<"-----END ", _/binary>>| Lines], Entry) ->
+	{lists:reverse(Entry), Lines};
+pem_dec_join_entry([<<"-----END X509 CRL-----", _/binary>>| Lines], Entry) ->
+	{lists:reverse(Entry), Lines};
+pem_dec_join_entry([Line | Lines], Entry) ->
+	pem_dec_join_entry(Lines, [Line | Entry]).
+
+%% @private
+pem_dec_split_bin(Bin) ->
+	pem_dec_split_bin(0, Bin).
+
+%% @private
+pem_dec_split_bin(N, Bin) ->
+	case Bin of
+		<<Line:N/binary, "\r\n", Rest/binary>> ->
+			[Line | pem_dec_split_bin(0, Rest)];
+		<<Line:N/binary, "\n", Rest/binary>> ->
+			[Line | pem_dec_split_bin(0, Rest)];
+		<<Line:N/binary>> ->
+			[Line];
+		_ ->
+		pem_dec_split_bin(N+1, Bin)
+	end.
+
+%% @private
+asn1_type(<<"-----BEGIN CERTIFICATE-----">>) ->
+	'Certificate';
+asn1_type(<<"-----BEGIN RSA PRIVATE KEY-----">>) ->
+	'RSAPrivateKey';
+asn1_type(<<"-----BEGIN RSA PUBLIC KEY-----">>) ->
+	'RSAPublicKey';
+asn1_type(<<"-----BEGIN PUBLIC KEY-----">>) ->
+	'SubjectPublicKeyInfo';
+asn1_type(<<"-----BEGIN DSA PRIVATE KEY-----">>) ->
+	'DSAPrivateKey';
+asn1_type(<<"-----BEGIN DH PARAMETERS-----">>) ->
+	'DHParameter';
+asn1_type(<<"-----BEGIN PRIVATE KEY-----">>) ->
+	'PrivateKeyInfo';
+asn1_type(<<"-----BEGIN ENCRYPTED PRIVATE KEY-----">>) ->
+	'EncryptedPrivateKeyInfo';
+asn1_type(<<"-----BEGIN CERTIFICATE REQUEST-----">>) ->
+	'CertificationRequest';
+asn1_type(<<"-----BEGIN PKCS7-----">>) ->
+	'ContentInfo';
+asn1_type(<<"-----BEGIN X509 CRL-----">>) ->
+	'CertificateList';
+asn1_type(<<"-----BEGIN EC PARAMETERS-----">>) ->
+	'EcpkParameters';
+asn1_type(<<"-----BEGIN EC PRIVATE KEY-----">>) ->
+	'ECPrivateKey';
+asn1_type(<<"-----BEGIN OPENSSH PRIVATE KEY-----">>) ->
+	{no_asn1, new_openssh}. %% Temporarily in the prototype of this format
+
+%% @private
+pem_end(<<"-----BEGIN CERTIFICATE-----">>) ->
+	<<"-----END CERTIFICATE-----">>;
+pem_end(<<"-----BEGIN RSA PRIVATE KEY-----">>) ->
+	<<"-----END RSA PRIVATE KEY-----">>;
+pem_end(<<"-----BEGIN RSA PUBLIC KEY-----">>) ->
+	<<"-----END RSA PUBLIC KEY-----">>;
+pem_end(<<"-----BEGIN PUBLIC KEY-----">>) ->
+	<<"-----END PUBLIC KEY-----">>;
+pem_end(<<"-----BEGIN DSA PRIVATE KEY-----">>) ->
+	<<"-----END DSA PRIVATE KEY-----">>;
+pem_end(<<"-----BEGIN DH PARAMETERS-----">>) ->
+	<<"-----END DH PARAMETERS-----">>;
+pem_end(<<"-----BEGIN PRIVATE KEY-----">>) ->
+	<<"-----END PRIVATE KEY-----">>;
+pem_end(<<"-----BEGIN ENCRYPTED PRIVATE KEY-----">>) ->
+	<<"-----END ENCRYPTED PRIVATE KEY-----">>;
+pem_end(<<"-----BEGIN CERTIFICATE REQUEST-----">>) ->
+	<<"-----END CERTIFICATE REQUEST-----">>;
+pem_end(<<"-----BEGIN PKCS7-----">>) ->
+	<<"-----END PKCS7-----">>;
+pem_end(<<"-----BEGIN X509 CRL-----">>) ->
+	<<"-----END X509 CRL-----">>;
+pem_end(<<"-----BEGIN EC PARAMETERS-----">>) ->
+	<<"-----END EC PARAMETERS-----">>;
+pem_end(<<"-----BEGIN EC PRIVATE KEY-----">>) ->
+	<<"-----END EC PRIVATE KEY-----">>;
+pem_end(<<"-----BEGIN OPENSSH PRIVATE KEY-----">>) ->
+	<<"-----END OPENSSH PRIVATE KEY-----">>;
+pem_end(_) ->
+	undefined.
 
 %% @private
 pem_enc(Entries) ->
@@ -256,6 +486,17 @@ pem_entry_dec({ASN1Type='SubjectPublicKeyInfo', Der, not_encrypted}) ->
 	{true, i2k(Entity)};
 pem_entry_dec(_) ->
 	false.
+
+%% @private
+pem_entry_dec({Asn1Type, EncryptedDer, CipherInfo = {_, #'PBES2-params'{}}}, Password) when is_atom(Asn1Type) ->
+	case decipher({Asn1Type, EncryptedDer, CipherInfo}, Password) of
+		DecryptedDer when is_binary(DecryptedDer) ->
+			{true, der_decode(Asn1Type, DecryptedDer)};
+		_ ->
+			false
+	end;
+pem_entry_dec(PEMEntry, _Password) ->
+	pem_entry_dec(PEMEntry).
 
 %% @private
 pem_entry_enc({'PrivateKeyInfo', Der, EncParams}) ->
@@ -295,8 +536,17 @@ pem_entry_enc('PrivateKeyInfo', K) ->
 		#'jose_EdDSA448PrivateKey'{} -> pem_entry_enc('EdDSA448PrivateKey', K);
 		#'jose_X25519PrivateKey'{} -> pem_entry_enc('X25519PrivateKey', K);
 		#'jose_X448PrivateKey'{} -> pem_entry_enc('X448PrivateKey', K);
+		#'ECPrivateKey'{} -> pem_entry_enc('ECPrivateKey', K);
+		#'RSAPrivateKey'{} -> pem_entry_enc('RSAPrivateKey', K);
 		_ -> false
 	end;
+%% Compatibility between PKCS1 and PKCS8 versions of public_key
+pem_entry_enc('ECPrivateKey', K=#'ECPrivateKey'{}) ->
+	EncodedPEMEntry = public_key:pem_entry_encode('PrivateKeyInfo', k2i(K)),
+	{true, EncodedPEMEntry};
+pem_entry_enc('RSAPrivateKey', K=#'RSAPrivateKey'{}) ->
+	EncodedPEMEntry = public_key:pem_entry_encode('PrivateKeyInfo', k2i(K)),
+	{true, EncodedPEMEntry};
 pem_entry_enc(_, _) ->
 	false.
 
@@ -331,8 +581,17 @@ pem_entry_enc('PrivateKeyInfo', K, Password) ->
 		#'jose_EdDSA448PrivateKey'{} -> pem_entry_enc('EdDSA448PrivateKey', K, Password);
 		#'jose_X25519PrivateKey'{} -> pem_entry_enc('X25519PrivateKey', K, Password);
 		#'jose_X448PrivateKey'{} -> pem_entry_enc('X448PrivateKey', K, Password);
+		#'ECPrivateKey'{} -> pem_entry_enc('ECPrivateKey', K, Password);
+		#'RSAPrivateKey'{} -> pem_entry_enc('RSAPrivateKey', K, Password);
 		_ -> false
 	end;
+%% Compatibility between PKCS1 and PKCS8 versions of public_key
+pem_entry_enc('ECPrivateKey', K=#'ECPrivateKey'{}, Password) ->
+	EncodedPEMEntry = pem_entry_enc0('PrivateKeyInfo', k2i(K), Password),
+	{true, EncodedPEMEntry};
+pem_entry_enc('RSAPrivateKey', K=#'RSAPrivateKey'{}, Password) ->
+	EncodedPEMEntry = pem_entry_enc0('PrivateKeyInfo', k2i(K), Password),
+	{true, EncodedPEMEntry};
 pem_entry_enc(_, _, _) ->
 	false.
 
@@ -351,18 +610,42 @@ pem_entry_enc0(ASN1Type, Entry, Cipher) ->
 	end.
 
 %% @private
-pem_entry_enc1(ASN1Type, Entry, {CipherInfo={C, _}, Password}) when C == "AES-128-CBC" ->
-	Der = der_encode(ASN1Type, Entry),
-	DecryptDer = pem_cipher(Der, CipherInfo, Password),
-	{true, {ASN1Type, DecryptDer, CipherInfo}};
+pem_entry_enc1(ASN1Type, Entry, {CipherInfo={C, _}, Password}) when C == "AES-128-CBC" orelse C == "AES-192-CBC" orelse C == "AES-256-CBC" ->
+	DecryptedDer = der_encode(ASN1Type, Entry),
+	case cipher(DecryptedDer, CipherInfo, Password) of
+		EncryptedDer when is_binary(EncryptedDer) ->
+			{true, {ASN1Type, EncryptedDer, CipherInfo}};
+		_ ->
+			false
+	end;
 pem_entry_enc1(_, _, _) ->
 	false.
 
 %% @private
-pem_cipher(Data, {Cipher = "AES-128-CBC", IV}, Password) ->
-	<< Salt:8/binary, _/binary >> = IV,
-	{Key, _} = password_to_key_and_iv(Password, Cipher, Salt),
-	crypto:block_encrypt(aes_cbc128, Key, IV, jose_jwa_pkcs7:pad(Data)).
+pem_cipher(Data, {Cipher = "AES-128-CBC", KeyDevParams}, Password) ->
+	{Key, IV} = password_to_key_and_iv(Password, Cipher, KeyDevParams),
+	{true, crypto:block_encrypt(aes_cbc128, Key, IV, jose_jwa_pkcs7:pad(Data))};
+pem_cipher(Data, {Cipher = "AES-192-CBC", KeyDevParams}, Password) ->
+	{Key, IV} = password_to_key_and_iv(Password, Cipher, KeyDevParams),
+	{true, crypto:block_encrypt(aes_cbc192, Key, IV, jose_jwa_pkcs7:pad(Data))};
+pem_cipher(Data, {Cipher = "AES-256-CBC", KeyDevParams}, Password) ->
+	{Key, IV} = password_to_key_and_iv(Password, Cipher, KeyDevParams),
+	{true, crypto:block_encrypt(aes_cbc256, Key, IV, jose_jwa_pkcs7:pad(Data))};
+pem_cipher(_, _, _) ->
+	false.
+
+%% @private
+pem_decipher(Data, {Cipher = "AES-128-CBC", KeyDevParams}, Password) ->
+	{Key, IV} = password_to_key_and_iv(Password, Cipher, KeyDevParams),
+	{true, crypto:block_decrypt(aes_cbc128, Key, IV, Data)};
+pem_decipher(Data, {Cipher = "AES-192-CBC", KeyDevParams}, Password) ->
+	{Key, IV} = password_to_key_and_iv(Password, Cipher, KeyDevParams),
+	{true, crypto:block_decrypt(aes_cbc192, Key, IV, Data)};
+pem_decipher(Data, {Cipher = "AES-256-CBC", KeyDevParams}, Password) ->
+	{Key, IV} = password_to_key_and_iv(Password, Cipher, KeyDevParams),
+	{true, crypto:block_decrypt(aes_cbc256, Key, IV, Data)};
+pem_decipher(_, _, _) ->
+	false.
 
 %% @private
 ceiling(Float) -> 
@@ -371,23 +654,29 @@ ceiling(Float) ->
 %% @private
 derived_key_length(_, Len) when is_integer(Len) ->
 	Len;
-derived_key_length(Cipher, _) when (Cipher == "AES-128-CBC") ->
-	16.
+derived_key_length(Cipher, _) when (Cipher == "AES-128-CBC"); (Cipher == ?'id-aes128-CBC') ->
+	16;
+derived_key_length(Cipher,_) when (Cipher == "AES-192-CBC"); (Cipher == ?'id-aes192-CBC') ->
+	24;
+derived_key_length(Cipher,_) when (Cipher == "AES-256-CBC"); (Cipher == ?'id-aes256-CBC') ->
+	32.
 
 %% @private
-password_to_key_and_iv(Password, Cipher, Salt) ->
+password_to_key_and_iv(Password, _Cipher, Params = #'PBES2-params'{}) ->
+	{Salt, ItrCount, KeyLen, PseudoRandomFunction, PseudoHash, PseudoOtputLen, IV} = key_derivation_params(Params),
+	<<Key:KeyLen/binary, _/binary>> = pubkey_pbe:pbdkdf2(Password, Salt, ItrCount, KeyLen, PseudoRandomFunction, PseudoHash, PseudoOtputLen),
+	{Key, IV};
+password_to_key_and_iv(Password, _Cipher, {#'PBEParameter'{salt = Salt, iterationCount = Count}, Hash}) ->
+	<<Key:8/binary, IV:8/binary, _/binary>> = pubkey_pbe:pbdkdf1(Password, Salt, Count, Hash),
+	{Key, IV};
+password_to_key_and_iv(Password, Cipher, KeyDevParams) ->
+	%% PKCS5_SALT_LEN is 8 bytes
+	<<Salt:8/binary,_/binary>> = KeyDevParams,
 	KeyLen = derived_key_length(Cipher, undefined),
-	<< Key:KeyLen/binary, _/binary >> =
-		pem_encrypt(<<>>, Password, Salt, ceiling(KeyLen div 16), <<>>, md5),
+	<<Key:KeyLen/binary, _/binary>> = pem_encrypt(<<>>, Password, Salt, ceiling(KeyLen div 16), <<>>, md5),
 	%% Old PEM encryption does not use standard encryption method
 	%% pbdkdf1 and uses then salt as IV
-	{Key, Salt}.
-
-% %% @private
-% pbe_pad(Data) ->
-% 	N = 8 - (erlang:byte_size(Data) rem 8), 
-% 	Pad = binary:copy(<< N >>, N),
-% 	<<Data/binary, Pad/binary>>.
+	{Key, KeyDevParams}.
 
 %% @private
 pem_encrypt(_, _, _, 0, Acc, _) ->
@@ -395,6 +684,67 @@ pem_encrypt(_, _, _, 0, Acc, _) ->
 pem_encrypt(Prev, Password, Salt, Count, Acc, Hash) ->
 	Result = crypto:hash(Hash, [Prev, Password, Salt]),
 	pem_encrypt(Result, Password, Salt, Count-1 , <<Acc/binary, Result/binary>>, Hash).
+
+%% @private
+key_derivation_params(#'PBES2-params'{keyDerivationFunc = KeyDerivationFunc, encryptionScheme = EncScheme}) ->
+	#'PBES2-params_keyDerivationFunc'{
+		algorithm = ?'id-PBKDF2',
+		parameters = #'PBKDF2-params'{
+			salt = {specified, OctetSalt},
+			iterationCount = Count,
+			keyLength = Length,
+			prf = Prf
+		}
+	} = KeyDerivationFunc,
+	#'PBES2-params_encryptionScheme'{algorithm = Algo} = EncScheme,
+	{PseudoRandomFunction, PseudoHash, PseudoOtputLen} = pseudo_random_function(Prf),
+	KeyLen = derived_key_length(Algo, Length),
+	{OctetSalt, Count, KeyLen,
+	PseudoRandomFunction, PseudoHash, PseudoOtputLen, iv(EncScheme)}.
+
+%% @private
+%% This function currently matches a tuple that ougth to be the value
+%% ?'id-hmacWithSHA1, but we need some kind of ASN1-fix for this.
+pseudo_random_function(#'PBKDF2-params_prf'{algorithm = {_,_, _,'id-hmacWithSHA1'}}) ->
+	{fun crypto:hmac/4, sha, pseudo_output_length(?'id-hmacWithSHA1')};
+pseudo_random_function(#'PBKDF2-params_prf'{algorithm = ?'id-hmacWithSHA1' = Algo}) ->
+	{fun crypto:hmac/4, sha, pseudo_output_length(Algo)};
+pseudo_random_function(#'PBKDF2-params_prf'{algorithm = ?'id-hmacWithSHA224'= Algo}) ->
+	{fun crypto:hmac/4, sha224, pseudo_output_length(Algo)};
+pseudo_random_function(#'PBKDF2-params_prf'{algorithm = ?'id-hmacWithSHA256' = Algo}) ->
+	{fun crypto:hmac/4, sha256, pseudo_output_length(Algo)};
+pseudo_random_function(#'PBKDF2-params_prf'{algorithm = ?'id-hmacWithSHA384' = Algo}) ->
+	{fun crypto:hmac/4, sha384, pseudo_output_length(Algo)};
+pseudo_random_function(#'PBKDF2-params_prf'{algorithm = ?'id-hmacWithSHA512' = Algo}) ->
+	{fun crypto:hmac/4, sha512, pseudo_output_length(Algo)}.
+
+%% @private
+pseudo_output_length(?'id-hmacWithSHA1') ->
+	20; %%160/8
+pseudo_output_length(?'id-hmacWithSHA224') ->
+	28; %%%224/8
+pseudo_output_length(?'id-hmacWithSHA256') ->
+	32; %%256/8
+pseudo_output_length(?'id-hmacWithSHA384') ->
+	48; %%384/8
+pseudo_output_length(?'id-hmacWithSHA512') ->
+	64. %%512/8
+
+%% @private
+iv(#'PBES2-params_encryptionScheme'{algorithm = ?'rc2CBC', parameters =  ASN1IV}) ->
+	{ok, #'RC2-CBC-Parameter'{iv = IV}} = 'PKCS-FRAME':decode('RC2-CBC-Parameter', decode_handle_open_type_wrapper(ASN1IV)),
+	erlang:iolist_to_binary(IV);
+iv(#'PBES2-params_encryptionScheme'{algorithm = _Algo, parameters = ASN1IV}) ->
+	<<4, Len:8/unsigned-big-integer, IV:Len/binary>> = decode_handle_open_type_wrapper(ASN1IV),
+	IV.
+
+%% @private
+decode_handle_open_type_wrapper({asn1_OPENTYPE, Type}) ->
+	Type.
+
+%% @private
+encode_handle_open_type_wrapper(Type) ->
+	{asn1_OPENTYPE, Type}.
 
 %% @private
 i2k(#'SubjectPublicKeyInfo'{
@@ -494,15 +844,6 @@ i2k(Info) ->
 	Info.
 
 %% @private
-k2i({#'ECPoint'{point=ECPublicKey}, ECParameters}) ->
-	#'SubjectPublicKeyInfo'{
-		algorithm =
-			#'AlgorithmIdentifier'{
-				algorithm = ?'id-ecPublicKey',
-				parameters = der_encode('EcpkParameters', ECParameters)
-			},
-		subjectPublicKey = ECPublicKey
-	};
 k2i(#'jose_EdDSA25519PrivateKey'{privateKey=PrivateKey}) ->
 	#'PrivateKeyInfo'{
 		version = v1,
@@ -586,4 +927,36 @@ k2i(#'jose_X448PublicKey'{publicKey=PublicKey}) ->
 				parameters = asn1_NOVALUE
 			},
 		subjectPublicKey = << PublicKey:56/binary >>
+	};
+% public_key compat
+k2i({#'ECPoint'{point=ECPublicKey}, ECParameters}) ->
+	#'SubjectPublicKeyInfo'{
+		algorithm =
+			#'AlgorithmIdentifier'{
+				algorithm = ?'id-ecPublicKey',
+				parameters = der_encode('EcpkParameters', ECParameters)
+			},
+		subjectPublicKey = ECPublicKey
+	};
+k2i(PrivateKey=#'ECPrivateKey'{parameters=ECParameters}) ->
+	#'PrivateKeyInfo'{
+		version = v1,
+		privateKeyAlgorithm =
+			#'PrivateKeyInfo_privateKeyAlgorithm'{
+				algorithm = ?'id-ecPublicKey',
+				parameters = encode_handle_open_type_wrapper(der_encode('EcpkParameters', ECParameters))
+			},
+		privateKey = der_encode('ECPrivateKey', PrivateKey#'ECPrivateKey'{parameters=asn1_NOVALUE}),
+		attributes = asn1_NOVALUE
+	};
+k2i(PrivateKey=#'RSAPrivateKey'{}) ->
+	#'PrivateKeyInfo'{
+		version = v1,
+		privateKeyAlgorithm =
+			#'PrivateKeyInfo_privateKeyAlgorithm'{
+				algorithm = ?'rsaEncryption',
+				parameters = asn1_NOVALUE
+			},
+		privateKey = der_encode('RSAPrivateKey', PrivateKey),
+		attributes = asn1_NOVALUE
 	}.

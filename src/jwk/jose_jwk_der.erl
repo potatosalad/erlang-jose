@@ -10,7 +10,7 @@
 %%%-------------------------------------------------------------------
 -module(jose_jwk_der).
 
--include_lib("public_key/include/public_key.hrl").
+-include_lib("jose_public_key.hrl").
 
 %% API
 -export([from_binary/1]).
@@ -22,19 +22,19 @@
 %%====================================================================
 
 from_binary(DERBinary) when is_binary(DERBinary) ->
-    case jose_public_key:der_decode(DERBinary) of
+	case jose_public_key:der_decode(DERBinary) of
 		Key ->
 			jose_jwk_kty:from_key(Key)
 	end.
 
 from_binary(Password, DERBinary) when is_binary(DERBinary) ->
-    case jose_public_key:der_decode(DERBinary) of
+	case jose_public_key:der_decode(DERBinary) of
 		#'EncryptedPrivateKeyInfo'{
 			encryptionAlgorithm = AlgorithmInfo,
 			encryptedData = EncryptedDER
 		} ->
-			CipherInfo = pubkey_pbe:decrypt_parameters(AlgorithmInfo),
-			DecryptedDER = pubkey_pem:decipher({'PrivateKeyInfo', EncryptedDER, CipherInfo}, Password),
+			CipherInfo = jose_public_key:decrypt_parameters(AlgorithmInfo),
+			DecryptedDER = jose_public_key:decipher({'PrivateKeyInfo', EncryptedDER, CipherInfo}, Password),
 			from_binary(DecryptedDER);
 		Key ->
 			jose_jwk_kty:from_key(Key)
@@ -61,9 +61,9 @@ to_binary(Password, _KeyType, Key) ->
 	}},
 	PasswordString = binary_to_list(iolist_to_binary(Password)),
 	DecryptedDER = jose_public_key:der_encode('PrivateKeyInfo', Key),
-    EncryptedDER = pubkey_pem:cipher(DecryptedDER, CipherInfo, PasswordString),
-	AlgorithmInfo = pubkey_pbe:encrypt_parameters(CipherInfo),
-    jose_public_key:der_encode('EncryptedPrivateKeyInfo', #'EncryptedPrivateKeyInfo'{
+	EncryptedDER = jose_public_key:cipher(DecryptedDER, CipherInfo, PasswordString),
+	AlgorithmInfo = jose_public_key:encrypt_parameters(CipherInfo),
+	jose_public_key:der_encode('EncryptedPrivateKeyInfo', #'EncryptedPrivateKeyInfo'{
 		encryptionAlgorithm = AlgorithmInfo,
 		encryptedData = EncryptedDER
 	}).
