@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.10.1 (2020-01-08)
+
+* Fixes
+  * Add PEM/DER compatibility layer for PKCS-8 incompatibilities with various versions of OTP, `crypto`, and `public_key`; see [#82](https://github.com/potatosalad/erlang-jose/issues/82)
+
 ## 1.10.0 (2020-01-03)
 
 * Enhancements

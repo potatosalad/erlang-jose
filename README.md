@@ -11,7 +11,7 @@ Add `jose` to your project's dependencies in `mix.exs`
 ```elixir
 defp deps() do
   [
-    {:jose, "~> 1.10"}
+    {:jose, "~> 1.10.1"}
   ]
 end
 ```
@@ -45,9 +45,9 @@ You will also need to specify either [jiffy](https://github.com/davisp/jiffy), [
 For example, with Elixir and `mix.exs`
 
 ```elixir
-defp deps do
+defp deps() do
   [
-    {:jose, "~> 1.10"},
+    {:jose, "~> 1.10.1"},
     {:ojson, "~> 1.0"}
   ]
 end
