@@ -293,7 +293,7 @@ sign(KeyList, PlainText, HeaderList, SignerList)
 		<<"payload">> => Payload,
 		<<"signatures">> => Signatures
 	}};
-sign(Key=#jose_jwk{}, PlainText, Header, JWS=#jose_jws{alg={ALGModule, ALG}})
+sign(Key=#jose_jwk{}, PlainText, Header, JWS=#jose_jws{alg={ALGModule, ALG}, fields=Fields})
 		when is_binary(PlainText)
 		andalso is_map(Header) ->
 	_ = code:ensure_loaded(ALGModule),
@@ -303,14 +303,14 @@ sign(Key=#jose_jwk{}, PlainText, Header, JWS=#jose_jws{alg={ALGModule, ALG}})
 		true ->
 			ALGModule:presign(Key, ALG)
 	end,
-	NewJWS = JWS#jose_jws{alg={ALGModule, NewALG}},
+	NewJWS = JWS#jose_jws{alg={ALGModule, NewALG}, fields=Fields},
 	{Modules, ProtectedBinary} = to_binary(NewJWS),
 	Protected = jose_jwa_base64url:encode(ProtectedBinary),
 	Payload = jose_jwa_base64url:encode(PlainText),
 	SigningInput = signing_input(PlainText, Protected, NewJWS),
 	Signature = jose_jwa_base64url:encode(ALGModule:sign(Key, SigningInput, NewALG)),
 	{Modules, maps:put(<<"payload">>, Payload, signature_to_map(Protected, Header, Key, Signature))};
-sign(Key=none, PlainText, Header, JWS=#jose_jws{alg={ALGModule, ALG}})
+sign(Key=none, PlainText, Header, JWS=#jose_jws{alg={ALGModule, ALG}, fields=Fields})
 		when is_binary(PlainText)
 		andalso is_map(Header) ->
 	_ = code:ensure_loaded(ALGModule),
@@ -320,7 +320,7 @@ sign(Key=none, PlainText, Header, JWS=#jose_jws{alg={ALGModule, ALG}})
 		true ->
 			ALGModule:presign(Key, ALG)
 	end,
-	NewJWS = JWS#jose_jws{alg={ALGModule, NewALG}},
+	NewJWS = JWS#jose_jws{alg={ALGModule, NewALG}, fields=Fields},
 	{Modules, ProtectedBinary} = to_binary(NewJWS),
 	Protected = jose_jwa_base64url:encode(ProtectedBinary),
 	Payload = jose_jwa_base64url:encode(PlainText),

@@ -320,9 +320,9 @@ key_decrypt(Key, EncryptedKey, JWE=#jose_jwe{}) ->
 key_decrypt(Key, EncryptedKey, Other) ->
 	key_decrypt(Key, EncryptedKey, from(Other)).
 
-key_encrypt(Key, DecryptedKey, JWE0=#jose_jwe{alg={ALGModule, ALG0}}) ->
+key_encrypt(Key, DecryptedKey, JWE0=#jose_jwe{alg={ALGModule, ALG0}, fields=Fields}) ->
 	{EncryptedKey, ALG1} = ALGModule:key_encrypt(Key, DecryptedKey, ALG0),
-	JWE1 = JWE0#jose_jwe{alg={ALGModule, ALG1}},
+	JWE1 = JWE0#jose_jwe{alg={ALGModule, ALG1}, fields=Fields},
 	{EncryptedKey, JWE1};
 key_encrypt(Key, EncryptedKey, Other) ->
 	key_encrypt(Key, EncryptedKey, from(Other)).
