@@ -23,10 +23,10 @@
 %%====================================================================
 
 decrypt(CipherText, CipherTag, AAD, IV, CEK) ->
-	crypto:block_decrypt(xchacha20_poly1305, CEK, IV, {AAD, CipherText, CipherTag}).
+	jose_crypto_compat:crypto_one_time(xchacha20_poly1305, CEK, IV, {AAD, CipherText, CipherTag}, false).
 
 encrypt(PlainText, AAD, IV, CEK) ->
-	crypto:block_encrypt(xchacha20_poly1305, CEK, IV, {AAD, PlainText}).
+	jose_crypto_compat:crypto_one_time(xchacha20_poly1305, CEK, IV, {AAD, PlainText}, true).
 
 authenticate(Message, Key, Nonce) ->
 	jose_jwa_xchacha20_poly1305:authenticate(Message, Key, Nonce).
