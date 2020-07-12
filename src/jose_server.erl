@@ -494,7 +494,7 @@ check_crypto(Fallback, Entries) ->
 				{{cipher, {Cipher, KeySize}}, {crypto, CryptoCipher}}
 		end
 	end || Cipher <- Ciphers, KeySize <- KeySizes],
-	CipherEntries1 = 
+	CipherEntries1 =
 		case lists:keyfind(chacha20_poly1305_module, 1, Entries) of
 			{chacha20_poly1305_module, jose_chacha20_poly1305_unsupported} ->
 				CipherEntries0 ++ [{{cipher, {chacha20_poly1305, 256}}, {Fallback, {chacha20_poly1305, 256}}}];
@@ -643,7 +643,7 @@ has_cipher(aes_cbc, KeySize) ->
 	PlainText = jose_jwa_pkcs7:pad(<<>>),
 	case has_block_cipher(aes_cbc, {Key, IV, PlainText}) of
 		false ->
-			Cipher = list_to_atom("aes_cbc" ++ integer_to_list(KeySize)),
+			Cipher = list_to_atom("aes_" ++ integer_to_list(KeySize) ++ "_cbc"),
 			has_block_cipher(Cipher, {Key, IV, PlainText});
 		Other ->
 			Other
@@ -657,13 +657,19 @@ has_cipher(aes_gcm, KeySize) ->
 	IV = << 0:96 >>,
 	AAD = <<>>,
 	PlainText = jose_jwa_pkcs7:pad(<<>>),
-	has_block_cipher(aes_gcm, {Key, IV, AAD, PlainText}).
+	case has_block_cipher(aes_gcm, {Key, IV, AAD, PlainText}) of
+		false ->
+			Cipher = list_to_atom("aes_" ++ integer_to_list(KeySize) ++ "_gcm"),
+			has_block_cipher(Cipher, {Key, IV, AAD, PlainText});
+		Other ->
+			Other
+	end.
 
 %% @private
 has_block_cipher(Cipher, {Key, PlainText}) ->
-	case catch crypto:block_encrypt(Cipher, Key, PlainText) of
+	case catch jose_crypto_compat:crypto_one_time(Cipher, Key, PlainText, true) of
 		CipherText when is_binary(CipherText) ->
-			case catch crypto:block_decrypt(Cipher, Key, CipherText) of
+			case catch jose_crypto_compat:crypto_one_time(Cipher, Key, CipherText, false) of
 				PlainText ->
 					{true, Cipher};
 				_ ->
@@ -673,9 +679,9 @@ has_block_cipher(Cipher, {Key, PlainText}) ->
 			false
 	end;
 has_block_cipher(Cipher, {Key, IV, PlainText}) ->
-	case catch crypto:block_encrypt(Cipher, Key, IV, PlainText) of
+	case catch jose_crypto_compat:crypto_one_time(Cipher, Key, IV, PlainText, true) of
 		CipherText when is_binary(CipherText) ->
-			case catch crypto:block_decrypt(Cipher, Key, IV, CipherText) of
+			case catch jose_crypto_compat:crypto_one_time(Cipher, Key, IV, CipherText, false) of
 				PlainText ->
 					{true, Cipher};
 				_ ->
@@ -685,9 +691,9 @@ has_block_cipher(Cipher, {Key, IV, PlainText}) ->
 			false
 	end;
 has_block_cipher(Cipher, {Key, IV, AAD, PlainText}) ->
-	case catch crypto:block_encrypt(Cipher, Key, IV, {AAD, PlainText}) of
+	case catch jose_crypto_compat:crypto_one_time(Cipher, Key, IV, {AAD, PlainText}, true) of
 		{CipherText, CipherTag} when is_binary(CipherText) andalso is_binary(CipherTag) ->
-			case catch crypto:block_decrypt(Cipher, Key, IV, {AAD, CipherText, CipherTag}) of
+			case catch jose_crypto_compat:crypto_one_time(Cipher, Key, IV, {AAD, CipherText, CipherTag}, false) of
 				PlainText ->
 					{true, Cipher};
 				_ ->

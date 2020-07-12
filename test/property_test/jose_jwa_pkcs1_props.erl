@@ -137,4 +137,4 @@ prop_rsassa_pss_sign_and_verify_with_salt() ->
 do_hash(DigestType, PlainText) when is_atom(DigestType) ->
 	crypto:hash(DigestType, PlainText);
 do_hash({hmac, DigestType, Key}, PlainText) ->
-	crypto:hmac(DigestType, Key, PlainText).
+	jose_crypto_compat:mac(hmac, DigestType, Key, PlainText).

@@ -120,7 +120,7 @@ derive_key(Key) ->
 
 sign(Message, JWSALG, Key) when is_atom(JWSALG) ->
 	DigestType = jws_alg_to_digest_type(JWSALG),
-	crypto:hmac(DigestType, Key, Message);
+	jose_crypto_compat:mac(hmac, DigestType, Key, Message);
 sign(Message, {'Poly1305', Nonce}, Key) ->
 	jose_chacha20_poly1305:authenticate(Message, Key, Nonce);
 sign(_Message, JWSALG, _Key) ->

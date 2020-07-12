@@ -18,7 +18,7 @@ ERLANG_MK_FILENAME := $(realpath $(lastword $(MAKEFILE_LIST)))
 export ERLANG_MK_FILENAME
 
 ERLANG_MK_VERSION = 4508aa0-dirty
-ERLANG_MK_WITHOUT = 
+ERLANG_MK_WITHOUT =
 
 # Make 3.81 and 3.82 are deprecated.
 
@@ -2327,7 +2327,7 @@ pkg_jsx_description = An Erlang application for consuming, producing and manipul
 pkg_jsx_homepage = https://github.com/talentdeficit/jsx
 pkg_jsx_fetch = git
 pkg_jsx_repo = https://github.com/talentdeficit/jsx
-pkg_jsx_commit = master
+pkg_jsx_commit = v2.10.0
 
 PACKAGES += kafka
 pkg_kafka_name = kafka

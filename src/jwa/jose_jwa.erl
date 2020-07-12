@@ -57,7 +57,7 @@ block_decrypt(Cipher, Key, CipherText)
 		when is_binary(CipherText) ->
 	case block_cipher(Cipher) of
 		{crypto, aes_ecb} ->
-			<< << (crypto:block_decrypt(aes_ecb, Key, Block))/binary >> || << Block:128/bitstring >> <= CipherText >>;
+			<< << (jose_crypto_compat:crypto_one_time(aes_128_ecb, Key, Block, false))/binary >> || << Block:128/bitstring >> <= CipherText >>;
 		{Module, BlockCipher} ->
 			Module:block_decrypt(BlockCipher, Key, CipherText)
 	end.
@@ -66,7 +66,7 @@ block_encrypt(Cipher, Key, PlainText)
 		when is_binary(PlainText) ->
 	case block_cipher(Cipher) of
 		{crypto, aes_ecb} ->
-			<< << (crypto:block_encrypt(aes_ecb, Key, Block))/binary >> || << Block:128/bitstring >> <= PlainText >>;
+			<< << (jose_crypto_compat:crypto_one_time(aes_128_ecb, Key, Block, true))/binary >> || << Block:128/bitstring >> <= PlainText >>;
 		{Module, BlockCipher} ->
 			Module:block_encrypt(BlockCipher, Key, PlainText)
 	end.

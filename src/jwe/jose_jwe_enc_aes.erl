@@ -162,7 +162,7 @@ block_decrypt({AAD, CipherText, CipherTag}, CEK, IV, #jose_jwe_enc_aes{
 	<< MacKey:MacLen/binary, EncKey:EncLen/binary >> = CEK,
 	AADLength = << (bit_size(AAD)):1/unsigned-big-integer-unit:64 >>,
 	MacData = << AAD/binary, IV/binary, CipherText/binary, AADLength/binary >>,
-	case crypto:hmac(HMAC, MacKey, MacData) of
+	case jose_crypto_compat:mac(hmac, HMAC, MacKey, MacData) of
 		<< CipherTag:TagLen/binary, _/binary >> ->
 			PlainText = jose_jwa_pkcs7:unpad(jose_jwa:block_decrypt(Cipher, EncKey, IV, CipherText)),
 			PlainText;
@@ -191,7 +191,7 @@ block_encrypt({AAD, PlainText}, CEK, IV, #jose_jwe_enc_aes{
 	CipherText = jose_jwa:block_encrypt(Cipher, EncKey, IV, jose_jwa_pkcs7:pad(PlainText)),
 	AADLength = << (bit_size(AAD)):1/unsigned-big-integer-unit:64 >>,
 	MacData = << AAD/binary, IV/binary, CipherText/binary, AADLength/binary >>,
-	<< CipherTag:TagLen/binary, _/binary >> = crypto:hmac(HMAC, MacKey, MacData),
+	<< CipherTag:TagLen/binary, _/binary >> = jose_crypto_compat:mac(hmac, HMAC, MacKey, MacData),
 	{CipherText, CipherTag}.
 
 next_cek(#jose_jwe_enc_aes{cek_len=CEKLen}) ->

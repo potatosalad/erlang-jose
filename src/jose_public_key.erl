@@ -366,7 +366,7 @@ pem_dec_entry(Start, Lines) ->
 %% @private
 decode_encrypted_private_keyinfo(Der) ->
 	#'EncryptedPrivateKeyInfo'{encryptionAlgorithm = AlgorithmInfo, encryptedData = Data} = der_decode('EncryptedPrivateKeyInfo', Der),
-	DecryptParams = decrypt_parameters(AlgorithmInfo), 
+	DecryptParams = decrypt_parameters(AlgorithmInfo),
 	{true, {'PrivateKeyInfo', Data, DecryptParams}}.
 
 %% @private
@@ -624,31 +624,31 @@ pem_entry_enc1(_, _, _) ->
 %% @private
 pem_cipher(Data, {Cipher = "AES-128-CBC", KeyDevParams}, Password) ->
 	{Key, IV} = password_to_key_and_iv(Password, Cipher, KeyDevParams),
-	{true, crypto:block_encrypt(aes_cbc128, Key, IV, jose_jwa_pkcs7:pad(Data))};
+	{true, jose_crypto_compat:crypto_one_time(aes_128_cbc, Key, IV, jose_jwa_pkcs7:pad(Data), true)};
 pem_cipher(Data, {Cipher = "AES-192-CBC", KeyDevParams}, Password) ->
 	{Key, IV} = password_to_key_and_iv(Password, Cipher, KeyDevParams),
-	{true, crypto:block_encrypt(aes_cbc192, Key, IV, jose_jwa_pkcs7:pad(Data))};
+	{true, jose_crypto_compat:crypto_one_time(aes_192_cbc, Key, IV, jose_jwa_pkcs7:pad(Data), true)};
 pem_cipher(Data, {Cipher = "AES-256-CBC", KeyDevParams}, Password) ->
 	{Key, IV} = password_to_key_and_iv(Password, Cipher, KeyDevParams),
-	{true, crypto:block_encrypt(aes_cbc256, Key, IV, jose_jwa_pkcs7:pad(Data))};
+	{true, jose_crypto_compat:crypto_one_time(aes_256_cbc, Key, IV, jose_jwa_pkcs7:pad(Data), true)};
 pem_cipher(_, _, _) ->
 	false.
 
 %% @private
 pem_decipher(Data, {Cipher = "AES-128-CBC", KeyDevParams}, Password) ->
 	{Key, IV} = password_to_key_and_iv(Password, Cipher, KeyDevParams),
-	{true, crypto:block_decrypt(aes_cbc128, Key, IV, Data)};
+	{true, jose_crypto_compat:crypto_one_time(aes_128_cbc, Key, IV, Data, false)};
 pem_decipher(Data, {Cipher = "AES-192-CBC", KeyDevParams}, Password) ->
 	{Key, IV} = password_to_key_and_iv(Password, Cipher, KeyDevParams),
-	{true, crypto:block_decrypt(aes_cbc192, Key, IV, Data)};
+	{true, jose_crypto_compat:crypto_one_time(aes_192_cbc, Key, IV, Data, false)};
 pem_decipher(Data, {Cipher = "AES-256-CBC", KeyDevParams}, Password) ->
 	{Key, IV} = password_to_key_and_iv(Password, Cipher, KeyDevParams),
-	{true, crypto:block_decrypt(aes_cbc256, Key, IV, Data)};
+	{true, jose_crypto_compat:crypto_one_time(aes_256_cbc, Key, IV, Data, false)};
 pem_decipher(_, _, _) ->
 	false.
 
 %% @private
-ceiling(Float) -> 
+ceiling(Float) ->
 	erlang:round(Float + 0.5).
 
 %% @private

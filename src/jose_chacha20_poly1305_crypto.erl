@@ -44,7 +44,7 @@ encrypt(PlainText, AAD, IV, CEK) ->
 
 authenticate(Message, Key, Nonce) ->
 	OTK = jose_jwa_chacha20_poly1305:poly1305_key_gen(Key, Nonce),
-	crypto:poly1305(OTK, Message).
+	jose_crypto_compat:mac(poly1305, OTK, Message).
 
 verify(MAC, Message, Key, Nonce) ->
 	Challenge = jose_jwa_chacha20_poly1305:authenticate(Message, Key, Nonce),
