@@ -954,7 +954,7 @@ resolve_hash(DigestType) when is_atom(DigestType) ->
 	end;
 resolve_hash({hmac, DigestType, Key}) when is_atom(DigestType) ->
 	fun(Data) ->
-		crypto:hmac(DigestType, Key, Data)
+		jose_crypto_compat:mac(hmac, DigestType, Key, Data)
 	end.
 
 %% @private

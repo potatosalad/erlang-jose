@@ -12,11 +12,17 @@
 -ifndef(JOSE_COMPAT_HRL).
 
 -ifdef(OTP_RELEASE). %% this implies OTP 21 or higher
--define(COMPAT_CATCH(Class, Reason, Stacktrace), Class:Reason:Stacktrace).
--define(COMPAT_GET_STACKTRACE(Stacktrace), Stacktrace).
+    -define(COMPAT_CATCH(Class, Reason, Stacktrace), Class:Reason:Stacktrace).
+    -define(COMPAT_GET_STACKTRACE(Stacktrace), Stacktrace).
 -else.
--define(COMPAT_CATCH(Class, Reason, _), Class:Reason).
--define(COMPAT_GET_STACKTRACE(_), erlang:get_stacktrace()).
+    -define(COMPAT_CATCH(Class, Reason, _), Class:Reason).
+    -define(COMPAT_GET_STACKTRACE(_), erlang:get_stacktrace()).
+-endif.
+
+-if(?OTP_RELEASE >= 23).
+    -define(JOSE_CRYPTO_OTP_23, true).
+-elif(?OTP_RELEASE < 23).
+    -define(JOSE_CRYPTO_OTP_23, false).
 -endif.
 
 -define(JOSE_COMPAT_HRL, 1).

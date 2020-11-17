@@ -6,7 +6,7 @@ TEST_DEPS = jiffy jsone jsx libdecaf libsodium ojson proper
 
 dep_jiffy = git git://github.com/davisp/jiffy.git master
 dep_jsone = git git://github.com/sile/jsone.git master
-dep_jsx = git git://github.com/talentdeficit/jsx.git master
+dep_jsx = git git://github.com/talentdeficit/jsx.git v2.10.0
 dep_keccakf1600 = git git://github.com/potatosalad/erlang-keccakf1600.git master
 dep_libdecaf = git git://github.com/potatosalad/erlang-libdecaf.git master
 dep_libsodium = git git://github.com/potatosalad/erlang-libsodium.git master
