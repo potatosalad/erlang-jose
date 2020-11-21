@@ -5,7 +5,7 @@ defmodule JOSE.Mixfile do
     [
       app: :jose,
       version: "1.10.1",
-      elixir: "~> 1.0",
+      elixir: "~> 1.4",
       erlc_options: erlc_options(),
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
@@ -22,7 +22,7 @@ defmodule JOSE.Mixfile do
   end
 
   def application() do
-    [mod: {:jose_app, []}, applications: [:crypto, :asn1, :public_key]]
+    [mod: {:jose_app, []}, extra_applications: [:crypto, :asn1, :public_key]]
   end
 
   defp deps() do
