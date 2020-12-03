@@ -44,7 +44,7 @@ mac(Type, Key, Data) ->
 mac(Type, SubType, Key, Data) ->
     crypto:mac(Type, SubType, Key, Data).
 
--elif(true). %% "Old API" for OTP 22 and earlier
+-else. %% "Old API" for OTP 22 and earlier
 
 crypto_init(Cipher, Key, IV, _FlagOrOptions) ->
     crypto:stream_init(legacy_cipher_iv(Cipher), Key, IV).
