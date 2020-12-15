@@ -23,7 +23,7 @@
 %% API functions
 %%====================================================================
 
--if(?JOSE_CRYPTO_OTP_23). %% "New API" for OTP 23 and higher
+-ifdef(JOSE_CRYPTO_OTP_23). %% "New API" for OTP 23 and higher
 
 crypto_init(Cipher, Key, IV, FlagOrOptions) ->
     crypto:crypto_init(Cipher, Key, IV, FlagOrOptions).
@@ -44,7 +44,7 @@ mac(Type, Key, Data) ->
 mac(Type, SubType, Key, Data) ->
     crypto:mac(Type, SubType, Key, Data).
 
--elif(true). %% "Old API" for OTP 22 and earlier
+-else. %% "Old API" for OTP 22 and earlier
 
 crypto_init(Cipher, Key, IV, _FlagOrOptions) ->
     crypto:stream_init(legacy_cipher_iv(Cipher), Key, IV).
@@ -74,7 +74,7 @@ mac(hmac, SubType, Key, Data) ->
 %%% Internal functions
 %%%-------------------------------------------------------------------
 
--if(not ?JOSE_CRYPTO_OTP_23).
+-ifndef(JOSE_CRYPTO_OTP_23).
 
 legacy_cipher_no_iv(aes_128_ecb) -> aes_ecb;
 legacy_cipher_no_iv(aes_192_ecb) -> aes_ecb;
