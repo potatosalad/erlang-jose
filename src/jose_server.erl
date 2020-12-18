@@ -651,7 +651,13 @@ has_cipher(aes_cbc, KeySize) ->
 has_cipher(aes_ecb, KeySize) ->
 	Key = << 0:KeySize >>,
 	PlainText = jose_jwa_pkcs7:pad(<<>>),
-	has_block_cipher(aes_ecb, {Key, PlainText});
+	case has_block_cipher(aes_ecb, {Key, PlainText}) of
+		false ->
+			Cipher = list_to_atom("aes_" ++ integer_to_list(KeySize) ++ "_ecb"),
+			has_block_cipher(Cipher, {Key, PlainText});
+		Other ->
+			Other
+	end;
 has_cipher(aes_gcm, KeySize) ->
 	Key = << 0:KeySize >>,
 	IV = << 0:96 >>,
