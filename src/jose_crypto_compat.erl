@@ -31,6 +31,10 @@ crypto_init(Cipher, Key, IV, FlagOrOptions) ->
 crypto_one_time(Cipher, Key, Data, FlagOrOptions) ->
     crypto:crypto_one_time(Cipher, Key, Data, FlagOrOptions).
 
+crypto_one_time(Cipher, Key, IV, {AAD, PlainText}, FlagOrOptions) ->
+	crypto:crypto_one_time_aead(Cipher, Key, IV, PlainText, AAD, FlagOrOptions);
+crypto_one_time(Cipher, Key, IV, {AAD, PlainText, TagOrTagLength}, FlagOrOptions) ->
+	crypto:crypto_one_time_aead(Cipher, Key, IV, PlainText, AAD, TagOrTagLength, FlagOrOptions);
 crypto_one_time(Cipher, Key, IV, Data, FlagOrOptions) ->
     crypto:crypto_one_time(Cipher, Key, IV, Data, FlagOrOptions).
 
