@@ -7,17 +7,20 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
 
-    env:
-      OTP_VERSION: 22.2.1
-      ELIXIR_VERSION: 1.9.4
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - erlang: 23.2-alpine-3.12.1
+          - erlang: 22.2.1-alpine-3.12.0
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
 
       - name: Setup
         run: |
-          make docker-setup DOCKER_OTP_VERSION=${OTP_VERSION} DOCKER_ELIXIR_VERSION=${ELIXIR_VERSION}
+          make docker-setup DOCKER_OTP_VERSION=${{matrix.erlang}}
 
       - name: Test
         run: |
-          make docker-test DOCKER_OTP_VERSION=${OTP_VERSION} DOCKER_ELIXIR_VERSION=${ELIXIR_VERSION}
+          make docker-test DOCKER_OTP_VERSION=${{matrix.erlang}}
