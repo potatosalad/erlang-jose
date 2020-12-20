@@ -372,7 +372,9 @@ gcm_block_decrypt(H, K, IV, A, C, T) ->
 		_ ->
 			gcm_ghash(H, <<>>, IV)
 	end,
-	S0 = jose_crypto_compat:crypto_init(aes_ctr, K, Y0, true),
+	KeyLen = bit_size(K),
+	Cipher = list_to_atom("aes_" ++ integer_to_list(KeyLen) ++ "_ctr"),
+	S0 = jose_crypto_compat:crypto_init(Cipher, K, Y0, true),
 	{S1, EKY0xor} = jose_crypto_compat:crypto_update_encrypt(S0, Y0),
 	EKY0 = crypto:exor(EKY0xor, Y0),
 	<< Y0int:128/unsigned-big-integer-unit:1 >> = Y0,
@@ -396,7 +398,9 @@ gcm_block_encrypt(H, K, IV, A, P) ->
 		_ ->
 			gcm_ghash(H, <<>>, IV)
 	end,
-	S0 = jose_crypto_compat:crypto_init(aes_ctr, K, Y0, true),
+	KeyLen = bit_size(K),
+	Cipher = list_to_atom("aes_" ++ integer_to_list(KeyLen) ++ "_ctr"),
+	S0 = jose_crypto_compat:crypto_init(Cipher, K, Y0, true),
 	{S1, EKY0xor} = jose_crypto_compat:crypto_update_encrypt(S0, Y0),
 	EKY0 = crypto:exor(EKY0xor, Y0),
 	<< Y0int:128/unsigned-big-integer-unit:1 >> = Y0,
