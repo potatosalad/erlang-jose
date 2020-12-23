@@ -11,7 +11,7 @@ Add `jose` to your project's dependencies in `mix.exs`
 ```elixir
 defp deps() do
   [
-    {:jose, "~> 1.10.1"}
+    {:jose, "~> 1.11"}
   ]
 end
 ```
@@ -47,7 +47,7 @@ For example, with Elixir and `mix.exs`
 ```elixir
 defp deps() do
   [
-    {:jose, "~> 1.10.1"},
+    {:jose, "~> 1.11"},
     {:ojson, "~> 1.0"}
   ]
 end

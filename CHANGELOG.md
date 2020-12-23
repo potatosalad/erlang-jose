@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.11.0 (2020-12-23)
+
+* Fixes
+  * Fix compatibility with older OTP versions
+  * Fix AES detection on OTP 23
+  * Fix AES GCM bugs on OTP 23
+
 ## 1.11.0 (2020-11-24)
 
 * Fixes
