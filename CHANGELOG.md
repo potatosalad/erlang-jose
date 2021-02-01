@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.11.0 (2020-12-23)
+## 1.11.1 (2020-12-23)
 
 * Fixes
   * Fix compatibility with older OTP versions
