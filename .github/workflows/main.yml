@@ -25,3 +25,10 @@ jobs:
       - name: Test
         run: |
           make docker-test DOCKER_OTP_VERSION=${{matrix.erlang}}
+
+      - name: Logs
+        uses: actions/upload-artifact@v2-preview
+        if: failure()
+        with:
+          name: logs
+          path: logs/*
