@@ -134,7 +134,9 @@ der_decode(DER) when is_binary(DER) ->
 	case Result of
 		PrivateKeyInfo=#'PrivateKeyInfo'{} ->
 			i2k(PrivateKeyInfo);
-		ECPrivateKey=#'ECPrivateKey'{} ->
+		ECPrivateKey={'ECPrivateKey', _, _, _, _, _} -> %% OTP 24
+			i2k(ECPrivateKey);
+		ECPrivateKey={'ECPrivateKey', _, _, _, _} -> %% OTP 23
 			i2k(ECPrivateKey);
 		SubjectPublicKeyInfo=#'SubjectPublicKeyInfo'{} ->
 			i2k(SubjectPublicKeyInfo);
@@ -200,7 +202,9 @@ pem_entry_decode(PEMEntry) ->
 	case Result of
 		PrivateKeyInfo=#'PrivateKeyInfo'{} ->
 			i2k(PrivateKeyInfo);
-		ECPrivateKey=#'ECPrivateKey'{} ->
+		ECPrivateKey={'ECPrivateKey', _, _, _, _, _} -> %% OTP 24
+			i2k(ECPrivateKey);
+		ECPrivateKey={'ECPrivateKey', _, _, _, _} -> %% OTP 23
 			i2k(ECPrivateKey);
 		SubjectPublicKeyInfo=#'SubjectPublicKeyInfo'{} ->
 			i2k(SubjectPublicKeyInfo);
@@ -224,7 +228,9 @@ pem_entry_decode(PEMEntry, Password) ->
 	case Result of
 		PrivateKeyInfo=#'PrivateKeyInfo'{} ->
 			i2k(PrivateKeyInfo);
-		ECPrivateKey=#'ECPrivateKey'{} ->
+		ECPrivateKey={'ECPrivateKey', _, _, _, _, _} -> %% OTP 24
+			i2k(ECPrivateKey);
+		ECPrivateKey={'ECPrivateKey', _, _, _, _} -> %% OTP 23
 			i2k(ECPrivateKey);
 		SubjectPublicKeyInfo=#'SubjectPublicKeyInfo'{} ->
 			i2k(SubjectPublicKeyInfo);
@@ -766,11 +772,17 @@ i2k(#'PrivateKeyInfo'{
 		publicKey = #'jose_EdDSA25519PublicKey'{ publicKey = PublicKey },
 		privateKey = PrivateKey
 	};
-i2k(#'ECPrivateKey'{
-	   parameters = {namedCurve, ?'jose_id-EdDSA25519'},
-	   privateKey =
-		   << 4, 32:8/integer, PrivateKey:32/binary >>
-}) ->
+i2k({'ECPrivateKey', _,
+	 << 4, 32:8/integer, PrivateKey:32/binary >>,
+	 {namedCurve, ?'jose_id-EdDSA25519'}, _, _}) ->
+	PublicKey = jose_curve25519:eddsa_secret_to_public(PrivateKey),
+	#'jose_EdDSA25519PrivateKey'{
+	    publicKey = #'jose_EdDSA25519PublicKey'{ publicKey = PublicKey },
+	    privateKey = PrivateKey
+	};
+i2k({'ECPrivateKey', _,
+	 << 4, 32:8/integer, PrivateKey:32/binary >>,
+	 {namedCurve, ?'jose_id-EdDSA25519'}, _, _, _}) ->
 	PublicKey = jose_curve25519:eddsa_secret_to_public(PrivateKey),
 	#'jose_EdDSA25519PrivateKey'{
 	    publicKey = #'jose_EdDSA25519PublicKey'{ publicKey = PublicKey },
@@ -797,11 +809,17 @@ i2k(#'PrivateKeyInfo'{
 		publicKey = #'jose_EdDSA448PublicKey'{ publicKey = PublicKey },
 		privateKey = PrivateKey
 	};
-i2k(#'ECPrivateKey'{
-	   parameters = {namedCurve, ?'jose_id-EdDSA448'},
-	   privateKey =
-		   << 4, 57:8/integer, PrivateKey:57/binary >>
-}) ->
+i2k({'ECPrivateKey', _,
+	 << 4, 57:8/integer, PrivateKey:57/binary >>,
+	 {namedCurve, ?'jose_id-EdDSA448'}, _, _}) ->
+	PublicKey = jose_curve448:eddsa_secret_to_public(PrivateKey),
+	#'jose_EdDSA448PrivateKey'{
+		publicKey = #'jose_EdDSA448PublicKey'{ publicKey = PublicKey },
+		privateKey = PrivateKey
+	};
+i2k({'ECPrivateKey', _,
+	 << 4, 57:8/integer, PrivateKey:57/binary >>,
+	 {namedCurve, ?'jose_id-EdDSA448'}, _, _, _}) ->
 	PublicKey = jose_curve448:eddsa_secret_to_public(PrivateKey),
 	#'jose_EdDSA448PrivateKey'{
 		publicKey = #'jose_EdDSA448PublicKey'{ publicKey = PublicKey },
