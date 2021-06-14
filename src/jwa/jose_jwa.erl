@@ -56,8 +56,8 @@ end).
 block_decrypt(Cipher, Key, CipherText)
 		when is_binary(CipherText) ->
 	case block_cipher(Cipher) of
-		{crypto, aes_ecb} ->
-			<< << (jose_crypto_compat:crypto_one_time(aes_128_ecb, Key, Block, false))/binary >> || << Block:128/bitstring >> <= CipherText >>;
+		{crypto, BlockCipher} ->
+			jose_crypto_compat:crypto_one_time(BlockCipher, Key, CipherText, false);
 		{Module, BlockCipher} ->
 			Module:block_decrypt(BlockCipher, Key, CipherText)
 	end.
@@ -65,32 +65,48 @@ block_decrypt(Cipher, Key, CipherText)
 block_encrypt(Cipher, Key, PlainText)
 		when is_binary(PlainText) ->
 	case block_cipher(Cipher) of
-		{crypto, aes_ecb} ->
-			<< << (jose_crypto_compat:crypto_one_time(aes_128_ecb, Key, Block, true))/binary >> || << Block:128/bitstring >> <= PlainText >>;
+		{crypto, BlockCipher} ->
+			jose_crypto_compat:crypto_one_time(BlockCipher, Key, PlainText, true);
 		{Module, BlockCipher} ->
 			Module:block_encrypt(BlockCipher, Key, PlainText)
 	end.
 
 block_decrypt(Cipher, Key, IV, CipherText)
 		when is_binary(CipherText) ->
-	{Module, BlockCipher} = block_cipher(Cipher),
-	Module:block_decrypt(BlockCipher, Key, IV, CipherText);
+	case block_cipher(Cipher) of
+		{crypto, BlockCipher} ->
+			jose_crypto_compat:crypto_one_time(BlockCipher, Key, IV, CipherText, false);
+		{Module, BlockCipher} ->
+			Module:block_decrypt(BlockCipher, Key, IV, CipherText)
+	end;
 block_decrypt(Cipher, Key, IV, {AAD, CipherText, CipherTag})
 		when is_binary(AAD)
 		andalso is_binary(CipherText)
 		andalso is_binary(CipherTag) ->
-	{Module, BlockCipher} = block_cipher(Cipher),
-	Module:block_decrypt(BlockCipher, Key, IV, {AAD, CipherText, CipherTag}).
+	case block_cipher(Cipher) of
+		{crypto, BlockCipher} ->
+			jose_crypto_compat:crypto_one_time(BlockCipher, Key, IV, {AAD, CipherText, CipherTag}, false);
+		{Module, BlockCipher} ->
+			Module:block_decrypt(BlockCipher, Key, IV, {AAD, CipherText, CipherTag})
+	end.
 
 block_encrypt(Cipher, Key, IV, PlainText)
 		when is_binary(PlainText) ->
-	{Module, BlockCipher} = block_cipher(Cipher),
-	Module:block_encrypt(BlockCipher, Key, IV, PlainText);
+	case block_cipher(Cipher) of
+		{crypto, BlockCipher} ->
+			jose_crypto_compat:crypto_one_time(BlockCipher, Key, IV, PlainText, true);
+		{Module, BlockCipher} ->
+			Module:block_encrypt(BlockCipher, Key, IV, PlainText)
+	end;
 block_encrypt(Cipher, Key, IV, {AAD, PlainText})
 		when is_binary(AAD)
 		andalso is_binary(PlainText) ->
-	{Module, BlockCipher} = block_cipher(Cipher),
-	Module:block_encrypt(BlockCipher, Key, IV, {AAD, PlainText}).
+	case block_cipher(Cipher) of
+		{crypto, BlockCipher} ->
+			jose_crypto_compat:crypto_one_time(BlockCipher, Key, IV, {AAD, PlainText}, true);
+		{Module, BlockCipher} ->
+			Module:block_encrypt(BlockCipher, Key, IV, {AAD, PlainText})
+	end.
 
 %%====================================================================
 %% Public Key API functions
