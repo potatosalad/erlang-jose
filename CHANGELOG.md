@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.11.2 (2021-08-06)
+
+* Fixes
+  * Add compatability with OTP 24
+
 ## 1.11.1 (2020-12-23)
 
 * Fixes

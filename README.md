@@ -1,7 +1,5 @@
 # JOSE
 
-[![Build Status](https://travis-ci.org/potatosalad/erlang-jose.svg?branch=master)](https://travis-ci.org/potatosalad/erlang-jose) [![Hex.pm](https://img.shields.io/hexpm/v/jose.svg)](https://hex.pm/packages/jose)
-
 JSON Object Signing and Encryption (JOSE) for Erlang and Elixir.
 
 ## Installation
@@ -34,7 +32,7 @@ Add `jose` to your project's dependencies in your `Makefile` for [`erlang.mk`](h
 
 ```erlang
 {deps, [
-  {jose, ".*", {git, "git://github.com/potatosalad/erlang-jose.git", {branch, "master"}}}
+  jose
 ]}.
 ```
 
@@ -48,7 +46,7 @@ For example, with Elixir and `mix.exs`
 defp deps() do
   [
     {:jose, "~> 1.11"},
-    {:ojson, "~> 1.0"}
+    {:jason, "~> 1.2"}
   ]
 end
 ```
@@ -57,8 +55,8 @@ Or with Erlang and `rebar.config`
 
 ```erlang
 {deps, [
-  {jose, ".*", {git, "git://github.com/potatosalad/erlang-jose.git", {branch, "master"}}},
-  {ojson, ".*", {git, "git://github.com/potatosalad/erlang-ojson.git", {branch, "master"}}}
+  jose,
+  ojson
 ]}.
 ```
 
