@@ -20,7 +20,11 @@
 %%====================================================================
 
 decode(Binary) ->
-	thoas:decode(Binary).
+	case thoas:decode(Binary) of
+		{ok, Value} -> Value;
+		{error, _} = Error ->
+			error(Error)
+	end.
 
 encode(Term) ->
 	thoas:encode(Term).
