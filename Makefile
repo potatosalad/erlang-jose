@@ -2,7 +2,7 @@ PROJECT = jose
 PROJECT_DESCRIPTION = JSON Object Signing and Encryption (JOSE) for Erlang and Elixir.
 PROJECT_VERSION = 1.11.3
 
-TEST_DEPS = jiffy jsone jsx libdecaf ojson proper
+TEST_DEPS = jiffy jsone jsx libdecaf ojson proper thoas
 
 dep_jiffy = hex 1.1.1
 dep_jsone = hex 1.7.0
@@ -11,7 +11,9 @@ dep_jsx = hex 3.1.0
 dep_libdecaf = hex 2.1.0
 # dep_libsodium = git https://github.com/talklittle/erlang-libsodium.git otp-23-remove-erl-interface
 dep_ojson = hex 1.0.0
+dep_thoas = hex 0.4.0
 dep_proper = git https://github.com/proper-testing/proper.git bfd7d862dd5082eeca65c192a7021d0e4de5973e
+
 
 include erlang.mk
 

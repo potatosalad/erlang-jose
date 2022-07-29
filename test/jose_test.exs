@@ -137,6 +137,13 @@ defmodule JOSETest do
     assert binary == :erlang.element(2, JOSE.JWE.to_binary(jwe))
     assert jwe == JOSE.JWE.from_binary(binary)
     assert jwe == JOSE.JWE.from(jwe)
+    # thoas
+    JOSE.json_module(:thoas)
+    assert :jose_json_thoas == JOSE.json_module()
+    assert map == :erlang.element(2, JOSE.JWE.to_map(jwe))
+    assert binary == :erlang.element(2, JOSE.JWE.to_binary(jwe))
+    assert jwe == JOSE.JWE.from_binary(binary)
+    assert jwe == JOSE.JWE.from(jwe)
     # ojson
     JOSE.json_module(:ojson)
     assert :jose_json_ojson == JOSE.json_module()
@@ -219,6 +226,17 @@ defmodule JOSETest do
     assert jwk == :erlang.element(2, JOSE.JWK.from_binary(password, JOSE.JWK.to_binary(password, jwk)))
     assert jwk == :erlang.element(2, JOSE.JWK.from_map(password, JOSE.JWK.to_map(password, jwk)))
     assert jwk == JOSE.JWK.from_pem(password, JOSE.JWK.to_pem(password, jwk))
+    # thoas
+    JOSE.json_module(:thoas)
+    assert :jose_json_thoas == JOSE.json_module()
+    assert map == :erlang.element(2, JOSE.JWK.to_map(jwk))
+    assert binary == :erlang.element(2, JOSE.JWK.to_binary(jwk))
+    assert jwk == JOSE.JWK.from_binary(binary)
+    assert jwk == JOSE.JWK.from(jwk)
+    assert jwk == JOSE.JWK.from_pem(JOSE.JWK.to_pem(jwk))
+    assert jwk == :erlang.element(2, JOSE.JWK.from_binary(password, JOSE.JWK.to_binary(password, jwk)))
+    assert jwk == :erlang.element(2, JOSE.JWK.from_map(password, JOSE.JWK.to_map(password, jwk)))
+    assert jwk == JOSE.JWK.from_pem(password, JOSE.JWK.to_pem(password, jwk))
     # ojson
     JOSE.json_module(:ojson)
     assert :jose_json_ojson == JOSE.json_module()
@@ -289,6 +307,13 @@ defmodule JOSETest do
     assert binary == :erlang.element(2, JOSE.JWS.to_binary(jws))
     assert jws == JOSE.JWS.from_binary(binary)
     assert jws == JOSE.JWS.from(jws)
+    # thoas
+    JOSE.json_module(:thoas)
+    assert :jose_json_thoas == JOSE.json_module()
+    assert map == :erlang.element(2, JOSE.JWS.to_map(jws))
+    assert binary == :erlang.element(2, JOSE.JWS.to_binary(jws))
+    assert jws == JOSE.JWS.from_binary(binary)
+    assert jws == JOSE.JWS.from(jws)
     # ojson
     JOSE.json_module(:ojson)
     assert :jose_json_ojson == JOSE.json_module()
@@ -343,6 +368,13 @@ defmodule JOSETest do
     # jsx
     JOSE.json_module(:jsx)
     assert :jose_json_jsx == JOSE.json_module()
+    assert map == :erlang.element(2, JOSE.JWT.to_map(jwt))
+    assert binary == :erlang.element(2, JOSE.JWT.to_binary(jwt))
+    assert jwt == JOSE.JWT.from_binary(binary)
+    assert jwt == JOSE.JWT.from(jwt)
+    # thoas
+    JOSE.json_module(:thoas)
+    assert :jose_json_thoas == JOSE.json_module()
     assert map == :erlang.element(2, JOSE.JWT.to_map(jwt))
     assert binary == :erlang.element(2, JOSE.JWT.to_binary(jwt))
     assert jwt == JOSE.JWT.from_binary(binary)
@@ -426,6 +458,8 @@ defmodule JOSETest do
       assert :jose_json_jsone.decode(json) == term
       assert :jose_json_jsx.encode(term) == json
       assert :jose_json_jsx.decode(json) == term
+      assert :jose_json_thoas.encode(term) == json
+      assert :jose_json_thoas.decode(json) == term
       assert :jose_json_poison_compat_encoder.encode(term) == json
       assert :jose_json_poison_compat_encoder.decode(json) == term
       assert :jose_json_poison_lexical_encoder.encode(term) == json
