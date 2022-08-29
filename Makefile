@@ -1,17 +1,17 @@
 PROJECT = jose
 PROJECT_DESCRIPTION = JSON Object Signing and Encryption (JOSE) for Erlang and Elixir.
-PROJECT_VERSION = 1.9.0
+PROJECT_VERSION = 1.11.3
 
-TEST_DEPS = jiffy jsone jsx libdecaf libsodium ojson proper
+TEST_DEPS = jiffy jsone jsx libdecaf ojson proper
 
-dep_jiffy = git git://github.com/davisp/jiffy.git master
-dep_jsone = git git://github.com/sile/jsone.git master
-dep_jsx = git git://github.com/talentdeficit/jsx.git v2.10.0
-dep_keccakf1600 = git git://github.com/potatosalad/erlang-keccakf1600.git master
-dep_libdecaf = git https://github.com/talklittle/erlang-libdecaf.git otp-23-remove-erl-interface
-dep_libsodium = git https://github.com/talklittle/erlang-libsodium.git otp-23-remove-erl-interface
-dep_ojson = git git://github.com/potatosalad/erlang-ojson.git master
-dep_proper = git git://github.com/proper-testing/proper.git v1.3
+dep_jiffy = hex 1.1.1
+dep_jsone = hex 1.7.0
+dep_jsx = hex 3.1.0
+# dep_keccakf1600 = hex 3.0.0
+dep_libdecaf = hex 2.1.0
+# dep_libsodium = git https://github.com/talklittle/erlang-libsodium.git otp-23-remove-erl-interface
+dep_ojson = hex 1.0.0
+dep_proper = git https://github.com/proper-testing/proper.git bfd7d862dd5082eeca65c192a7021d0e4de5973e
 
 include erlang.mk
 

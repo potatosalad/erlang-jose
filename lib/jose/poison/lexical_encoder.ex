@@ -139,7 +139,7 @@ if Code.ensure_loaded?(Poison) do
   defimpl JOSE.Poison.LexicalEncoder, for: BitString do
     alias JOSE.Poison.LexicalEncodeError
 
-    use Bitwise
+    import Bitwise
 
     def encode("", _), do: "\"\""
 

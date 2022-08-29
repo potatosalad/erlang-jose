@@ -4,8 +4,8 @@ defmodule JOSE.Mixfile do
   def project() do
     [
       app: :jose,
-      version: "1.11.2",
-      elixir: "~> 1.4",
+      version: "1.11.3",
+      elixir: "~> 1.12",
       erlc_options: erlc_options(),
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
@@ -28,16 +28,16 @@ defmodule JOSE.Mixfile do
   defp deps() do
     [
       # {:cutkey, github: "potatosalad/cutkey", only: [:dev, :test]},
-      {:jason, "~> 1.1", only: [:dev, :test]},
-      {:jsone, "~> 1.4", only: [:dev, :test]},
-      {:jsx, "~> 2.9", only: [:dev, :test]},
+      {:jason, "~> 1.3", only: [:dev, :test]},
+      {:jsone, "~> 1.7", only: [:dev, :test]},
+      {:jsx, "~> 3.1", only: [:dev, :test]},
       # {:keccakf1600, "~> 2.0.0", only: [:dev, :test]},
-      {:libdecaf, "~> 1.0.0", only: [:dev, :test]},
-      {:libsodium, "~> 0.0.10", only: [:dev, :test]},
+      {:libdecaf, "~> 2.1.0", only: [:dev, :test]},
+      # {:libsodium, "~> 0.0.10", only: [:dev, :test]},
       {:ojson, "~> 1.0", only: [:dev, :test]},
-      {:poison, "~> 4.0", only: [:dev, :test]},
-      {:ex_doc, "~> 0.19", only: :dev},
-      {:earmark, "~> 1.3", only: :dev}
+      {:poison, "~> 5.0", only: [:dev, :test]},
+      {:ex_doc, "~> 0.28", only: :dev},
+      {:earmark, "~> 1.4", only: :dev}
     ]
   end
 

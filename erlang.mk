@@ -17,7 +17,7 @@
 ERLANG_MK_FILENAME := $(realpath $(lastword $(MAKEFILE_LIST)))
 export ERLANG_MK_FILENAME
 
-ERLANG_MK_VERSION = 579e9f3-dirty
+ERLANG_MK_VERSION = bf7a194-dirty
 ERLANG_MK_WITHOUT = 
 
 # Make 3.81 and 3.82 are deprecated.
@@ -2735,7 +2735,7 @@ pkg_mochiweb_description = MochiWeb is an Erlang library for building lightweigh
 pkg_mochiweb_homepage = https://github.com/mochi/mochiweb
 pkg_mochiweb_fetch = git
 pkg_mochiweb_repo = https://github.com/mochi/mochiweb
-pkg_mochiweb_commit = master
+pkg_mochiweb_commit = main
 
 PACKAGES += mochiweb_xpath
 pkg_mochiweb_xpath_name = mochiweb_xpath
@@ -3391,7 +3391,7 @@ pkg_relx_description = Sane, simple release creation for Erlang
 pkg_relx_homepage = https://github.com/erlware/relx
 pkg_relx_fetch = git
 pkg_relx_repo = https://github.com/erlware/relx
-pkg_relx_commit = master
+pkg_relx_commit = main
 
 PACKAGES += resource_discovery
 pkg_resource_discovery_name = resource_discovery
@@ -4692,8 +4692,19 @@ define dep_autopatch_rebar.erl
 		case file:consult("$(call core_native_path,$(DEPS_DIR)/$1/rebar.lock)") of
 			{ok, Lock} ->
 				io:format("~p~n", [Lock]),
-				case lists:keyfind("1.1.0", 1, Lock) of
-					{_, LockPkgs} ->
+				LockPkgs = case lists:keyfind("1.2.0", 1, Lock) of
+					{_, LP} ->
+						LP;
+					_ ->
+						case lists:keyfind("1.1.0", 1, Lock) of
+							{_, LP} ->
+								LP;
+							_ ->
+								false
+						end
+				end,
+				if
+					is_list(LockPkgs) ->
 						io:format("~p~n", [LockPkgs]),
 						case lists:keyfind(atom_to_binary(N, latin1), 1, LockPkgs) of
 							{_, {pkg, _, Vsn}, _} ->
@@ -4702,7 +4713,7 @@ define dep_autopatch_rebar.erl
 							_ ->
 								false
 						end;
-					_ ->
+					true ->
 						false
 				end;
 			_ ->
@@ -4948,9 +4959,12 @@ endef
 define dep_autopatch_appsrc_script.erl
 	AppSrc = "$(call core_native_path,$(DEPS_DIR)/$1/src/$1.app.src)",
 	AppSrcScript = AppSrc ++ ".script",
-	{ok, Conf0} = file:consult(AppSrc),
+	Conf1 = case file:consult(AppSrc) of
+		{ok, Conf0} -> Conf0;
+		{error, enoent} -> []
+	end,
 	Bindings0 = erl_eval:new_bindings(),
-	Bindings1 = erl_eval:add_binding('CONFIG', Conf0, Bindings0),
+	Bindings1 = erl_eval:add_binding('CONFIG', Conf1, Bindings0),
 	Bindings = erl_eval:add_binding('SCRIPT', AppSrcScript, Bindings1),
 	Conf = case file:script(AppSrcScript, Bindings) of
 		{ok, [C]} -> C;
@@ -5123,66 +5137,6 @@ ERLANG_MK_QUERY_DOC_DEPS_FILE = $(ERLANG_MK_TMP)/query-doc-deps.log
 ERLANG_MK_QUERY_REL_DEPS_FILE = $(ERLANG_MK_TMP)/query-rel-deps.log
 ERLANG_MK_QUERY_TEST_DEPS_FILE = $(ERLANG_MK_TMP)/query-test-deps.log
 ERLANG_MK_QUERY_SHELL_DEPS_FILE = $(ERLANG_MK_TMP)/query-shell-deps.log
-
-# Copyright (c) 2015-2016, Loïc Hoguin <essen@ninenines.eu>
-# This file is part of erlang.mk and subject to the terms of the ISC License.
-
-# Verbosity.
-
-proto_verbose_0 = @echo " PROTO " $(filter %.proto,$(?F));
-proto_verbose = $(proto_verbose_$(V))
-
-# Core targets.
-
-ifneq ($(wildcard src/),)
-ifneq ($(filter gpb protobuffs,$(BUILD_DEPS) $(DEPS)),)
-PROTO_FILES := $(filter %.proto,$(ALL_SRC_FILES))
-ERL_FILES += $(addprefix src/,$(patsubst %.proto,%_pb.erl,$(notdir $(PROTO_FILES))))
-
-ifeq ($(PROTO_FILES),)
-$(ERLANG_MK_TMP)/last-makefile-change-protobuffs:
-	$(verbose) :
-else
-# Rebuild proto files when the Makefile changes.
-# We exclude $(PROJECT).d to avoid a circular dependency.
-$(ERLANG_MK_TMP)/last-makefile-change-protobuffs: $(filter-out $(PROJECT).d,$(MAKEFILE_LIST)) | $(ERLANG_MK_TMP)
-	$(verbose) if test -f $@; then \
-		touch $(PROTO_FILES); \
-	fi
-	$(verbose) touch $@
-
-$(PROJECT).d:: $(ERLANG_MK_TMP)/last-makefile-change-protobuffs
-endif
-
-ifeq ($(filter gpb,$(BUILD_DEPS) $(DEPS)),)
-define compile_proto.erl
-	[begin
-		protobuffs_compile:generate_source(F, [
-			{output_include_dir, "./include"},
-			{output_src_dir, "./src"}])
-	end || F <- string:tokens("$1", " ")],
-	halt().
-endef
-else
-define compile_proto.erl
-	[begin
-		gpb_compile:file(F, [
-			{include_as_lib, true},
-			{module_name_suffix, "_pb"},
-			{o_hrl, "./include"},
-			{o_erl, "./src"}])
-	end || F <- string:tokens("$1", " ")],
-	halt().
-endef
-endif
-
-ifneq ($(PROTO_FILES),)
-$(PROJECT).d:: $(PROTO_FILES)
-	$(verbose) mkdir -p ebin/ include/
-	$(if $(strip $?),$(proto_verbose) $(call erlang,$(call compile_proto.erl,$?)))
-endif
-endif
-endif
 
 # Copyright (c) 2013-2016, Loïc Hoguin <essen@ninenines.eu>
 # This file is part of erlang.mk and subject to the terms of the ISC License.
@@ -5878,6 +5832,8 @@ endef
 
 define bs_relx_config
 {release, {$p_release, "1"}, [$p, sasl, runtime_tools]}.
+{dev_mode, false}.
+{include_erts, true}.
 {extended_start_script, true}.
 {sys_config, "config/sys.config"}.
 {vm_args, "config/vm.args"}.
@@ -6234,6 +6190,8 @@ endif
 	$(verbose) mkdir config/
 	$(verbose) $(call core_render,bs_sys_config,config/sys.config)
 	$(verbose) $(call core_render,bs_vm_args,config/vm.args)
+	$(verbose) awk '/^include erlang.mk/ && !ins {print "BUILD_DEPS += relx";ins=1};{print}' Makefile > Makefile.bak
+	$(verbose) mv Makefile.bak Makefile
 
 new-app:
 ifndef in
@@ -6601,6 +6559,74 @@ help::
 
 endif
 
+# Copyright (c) 2020, Loïc Hoguin <essen@ninenines.eu>
+# This file is part of erlang.mk and subject to the terms of the ISC License.
+
+ifdef CONCUERROR_TESTS
+
+.PHONY: concuerror distclean-concuerror
+
+# Configuration
+
+CONCUERROR_LOGS_DIR ?= $(CURDIR)/logs
+CONCUERROR_OPTS ?=
+
+# Core targets.
+
+check:: concuerror
+
+ifndef KEEP_LOGS
+distclean:: distclean-concuerror
+endif
+
+# Plugin-specific targets.
+
+$(ERLANG_MK_TMP)/Concuerror/bin/concuerror: | $(ERLANG_MK_TMP)
+	$(verbose) git clone https://github.com/parapluu/Concuerror $(ERLANG_MK_TMP)/Concuerror
+	$(verbose) $(MAKE) -C $(ERLANG_MK_TMP)/Concuerror
+
+$(CONCUERROR_LOGS_DIR):
+	$(verbose) mkdir -p $(CONCUERROR_LOGS_DIR)
+
+define concuerror_html_report
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Concuerror HTML report</title>
+</head>
+<body>
+<h1>Concuerror HTML report</h1>
+<p>Generated on $(concuerror_date)</p>
+<ul>
+$(foreach t,$(concuerror_targets),<li><a href="$(t).txt">$(t)</a></li>)
+</ul>
+</body>
+</html>
+endef
+
+concuerror: $(addprefix concuerror-,$(subst :,-,$(CONCUERROR_TESTS)))
+	$(eval concuerror_date := $(shell date))
+	$(eval concuerror_targets := $^)
+	$(verbose) $(call core_render,concuerror_html_report,$(CONCUERROR_LOGS_DIR)/concuerror.html)
+
+define concuerror_target
+.PHONY: concuerror-$1-$2
+
+concuerror-$1-$2: test-build | $(ERLANG_MK_TMP)/Concuerror/bin/concuerror $(CONCUERROR_LOGS_DIR)
+	$(ERLANG_MK_TMP)/Concuerror/bin/concuerror \
+		--pa $(CURDIR)/ebin --pa $(TEST_DIR) \
+		-o $(CONCUERROR_LOGS_DIR)/concuerror-$1-$2.txt \
+		$$(CONCUERROR_OPTS) -m $1 -t $2
+endef
+
+$(foreach test,$(CONCUERROR_TESTS),$(eval $(call concuerror_target,$(firstword $(subst :, ,$(test))),$(lastword $(subst :, ,$(test))))))
+
+distclean-concuerror:
+	$(gen_verbose) rm -rf $(CONCUERROR_LOGS_DIR)
+
+endif
+
 # Copyright (c) 2013-2016, Loïc Hoguin <essen@ninenines.eu>
 # This file is part of erlang.mk and subject to the terms of the ISC License.
 
@@ -6703,7 +6729,7 @@ export DIALYZER_PLT
 
 PLT_APPS ?=
 DIALYZER_DIRS ?= --src -r $(wildcard src) $(ALL_APPS_DIRS)
-DIALYZER_OPTS ?= -Werror_handling -Wrace_conditions -Wunmatched_returns # -Wunderspecs
+DIALYZER_OPTS ?= -Werror_handling -Wunmatched_returns # -Wunderspecs
 DIALYZER_PLT_OPTS ?=
 
 # Core targets.
@@ -6979,6 +7005,343 @@ apps-eunit: test-build
 endif
 endif
 
+# Copyright (c) 2020, Loïc Hoguin <essen@ninenines.eu>
+# This file is part of erlang.mk and subject to the terms of the ISC License.
+
+HEX_CORE_GIT ?= https://github.com/hexpm/hex_core
+HEX_CORE_COMMIT ?= v0.7.0
+
+PACKAGES += hex_core
+pkg_hex_core_name = hex_core
+pkg_hex_core_description = Reference implementation of Hex specifications
+pkg_hex_core_homepage = $(HEX_CORE_GIT)
+pkg_hex_core_fetch = git
+pkg_hex_core_repo = $(HEX_CORE_GIT)
+pkg_hex_core_commit = $(HEX_CORE_COMMIT)
+
+# We automatically depend on hex_core when the project isn't already.
+$(if $(filter hex_core,$(DEPS) $(BUILD_DEPS) $(DOC_DEPS) $(REL_DEPS) $(TEST_DEPS)),,\
+	$(eval $(call dep_target,hex_core)))
+
+hex-core: $(DEPS_DIR)/hex_core
+	$(verbose) if [ ! -e $(DEPS_DIR)/hex_core/ebin/dep_built ]; then \
+		$(MAKE) -C $(DEPS_DIR)/hex_core IS_DEP=1; \
+		touch $(DEPS_DIR)/hex_core/ebin/dep_built; \
+	fi
+
+# @todo This must also apply to fetching.
+HEX_CONFIG ?=
+
+define hex_config.erl
+	begin
+		Config0 = hex_core:default_config(),
+		Config0$(HEX_CONFIG)
+	end
+endef
+
+define hex_user_create.erl
+	{ok, _} = application:ensure_all_started(ssl),
+	{ok, _} = application:ensure_all_started(inets),
+	Config = $(hex_config.erl),
+	case hex_api_user:create(Config, <<"$(strip $1)">>, <<"$(strip $2)">>, <<"$(strip $3)">>) of
+		{ok, {201, _, #{<<"email">> := Email, <<"url">> := URL, <<"username">> := Username}}} ->
+			io:format("User ~s (~s) created at ~s~n"
+				"Please check your inbox for a confirmation email.~n"
+				"You must confirm before you are allowed to publish packages.~n",
+				[Username, Email, URL]),
+			halt(0);
+		{ok, {Status, _, Errors}} ->
+			io:format("Error ~b: ~0p~n", [Status, Errors]),
+			halt(80)
+	end
+endef
+
+# The $(info ) call inserts a new line after the password prompt.
+hex-user-create: hex-core
+	$(if $(HEX_USERNAME),,$(eval HEX_USERNAME := $(shell read -p "Username: " username; echo $$username)))
+	$(if $(HEX_PASSWORD),,$(eval HEX_PASSWORD := $(shell stty -echo; read -p "Password: " password; stty echo; echo $$password) $(info )))
+	$(if $(HEX_EMAIL),,$(eval HEX_EMAIL := $(shell read -p "Email: " email; echo $$email)))
+	$(gen_verbose) $(call erlang,$(call hex_user_create.erl,$(HEX_USERNAME),$(HEX_PASSWORD),$(HEX_EMAIL)))
+
+define hex_key_add.erl
+	{ok, _} = application:ensure_all_started(ssl),
+	{ok, _} = application:ensure_all_started(inets),
+	Config = $(hex_config.erl),
+	ConfigF = Config#{api_key => iolist_to_binary([<<"Basic ">>, base64:encode(<<"$(strip $1):$(strip $2)">>)])},
+	Permissions = [
+		case string:split(P, <<":">>) of
+			[D] -> #{domain => D};
+			[D, R] -> #{domain => D, resource => R}
+		end
+	|| P <- string:split(<<"$(strip $4)">>, <<",">>, all)],
+	case hex_api_key:add(ConfigF, <<"$(strip $3)">>, Permissions) of
+		{ok, {201, _, #{<<"secret">> := Secret}}} ->
+			io:format("Key ~s created for user ~s~nSecret: ~s~n"
+				"Please store the secret in a secure location, such as a password store.~n"
+				"The secret will be requested for most Hex-related operations.~n",
+				[<<"$(strip $3)">>, <<"$(strip $1)">>, Secret]),
+			halt(0);
+		{ok, {Status, _, Errors}} ->
+			io:format("Error ~b: ~0p~n", [Status, Errors]),
+			halt(81)
+	end
+endef
+
+hex-key-add: hex-core
+	$(if $(HEX_USERNAME),,$(eval HEX_USERNAME := $(shell read -p "Username: " username; echo $$username)))
+	$(if $(HEX_PASSWORD),,$(eval HEX_PASSWORD := $(shell stty -echo; read -p "Password: " password; stty echo; echo $$password) $(info )))
+	$(gen_verbose) $(call erlang,$(call hex_key_add.erl,$(HEX_USERNAME),$(HEX_PASSWORD),\
+		$(if $(name),$(name),$(shell hostname)-erlang-mk),\
+		$(if $(perm),$(perm),api)))
+
+HEX_TARBALL_EXTRA_METADATA ?=
+
+# @todo Check that we can += files
+HEX_TARBALL_FILES ?= \
+	$(wildcard early-plugins.mk) \
+	$(wildcard ebin/$(PROJECT).app) \
+	$(wildcard ebin/$(PROJECT).appup) \
+	$(wildcard $(notdir $(ERLANG_MK_FILENAME))) \
+	$(sort $(call core_find,include/,*.hrl)) \
+	$(wildcard LICENSE*) \
+	$(wildcard Makefile) \
+	$(wildcard plugins.mk) \
+	$(sort $(call core_find,priv/,*)) \
+	$(wildcard README*) \
+	$(wildcard rebar.config) \
+	$(sort $(call core_find,src/,*))
+
+HEX_TARBALL_OUTPUT_FILE ?= $(ERLANG_MK_TMP)/$(PROJECT).tar
+
+# @todo Need to check for rebar.config and/or the absence of DEPS to know
+# whether a project will work with Rebar.
+#
+# @todo contributors licenses links in HEX_TARBALL_EXTRA_METADATA
+
+# In order to build the requirements metadata we look into DEPS.
+# We do not require that the project use Hex dependencies, however
+# Hex.pm does require that the package name and version numbers
+# correspond to a real Hex package.
+define hex_tarball_create.erl
+	Files0 = [$(call comma_list,$(patsubst %,"%",$(HEX_TARBALL_FILES)))],
+	Requirements0 = #{
+		$(foreach d,$(DEPS),
+			<<"$(if $(subst hex,,$(call query_fetch_method,$d)),$d,$(if $(word 3,$(dep_$d)),$(word 3,$(dep_$d)),$d))">> => #{
+				<<"app">> => <<"$d">>,
+				<<"optional">> => false,
+				<<"requirement">> => <<"$(call query_version,$d)">>
+			},)
+		$(if $(DEPS),dummy => dummy)
+	},
+	Requirements = maps:remove(dummy, Requirements0),
+	Metadata0 = #{
+		app => <<"$(strip $(PROJECT))">>,
+		build_tools => [<<"make">>, <<"rebar3">>],
+		description => <<"$(strip $(PROJECT_DESCRIPTION))">>,
+		files => [unicode:characters_to_binary(F) || F <- Files0],
+		name => <<"$(strip $(PROJECT))">>,
+		requirements => Requirements,
+		version => <<"$(strip $(PROJECT_VERSION))">>
+	},
+	Metadata = Metadata0$(HEX_TARBALL_EXTRA_METADATA),
+	Files = [case file:read_file(F) of
+		{ok, Bin} ->
+			{F, Bin};
+		{error, Reason} ->
+			io:format("Error trying to open file ~0p: ~0p~n", [F, Reason]),
+			halt(82)
+	end || F <- Files0],
+	case hex_tarball:create(Metadata, Files) of
+		{ok, #{tarball := Tarball}} ->
+			ok = file:write_file("$(strip $(HEX_TARBALL_OUTPUT_FILE))", Tarball),
+			halt(0);
+		{error, Reason} ->
+			io:format("Error ~0p~n", [Reason]),
+			halt(83)
+	end
+endef
+
+hex_tar_verbose_0 = @echo " TAR    $(notdir $(ERLANG_MK_TMP))/$(@F)";
+hex_tar_verbose_2 = set -x;
+hex_tar_verbose = $(hex_tar_verbose_$(V))
+
+$(HEX_TARBALL_OUTPUT_FILE): hex-core app
+	$(hex_tar_verbose) $(call erlang,$(call hex_tarball_create.erl))
+
+hex-tarball-create: $(HEX_TARBALL_OUTPUT_FILE)
+
+define hex_release_publish_summary.erl
+	{ok, Tarball} = erl_tar:open("$(strip $(HEX_TARBALL_OUTPUT_FILE))", [read]),
+	ok = erl_tar:extract(Tarball, [{cwd, "$(ERLANG_MK_TMP)"}, {files, ["metadata.config"]}]),
+	{ok, Metadata} = file:consult("$(ERLANG_MK_TMP)/metadata.config"),
+	#{
+		<<"name">> := Name,
+		<<"version">> := Version,
+		<<"files">> := Files,
+		<<"requirements">> := Deps
+	} = maps:from_list(Metadata),
+	io:format("Publishing ~s ~s~n  Dependencies:~n", [Name, Version]),
+	case Deps of
+		[] ->
+			io:format("    (none)~n");
+		_ ->
+			[begin
+				#{<<"app">> := DA, <<"requirement">> := DR} = maps:from_list(D),
+				io:format("    ~s ~s~n", [DA, DR])
+			end || {_, D} <- Deps]
+	end,
+	io:format("  Included files:~n"),
+	[io:format("    ~s~n", [F]) || F <- Files],
+	io:format("You may also review the contents of the tarball file.~n"
+		"Please enter your secret key to proceed.~n"),
+	halt(0)
+endef
+
+define hex_release_publish.erl
+	{ok, _} = application:ensure_all_started(ssl),
+	{ok, _} = application:ensure_all_started(inets),
+	Config = $(hex_config.erl),
+	ConfigF = Config#{api_key => <<"$(strip $1)">>},
+	{ok, Tarball} = file:read_file("$(strip $(HEX_TARBALL_OUTPUT_FILE))"),
+	case hex_api_release:publish(ConfigF, Tarball, [{replace, $2}]) of
+		{ok, {200, _, #{}}} ->
+			io:format("Release replaced~n"),
+			halt(0);
+		{ok, {201, _, #{}}} ->
+			io:format("Release published~n"),
+			halt(0);
+		{ok, {Status, _, Errors}} ->
+			io:format("Error ~b: ~0p~n", [Status, Errors]),
+			halt(84)
+	end
+endef
+
+hex-release-tarball: hex-core $(HEX_TARBALL_OUTPUT_FILE)
+	$(verbose) $(call erlang,$(call hex_release_publish_summary.erl))
+
+hex-release-publish: hex-core hex-release-tarball
+	$(if $(HEX_SECRET),,$(eval HEX_SECRET := $(shell stty -echo; read -p "Secret: " secret; stty echo; echo $$secret) $(info )))
+	$(gen_verbose) $(call erlang,$(call hex_release_publish.erl,$(HEX_SECRET),false))
+
+hex-release-replace: hex-core hex-release-tarball
+	$(if $(HEX_SECRET),,$(eval HEX_SECRET := $(shell stty -echo; read -p "Secret: " secret; stty echo; echo $$secret) $(info )))
+	$(gen_verbose) $(call erlang,$(call hex_release_publish.erl,$(HEX_SECRET),true))
+
+define hex_release_delete.erl
+	{ok, _} = application:ensure_all_started(ssl),
+	{ok, _} = application:ensure_all_started(inets),
+	Config = $(hex_config.erl),
+	ConfigF = Config#{api_key => <<"$(strip $1)">>},
+	case hex_api_release:delete(ConfigF, <<"$(strip $(PROJECT))">>, <<"$(strip $(PROJECT_VERSION))">>) of
+		{ok, {204, _, _}} ->
+			io:format("Release $(strip $(PROJECT_VERSION)) deleted~n"),
+			halt(0);
+		{ok, {Status, _, Errors}} ->
+			io:format("Error ~b: ~0p~n", [Status, Errors]),
+			halt(85)
+	end
+endef
+
+hex-release-delete: hex-core
+	$(if $(HEX_SECRET),,$(eval HEX_SECRET := $(shell stty -echo; read -p "Secret: " secret; stty echo; echo $$secret) $(info )))
+	$(gen_verbose) $(call erlang,$(call hex_release_delete.erl,$(HEX_SECRET)))
+
+define hex_release_retire.erl
+	{ok, _} = application:ensure_all_started(ssl),
+	{ok, _} = application:ensure_all_started(inets),
+	Config = $(hex_config.erl),
+	ConfigF = Config#{api_key => <<"$(strip $1)">>},
+	Params = #{<<"reason">> => <<"$(strip $3)">>, <<"message">> => <<"$(strip $4)">>},
+	case hex_api_release:retire(ConfigF, <<"$(strip $(PROJECT))">>, <<"$(strip $2)">>, Params) of
+		{ok, {204, _, _}} ->
+			io:format("Release $(strip $2) has been retired~n"),
+			halt(0);
+		{ok, {Status, _, Errors}} ->
+			io:format("Error ~b: ~0p~n", [Status, Errors]),
+			halt(86)
+	end
+endef
+
+hex-release-retire: hex-core
+	$(if $(HEX_SECRET),,$(eval HEX_SECRET := $(shell stty -echo; read -p "Secret: " secret; stty echo; echo $$secret) $(info )))
+	$(gen_verbose) $(call erlang,$(call hex_release_retire.erl,$(HEX_SECRET),\
+		$(if $(HEX_VERSION),$(HEX_VERSION),$(PROJECT_VERSION)),\
+		$(if $(HEX_REASON),$(HEX_REASON),invalid),\
+		$(HEX_MESSAGE)))
+
+define hex_release_unretire.erl
+	{ok, _} = application:ensure_all_started(ssl),
+	{ok, _} = application:ensure_all_started(inets),
+	Config = $(hex_config.erl),
+	ConfigF = Config#{api_key => <<"$(strip $1)">>},
+	case hex_api_release:unretire(ConfigF, <<"$(strip $(PROJECT))">>, <<"$(strip $2)">>) of
+		{ok, {204, _, _}} ->
+			io:format("Release $(strip $2) is not retired anymore~n"),
+			halt(0);
+		{ok, {Status, _, Errors}} ->
+			io:format("Error ~b: ~0p~n", [Status, Errors]),
+			halt(87)
+	end
+endef
+
+hex-release-unretire: hex-core
+	$(if $(HEX_SECRET),,$(eval HEX_SECRET := $(shell stty -echo; read -p "Secret: " secret; stty echo; echo $$secret) $(info )))
+	$(gen_verbose) $(call erlang,$(call hex_release_unretire.erl,$(HEX_SECRET),\
+		$(if $(HEX_VERSION),$(HEX_VERSION),$(PROJECT_VERSION))))
+
+HEX_DOCS_DOC_DIR ?= doc/
+HEX_DOCS_TARBALL_FILES ?= $(sort $(call core_find,$(HEX_DOCS_DOC_DIR),*))
+HEX_DOCS_TARBALL_OUTPUT_FILE ?= $(ERLANG_MK_TMP)/$(PROJECT)-docs.tar.gz
+
+$(HEX_DOCS_TARBALL_OUTPUT_FILE): hex-core app docs
+	$(hex_tar_verbose) tar czf $(HEX_DOCS_TARBALL_OUTPUT_FILE) -C $(HEX_DOCS_DOC_DIR) \
+		$(HEX_DOCS_TARBALL_FILES:$(HEX_DOCS_DOC_DIR)%=%)
+
+hex-docs-tarball-create: $(HEX_DOCS_TARBALL_OUTPUT_FILE)
+
+define hex_docs_publish.erl
+	{ok, _} = application:ensure_all_started(ssl),
+	{ok, _} = application:ensure_all_started(inets),
+	Config = $(hex_config.erl),
+	ConfigF = Config#{api_key => <<"$(strip $1)">>},
+	{ok, Tarball} = file:read_file("$(strip $(HEX_DOCS_TARBALL_OUTPUT_FILE))"),
+	case hex_api:post(ConfigF,
+			["packages", "$(strip $(PROJECT))", "releases", "$(strip $(PROJECT_VERSION))", "docs"],
+			{"application/octet-stream", Tarball}) of
+		{ok, {Status, _, _}} when Status >= 200, Status < 300 ->
+			io:format("Docs published~n"),
+			halt(0);
+		{ok, {Status, _, Errors}} ->
+			io:format("Error ~b: ~0p~n", [Status, Errors]),
+			halt(88)
+	end
+endef
+
+hex-docs-publish: hex-core hex-docs-tarball-create
+	$(if $(HEX_SECRET),,$(eval HEX_SECRET := $(shell stty -echo; read -p "Secret: " secret; stty echo; echo $$secret) $(info )))
+	$(gen_verbose) $(call erlang,$(call hex_docs_publish.erl,$(HEX_SECRET)))
+
+define hex_docs_delete.erl
+	{ok, _} = application:ensure_all_started(ssl),
+	{ok, _} = application:ensure_all_started(inets),
+	Config = $(hex_config.erl),
+	ConfigF = Config#{api_key => <<"$(strip $1)">>},
+	case hex_api:delete(ConfigF,
+			["packages", "$(strip $(PROJECT))", "releases", "$(strip $2)", "docs"]) of
+		{ok, {Status, _, _}} when Status >= 200, Status < 300 ->
+			io:format("Docs removed~n"),
+			halt(0);
+		{ok, {Status, _, Errors}} ->
+			io:format("Error ~b: ~0p~n", [Status, Errors]),
+			halt(89)
+	end
+endef
+
+hex-docs-delete: hex-core
+	$(if $(HEX_SECRET),,$(eval HEX_SECRET := $(shell stty -echo; read -p "Secret: " secret; stty echo; echo $$secret) $(info )))
+	$(gen_verbose) $(call erlang,$(call hex_docs_delete.erl,$(HEX_SECRET),\
+		$(if $(HEX_VERSION),$(HEX_VERSION),$(PROJECT_VERSION))))
+
 # Copyright (c) 2015-2017, Loïc Hoguin <essen@ninenines.eu>
 # This file is part of erlang.mk and subject to the terms of the ISC License.
 
@@ -7041,30 +7404,82 @@ proper: test-build cover-data-dir
 endif
 endif
 
+# Copyright (c) 2015-2016, Loïc Hoguin <essen@ninenines.eu>
+# This file is part of erlang.mk and subject to the terms of the ISC License.
+
+# Verbosity.
+
+proto_verbose_0 = @echo " PROTO " $(filter %.proto,$(?F));
+proto_verbose = $(proto_verbose_$(V))
+
+# Core targets.
+
+ifneq ($(wildcard src/),)
+ifneq ($(filter gpb protobuffs,$(BUILD_DEPS) $(DEPS)),)
+PROTO_FILES := $(filter %.proto,$(ALL_SRC_FILES))
+ERL_FILES += $(addprefix src/,$(patsubst %.proto,%_pb.erl,$(notdir $(PROTO_FILES))))
+
+ifeq ($(PROTO_FILES),)
+$(ERLANG_MK_TMP)/last-makefile-change-protobuffs:
+	$(verbose) :
+else
+# Rebuild proto files when the Makefile changes.
+# We exclude $(PROJECT).d to avoid a circular dependency.
+$(ERLANG_MK_TMP)/last-makefile-change-protobuffs: $(filter-out $(PROJECT).d,$(MAKEFILE_LIST)) | $(ERLANG_MK_TMP)
+	$(verbose) if test -f $@; then \
+		touch $(PROTO_FILES); \
+	fi
+	$(verbose) touch $@
+
+$(PROJECT).d:: $(ERLANG_MK_TMP)/last-makefile-change-protobuffs
+endif
+
+ifeq ($(filter gpb,$(BUILD_DEPS) $(DEPS)),)
+define compile_proto.erl
+	[begin
+		protobuffs_compile:generate_source(F, [
+			{output_include_dir, "./include"},
+			{output_src_dir, "./src"}])
+	end || F <- string:tokens("$1", " ")],
+	halt().
+endef
+else
+define compile_proto.erl
+	[begin
+		gpb_compile:file(F, [
+			{include_as_lib, true},
+			{module_name_suffix, "_pb"},
+			{o_hrl, "./include"},
+			{o_erl, "./src"}])
+	end || F <- string:tokens("$1", " ")],
+	halt().
+endef
+endif
+
+ifneq ($(PROTO_FILES),)
+$(PROJECT).d:: $(PROTO_FILES)
+	$(verbose) mkdir -p ebin/ include/
+	$(if $(strip $?),$(proto_verbose) $(call erlang,$(call compile_proto.erl,$?)))
+endif
+endif
+endif
+
 # Copyright (c) 2013-2016, Loïc Hoguin <essen@ninenines.eu>
 # This file is part of erlang.mk and subject to the terms of the ISC License.
 
+ifeq ($(filter relx,$(BUILD_DEPS) $(DEPS) $(REL_DEPS)),relx)
 .PHONY: relx-rel relx-relup distclean-relx-rel run
 
 # Configuration.
 
-RELX ?= $(ERLANG_MK_TMP)/relx
 RELX_CONFIG ?= $(CURDIR)/relx.config
 
-RELX_URL ?= https://erlang.mk/res/relx-v3.27.0
-RELX_OPTS ?=
 RELX_OUTPUT_DIR ?= _rel
 RELX_REL_EXT ?=
 RELX_TAR ?= 1
 
 ifdef SFX
 	RELX_TAR = 1
-endif
-
-ifeq ($(firstword $(RELX_OPTS)),-o)
-	RELX_OUTPUT_DIR = $(word 2,$(RELX_OPTS))
-else
-	RELX_OPTS += -o $(RELX_OUTPUT_DIR)
 endif
 
 # Core targets.
@@ -7081,21 +7496,59 @@ distclean:: distclean-relx-rel
 
 # Plugin-specific targets.
 
-$(RELX): | $(ERLANG_MK_TMP)
-	$(gen_verbose) $(call core_http_get,$(RELX),$(RELX_URL))
-	$(verbose) chmod +x $(RELX)
+define relx_release.erl
+	{ok, Config} = file:consult("$(call core_native_path,$(RELX_CONFIG))"),
+	{release, {Name, Vsn0}, _} = lists:keyfind(release, 1, Config),
+	Vsn = case Vsn0 of
+		{cmd, Cmd} -> os:cmd(Cmd);
+		semver -> "";
+		{semver, _} -> "";
+		VsnStr -> Vsn0
+	end,
+	{ok, _} = relx:build_release(#{name => Name, vsn => Vsn}, Config),
+	halt(0).
+endef
 
-relx-rel: $(RELX) rel-deps app
-	$(verbose) $(RELX) $(if $(filter 1,$V),-V 3) -c $(RELX_CONFIG) $(RELX_OPTS) release
+define relx_tar.erl
+	{ok, Config} = file:consult("$(call core_native_path,$(RELX_CONFIG))"),
+	{release, {Name, Vsn0}, _} = lists:keyfind(release, 1, Config),
+	Vsn = case Vsn0 of
+		{cmd, Cmd} -> os:cmd(Cmd);
+		semver -> "";
+		{semver, _} -> "";
+		VsnStr -> Vsn0
+	end,
+	{ok, _} = relx:build_tar(#{name => Name, vsn => Vsn}, Config),
+	halt(0).
+endef
+
+define relx_relup.erl
+	{ok, Config} = file:consult("$(call core_native_path,$(RELX_CONFIG))"),
+	{release, {Name, Vsn0}, _} = lists:keyfind(release, 1, Config),
+	Vsn = case Vsn0 of
+		{cmd, Cmd} -> os:cmd(Cmd);
+		semver -> "";
+		{semver, _} -> "";
+		VsnStr -> Vsn0
+	end,
+	{ok, _} = relx:build_relup(Name, Vsn, undefined, Config ++ [{output_dir, "$(RELX_OUTPUT_DIR)"}]),
+	halt(0).
+endef
+
+relx-rel: rel-deps app
+	$(call erlang,$(call relx_release.erl),-pa ebin/)
 	$(verbose) $(MAKE) relx-post-rel
 ifeq ($(RELX_TAR),1)
-	$(verbose) $(RELX) $(if $(filter 1,$V),-V 3) -c $(RELX_CONFIG) $(RELX_OPTS) tar
+	$(call erlang,$(call relx_tar.erl),-pa ebin/)
 endif
 
-relx-relup: $(RELX) rel-deps app
-	$(verbose) $(RELX) $(if $(filter 1,$V),-V 3) -c $(RELX_CONFIG) $(RELX_OPTS) release
+relx-relup: rel-deps app
+	$(call erlang,$(call relx_release.erl),-pa ebin/)
 	$(MAKE) relx-post-rel
-	$(verbose) $(RELX) $(if $(filter 1,$V),-V 3) -c $(RELX_CONFIG) $(RELX_OPTS) relup $(if $(filter 1,$(RELX_TAR)),tar)
+	$(call erlang,$(call relx_relup.erl),-pa ebin/)
+ifeq ($(RELX_TAR),1)
+	$(call erlang,$(call relx_tar.erl),-pa ebin/)
+endif
 
 distclean-relx-rel:
 	$(gen_verbose) rm -rf $(RELX_OUTPUT_DIR)
@@ -7151,6 +7604,7 @@ help::
 		"Relx targets:" \
 		"  run         Compile the project, build the release and run it"
 
+endif
 endif
 
 # Copyright (c) 2015-2016, Loïc Hoguin <essen@ninenines.eu>
@@ -7323,45 +7777,224 @@ triq: test-build cover-data-dir
 endif
 endif
 
-# Copyright (c) 2016, Loïc Hoguin <essen@ninenines.eu>
-# Copyright (c) 2015, Erlang Solutions Ltd.
+# Copyright (c) 2022, Loïc Hoguin <essen@ninenines.eu>
 # This file is part of erlang.mk and subject to the terms of the ISC License.
 
-.PHONY: xref distclean-xref
+.PHONY: xref
 
 # Configuration.
 
-ifeq ($(XREF_CONFIG),)
-	XREFR_ARGS :=
-else
-	XREFR_ARGS := -c $(XREF_CONFIG)
-endif
+# We do not use locals_not_used or deprecated_function_calls
+# because the compiler will error out by default in those
+# cases with Erlang.mk. Deprecated functions may make sense
+# in some cases but few libraries define them. We do not
+# use exports_not_used by default because it hinders more
+# than it helps library projects such as Cowboy. Finally,
+# undefined_functions provides little that undefined_function_calls
+# doesn't already provide, so it's not enabled by default.
+XREF_CHECKS ?= [undefined_function_calls]
 
-XREFR ?= $(CURDIR)/xrefr
-export XREFR
+# Instead of predefined checks a query can be evaluated
+# using the Xref DSL. The $q variable is used in that case.
 
-XREFR_URL ?= https://github.com/inaka/xref_runner/releases/download/1.1.0/xrefr
+# The scope is a list of keywords that correspond to
+# application directories, being essentially an easy way
+# to configure which applications to analyze. With:
+#
+# - app:  .
+# - apps: $(ALL_APPS_DIRS)
+# - deps: $(ALL_DEPS_DIRS)
+# - otp:  Built-in Erlang/OTP applications.
+#
+# The default is conservative (app) and will not be
+# appropriate for all types of queries (for example
+# application_call requires adding all applications
+# that might be called or they will not be found).
+XREF_SCOPE ?= app # apps deps otp
+
+# If the above is not enough, additional application
+# directories can be configured.
+XREF_EXTRA_APP_DIRS ?=
+
+# As well as additional non-application directories.
+XREF_EXTRA_DIRS ?=
+
+# Erlang.mk supports -ignore_xref([...]) with forms
+# {M, F, A} | {F, A} | M, the latter ignoring whole
+# modules. Ignores can also be provided project-wide.
+XREF_IGNORE ?= []
+
+# All callbacks may be ignored. Erlang.mk will ignore
+# them automatically for exports_not_used (unless it
+# is explicitly disabled by the user).
+XREF_IGNORE_CALLBACKS ?=
 
 # Core targets.
 
 help::
 	$(verbose) printf '%s\n' '' \
 		'Xref targets:' \
-		'  xref        Run Xrefr using $$XREF_CONFIG as config file if defined'
-
-distclean:: distclean-xref
+		'  xref         Analyze the project using Xref' \
+		'  xref q=QUERY Evaluate an Xref query'
 
 # Plugin-specific targets.
 
-$(XREFR):
-	$(gen_verbose) $(call core_http_get,$(XREFR),$(XREFR_URL))
-	$(verbose) chmod +x $(XREFR)
+define xref.erl
+	{ok, Xref} = xref:start([]),
+	Scope = [$(call comma_list,$(XREF_SCOPE))],
+	AppDirs0 = [$(call comma_list,$(foreach d,$(XREF_EXTRA_APP_DIRS),"$d"))],
+	AppDirs1 = case lists:member(otp, Scope) of
+		false -> AppDirs0;
+		true ->
+			RootDir = code:root_dir(),
+			AppDirs0 ++ [filename:dirname(P) || P <- code:get_path(), lists:prefix(RootDir, P)]
+	end,
+	AppDirs2 = case lists:member(deps, Scope) of
+		false -> AppDirs1;
+		true -> [$(call comma_list,$(foreach d,$(ALL_DEPS_DIRS),"$d"))] ++ AppDirs1
+	end,
+	AppDirs3 = case lists:member(apps, Scope) of
+		false -> AppDirs2;
+		true -> [$(call comma_list,$(foreach d,$(ALL_APPS_DIRS),"$d"))] ++ AppDirs2
+	end,
+	AppDirs = case lists:member(app, Scope) of
+		false -> AppDirs3;
+		true -> ["../$(notdir $(CURDIR))"|AppDirs3]
+	end,
+	[{ok, _} = xref:add_application(Xref, AppDir, [{builtins, true}]) || AppDir <- AppDirs],
+	ExtraDirs = [$(call comma_list,$(foreach d,$(XREF_EXTRA_DIRS),"$d"))],
+	[{ok, _} = xref:add_directory(Xref, ExtraDir, [{builtins, true}]) || ExtraDir <- ExtraDirs],
+	ok = xref:set_library_path(Xref, code:get_path() -- (["ebin", "."] ++ AppDirs ++ ExtraDirs)),
+	Checks = case {$1, is_list($2)} of
+		{check, true} -> $2;
+		{check, false} -> [$2];
+		{query, _} -> [$2]
+	end,
+	FinalRes = [begin
+		IsInformational = case $1 of
+			query -> true;
+			check ->
+				is_tuple(Check) andalso
+					lists:member(element(1, Check),
+						[call, use, module_call, module_use, application_call, application_use])
+		end,
+		{ok, Res0} = case $1 of
+			check -> xref:analyze(Xref, Check);
+			query -> xref:q(Xref, Check)
+		end,
+		Res = case IsInformational of
+			true -> Res0;
+			false ->
+				lists:filter(fun(R) ->
+					{Mod, InMFA, MFA} = case R of
+						{InMFA0 = {M, _, _}, MFA0} -> {M, InMFA0, MFA0};
+						{M, _, _} -> {M, R, R}
+					end,
+					Attrs = try
+						Mod:module_info(attributes)
+					catch error:undef ->
+						[]
+					end,
+					InlineIgnores = lists:flatten([
+						[case V of
+							M when is_atom(M) -> {M, '_', '_'};
+							{F, A} -> {Mod, F, A};
+							_ -> V
+						end || V <- Values]
+					|| {ignore_xref, Values} <- Attrs]),
+					BuiltinIgnores = [
+						{eunit_test, wrapper_test_exported_, 0}
+					],
+					DoCallbackIgnores = case {Check, "$(strip $(XREF_IGNORE_CALLBACKS))"} of
+						{exports_not_used, ""} -> true;
+						{_, "0"} -> false;
+						_ -> true
+					end,
+					CallbackIgnores = case DoCallbackIgnores of
+						false -> [];
+						true ->
+							Behaviors = lists:flatten([
+								[BL || {behavior, BL} <- Attrs],
+								[BL || {behaviour, BL} <- Attrs]
+							]),
+							[{Mod, CF, CA} || B <- Behaviors, {CF, CA} <- B:behaviour_info(callbacks)]
+					end,
+					WideIgnores = if
+						is_list($(XREF_IGNORE)) ->
+							[if is_atom(I) -> {I, '_', '_'}; true -> I end
+								|| I <- $(XREF_IGNORE)];
+						true -> [$(XREF_IGNORE)]
+					end,
+					Ignores = InlineIgnores ++ BuiltinIgnores ++ CallbackIgnores ++ WideIgnores,
+					not (lists:member(InMFA, Ignores)
+					orelse lists:member(MFA, Ignores)
+					orelse lists:member({Mod, '_', '_'}, Ignores))
+				end, Res0)
+		end,
+		case Res of
+			[] -> ok;
+			_ when IsInformational ->
+				case Check of
+					{call, {CM, CF, CA}} ->
+						io:format("Functions that ~s:~s/~b calls:~n", [CM, CF, CA]);
+					{use, {CM, CF, CA}} ->
+						io:format("Function ~s:~s/~b is called by:~n", [CM, CF, CA]);
+					{module_call, CMod} ->
+						io:format("Modules that ~s calls:~n", [CMod]);
+					{module_use, CMod} ->
+						io:format("Module ~s is used by:~n", [CMod]);
+					{application_call, CApp} ->
+						io:format("Applications that ~s calls:~n", [CApp]);
+					{application_use, CApp} ->
+						io:format("Application ~s is used by:~n", [CApp]);
+					_ when $1 =:= query ->
+						io:format("Query ~s returned:~n", [Check])
+				end,
+				[case R of
+					{{InM, InF, InA}, {M, F, A}} ->
+						io:format("- ~s:~s/~b called by ~s:~s/~b~n",
+							[M, F, A, InM, InF, InA]);
+					{M, F, A} ->
+						io:format("- ~s:~s/~b~n", [M, F, A]);
+					ModOrApp ->
+						io:format("- ~s~n", [ModOrApp])
+				end || R <- Res],
+				ok;
+			_ ->
+				[case {Check, R} of
+					{undefined_function_calls, {{InM, InF, InA}, {M, F, A}}} ->
+						io:format("Undefined function ~s:~s/~b called by ~s:~s/~b~n",
+							[M, F, A, InM, InF, InA]);
+					{undefined_functions, {M, F, A}} ->
+						io:format("Undefined function ~s:~s/~b~n", [M, F, A]);
+					{locals_not_used, {M, F, A}} ->
+						io:format("Unused local function ~s:~s/~b~n", [M, F, A]);
+					{exports_not_used, {M, F, A}} ->
+						io:format("Unused exported function ~s:~s/~b~n", [M, F, A]);
+					{deprecated_function_calls, {{InM, InF, InA}, {M, F, A}}} ->
+						io:format("Deprecated function ~s:~s/~b called by ~s:~s/~b~n",
+							[M, F, A, InM, InF, InA]);
+					{deprecated_functions, {M, F, A}} ->
+						io:format("Deprecated function ~s:~s/~b~n", [M, F, A]);
+					_ ->
+						io:format("~p: ~p~n", [Check, R])
+				end || R <- Res],
+				error
+		end
+	end || Check <- Checks],
+	stopped = xref:stop(Xref),
+	case lists:usort(FinalRes) of
+		[ok] -> halt(0);
+		_ -> halt(1)
+	end
+endef
 
-xref: deps app $(XREFR)
-	$(gen_verbose) $(XREFR) $(XREFR_ARGS)
-
-distclean-xref:
-	$(gen_verbose) rm -rf $(XREFR)
+xref: deps app
+ifdef q
+	$(verbose) $(call erlang,$(call xref.erl,query,"$q"),-pa ebin/)
+else
+	$(verbose) $(call erlang,$(call xref.erl,check,$(XREF_CHECKS)),-pa ebin/)
+endif
 
 # Copyright (c) 2016, Loïc Hoguin <essen@ninenines.eu>
 # Copyright (c) 2015, Viktor Söderqvist <viktor@zuiderkwast.se>
