@@ -772,22 +772,10 @@ i2k(#'PrivateKeyInfo'{
 		publicKey = #'jose_EdDSA25519PublicKey'{ publicKey = PublicKey },
 		privateKey = PrivateKey
 	};
-i2k({'ECPrivateKey', _,
-	 << 4, 32:8/integer, PrivateKey:32/binary >>,
-	 {namedCurve, ?'jose_id-EdDSA25519'}, _, _}) ->
-	PublicKey = jose_curve25519:eddsa_secret_to_public(PrivateKey),
-	#'jose_EdDSA25519PrivateKey'{
-	    publicKey = #'jose_EdDSA25519PublicKey'{ publicKey = PublicKey },
-	    privateKey = PrivateKey
-	};
-i2k({'ECPrivateKey', _,
-	 << 4, 32:8/integer, PrivateKey:32/binary >>,
-	 {namedCurve, ?'jose_id-EdDSA25519'}, _, _, _}) ->
-	PublicKey = jose_curve25519:eddsa_secret_to_public(PrivateKey),
-	#'jose_EdDSA25519PrivateKey'{
-	    publicKey = #'jose_EdDSA25519PublicKey'{ publicKey = PublicKey },
-	    privateKey = PrivateKey
-	};
+i2k(ECPrivateKey = {'ECPrivateKey', _, PrivateKey, {namedCurve, ?'jose_id-EdDSA25519'}, _, _}) ->
+	i2k_eddsa25519(ECPrivateKey, PrivateKey);
+i2k(ECPrivateKey = {'ECPrivateKey', _, PrivateKey, {namedCurve, ?'jose_id-EdDSA25519'}, _, _, _}) ->
+	i2k_eddsa25519(ECPrivateKey, PrivateKey);
 i2k(#'SubjectPublicKeyInfo'{
 	algorithm =
 		#'AlgorithmIdentifier'{
@@ -809,22 +797,10 @@ i2k(#'PrivateKeyInfo'{
 		publicKey = #'jose_EdDSA448PublicKey'{ publicKey = PublicKey },
 		privateKey = PrivateKey
 	};
-i2k({'ECPrivateKey', _,
-	 << 4, 57:8/integer, PrivateKey:57/binary >>,
-	 {namedCurve, ?'jose_id-EdDSA448'}, _, _}) ->
-	PublicKey = jose_curve448:eddsa_secret_to_public(PrivateKey),
-	#'jose_EdDSA448PrivateKey'{
-		publicKey = #'jose_EdDSA448PublicKey'{ publicKey = PublicKey },
-		privateKey = PrivateKey
-	};
-i2k({'ECPrivateKey', _,
-	 << 4, 57:8/integer, PrivateKey:57/binary >>,
-	 {namedCurve, ?'jose_id-EdDSA448'}, _, _, _}) ->
-	PublicKey = jose_curve448:eddsa_secret_to_public(PrivateKey),
-	#'jose_EdDSA448PrivateKey'{
-		publicKey = #'jose_EdDSA448PublicKey'{ publicKey = PublicKey },
-		privateKey = PrivateKey
-	};
+i2k(ECPrivateKey = {'ECPrivateKey', _, PrivateKey, {namedCurve, ?'jose_id-EdDSA448'}, _, _}) ->
+	i2k_eddsa448(ECPrivateKey, PrivateKey);
+i2k(ECPrivateKey = {'ECPrivateKey', _, PrivateKey, {namedCurve, ?'jose_id-EdDSA448'}, _, _, _}) ->
+	i2k_eddsa448(ECPrivateKey, PrivateKey);
 i2k(#'SubjectPublicKeyInfo'{
 	algorithm =
 		#'AlgorithmIdentifier'{
@@ -901,6 +877,34 @@ i2k(PrivateKeyInfo=#'PrivateKeyInfo'{
 	end;
 i2k(Info) ->
 	Info.
+
+%% @private
+i2k_eddsa25519(_ECPrivateKey, << 4, 32:8/integer, PrivateKey:32/binary >>) ->
+	PublicKey = jose_curve25519:eddsa_secret_to_public(PrivateKey),
+	#'jose_EdDSA25519PrivateKey'{
+		publicKey = #'jose_EdDSA25519PublicKey'{ publicKey = PublicKey },
+		privateKey = PrivateKey
+	};
+i2k_eddsa25519(_ECPrivateKey, << PrivateKey:32/binary >>) ->
+	PublicKey = jose_curve25519:eddsa_secret_to_public(PrivateKey),
+	#'jose_EdDSA25519PrivateKey'{
+		publicKey = #'jose_EdDSA25519PublicKey'{ publicKey = PublicKey },
+		privateKey = PrivateKey
+	}.
+
+%% @private
+i2k_eddsa448(_ECPrivateKey, << 4, 57:8/integer, PrivateKey:57/binary >>) ->
+	PublicKey = jose_curve448:eddsa_secret_to_public(PrivateKey),
+	#'jose_EdDSA448PrivateKey'{
+		publicKey = #'jose_EdDSA448PublicKey'{ publicKey = PublicKey },
+		privateKey = PrivateKey
+	};
+i2k_eddsa448(_ECPrivateKey, << PrivateKey:57/binary >>) ->
+	PublicKey = jose_curve448:eddsa_secret_to_public(PrivateKey),
+	#'jose_EdDSA448PrivateKey'{
+		publicKey = #'jose_EdDSA448PublicKey'{ publicKey = PublicKey },
+		privateKey = PrivateKey
+	}.
 
 %% @private
 k2i(#'jose_EdDSA25519PrivateKey'{privateKey=PrivateKey}) ->

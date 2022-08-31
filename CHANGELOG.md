@@ -4,6 +4,7 @@
 
 * Fixes
   * Version mismatch causing `rebar3` to constantly try to update; see [#122](https://github.com/potatosalad/erlang-jose/pull/122).
+  * Fix Ed25519 and Ed448 key DER/PEM encode/decode for OTP 25.
 
 ## 1.11.2 (2021-08-06)
 
