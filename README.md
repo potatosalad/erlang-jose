@@ -1,5 +1,8 @@
 # JOSE
 
+[![Build Status](https://github.com/potatosalad/erlang-jose/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/potatosal
+ad/erlang-jose/actions) [![Hex.pm](https://img.shields.io/hexpm/v/jose.svg)](https://hex.pm/packages/jose)
+
 JSON Object Signing and Encryption (JOSE) for Erlang and Elixir.
 
 ## Installation
@@ -124,7 +127,7 @@ JOSE.sha3_module(:jose_jwa_sha3) # uses the pure Erlang implementation (slow)
 
 However, not all of the required algorithms are supported natively by Erlang/Elixir.  For algorithms unsupported by the native [`crypto`](http://www.erlang.org/doc/man/crypto.html) and [`public_key`](http://www.erlang.org/doc/man/public_key.html), `jose` has a pure Erlang implementation that may be used as a fallback.
 
-See [ALGORITHMS.md](https://github.com/potatosalad/erlang-jose/blob/master/ALGORITHMS.md) for more information about algorithm support for specific OTP versions.
+See [ALGORITHMS.md](https://github.com/potatosalad/erlang-jose/blob/main/ALGORITHMS.md) for more information about algorithm support for specific OTP versions.
 
 By default, the algorithm fallback is disabled, but can be enabled by setting the `crypto_fallback` application environment variable for `jose` to `true` or by calling `jose:crypto_fallback/1` or `JOSE.crypto_fallback/1` with `true`.
 
