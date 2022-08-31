@@ -9,7 +9,7 @@ dep_jsone = hex 1.7.0
 dep_jsx = hex 3.1.0
 # dep_keccakf1600 = hex 3.0.0
 dep_libdecaf = hex 2.1.0
-# dep_libsodium = git https://github.com/talklittle/erlang-libsodium.git otp-23-remove-erl-interface
+dep_libsodium = hex 1.0.18
 dep_ojson = hex 1.0.0
 dep_proper = git https://github.com/proper-testing/proper.git bfd7d862dd5082eeca65c192a7021d0e4de5973e
 
