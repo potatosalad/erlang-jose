@@ -2,7 +2,7 @@
 %% vim: ts=4 sw=4 ft=erlang noet
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <andrew@pixid.com>
-%%% @copyright 2014-2016, Andrew Bennett
+%%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%% @end
 %%% Created :  08 Aug 2016 by Andrew Bennett <andrew@pixid.com>

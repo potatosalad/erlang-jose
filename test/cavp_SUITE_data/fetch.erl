@@ -2,7 +2,7 @@
 %% vim: ts=4 sw=4 ft=erlang noet
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <andrew@pixid.com>
-%%% @copyright 2014-2015, Andrew Bennett
+%%% @copyright 2014-2022, Andrew Bennett
 %%% @doc Based on core_http_get.erl
 %%% See [https://github.com/ninenines/erlang.mk/blob/0eb54a71605a955df14c5df793ebe676c86259f9/core/core.mk]
 %%% @end

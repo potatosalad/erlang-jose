@@ -2,7 +2,7 @@
 %% vim: ts=4 sw=4 ft=erlang noet
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2015, Andrew Bennett
+%%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -441,7 +441,7 @@ check_sha3(Fallback, Entries) ->
 		[] ->
 			case application:get_env(jose, sha3_module, undefined) of
 				undefined ->
-					check_sha3_modules(Fallback, [keccakf1600, libdecaf]);
+					check_sha3_modules(Fallback, [libdecaf, keccakf1600]);
 				M when is_atom(M) ->
 					check_sha3_module(M)
 			end

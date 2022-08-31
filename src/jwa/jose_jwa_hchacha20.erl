@@ -2,7 +2,7 @@
 %% vim: ts=4 sw=4 ft=erlang noet
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2019, Andrew Bennett
+%%% @copyright 2014-2022, Andrew Bennett
 %%% @doc XChaCha: eXtended-nonce ChaCha and AEAD_XChaCha20_Poly1305
 %%% See https://tools.ietf.org/html/draft-irtf-cfrg-xchacha
 %%% @end

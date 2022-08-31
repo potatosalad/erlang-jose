@@ -2,7 +2,7 @@
 %% vim: ts=4 sw=4 ft=erlang noet
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2017-2019, Andrew Bennett
+%%% @copyright 2014-2022, Andrew Bennett
 %%% @doc RFC 4648, Section 5: https://tools.ietf.org/html/rfc4648#section-5
 %%%
 %%% @end

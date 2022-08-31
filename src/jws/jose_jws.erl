@@ -2,7 +2,7 @@
 %% vim: ts=4 sw=4 ft=erlang noet
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2015, Andrew Bennett
+%%% @copyright 2014-2022, Andrew Bennett
 %%% @doc JSON Web Signature (JWS)
 %%% See RFC 7515: https://tools.ietf.org/html/rfc7515
 %%% See RFC 7797: https://tools.ietf.org/html/rfc7797

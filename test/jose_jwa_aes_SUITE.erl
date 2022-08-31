@@ -2,7 +2,7 @@
 %% vim: ts=4 sw=4 ft=erlang noet
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <andrew@pixid.com>
-%%% @copyright 2014-2015, Andrew Bennett
+%%% @copyright 2014-2022, Andrew Bennett
 %%% @doc Advanced Encryption Standard (AES)
 %%% Cipher Block Chaining (CBC), as defined in NIST.800-38A
 %%% Electronic Codebook (ECB), as defined in NIST.800-38A

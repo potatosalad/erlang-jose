@@ -2,7 +2,7 @@
 %% vim: ts=4 sw=4 ft=erlang noet
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2016, Andrew Bennett
+%%% @copyright 2014-2022, Andrew Bennett
 %%% @doc Elliptic Curves for Security - X25519
 %%% See https://tools.ietf.org/html/rfc7748
 %%% @end

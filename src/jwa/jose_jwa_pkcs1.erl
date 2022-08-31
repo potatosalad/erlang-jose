@@ -2,7 +2,7 @@
 %% vim: ts=4 sw=4 ft=erlang noet
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2015, Andrew Bennett
+%%% @copyright 2014-2022, Andrew Bennett
 %%% @doc PKCS #1: RSA Cryptography Specifications Version 2.1
 %%% See RFC 3447: [https://tools.ietf.org/html/rfc3447]
 %%% @end

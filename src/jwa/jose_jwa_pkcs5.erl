@@ -2,7 +2,7 @@
 %% vim: ts=4 sw=4 ft=erlang noet
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2015, Andrew Bennett
+%%% @copyright 2014-2022, Andrew Bennett
 %%% @doc PKCS #5: Password-Based Cryptography Specification Version 2.0
 %%% See RFC 2898: https://tools.ietf.org/html/rfc2898
 %%% @end

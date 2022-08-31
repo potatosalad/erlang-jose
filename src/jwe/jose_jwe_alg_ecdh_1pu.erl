@@ -2,7 +2,7 @@
 %% vim: ts=4 sw=4 ft=erlang noet
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2019, Andrew Bennett
+%%% @copyright 2014-2022, Andrew Bennett
 %%% @doc Key Agreement with Elliptic Curve Diffie-Hellman One-Pass Unified Model (ECDH-1PU)
 %%% See https://tools.ietf.org/html/draft-madden-jose-ecdh-1pu-02
 %%%

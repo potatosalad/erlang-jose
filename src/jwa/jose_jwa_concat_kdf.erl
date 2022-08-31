@@ -2,7 +2,7 @@
 %% vim: ts=4 sw=4 ft=erlang noet
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2015, Andrew Bennett
+%%% @copyright 2014-2022, Andrew Bennett
 %%% @doc Concat KDF, as defined in Section 5.8.1 of NIST.800-56A
 %%% See NIST.800-56A: https://dx.doi.org/10.6028/NIST.SP.800-56Ar2
 %%% @end

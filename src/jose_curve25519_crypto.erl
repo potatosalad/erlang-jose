@@ -3,12 +3,13 @@
 %%%-------------------------------------------------------------------
 %%% @author Brett Beatty <brettbeatty@gmail.com>
 %%% @copyright 2021, Brett Beatty
+%%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  22 Oct 2021 by Brett Beatty <brettbeatty@gmail.com>
 %%%-------------------------------------------------------------------
--module(jose_curve25519_otp).
+-module(jose_curve25519_crypto).
 
 -behaviour(jose_curve25519).
 
