@@ -423,9 +423,9 @@ check_json(_Fallback, Entries) ->
 				undefined ->
 					case code:ensure_loaded(elixir) of
 						{module, elixir} ->
-							check_json_modules([ojson, 'Elixir.Jason', 'Elixir.Poison', jiffy, jsone, jsx]);
+							check_json_modules([ojson, 'Elixir.Jason', 'Elixir.Poison', jiffy, jsone, jsx, thoas]);
 						_ ->
-							check_json_modules([ojson, jiffy, jsone, jsx])
+							check_json_modules([ojson, jiffy, jsone, jsx, thoas])
 					end;
 				M when is_atom(M) ->
 					check_json_module(M)
@@ -442,6 +442,8 @@ check_json_module(jsone) ->
 	jose_json_jsone;
 check_json_module(ojson) ->
 	jose_json_ojson;
+check_json_module(thoas) ->
+	jose_json_thoas;
 check_json_module('Elixir.Jason') ->
 	jose_json_jason;
 check_json_module('Elixir.Poison') ->
