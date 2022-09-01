@@ -6,6 +6,7 @@
   * Add support for native `crypto` operations for Ed25519 and Ed448, thanks to [@brettbeatty](https://github.com/brettbeatty); see [#123](https://github.com/potatosalad/erlang-jose/pull/123).
   * Add support for native `crypto` operations for ChaCha20-Poly1305 and XChaCha20-Poly1305, when available.
   * Add support for `libsodium` operations for XChaCha20-Poly1305, when available.
+  * Add support for [`thoas`](https://github.com/lpil/thoas) JSON encode/decode, thanks to [@michaelklishin](https://github.com/michaelklishin); see [#126](https://github.com/potatosalad/erlang-jose/pull/126).
 * Fixes
   * Version mismatch causing `rebar3` to constantly try to update; see [#122](https://github.com/potatosalad/erlang-jose/pull/122).
   * Fix Ed25519 and Ed448 key DER/PEM encode/decode for OTP 25.
