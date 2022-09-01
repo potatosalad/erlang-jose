@@ -25,7 +25,7 @@
 %% API
 
 %% Types
--type alg() :: 'RS256' | 'RS384' | 'RS512'.
+-type alg() :: 'RS1' | 'RS256' | 'RS384' | 'RS512'.
 
 -export_type([alg/0]).
 
@@ -33,6 +33,8 @@
 %% jose_jws callbacks
 %%====================================================================
 
+from_map(F = #{ <<"alg">> := <<"RS1">> }) ->
+	{'RS1', maps:remove(<<"alg">>, F)};
 from_map(F = #{ <<"alg">> := <<"RS256">> }) ->
 	{'RS256', maps:remove(<<"alg">>, F)};
 from_map(F = #{ <<"alg">> := <<"RS384">> }) ->
@@ -40,6 +42,8 @@ from_map(F = #{ <<"alg">> := <<"RS384">> }) ->
 from_map(F = #{ <<"alg">> := <<"RS512">> }) ->
 	{'RS512', maps:remove(<<"alg">>, F)}.
 
+to_map('RS1', F) ->
+	F#{ <<"alg">> => <<"RS1">> };
 to_map('RS256', F) ->
 	F#{ <<"alg">> => <<"RS256">> };
 to_map('RS384', F) ->
@@ -51,6 +55,8 @@ to_map('RS512', F) ->
 %% jose_jws_alg callbacks
 %%====================================================================
 
+generate_key('RS1', _Fields) ->
+	jose_jws_alg:generate_key({rsa, 2048}, <<"RS1">>);
 generate_key('RS256', _Fields) ->
 	jose_jws_alg:generate_key({rsa, 2048}, <<"RS256">>);
 generate_key('RS384', _Fields) ->

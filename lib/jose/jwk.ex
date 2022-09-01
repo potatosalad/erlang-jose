@@ -22,6 +22,10 @@ defmodule JOSE.JWK do
 
   def to_record(list) when is_list(list), do: for(element <- list, into: [], do: to_record(element))
 
+  @doc false
+  defp maybe_to_record(struct = %JOSE.JWK{}), do: to_record(struct)
+  defp maybe_to_record(other), do: other
+
   @doc """
   Converts a `:jose_jwk` record into a `JOSE.JWK`.
   """
@@ -391,7 +395,7 @@ defmodule JOSE.JWK do
   @doc """
   Converts a private `JOSE.JWK` into a public `JOSE.JWK`.
 
-      iex> jwk_rsa = JOSE.JWK.generate_key({:rsa, 256}) 
+      iex> jwk_rsa = JOSE.JWK.generate_key({:rsa, 256})
       %JOSE.JWK{fields: %{}, keys: :undefined,
        kty: {:jose_jwk_kty_rsa,
         {:RSAPrivateKey, :"two-prime",
@@ -499,9 +503,7 @@ defmodule JOSE.JWK do
   def block_encryptor(jwk = %JOSE.JWK{}), do: block_encryptor(to_record(jwk))
   def block_encryptor(jwk), do: :jose_jwk.block_encryptor(jwk)
 
-  @doc """
-  Key Agreement decryption of the `encrypted` binary or map using `my_private_jwk`.  See `box_encrypt/2` and `JOSE.JWE.block_decrypt/2`.
-  """
+  @deprecated "Use JOSE.JWK.box_decrypt_ecdh_es/2 or JOSE.JWK.box_decrypt_ecdh_1pu/3 instead"
   def box_decrypt(encrypted, my_private_jwk = %JOSE.JWK{}), do: box_decrypt(encrypted, to_record(my_private_jwk))
 
   def box_decrypt(encrypted, {your_public_jwk = %JOSE.JWK{}, my_private_jwk}),
@@ -520,52 +522,7 @@ defmodule JOSE.JWK do
     end
   end
 
-  @doc """
-  Key Agreement encryption of `plain_text` by generating an ephemeral private key based on `other_public_jwk` curve.  See `box_encrypt/3`.
-
-      # bob wants alice to send him a secret, so he first sends alice his public key:
-      bob_public_jwk = JOSE.JWK.from(%{"crv" => "P-256", "kty" => "EC",
-       "x" => "6pwDpICQ8JBWdvuLuXeWILAxSEUNB_BBAswikgYKKmY",
-       "y" => "fEHj1ehsIJ7PP-qon-oONl_J2yZLWpUncNRedZT7xqs"})
-
-      # alice uses bob's public key to generate an ephemeral private key used to encrypt the secret:
-      iex> {enc_alice2bob_tuple, alice_private_jwk} = JOSE.JWK.box_encrypt("secret", bob_public_jwk)
-      {{%{alg: :jose_jwe_alg_ecdh_es, enc: :jose_jwe_enc_aes},
-        %{"ciphertext" => "zcIIZLDB", "encrypted_key" => "",
-          "iv" => "9p8c7YJV5htz8zLI",
-          "protected" => "eyJhbGciOiJFQ0RILUVTIiwiYXB1IjoiaEhibEsxZlNWQ1FjTE5NQkpXMjB5Mko0VHMzcUhqR2c4ZDlocmFfc2QyZyIsImFwdiI6IlU4MkpJbFFNS0FWYWY5bXVwU0I2c0JERWpIQ1Qxdl9JU00xMUNsZHpVUGMiLCJlbmMiOiJBMTI4R0NNIiwiZXBrIjp7ImNydiI6IlAtMjU2Iiwia3R5IjoiRUMiLCJ4IjoiSUY3RTFza0hJMjBwQjRwbi0tMVZ4dVF4Vkl4Sjkzd21IaFl4VEp0VkZOVSIsInkiOiJiVDdidzdhRjVlM1hLNUh6YVM4MEFVbktKVGE2eWdYbkJDVDFxNERHSWNrIn19",
-          "tag" => "MHtfyNub8vG84ER0MPynuA"}},
-       %JOSE.JWK{fields: %{}, keys: :undefined,
-        kty: {:jose_jwk_kty_ec,
-         {:ECPrivateKey, 1,
-          <<138, 8, 179, 41, 203, 0, 127, 144, 178, 132, 66, 96, 50, 161, 103, 50, 4, 119, 71, 57, 63, 63, 33, 29, 69, 201, 182, 210, 106, 37, 196, 183>>,
-          {:namedCurve, {1, 2, 840, 10045, 3, 1, 7}},
-          <<4, 32, 94, 196, 214, 201, 7, 35, 109, 41, 7, 138, 103, 251, 237, 85, 198, 228, 49, 84, 140, 73, 247, 124, 38, 30, 22, 49, 76, 155, 85, 20, 213, 109, 62, 219, 195, 182, 133, 229, 237, 215, ...>>}}}}
-
-      # alice compacts the encrypted message and sends it to bob which contains alice's public key:
-      iex> enc_alice2bob_binary = JOSE.JWE.compact(enc_alice2bob_tuple) |> elem(1)
-      "eyJhbGciOiJFQ0RILUVTIiwiYXB1IjoiaEhibEsxZlNWQ1FjTE5NQkpXMjB5Mko0VHMzcUhqR2c4ZDlocmFfc2QyZyIsImFwdiI6IlU4MkpJbFFNS0FWYWY5bXVwU0I2c0JERWpIQ1Qxdl9JU00xMUNsZHpVUGMiLCJlbmMiOiJBMTI4R0NNIiwiZXBrIjp7ImNydiI6IlAtMjU2Iiwia3R5IjoiRUMiLCJ4IjoiSUY3RTFza0hJMjBwQjRwbi0tMVZ4dVF4Vkl4Sjkzd21IaFl4VEp0VkZOVSIsInkiOiJiVDdidzdhRjVlM1hLNUh6YVM4MEFVbktKVGE2eWdYbkJDVDFxNERHSWNrIn19..9p8c7YJV5htz8zLI.zcIIZLDB.MHtfyNub8vG84ER0MPynuA"
-
-      # bob can then decrypt the encrypted message using his private key:
-      bob_private_jwk = JOSE.JWK.from(%{"crv" => "P-256", "d" => "69sPu8znGIFuysKso-RemObfFs8bMBmkF0dfI1h6S1E",
-       "kty" => "EC", "x" => "6pwDpICQ8JBWdvuLuXeWILAxSEUNB_BBAswikgYKKmY",
-       "y" => "fEHj1ehsIJ7PP-qon-oONl_J2yZLWpUncNRedZT7xqs"})
-
-      iex> JOSE.JWK.box_decrypt(enc_alice2bob_binary, bob_private_jwk)
-      {"secret",
-       %JOSE.JWE{alg: {:jose_jwe_alg_ecdh_es,
-         {:jose_jwe_alg_ecdh_es,
-          {{{:ECPoint,
-             <<4, 32, 94, 196, 214, 201, 7, 35, 109, 41, 7, 138, 103, 251, 237, 85, 198, 228, 49, 84, 140, 73, 247, 124, 38, 30, 22, 49, 76, 155, 85, 20, 213, 109, 62, 219, 195, 182, 133, 229, 237, 215, ...>>},
-            {:namedCurve, {1, 2, 840, 10045, 3, 1, 7}}}, %{}},
-          <<132, 118, 229, 43, 87, 210, 84, 36, 28, 44, 211, 1, 37, 109, 180, 203, 98, 120, 78, 205, 234, 30, 49, 160, 241, 223, 97, 173, 175, 236, 119, 104>>,
-          <<83, 205, 137, 34, 84, 12, 40, 5, 90, 127, 217, 174, 165, 32, 122, 176, 16, 196, 140, 112, 147, 214, 255, 200, 72, 205, 117, 10, 87, 115, 80, 247>>,
-          :undefined}},
-        enc: {:jose_jwe_enc_aes,
-         {:jose_jwe_enc_aes, {:aes_gcm, 128}, 128, 16, 12, :undefined, :undefined,
-          :undefined, :undefined}}, fields: %{}, zip: :undefined}}
-
-  """
+  @deprecated "Use JOSE.JWK.box_decrypt_ecdh_es/2 or JOSE.JWK.box_encrypt_ecdh_1pu/3 instead"
   def box_encrypt(plain_text, other_public_jwk = %JOSE.JWK{}), do: box_encrypt(plain_text, to_record(other_public_jwk))
 
   def box_encrypt(plain_text, other_public_jwk) do
@@ -578,9 +535,7 @@ defmodule JOSE.JWK do
     end
   end
 
-  @doc """
-  Key Agreement encryption of `plain_text` using `my_private_jwk`, `other_public_jwk`, and the default `jwe` based on the key types.  See `box_encrypt/4`.
-  """
+  @deprecated "Use JOSE.JWK.box_decrypt_ecdh_es/3 or JOSE.JWK.box_encrypt_ecdh_1pu/4 instead"
   def box_encrypt(plain_text, other_public_jwk = %JOSE.JWK{}, my_private_jwk),
     do: box_encrypt(plain_text, to_record(other_public_jwk), my_private_jwk)
 
@@ -590,11 +545,7 @@ defmodule JOSE.JWK do
   def box_encrypt(plain_text, other_public_jwk, my_private_jwk),
     do: :jose_jwk.box_encrypt(plain_text, other_public_jwk, my_private_jwk)
 
-  @doc """
-  Key Agreement encryption of `plain_text` using `my_private_jwk`, `other_public_jwk`, and the algorithms specified by the `jwe`.
-
-      # let's 
-  """
+  @deprecated "Use JOSE.JWK.box_decrypt_ecdh_es/4 or JOSE.JWK.box_encrypt_ecdh_1pu/5 instead"
   def box_encrypt(plain_text, jwe = %JOSE.JWE{}, other_public_jwk, my_private_jwk),
     do: box_encrypt(plain_text, JOSE.JWE.to_record(jwe), other_public_jwk, my_private_jwk)
 
@@ -608,6 +559,228 @@ defmodule JOSE.JWK do
     do: :jose_jwk.box_encrypt(plain_text, jwe, other_public_jwk, my_private_jwk)
 
   @doc """
+  ECDH-1PU Key Agreement decryption of the `encrypted` binary or map using `u_static_public_key` and `v_static_secret_key`.  See `box_encrypt_ecdh_1pu/3` and `JOSE.JWE.block_decrypt/2`.
+  """
+  def box_decrypt_ecdh_1pu(encrypted, u_static_public_key, v_static_secret_key) do
+    u_static_public_key = maybe_to_record(u_static_public_key)
+    v_static_secret_key = maybe_to_record(v_static_secret_key)
+
+    case :jose_jwk.box_decrypt_ecdh_1pu(encrypted, u_static_public_key, v_static_secret_key) do
+      {plain_text, jwe} when is_tuple(jwe) ->
+        {plain_text, JOSE.JWE.from_record(jwe)}
+
+      error ->
+        error
+    end
+  end
+
+  @doc """
+  ECDH-1PU Key Agreement encryption of `plain_text` by generating an ephemeral secret key based on `v_static_public_key` and `u_static_secret_key` curve.  See `box_encrypt_ecdh_1pu/4`.
+
+      # Alice (U) wants to send Bob (V) a secret message.
+      # They have already shared their static public keys with one another through an unspecified channel:
+      u_static_public_key = JOSE.JWK.from(%{
+        "crv" => "X25519",
+        "kty" => "OKP",
+        "x" => "sz1JMMasNRLQfXIkvLTRaOu978QQu1roFKxBPKZdsC8"
+      })
+      v_static_public_key = JOSE.JWK.from(%{
+        "crv" => "X25519",
+        "kty" => "OKP",
+        "x" => "EFvrJluQClNDvbIjcie4UADLfirR9Fk53rcSM5gibx4"
+      })
+
+      # WARNING: Do not share secret keys.  For reference purposes only, here is Alice's (U) static secret key that is used below:
+      u_static_secret_key = JOSE.JWK.from(%{
+        "crv" => "X25519",
+        "d" => "SfYmE8aLpvX6Z0rZQVa5eBjLKeINUfSlu-_AcYJXCqQ",
+        "kty" => "OKP",
+        "x" => "sz1JMMasNRLQfXIkvLTRaOu978QQu1roFKxBPKZdsC8"
+      })
+      # WARNING: Do not share secret keys.  For reference purposes only, here is Bob's (V) static secret key that is used below:
+      v_static_secret_key = JOSE.JWK.from(%{
+        "crv" => "X25519",
+        "d" => "8-SdA6TQ1mdFRC06U-R4-ah6YkeVcodtGuMNVngwlto",
+        "kty" => "OKP",
+        "x" => "EFvrJluQClNDvbIjcie4UADLfirR9Fk53rcSM5gibx4"
+      })
+
+      # Alice (U) uses Bob's (V) static public key along with Alice's (U) static secret key to generate an ephemeral secret key used to encrypt the message:
+      iex> {enc_alice2bob_tuple, u_ephemeral_secret_key} = JOSE.JWK.box_encrypt_ecdh_1pu("secret message", v_static_public_key, u_static_secret_key)
+      {{%{alg: :jose_jwe_alg_ecdh_1pu, enc: :jose_jwe_enc_aes},
+        %{
+          "ciphertext" => "Ry0I26YMnaHSmNQ86EY",
+          "encrypted_key" => "",
+          "iv" => "swK08mi6cjJ1aUQF",
+          "protected" => "eyJhbGciOiJFQ0RILTFQVSIsImFwdSI6IjAybXM0OF90ZmpqQXk4TXJMeDV1LW1yaVZwT24tOFpNVmtDTXlIbEtBTjAiLCJhcHYiOiJrNDR0QzE4U2tYTUVXektFQ0JSZ3VhMHpaX01MRHY1VTQ2TWNueVl6ajBBIiwiZW5jIjoiQTEyOEdDTSIsImVwayI6eyJjcnYiOiJYMjU1MTkiLCJrdHkiOiJPS1AiLCJ4IjoiX3JBS1l6WThJczFSRXJQTTVod29OSEZjdWZQOHpiYXpVaTN5QXJ3WnVDVSJ9LCJza2lkIjoieXNZVzZiUmRpVW1ST0NWa09oSmtWMV9JX0VEM1dESzBIN2tkbU5GelNYSSJ9",
+          "tag" => "-6PitRlVuXk5HT3g_y6Uxw"
+        }},
+       %JOSE.JWK{
+         keys: :undefined,
+         kty: {:jose_jwk_kty_okp_x25519,
+          <<30, 250, 220, 248, 158, 207, 86, 211, 254, 196, 78, 125, 132, 228, 186, 20, 253, 56, 226, 29, 191, 220, 131, 114, 44, 253, 72, 117, 25, 112, 209, 175, 254, 176, 10, 99, 54, 60, 34, 205, 81, 18, 179, 204, 230, 28, 40, 52, 113, 92, 185, 243, 252, 205, 182, 179, 82, 45, 242, 2, 188, 25, 184, 37>>},
+         fields: %{}
+       }}
+
+      # Alice (U) compacts the encrypted message and sends it to Bob (V), which contains Alice's (U) ephemeral public key:
+      iex> enc_alice2bob_binary = JOSE.JWE.compact(enc_alice2bob_tuple) |> elem(1)
+      "eyJhbGciOiJFQ0RILTFQVSIsImFwdSI6IjAybXM0OF90ZmpqQXk4TXJMeDV1LW1yaVZwT24tOFpNVmtDTXlIbEtBTjAiLCJhcHYiOiJrNDR0QzE4U2tYTUVXektFQ0JSZ3VhMHpaX01MRHY1VTQ2TWNueVl6ajBBIiwiZW5jIjoiQTEyOEdDTSIsImVwayI6eyJjcnYiOiJYMjU1MTkiLCJrdHkiOiJPS1AiLCJ4IjoiX3JBS1l6WThJczFSRXJQTTVod29OSEZjdWZQOHpiYXpVaTN5QXJ3WnVDVSJ9LCJza2lkIjoieXNZVzZiUmRpVW1ST0NWa09oSmtWMV9JX0VEM1dESzBIN2tkbU5GelNYSSJ9..swK08mi6cjJ1aUQF.Ry0I26YMnaHSmNQ86EY.-6PitRlVuXk5HT3g_y6Uxw"
+
+      # Bob (V) can then decrypt the encrypted message using Alice's (U) static public key along with Bob's (V) static secret key:
+      iex> JOSE.JWK.box_decrypt_ecdh_1pu(enc_alice2bob_binary, u_static_public_key, v_static_secret_key)
+      {"secret message",
+       %JOSE.JWE{
+         alg: {:jose_jwe_alg_ecdh_1pu,
+          {:jose_jwe_alg_ecdh_1pu,
+           {:jose_jwk, :undefined,
+            {:jose_jwk_kty_okp_x25519,
+             <<254, 176, 10, 99, 54, 60, 34, 205, 81, 18, 179, 204, 230, 28, 40, 52, 113, 92, 185, 243, 252, 205, 182, 179, 82, 45, 242, 2, 188, 25, 184, 37>>}, %{}},
+           <<211, 105, 172, 227, 207, 237, 126, 56, 192, 203, 195, 43, 47, 30, 110, 250, 106, 226, 86, 147, 167, 251, 198, 76, 86, 64, 140, 200, 121, 74, 0, 221>>,
+           <<147, 142, 45, 11, 95, 18, 145, 115, 4, 91, 50, 132, 8, 20, 96, 185, 173, 51, 103, 243, 11, 14, 254, 84, 227, 163, 28, 159, 38, 51, 143, 64>>, :undefined, :undefined, :undefined, :undefined}},
+         enc: {:jose_jwe_enc_aes,
+          {:jose_jwe_enc_aes, {:aes_gcm, 128}, 128, 16, 12, :undefined, :undefined, :undefined, :undefined}},
+         zip: :undefined,
+         fields: %{"skid" => "ysYW6bRdiUmROCVkOhJkV1_I_ED3WDK0H7kdmNFzSXI"}
+       }}
+  """
+  def box_encrypt_ecdh_1pu(plain_text, v_static_public_key, u_static_secret_key) do
+    v_static_public_key = maybe_to_record(v_static_public_key)
+    u_static_secret_key = maybe_to_record(u_static_secret_key)
+    {encrypted, u_ephemeral_secret_key} = :jose_jwk.box_encrypt_ecdh_1pu(plain_text, v_static_public_key, u_static_secret_key)
+    {encrypted, from_record(u_ephemeral_secret_key)}
+  end
+
+  @doc """
+  ECDH-1PU Key Agreement encryption of `plain_text` using `v_static_public_key`, `u_static_secret_key`, `u_ephemeral_secret_key`, and a derived `jwe` based on the input key types.  See `box_encrypt_ecdh_1pu/5`.
+  """
+  def box_encrypt_ecdh_1pu(plain_text, v_static_public_key, u_static_secret_key, u_ephemeral_secret_key) do
+    v_static_public_key = maybe_to_record(v_static_public_key)
+    u_static_secret_key = maybe_to_record(u_static_secret_key)
+    u_ephemeral_secret_key = maybe_to_record(u_ephemeral_secret_key)
+    :jose_jwk.box_encrypt_ecdh_1pu(plain_text, v_static_public_key, u_static_secret_key, u_ephemeral_secret_key)
+  end
+
+  @doc """
+  ECDH-1PU Key Agreement encryption of `plain_text` using `v_static_public_key`, `u_static_secret_key`, `u_ephemeral_secret_key`, and the algorithms specified by the `jwe`.
+  """
+  def box_encrypt_ecdh_1pu(plain_text, jwe, v_static_public_key, u_static_secret_key, u_ephemeral_secret_key) do
+    jwe =
+      case jwe do
+        %JOSE.JWE{} -> JOSE.JWE.to_record(jwe)
+        {metadata, jwe = %JOSE.JWE{}} -> {metadata, JOSE.JWE.to_record(jwe)}
+        _ -> jwe
+      end
+
+    v_static_public_key = maybe_to_record(v_static_public_key)
+    u_static_secret_key = maybe_to_record(u_static_secret_key)
+    u_ephemeral_secret_key = maybe_to_record(u_ephemeral_secret_key)
+    :jose_jwk.box_encrypt_ecdh_1pu(plain_text, jwe, v_static_public_key, u_static_secret_key, u_ephemeral_secret_key)
+  end
+
+  @doc """
+  ECDH-ES Key Agreement decryption of the `encrypted` binary or map using `v_static_secret_key`.  See `box_encrypt_ecdh_es/2` and `JOSE.JWE.block_decrypt/2`.
+  """
+  def box_decrypt_ecdh_es(encrypted, v_static_secret_key) do
+    v_static_secret_key = maybe_to_record(v_static_secret_key)
+
+    case :jose_jwk.box_decrypt_ecdh_es(encrypted, v_static_secret_key) do
+      {plain_text, jwe} when is_tuple(jwe) ->
+        {plain_text, JOSE.JWE.from_record(jwe)}
+
+      error ->
+        error
+    end
+  end
+
+  @doc """
+  ECDH-ES Key Agreement encryption of `plain_text` by generating an ephemeral secret key based on `v_static_public_key` curve.  See `box_encrypt_ecdh_es/3`.
+
+      # Alice (U) wants to send Bob (V) a secret message.
+      # Bob (V) has already shared their static public key with Alice (U) through an unspecified channel:
+      v_static_public_key = JOSE.JWK.from(%{
+        "crv" => "X25519",
+        "kty" => "OKP",
+        "x" => "EFvrJluQClNDvbIjcie4UADLfirR9Fk53rcSM5gibx4"
+      })
+
+      # WARNING: Do not share secret keys.  For reference purposes only, here is Bob's (V) static secret key that is used below:
+      v_static_secret_key = JOSE.JWK.from(%{
+        "crv" => "X25519",
+        "d" => "8-SdA6TQ1mdFRC06U-R4-ah6YkeVcodtGuMNVngwlto",
+        "kty" => "OKP",
+        "x" => "EFvrJluQClNDvbIjcie4UADLfirR9Fk53rcSM5gibx4"
+      })
+
+      # Alice (U) uses Bob's (V) static public key to generate an ephemeral secret key used to encrypt the message:
+      iex> {enc_alice2bob_tuple, u_ephemeral_secret_key} = JOSE.JWK.box_encrypt_ecdh_es("secret message", v_static_public_key)
+      {{%{alg: :jose_jwe_alg_ecdh_es, enc: :jose_jwe_enc_aes},
+        %{
+          "ciphertext" => "AhQ3W31vvypJNubhD2U",
+          "encrypted_key" => "",
+          "iv" => "YjojFg2wPnk5JmMG",
+          "protected" => "eyJhbGciOiJFQ0RILUVTIiwiYXB1IjoiRHNVZlFNdUEybnZqMnRzTVp1N0o5YUFEekw3akUyRFUzRWFvVTh3YmJlVSIsImFwdiI6Ims0NHRDMThTa1hNRVd6S0VDQlJndWEwelpfTUxEdjVVNDZNY255WXpqMEEiLCJlbmMiOiJBMTI4R0NNIiwiZXBrIjp7ImNydiI6IlgyNTUxOSIsImt0eSI6Ik9LUCIsIngiOiJwRkg3YXZYQlFvUjBoZnNsUm1HaVJxREpxdUVjS0w0eTU4TEZocnc1S3dFIn19",
+          "tag" => "pwRKlhhXEPjwZg13455U5Q"
+        }},
+       %JOSE.JWK{
+         keys: :undefined,
+         kty: {:jose_jwk_kty_okp_x25519,
+          <<68, 178, 96, 158, 87, 182, 26, 216, 211, 230, 115, 239, 145, 244, 93, 4, 79, 231, 189, 5, 96, 164, 241, 132, 123, 151, 253, 19, 109, 246, 211, 86, 164, 81, 251, 106, 245, 193, 66, 132, 116, 133, 251, 37, 70, 97, 162, 70, 160, 201, 170, 225, 28, 40, 190, 50, 231, 194, 197, 134, 188, 57, 43, 1>>},
+         fields: %{}
+       }}
+
+      # Alice (U) compacts the encrypted message and sends it to Bob (V), which contains Alice's (U) ephemeral public key:
+      iex> enc_alice2bob_binary = JOSE.JWE.compact(enc_alice2bob_tuple) |> elem(1)
+      "eyJhbGciOiJFQ0RILUVTIiwiYXB1IjoiRHNVZlFNdUEybnZqMnRzTVp1N0o5YUFEekw3akUyRFUzRWFvVTh3YmJlVSIsImFwdiI6Ims0NHRDMThTa1hNRVd6S0VDQlJndWEwelpfTUxEdjVVNDZNY255WXpqMEEiLCJlbmMiOiJBMTI4R0NNIiwiZXBrIjp7ImNydiI6IlgyNTUxOSIsImt0eSI6Ik9LUCIsIngiOiJwRkg3YXZYQlFvUjBoZnNsUm1HaVJxREpxdUVjS0w0eTU4TEZocnc1S3dFIn19..YjojFg2wPnk5JmMG.AhQ3W31vvypJNubhD2U.pwRKlhhXEPjwZg13455U5Q"
+
+      # Bob (V) can then decrypt the encrypted message with Bob's (V) static secret key:
+      iex> JOSE.JWK.box_decrypt_ecdh_es(enc_alice2bob_binary, v_static_secret_key)
+      {"secret message",
+       %JOSE.JWE{
+         alg: {:jose_jwe_alg_ecdh_es,
+          {:jose_jwe_alg_ecdh_es,
+           {:jose_jwk, :undefined,
+            {:jose_jwk_kty_okp_x25519,
+             <<164, 81, 251, 106, 245, 193, 66, 132, 116, 133, 251, 37, 70, 97, 162, 70, 160, 201, 170, 225, 28, 40, 190, 50, 231, 194, 197, 134, 188, 57, 43, 1>>}, %{}},
+           <<14, 197, 31, 64, 203, 128, 218, 123, 227, 218, 219, 12, 102, 238, 201, 245, 160, 3, 204, 190, 227, 19, 96, 212, 220, 70, 168, 83, 204, 27, 109, 229>>,
+           <<147, 142, 45, 11, 95, 18, 145, 115, 4, 91, 50, 132, 8, 20, 96, 185, 173, 51, 103, 243, 11, 14, 254, 84, 227, 163, 28, 159, 38, 51, 143, 64>>, :undefined, :undefined, :undefined, :undefined}},
+         enc: {:jose_jwe_enc_aes,
+          {:jose_jwe_enc_aes, {:aes_gcm, 128}, 128, 16, 12, :undefined, :undefined, :undefined, :undefined}},
+         zip: :undefined,
+         fields: %{}
+       }}
+  """
+  def box_encrypt_ecdh_es(plain_text, v_static_public_key) do
+    v_static_public_key = maybe_to_record(v_static_public_key)
+    {encrypted, u_ephemeral_secret_key} = :jose_jwk.box_encrypt_ecdh_es(plain_text, v_static_public_key)
+    {encrypted, from_record(u_ephemeral_secret_key)}
+  end
+
+  @doc """
+  ECDH-ES Key Agreement encryption of `plain_text` using `v_static_public_key`, `u_ephemeral_secret_key`, and a derived `jwe` based on the input key types.  See `box_encrypt_ecdh_es/4`.
+  """
+  def box_encrypt_ecdh_es(plain_text, v_static_public_key, u_ephemeral_secret_key) do
+    v_static_public_key = maybe_to_record(v_static_public_key)
+    u_ephemeral_secret_key = maybe_to_record(u_ephemeral_secret_key)
+    :jose_jwk.box_encrypt_ecdh_es(plain_text, v_static_public_key, u_ephemeral_secret_key)
+  end
+
+  @doc """
+  ECDH-ES Key Agreement encryption of `plain_text` using `v_static_public_key`, `u_ephemeral_secret_key`, and the algorithms specified by the `jwe`.
+  """
+  def box_encrypt_ecdh_es(plain_text, jwe, v_static_public_key, u_ephemeral_secret_key) do
+    jwe =
+      case jwe do
+        %JOSE.JWE{} -> JOSE.JWE.to_record(jwe)
+        {metadata, jwe = %JOSE.JWE{}} -> {metadata, JOSE.JWE.to_record(jwe)}
+        _ -> jwe
+      end
+
+    v_static_public_key = maybe_to_record(v_static_public_key)
+    u_ephemeral_secret_key = maybe_to_record(u_ephemeral_secret_key)
+    :jose_jwk.box_encrypt_ecdh_es(plain_text, jwe, v_static_public_key, u_ephemeral_secret_key)
+  end
+
+  @doc """
   Generates a new `JOSE.JWK` based on another `JOSE.JWK` or from initialization params provided.
 
   Passing another `JOSE.JWK` results in different behavior depending on the `"kty"`:
@@ -619,7 +792,7 @@ defmodule JOSE.JWK do
 
   The following initialization params may also be used:
 
-    * `{:ec, "P-256" | "P-384" | "P-521"}` - generates an `"EC"` key using the `"P-256"`, `"P-384"`, or `"P-521"` curves
+    * `{:ec, "secp256k1", "P-256" | "P-384" | "P-521"}` - generates an `"EC"` key using the `"secp256k1"`, `"P-256"`, `"P-384"`, or `"P-521"` curves
     * `{:oct, bytes}` - generates an `"oct"` key made of a random `bytes` number of bytes
     * `{:okp, :Ed25519 | :Ed25519ph | :Ed448 | :Ed448ph | :X25519 | :X448}` - generates an `"OKP"` key using the specified EdDSA or ECDH edwards curve
     * `{:rsa, modulus_size} | {:rsa, modulus_size, exponent_size}` - generates an `"RSA"` key using the `modulus_size` and `exponent_size`

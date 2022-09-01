@@ -463,17 +463,17 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 - [X] `A128KW`
 - [X] `A192KW`
 - [X] `A256KW`
-- [X] `C20PKW` <sup>[draft-amringer-jose-chacha](https://tools.ietf.org/html/draft-amringer-jose-chacha-01)</sup>
+- [X] `C20PKW` <sup>[draft-amringer-jose-chacha](https://datatracker.ietf.org/doc/html/draft-amringer-jose-chacha-02)</sup>
 - [X] `dir`
-- [X] `ECDH-1PU`
-- [X] `ECDH-1PU+A128GCMKW` <sup>non-standard, [draft-madden-jose-ecdh-1pu](https://tools.ietf.org/html/draft-madden-jose-ecdh-1pu-02)</sup>
-- [X] `ECDH-1PU+A192GCMKW` <sup>non-standard, [draft-madden-jose-ecdh-1pu](https://tools.ietf.org/html/draft-madden-jose-ecdh-1pu-02)</sup>
-- [X] `ECDH-1PU+A256GCMKW` <sup>non-standard, [draft-madden-jose-ecdh-1pu](https://tools.ietf.org/html/draft-madden-jose-ecdh-1pu-02)</sup>
-- [X] `ECDH-1PU+A128KW` <sup>[draft-madden-jose-ecdh-1pu](https://tools.ietf.org/html/draft-madden-jose-ecdh-1pu-02)</sup>
-- [X] `ECDH-1PU+A192KW` <sup>[draft-madden-jose-ecdh-1pu](https://tools.ietf.org/html/draft-madden-jose-ecdh-1pu-02)</sup>
-- [X] `ECDH-1PU+A256KW` <sup>[draft-madden-jose-ecdh-1pu](https://tools.ietf.org/html/draft-madden-jose-ecdh-1pu-02)</sup>
-- [X] `ECDH-1PU+C20PKW` <sup>[draft-amringer-jose-chacha](https://tools.ietf.org/html/draft-amringer-jose-chacha-01), [draft-madden-jose-ecdh-1pu](https://tools.ietf.org/html/draft-madden-jose-ecdh-1pu-02)</sup>
-- [X] `ECDH-1PU+XC20PKW` <sup>[draft-amringer-jose-chacha](https://tools.ietf.org/html/draft-amringer-jose-chacha-01), [draft-madden-jose-ecdh-1pu](https://tools.ietf.org/html/draft-madden-jose-ecdh-1pu-02)</sup>
+- [X] `ECDH-1PU` <sup>non-standard, [draft-madden-jose-ecdh-1pu](https://datatracker.ietf.org/doc/html/draft-madden-jose-ecdh-1pu-04)</sup>
+- [X] `ECDH-1PU+A128GCMKW` <sup>non-standard, [draft-madden-jose-ecdh-1pu](https://datatracker.ietf.org/doc/html/draft-madden-jose-ecdh-1pu-04)</sup>
+- [X] `ECDH-1PU+A192GCMKW` <sup>non-standard, [draft-madden-jose-ecdh-1pu](https://datatracker.ietf.org/doc/html/draft-madden-jose-ecdh-1pu-04)</sup>
+- [X] `ECDH-1PU+A256GCMKW` <sup>non-standard, [draft-madden-jose-ecdh-1pu](https://datatracker.ietf.org/doc/html/draft-madden-jose-ecdh-1pu-04)</sup>
+- [X] `ECDH-1PU+A128KW` <sup>[draft-madden-jose-ecdh-1pu](https://datatracker.ietf.org/doc/html/draft-madden-jose-ecdh-1pu-04)</sup>
+- [X] `ECDH-1PU+A192KW` <sup>[draft-madden-jose-ecdh-1pu](https://datatracker.ietf.org/doc/html/draft-madden-jose-ecdh-1pu-04)</sup>
+- [X] `ECDH-1PU+A256KW` <sup>[draft-madden-jose-ecdh-1pu](https://datatracker.ietf.org/doc/html/draft-madden-jose-ecdh-1pu-04)</sup>
+- [X] `ECDH-1PU+C20PKW` <sup>[draft-amringer-jose-chacha](https://datatracker.ietf.org/doc/html/draft-amringer-jose-chacha-02), [draft-madden-jose-ecdh-1pu](https://datatracker.ietf.org/doc/html/draft-madden-jose-ecdh-1pu-04)</sup>
+- [X] `ECDH-1PU+XC20PKW` <sup>[draft-amringer-jose-chacha](https://datatracker.ietf.org/doc/html/draft-amringer-jose-chacha-02), [draft-madden-jose-ecdh-1pu](https://datatracker.ietf.org/doc/html/draft-madden-jose-ecdh-1pu-04)</sup>
 - [X] `ECDH-ES`
 - [X] `ECDH-ES+A128GCMKW` <sup>non-standard</sup>
 - [X] `ECDH-ES+A192GCMKW` <sup>non-standard</sup>
@@ -481,8 +481,8 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 - [X] `ECDH-ES+A128KW`
 - [X] `ECDH-ES+A192KW`
 - [X] `ECDH-ES+A256KW`
-- [X] `ECDH-ES+C20PKW` <sup>[draft-amringer-jose-chacha](https://tools.ietf.org/html/draft-amringer-jose-chacha-01)</sup>
-- [X] `ECDH-ES+XC20PKW` <sup>[draft-amringer-jose-chacha](https://tools.ietf.org/html/draft-amringer-jose-chacha-01)</sup>
+- [X] `ECDH-ES+C20PKW` <sup>[draft-amringer-jose-chacha](https://datatracker.ietf.org/doc/html/draft-amringer-jose-chacha-02)</sup>
+- [X] `ECDH-ES+XC20PKW` <sup>[draft-amringer-jose-chacha](https://datatracker.ietf.org/doc/html/draft-amringer-jose-chacha-02)</sup>
 - [X] `PBES2-HS256+A128GCMKW` <sup>non-standard</sup>
 - [X] `PBES2-HS384+A192GCMKW` <sup>non-standard</sup>
 - [X] `PBES2-HS512+A256GCMKW` <sup>non-standard</sup>
@@ -494,7 +494,7 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 - [X] `RSA1_5`
 - [X] `RSA-OAEP`
 - [X] `RSA-OAEP-256`
-- [X] `XC20PKW` <sup>[draft-amringer-jose-chacha](https://tools.ietf.org/html/draft-amringer-jose-chacha-01)</sup>
+- [X] `XC20PKW` <sup>[draft-amringer-jose-chacha](https://datatracker.ietf.org/doc/html/draft-amringer-jose-chacha-02)</sup>
 
 #### `"enc"` [RFC 7518 Section 5](https://tools.ietf.org/html/rfc7518#section-5)
 
@@ -504,8 +504,8 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 - [X] `A128GCM`
 - [X] `A192GCM`
 - [X] `A256GCM`
-- [X] `C20P` <sup>[draft-amringer-jose-chacha](https://tools.ietf.org/html/draft-amringer-jose-chacha-01)</sup>
-- [X] `XC20P` <sup>[draft-amringer-jose-chacha](https://tools.ietf.org/html/draft-amringer-jose-chacha-01)</sup>
+- [X] `C20P` <sup>[draft-amringer-jose-chacha](https://datatracker.ietf.org/doc/html/draft-amringer-jose-chacha-02)</sup>
+- [X] `XC20P` <sup>[draft-amringer-jose-chacha](https://datatracker.ietf.org/doc/html/draft-amringer-jose-chacha-02)</sup>
 
 #### `"zip"` [RFC 7518 Section 7.3](https://tools.ietf.org/html/rfc7518#section-7.3)
 
@@ -535,6 +535,7 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 - [X] `Ed448` <sup>[RFC 8037](https://tools.ietf.org/html/rfc8037), [RFC 8032](https://tools.ietf.org/html/rfc8032#section-5.2)</sup>
 - [X] `Ed448ph` <sup>[RFC 8037](https://tools.ietf.org/html/rfc8037), [RFC 8032](https://tools.ietf.org/html/rfc8032#section-5.2)</sup>
 - [X] `EdDSA` <sup>[RFC 8037](https://tools.ietf.org/html/rfc8037), [RFC 8032](https://tools.ietf.org/html/rfc8032)</sup>
+- [X] `ES256K` <sup>[RFC 8812](https://datatracker.ietf.org/doc/html/rfc8812)</sup>
 - [X] `ES256`
 - [X] `ES384`
 - [X] `ES512`
@@ -545,6 +546,7 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 - [X] `PS256`
 - [X] `PS384`
 - [X] `PS512`
+- [X] `RS1` <sup>deprecated, [RFC 8812](https://datatracker.ietf.org/doc/html/rfc8812)</sup>
 - [X] `RS256`
 - [X] `RS384`
 - [X] `RS512`

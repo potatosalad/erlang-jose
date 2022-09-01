@@ -25,7 +25,7 @@
 %% API
 
 %% Types
--type alg() :: 'ES256' | 'ES384' | 'ES512'.
+-type alg() :: 'ES256K' | 'ES256' | 'ES384' | 'ES512'.
 
 -export_type([alg/0]).
 
@@ -33,6 +33,8 @@
 %% jose_jws callbacks
 %%====================================================================
 
+from_map(F = #{ <<"alg">> := <<"ES256K">> }) ->
+	{'ES256K', maps:remove(<<"alg">>, F)};
 from_map(F = #{ <<"alg">> := <<"ES256">> }) ->
 	{'ES256', maps:remove(<<"alg">>, F)};
 from_map(F = #{ <<"alg">> := <<"ES384">> }) ->
@@ -40,6 +42,8 @@ from_map(F = #{ <<"alg">> := <<"ES384">> }) ->
 from_map(F = #{ <<"alg">> := <<"ES512">> }) ->
 	{'ES512', maps:remove(<<"alg">>, F)}.
 
+to_map('ES256K', F) ->
+	F#{ <<"alg">> => <<"ES256K">> };
 to_map('ES256', F) ->
 	F#{ <<"alg">> => <<"ES256">> };
 to_map('ES384', F) ->
@@ -51,6 +55,8 @@ to_map('ES512', F) ->
 %% jose_jws_alg callbacks
 %%====================================================================
 
+generate_key('ES256K', _Fields) ->
+	jose_jws_alg:generate_key({ec, <<"secp256k1">>}, <<"ES256K">>);
 generate_key('ES256', _Fields) ->
 	jose_jws_alg:generate_key({ec, <<"P-256">>}, <<"ES256">>);
 generate_key('ES384', _Fields) ->

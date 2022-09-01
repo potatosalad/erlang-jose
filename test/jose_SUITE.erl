@@ -317,7 +317,7 @@ jose_cfrg_curves_a_7(Config) ->
 
 % Public Key Authenticated Encryption for JOSE: ECDH-1PU
 % A.  Example ECDH-1PU Key Agreement Computation with A256GCM
-% [https://tools.ietf.org/html/draft-madden-jose-ecdh-1pu-02#appendix-A]
+% [https://datatracker.ietf.org/doc/html/draft-madden-jose-ecdh-1pu-04#appendix-A]
 jose_ecdh_1pu_a(Config) ->
 	C = ?config(jose_ecdh_1pu_a, Config),
 	A_USSK_JWK = jose_jwk:from_binary(?config("a.ussk.jwk+json", C)),

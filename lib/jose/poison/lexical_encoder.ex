@@ -181,7 +181,7 @@ if Code.ensure_loaded?(Poison) do
     end
 
     defp escape(<<char::utf8>> <> rest, mode)
-        when mode in [:html_safe, :javascript] and char in [0x2028, 0x2029] do
+         when mode in [:html_safe, :javascript] and char in [0x2028, 0x2029] do
       [seq(char) | escape(rest, mode)]
     end
 
@@ -196,7 +196,7 @@ if Code.ensure_loaded?(Poison) do
     end
 
     defp chunk_size(<<char>> <> _, _mode, acc)
-        when char <= 0x1F or char in '"\\' do
+         when char <= 0x1F or char in '"\\' do
       acc
     end
 
@@ -213,7 +213,7 @@ if Code.ensure_loaded?(Poison) do
     end
 
     defp chunk_size(<<char::utf8>> <> _, mode, acc)
-        when mode in [:html_safe, :javascript] and char in [0x2028, 0x2029] do
+         when mode in [:html_safe, :javascript] and char in [0x2028, 0x2029] do
       acc
     end
 

@@ -500,6 +500,8 @@ jws_alg_to_digest_type('PS384') ->
 	{rsa_pkcs1_pss_padding, sha384};
 jws_alg_to_digest_type('PS512') ->
 	{rsa_pkcs1_pss_padding, sha512};
+jws_alg_to_digest_type('RS1') ->
+	{rsa_pkcs1_padding, sha};
 jws_alg_to_digest_type('RS256') ->
 	{rsa_pkcs1_padding, sha256};
 jws_alg_to_digest_type('RS384') ->

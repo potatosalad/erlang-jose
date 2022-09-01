@@ -4,7 +4,7 @@
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc Key Agreement with Elliptic Curve Diffie-Hellman One-Pass Unified Model (ECDH-1PU)
-%%% See https://tools.ietf.org/html/draft-madden-jose-ecdh-1pu-02
+%%% See https://datatracker.ietf.org/doc/html/draft-madden-jose-ecdh-1pu-04
 %%%
 %%% @end
 %%% Created :  29 Dec 2019 by Andrew Bennett <potatosaladx@gmail.com>
