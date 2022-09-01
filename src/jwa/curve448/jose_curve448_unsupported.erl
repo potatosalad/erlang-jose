@@ -30,7 +30,7 @@
 -export([x448_shared_secret/2]).
 
 %% Macros
--define(unsupported, erlang:error(curve448_unsupported)).
+-define(unsupported, erlang:error(operation_not_supported)).
 
 %%====================================================================
 %% jose_curve448 callbacks

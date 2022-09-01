@@ -31,7 +31,7 @@
 -export([x448_shared_secret/2]).
 
 %% Macros
--define(unsupported, erlang:error(not_yet_implemented)).
+-define(FALLBACK_MOD, jose_curve448_fallback).
 
 %%====================================================================
 %% jose_curve448 callbacks
@@ -54,27 +54,27 @@ eddsa_secret_to_public(<<Secret:57/binary>>) ->
 ed448_sign(Message, <<Secret:57/binary, _:57/binary>>) ->
 	crypto:sign(eddsa, none, Message, [Secret, ed448]).
 
-ed448_sign(_Message, _SecretKey, _Context) ->
-	?unsupported.
+ed448_sign(Message, SecretKey, Context) ->
+	?FALLBACK_MOD:ed448_sign(Message, SecretKey, Context).
 
 ed448_verify(Signature, Message, <<PublicKey:57/binary>>) ->
 	crypto:verify(eddsa, none, Message, Signature, [PublicKey, ed448]).
 
-ed448_verify(_Signature, _Message, _PublicKey, _Context) ->
-	?unsupported.
+ed448_verify(Signature, Message, PublicKey, Context) ->
+	?FALLBACK_MOD:ed448_verify(Signature, Message, PublicKey, Context).
 
 % Ed448ph
-ed448ph_sign(_Message, _SecretKey) ->
-	?unsupported.
+ed448ph_sign(Message, SecretKey) ->
+	?FALLBACK_MOD:ed448ph_sign(Message, SecretKey).
 
-ed448ph_sign(_Message, _SecretKey, _Context) ->
-	?unsupported.
+ed448ph_sign(Message, SecretKey, Context) ->
+	?FALLBACK_MOD:ed448ph_sign(Message, SecretKey, Context).
 
-ed448ph_verify(_Signature, _Message, _PublicKey) ->
-	?unsupported.
+ed448ph_verify(Signature, Message, PublicKey) ->
+	?FALLBACK_MOD:ed448ph_verify(Signature, Message, PublicKey).
 
-ed448ph_verify(_Signature, _Message, _PublicKey, _Context) ->
-	?unsupported.
+ed448ph_verify(Signature, Message, PublicKey, Context) ->
+	?FALLBACK_MOD:ed448ph_verify(Signature, Message, PublicKey, Context).
 
 % X448
 x448_keypair() ->

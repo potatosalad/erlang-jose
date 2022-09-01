@@ -6,33 +6,41 @@
 %%% @doc
 %%%
 %%% @end
-%%% Created :  31 May 2016 by Andrew Bennett <potatosaladx@gmail.com>
+%%% Created :  11 Jan 2016 by Andrew Bennett <potatosaladx@gmail.com>
 %%%-------------------------------------------------------------------
--module(jose_chacha20_poly1305_unsupported).
+-module(jose_sha3_unsupported).
 
--behaviour(jose_chacha20_poly1305).
+-behaviour(jose_sha3).
 
-%% jose_chacha20_poly1305 callbacks
--export([decrypt/5]).
--export([encrypt/4]).
--export([authenticate/3]).
--export([verify/4]).
+%% jose_sha3 callbacks
+-export([sha3_224/1]).
+-export([sha3_256/1]).
+-export([sha3_384/1]).
+-export([sha3_512/1]).
+-export([shake128/2]).
+-export([shake256/2]).
 
 %% Macros
--define(unsupported, erlang:error(chacha20_poly1305_unsupported)).
+-define(unsupported, erlang:error(operation_not_supported)).
 
 %%====================================================================
-%% jose_chacha20_poly1305 callbacks
+%% jose_sha3 callbacks
 %%====================================================================
 
-decrypt(_CipherText, _CipherTag, _AAD, _IV, _Key) ->
+sha3_224(_InputBytes) ->
 	?unsupported.
 
-encrypt(_PlainText, _AAD, _IV, _Key) ->
+sha3_256(_InputBytes) ->
 	?unsupported.
 
-authenticate(_Message, _Key, _Nonce) ->
+sha3_384(_InputBytes) ->
 	?unsupported.
 
-verify(_MAC, _Message, _Key, _Nonce) ->
+sha3_512(_InputBytes) ->
+	?unsupported.
+
+shake128(_InputBytes, _OutputByteLen) ->
+	?unsupported.
+
+shake256(_InputBytes, _OutputByteLen) ->
 	?unsupported.

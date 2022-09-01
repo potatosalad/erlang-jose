@@ -32,11 +32,11 @@ encrypt(PlainText, AAD, IV, CEK) ->
 
 authenticate(Message, Key, Nonce0) ->
 	{Subkey, Nonce} = jose_jwa_xchacha20:subkey_and_nonce(Key, Nonce0),
-	jose_chacha20_poly1305:authenticate(Message, Nonce, Subkey).
+	jose_chacha20_poly1305:authenticate(Message, Subkey, Nonce).
 
 verify(MAC, Message, Key, Nonce0) ->
 	{Subkey, Nonce} = jose_jwa_xchacha20:subkey_and_nonce(Key, Nonce0),
-	jose_chacha20_poly1305:verify(MAC, Message, Nonce, Subkey).
+	jose_chacha20_poly1305:verify(MAC, Message, Subkey, Nonce).
 
 %%%-------------------------------------------------------------------
 %%% Internal functions

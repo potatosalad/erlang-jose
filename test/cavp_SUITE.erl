@@ -304,10 +304,10 @@ init_per_group(G='curve25519', Config) ->
 					"c35467ef2efd4d64ebf819683467e2bf"), % PUBLIC KEY
 				hexstr2bin("616263"), % MESSAGE
 				hexstr2bin(
-					"dc2a4459e7369633a52b1bf277839a00"
-					"201009a3efbf3ecb69bea2186c26b589"
-					"09351fc9ac90b3ecfdfbc7c66431e030"
-					"3dca179c138ac17ad9bef1177331a704") % SIGNATURE
+					"98a70222f0b8121aa9d30f813d683f80"
+					"9e462b469c7ff87639499bb94e6dae41"
+					"31f85042463c2a355a2003d062adf5aa"
+					"a10b8c61e636062aaad11c2a26083406") % SIGNATURE
 			}
 		]},
 		{x25519, [

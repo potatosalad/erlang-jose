@@ -18,8 +18,12 @@
 -export([eddsa_secret_to_public/1]).
 -export([ed25519_sign/2]).
 -export([ed25519_verify/3]).
+-export([ed25519ctx_sign/3]).
+-export([ed25519ctx_verify/4]).
 -export([ed25519ph_sign/2]).
+-export([ed25519ph_sign/3]).
 -export([ed25519ph_verify/3]).
+-export([ed25519ph_verify/4]).
 -export([x25519_keypair/0]).
 -export([x25519_keypair/1]).
 -export([x25519_secret_to_public/1]).
@@ -45,14 +49,35 @@ eddsa_secret_to_public(SecretKey)
 ed25519_sign(Message, SecretKey)
 		when is_binary(Message)
 		andalso is_binary(SecretKey) ->
-	jose_jwa_ed25519:sign(Message, SecretKey).
+	jose_jwa_ed25519:ed25519_sign(Message, SecretKey).
 
 ed25519_verify(Signature, Message, PublicKey)
 		when is_binary(Signature)
 		andalso is_binary(Message)
 		andalso is_binary(PublicKey) ->
 	try
-		jose_jwa_ed25519:verify(Signature, Message, PublicKey)
+		jose_jwa_ed25519:ed25519_verify(Signature, Message, PublicKey)
+	catch
+		_:_ ->
+			false
+	end.
+
+% Ed25519ctx
+ed25519ctx_sign(Message, SecretKey, Context)
+		when is_binary(Message)
+		andalso is_binary(SecretKey)
+		andalso is_binary(Context)
+		andalso byte_size(Context) =< 255 ->
+	jose_jwa_ed25519:ed25519ctx_sign(Message, SecretKey, Context).
+
+ed25519ctx_verify(Signature, Message, PublicKey, Context)
+		when is_binary(Signature)
+		andalso is_binary(Message)
+		andalso is_binary(PublicKey)
+		andalso is_binary(Context)
+		andalso byte_size(Context) =< 255 ->
+	try
+		jose_jwa_ed25519:ed25519ctx_verify(Signature, Message, PublicKey, Context)
 	catch
 		_:_ ->
 			false
@@ -62,14 +87,34 @@ ed25519_verify(Signature, Message, PublicKey)
 ed25519ph_sign(Message, SecretKey)
 		when is_binary(Message)
 		andalso is_binary(SecretKey) ->
-	jose_jwa_ed25519:sign_with_prehash(Message, SecretKey).
+	jose_jwa_ed25519:ed25519ph_sign(Message, SecretKey).
+
+ed25519ph_sign(Message, SecretKey, Context)
+		when is_binary(Message)
+		andalso is_binary(SecretKey)
+		andalso is_binary(Context)
+		andalso byte_size(Context) =< 255 ->
+	jose_jwa_ed25519:ed25519ph_sign(Message, SecretKey, Context).
 
 ed25519ph_verify(Signature, Message, PublicKey)
 		when is_binary(Signature)
 		andalso is_binary(Message)
 		andalso is_binary(PublicKey) ->
 	try
-		jose_jwa_ed25519:verify_with_prehash(Signature, Message, PublicKey)
+		jose_jwa_ed25519:ed25519ph_verify(Signature, Message, PublicKey)
+	catch
+		_:_ ->
+			false
+	end.
+
+ed25519ph_verify(Signature, Message, PublicKey, Context)
+		when is_binary(Signature)
+		andalso is_binary(Message)
+		andalso is_binary(PublicKey)
+		andalso is_binary(Context)
+		andalso byte_size(Context) =< 255 ->
+	try
+		jose_jwa_ed25519:ed25519ph_verify(Signature, Message, PublicKey, Context)
 	catch
 		_:_ ->
 			false

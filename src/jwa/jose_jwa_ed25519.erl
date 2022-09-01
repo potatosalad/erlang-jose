@@ -3,8 +3,8 @@
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
-%%% @doc Edwards-curve Digital Signature Algorithm (EdDSA) - Ed25519
-%%% See https://tools.ietf.org/html/draft-irtf-cfrg-eddsa
+%%% @doc Edwards-Curve Digital Signature Algorithm (EdDSA) - Ed25519, Ed25519ctx, Ed25519ph
+%%% See https://datatracker.ietf.org/doc/html/rfc8032
 %%% @end
 %%% Created :  06 Jan 2016 by Andrew Bennett <potatosaladx@gmail.com>
 %%%-------------------------------------------------------------------
@@ -29,16 +29,23 @@
 -export([sk_to_pk/1]).
 -export([sk_to_curve25519/1]).
 -export([pk_to_curve25519/1]).
--export([sign/2]).
--export([sign_with_prehash/2]).
--export([verify/3]).
--export([verify_with_prehash/3]).
+-export([dom2/2]).
+-export([sign_internal/4]).
+-export([ed25519_sign/2]).
+-export([ed25519ctx_sign/3]).
+-export([ed25519ph_sign/2]).
+-export([ed25519ph_sign/3]).
+-export([verify_internal/5]).
+-export([ed25519_verify/3]).
+-export([ed25519ctx_verify/4]).
+-export([ed25519ph_verify/3]).
+-export([ed25519ph_verify/4]).
 
 %% Macros
 -define(math, jose_jwa_math).
 -define(inv(Z), ?math:expmod(Z, ?p - 2, ?p)). % $= z^{-1} \mod p$, for z != 0
-% 3. EdDSA Algorithm - https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-3
-% 5.1. Ed25519ph and Ed25519 - https://tools.ietf.org/html/draft-irtf-cfrg-eddsa-01#section-5.1
+% 3. EdDSA Algorithm - https://datatracker.ietf.org/doc/html/rfc8032#section-3
+% 5.1. Ed25519ph and Ed25519 - https://datatracker.ietf.org/doc/html/rfc8032-01#section-5.1
 -define(d, -4513249062541557337682894930092624173785641285191125241628941591882900924598840740). % (-121665) * ?inv(121666)
 -define(I, 19681161376707505956807079304988542015446066515923890162744021073123829784752). % ?math:expmod(2, (?p - 1) div 4, ?p)
 %% 1. An odd prime power p.  EdDSA uses an elliptic curve over the
@@ -98,7 +105,7 @@
 %% API
 %%====================================================================
 
-% 5.1.1. Modular arithmetic - https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.1.1
+% 5.1.1. Modular arithmetic - https://datatracker.ietf.org/doc/html/rfc8032#section-5.1.1
 
 xrecover(Y) ->
 	YY = Y * Y,
@@ -127,7 +134,7 @@ xrecover(Y) ->
 			end
 	end.
 
-% 5.1.2. Encoding - https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.1.2
+% 5.1.2. Encoding - https://datatracker.ietf.org/doc/html/rfc8032#section-5.1.2
 
 encode_point({X, Y, Z, _T}) ->
 	Zi = ?inv(Z),
@@ -136,7 +143,7 @@ encode_point({X, Y, Z, _T}) ->
 	<< YpHead:(?b - 8)/bitstring, YpTail:8/integer >> = << Yp:?b/unsigned-little-integer-unit:1 >>,
 	<< YpHead/bitstring, (YpTail bxor (16#80 * (Xp band 1))):8/integer >>.
 
-% 5.1.3. Decoding - https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.1.3
+% 5.1.3. Decoding - https://datatracker.ietf.org/doc/html/rfc8032#section-5.1.3
 
 decode_point(<< YpHead:(?b - 8)/bitstring, Xb:1, YpTail:7/bitstring >>) ->
 	<< Yp:?b/unsigned-little-integer-unit:1 >> = << YpHead/bitstring, 0:1, YpTail/bitstring >>,
@@ -154,7 +161,7 @@ decode_point(<< YpHead:(?b - 8)/bitstring, Xb:1, YpTail:7/bitstring >>) ->
 			{X, Yp, 1, (X * Yp) rem ?p}
 	end.
 
-% 5.1.4. Point addition - https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.1.4
+% 5.1.4. Point addition - https://datatracker.ietf.org/doc/html/rfc8032#section-5.1.4
 
 edwards_add({X1, Y1, Z1, T1}, {X2, Y2, Z2, T2}) ->
 	A = ((Y1 - X1) * (Y2 - X2)) rem ?p,
@@ -205,7 +212,7 @@ normalize_point({X, Y, Z, _T}) ->
 	Zp = ?math:mod((Z * Zi), ?p),
 	{Xp, Yp, Zp, ?math:mod((Xp * Yp), ?p)}.
 
-% 5.1.5. Key Generation - https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.1.5
+% 5.1.5. Key Generation - https://datatracker.ietf.org/doc/html/rfc8032#section-5.1.5
 
 secret() ->
 	crypto:strong_rand_bytes(?secretbytes).
@@ -244,30 +251,67 @@ pk_to_curve25519(<< PK:?publickeybytes/binary >>) ->
 	U = ?math:mod((1 + Y) * ?inv(1 - Y), ?p),
 	<< U:?b/unsigned-little-integer-unit:1 >>.
 
-% 5.1.6. Sign - https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.1.6
+% 5.1.6. Sign - https://datatracker.ietf.org/doc/html/rfc8032#section-5.1.6
 
-sign(M, << Secret:?secretbytes/binary, PK:?publickeybytes/binary >>) when is_binary(M) ->
+dom2(0, <<>>) ->
+	<<>>;
+dom2(PHFlag, C) when (PHFlag =:= 0 orelse PHFlag =:= 1) andalso is_binary(C) ->
+	<<"SigEd25519 no Ed25519 collisions", PHFlag:8, (byte_size(C)):8/integer, C/binary>>.
+
+sign_internal(M, << Secret:?secretbytes/binary, PK:?publickeybytes/binary >>, PHFlag, C)
+		when is_binary(M)
+		andalso (PHFlag =:= 0 orelse PHFlag =:= 1)
+		andalso is_binary(C) ->
+	% Recalculate PK to prevent misuse as described in https://github.com/MystenLabs/ed25519-unsafe-libs
+	PK = secret_to_pk(Secret),
+	Dom2 = dom2(PHFlag, C),
 	<< HHead0:8/integer, HBody:30/binary, HFoot0:8/integer, HTail:32/binary >> = ?H(Secret),
 	HHead = HHead0 band 248,
 	HFoot = (HFoot0 band 63) bor 64,
 	<< As:?b/unsigned-little-integer-unit:1 >> = << HHead:8/integer, HBody/binary, HFoot:8/integer >>,
-	<< Rs:?HBits/unsigned-little-integer-unit:1 >> = ?H(<< HTail/binary, M/binary >>),
+	<< Rs:?HBits/unsigned-little-integer-unit:1 >> = ?H(<< Dom2/binary, HTail/binary, M/binary >>),
 	R = encode_point(scalarmult(?B, Rs)),
-	<< K:?HBits/unsigned-little-integer-unit:1 >> = ?H(<< R/binary, PK/binary, M/binary >>),
+	<< K:?HBits/unsigned-little-integer-unit:1 >> = ?H(<< Dom2/binary, R/binary, PK/binary, M/binary >>),
 	S = ?math:mod(Rs + (K * As), ?l),
 	<< R/binary, S:?b/unsigned-little-integer-unit:1 >>.
 
-sign_with_prehash(M, SK = << _:?secretkeybytes/binary >>) when is_binary(M) ->
-	sign(?PH(M), SK).
+ed25519_sign(M, SK = << _:?secretkeybytes/binary >>) when is_binary(M) ->
+	sign_internal(M, SK, 0, <<>>).
 
-% 5.1.7. Verify - https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.1.7
+ed25519ctx_sign(M, SK = << _:?secretkeybytes/binary >>, C) when is_binary(M) andalso is_binary(C) ->
+	sign_internal(M, SK, 0, C).
 
-verify(<< R:?b/bitstring, S:?b/unsigned-little-integer-unit:1 >>, M, PK = << _:?publickeybytes/binary >>) when is_binary(M) ->
+ed25519ph_sign(M, SK = << _:?secretkeybytes/binary >>) when is_binary(M) ->
+	sign_internal(?PH(M), SK, 1, <<>>).
+
+ed25519ph_sign(M, SK = << _:?secretkeybytes/binary >>, C) when is_binary(M) andalso is_binary(C) ->
+	sign_internal(?PH(M), SK, 1, C).
+
+% 5.1.7. Verify - https://datatracker.ietf.org/doc/html/rfc8032#section-5.1.7
+
+verify_internal(<< R:?b/bitstring, S:?b/unsigned-little-integer-unit:1 >>, M, PK = << _:?publickeybytes/binary >>, PHFlag, C)
+		when is_binary(M)
+		andalso (PHFlag =:= 0 orelse PHFlag =:= 1)
+		andalso is_binary(C) ->
+	Dom2 = dom2(PHFlag, C),
 	A = decode_point(PK),
-	<< K:?HBits/unsigned-little-integer-unit:1 >> = ?H(<< R/binary, PK/binary, M/binary >>),
+	<< K:?HBits/unsigned-little-integer-unit:1 >> = ?H(<< Dom2/binary, R/binary, PK/binary, M/binary >>),
 	edwards_equal(scalarmult(?B, S), edwards_add(decode_point(R), scalarmult(A, K)));
-verify(Sig, M, << _:?publickeybytes/binary >>) when is_binary(Sig) andalso is_binary(M) ->
+verify_internal(Sig, M, _PK = << _:?publickeybytes/binary >>, PHFlag, C)
+		when is_binary(Sig)
+		andalso is_binary(M)
+		andalso (PHFlag =:= 0 orelse PHFlag =:= 1)
+		andalso is_binary(C) ->
 	false.
 
-verify_with_prehash(Sig, M, PK = << _:?publickeybytes/binary >>) when is_binary(Sig) andalso is_binary(M) ->
-	verify(Sig, ?PH(M), PK).
+ed25519_verify(Sig, M, PK = << _:?publickeybytes/binary >>) when is_binary(Sig) andalso is_binary(M) ->
+	verify_internal(Sig, M, PK, 0, <<>>).
+
+ed25519ctx_verify(Sig, M, PK = << _:?publickeybytes/binary >>, C) when is_binary(Sig) andalso is_binary(M) andalso is_binary(C) ->
+	verify_internal(Sig, M, PK, 0, C).
+
+ed25519ph_verify(Sig, M, PK = << _:?publickeybytes/binary >>) when is_binary(Sig) andalso is_binary(M) ->
+	verify_internal(Sig, ?PH(M), PK, 1, <<>>).
+
+ed25519ph_verify(Sig, M, PK = << _:?publickeybytes/binary >>, C) when is_binary(Sig) andalso is_binary(M) andalso is_binary(C) ->
+	verify_internal(Sig, ?PH(M), PK, 1, C).

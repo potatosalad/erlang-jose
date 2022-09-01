@@ -6,23 +6,23 @@
 %%% @doc
 %%%
 %%% @end
-%%% Created :  14 Sep 2019 by Andrew Bennett <potatosaladx@gmail.com>
+%%% Created :  31 May 2016 by Andrew Bennett <potatosaladx@gmail.com>
 %%%-------------------------------------------------------------------
--module(jose_xchacha20_poly1305_unsupported).
+-module(jose_chacha20_poly1305_unsupported).
 
--behaviour(jose_xchacha20_poly1305).
+-behaviour(jose_chacha20_poly1305).
 
-%% jose_xchacha20_poly1305 callbacks
+%% jose_chacha20_poly1305 callbacks
 -export([decrypt/5]).
 -export([encrypt/4]).
 -export([authenticate/3]).
 -export([verify/4]).
 
 %% Macros
--define(unsupported, erlang:error(xchacha20_poly1305_unsupported)).
+-define(unsupported, erlang:error(operation_not_supported)).
 
 %%====================================================================
-%% jose_xchacha20_poly1305 callbacks
+%% jose_chacha20_poly1305 callbacks
 %%====================================================================
 
 decrypt(_CipherText, _CipherTag, _AAD, _IV, _Key) ->

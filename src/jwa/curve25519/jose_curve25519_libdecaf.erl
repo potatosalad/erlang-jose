@@ -6,9 +6,9 @@
 %%% @doc
 %%%
 %%% @end
-%%% Created :  02 Jan 2016 by Andrew Bennett <potatosaladx@gmail.com>
+%%% Created :  01 Mar 2016 by Andrew Bennett <potatosaladx@gmail.com>
 %%%-------------------------------------------------------------------
--module(jose_curve25519_libsodium).
+-module(jose_curve25519_libdecaf).
 
 -behaviour(jose_curve25519).
 
@@ -18,15 +18,16 @@
 -export([eddsa_secret_to_public/1]).
 -export([ed25519_sign/2]).
 -export([ed25519_verify/3]).
+-export([ed25519ctx_sign/3]).
+-export([ed25519ctx_verify/4]).
 -export([ed25519ph_sign/2]).
+-export([ed25519ph_sign/3]).
 -export([ed25519ph_verify/3]).
+-export([ed25519ph_verify/4]).
 -export([x25519_keypair/0]).
 -export([x25519_keypair/1]).
 -export([x25519_secret_to_public/1]).
 -export([x25519_shared_secret/2]).
-
-%% Macros
--define(PH(M), libsodium_crypto_hash_sha512:crypto_hash_sha512(M)).
 
 %%====================================================================
 %% jose_curve25519 callbacks
@@ -34,47 +35,50 @@
 
 % EdDSA
 eddsa_keypair() ->
-	libsodium_crypto_sign_ed25519:keypair().
+	libdecaf_curve25519:eddsa_keypair().
 
 eddsa_keypair(Seed) ->
-	libsodium_crypto_sign_ed25519:seed_keypair(Seed).
+	libdecaf_curve25519:eddsa_keypair(Seed).
 
 eddsa_secret_to_public(SecretKey) ->
-	{PK, _} = libsodium_crypto_sign_ed25519:seed_keypair(SecretKey),
-	PK.
+	libdecaf_curve25519:eddsa_secret_to_pk(SecretKey).
 
 % Ed25519
 ed25519_sign(Message, SecretKey) ->
-	libsodium_crypto_sign_ed25519:detached(Message, SecretKey).
+	libdecaf_curve25519:ed25519_sign(Message, SecretKey).
 
 ed25519_verify(Signature, Message, PublicKey) ->
-	try libsodium_crypto_sign_ed25519:verify_detached(Signature, Message, PublicKey) of
-		0 ->
-			true;
-		_ ->
-			false
-	catch
-		_:_ ->
-			false
-	end.
+	libdecaf_curve25519:ed25519_verify(Signature, Message, PublicKey).
+
+% Ed25519ctx
+ed25519ctx_sign(Message, SecretKey, Context) ->
+	libdecaf_curve25519:ed25519ctx_sign(Message, SecretKey, Context).
+
+ed25519ctx_verify(Signature, Message, PublicKey, Context) ->
+	libdecaf_curve25519:ed25519ctx_verify(Signature, Message, PublicKey, Context).
 
 % Ed25519ph
 ed25519ph_sign(Message, SecretKey) ->
-	ed25519_sign(?PH(Message), SecretKey).
+	libdecaf_curve25519:ed25519ph_sign(Message, SecretKey).
+
+ed25519ph_sign(Message, SecretKey, Context) ->
+	libdecaf_curve25519:ed25519ph_sign(Message, SecretKey, Context).
 
 ed25519ph_verify(Signature, Message, PublicKey) ->
-	ed25519_verify(Signature, ?PH(Message), PublicKey).
+	libdecaf_curve25519:ed25519ph_verify(Signature, Message, PublicKey).
+
+ed25519ph_verify(Signature, Message, PublicKey, Context) ->
+	libdecaf_curve25519:ed25519ph_verify(Signature, Message, PublicKey, Context).
 
 % X25519
 x25519_keypair() ->
-	libsodium_crypto_box_curve25519xsalsa20poly1305:keypair().
+	libdecaf_curve25519:x25519_keypair().
 
-x25519_keypair(SK = << _:32/binary >>) ->
-	PK = x25519_secret_to_public(SK),
-	{PK, SK}.
+x25519_keypair(Seed) ->
+	libdecaf_curve25519:x25519_keypair(Seed).
 
 x25519_secret_to_public(SecretKey) ->
-	libsodium_crypto_scalarmult_curve25519:base(SecretKey).
+	libdecaf_curve25519:x25519(SecretKey).
 
 x25519_shared_secret(MySecretKey, YourPublicKey) ->
-	libsodium_crypto_scalarmult_curve25519:crypto_scalarmult_curve25519(MySecretKey, YourPublicKey).
+	libdecaf_curve25519:x25519(MySecretKey, YourPublicKey).

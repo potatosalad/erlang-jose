@@ -153,13 +153,13 @@ support_check() ->
 	Entries = lists:flatten(lists:foldl(fun(Check, Acc) ->
 		Check(Fallback, Acc)
 	end, [], [
+		fun check_sha3/2,
 		fun check_ec_key_mode/2,
 		fun check_chacha20_poly1305/2,
 		fun check_xchacha20_poly1305/2,
 		fun check_curve25519/2,
 		fun check_curve448/2,
 		fun check_json/2,
-		fun check_sha3/2,
 		fun check_crypto/2,
 		fun check_public_key/2
 	])),
@@ -220,6 +220,8 @@ check_chacha20_poly1305(Fallback, Entries) ->
 					check_chacha20_poly1305_module(M)
 			end
 	end,
+	%% Potentially used by XChaCha20-Poly1305 related functions below, needs to be inserted early.
+	true = ets:insert(?TAB, {chacha20_poly1305_module, ChaCha20Poly1305Module}),
 	[{chacha20_poly1305_module, ChaCha20Poly1305Module} | Entries].
 
 %% @private
@@ -277,7 +279,7 @@ check_curve25519(Fallback, Entries) ->
 		[] ->
 			case application:get_env(jose, curve25519_module, undefined) of
 				undefined ->
-					check_curve25519_modules(Fallback, [libdecaf, libsodium]);
+					check_curve25519_modules(Fallback, [libdecaf, libsodium, crypto]);
 				M when is_atom(M) ->
 					check_curve25519_module(M)
 			end
@@ -285,6 +287,8 @@ check_curve25519(Fallback, Entries) ->
 	[{curve25519_module, Curve25519Module} | Entries].
 
 %% @private
+check_curve25519_module(crypto) ->
+	jose_curve25519_crypto;
 check_curve25519_module(libdecaf) ->
 	jose_curve25519_libdecaf;
 check_curve25519_module(libsodium) ->
@@ -297,12 +301,44 @@ check_curve25519_modules(Fallback, [Module | Modules]) ->
 	case code:ensure_loaded(Module) of
 		{module, Module} ->
 			_ = application:ensure_all_started(Module),
-			check_curve25519_module(Module);
+			RealFallback = jose_jwa_curve25519,
+			RealModule = check_curve25519_module(Module),
+			try check_curve25519_module_does_it_work(RealFallback, RealModule) of
+				true ->
+					RealModule;
+				false ->
+					check_curve25519_modules(Fallback, Modules)
+			catch _Class:_Reason:_Stacktrace ->
+				% io:format("Class = ~p~nReason = ~p~nStacktrace = ~p~n", [Class, Reason, Stacktrace]),
+				check_curve25519_modules(Fallback, Modules)
+			end;
 		_ ->
 			check_curve25519_modules(Fallback, Modules)
 	end;
 check_curve25519_modules(Fallback, []) ->
 	Fallback.
+
+%% @private
+check_curve25519_module_does_it_work(Fallback, Module) ->
+	{PK, SK = <<Secret:32/binary, _:32/binary>>} = Module:eddsa_keypair(),
+	{PK, SK} = Module:eddsa_keypair(Secret),
+	PK = Module:eddsa_secret_to_public(Secret),
+	Message = crypto:strong_rand_bytes(16),
+	Signature = Module:ed25519_sign(Message, SK),
+	true = Module:ed25519_verify(Signature, Message, PK),
+	true = Fallback:ed25519_verify(Signature, Message, PK),
+	%% NOTE: Ed25519ctx and Ed25519ph are lower priority, no need to check for now.
+	% Ctx = <<"ctx">>,
+	% CtxSignature = Module:ed25519ctx_sign(Message, SK, Ctx),
+	% true = Module:ed25519ctx_verify(CtxSignature, Message, PK, Ctx),
+	% true = Fallback:ed25519ctx_verify(CtxSignature, Message, PK, Ctx),
+	% PHSignature = Module:ed25519ph_sign(Message, SK),
+	% true = Module:ed25519ph_verify(PHSignature, Message, PK),
+	% true = Fallback:ed25519ph_verify(PHSignature, Message, PK),
+	% CtxPHSignature = Module:ed25519ph_sign(Message, SK, Ctx),
+	% true = Module:ed25519ph_verify(CtxPHSignature, Message, PK, Ctx),
+	% true = Fallback:ed25519ph_verify(CtxPHSignature, Message, PK, Ctx),
+	true.
 
 %% @private
 check_curve448(false, Entries) ->
@@ -318,7 +354,7 @@ check_curve448(Fallback, Entries) ->
 		[] ->
 			case application:get_env(jose, curve448_module, undefined) of
 				undefined ->
-					check_curve448_modules(Fallback, [libdecaf]);
+					check_curve448_modules(Fallback, [libdecaf, crypto]);
 				M when is_atom(M) ->
 					check_curve448_module(M)
 			end
@@ -326,6 +362,8 @@ check_curve448(Fallback, Entries) ->
 	[{curve448_module, Curve448Module} | Entries].
 
 %% @private
+check_curve448_module(crypto) ->
+	jose_curve448_crypto;
 check_curve448_module(libdecaf) ->
 	jose_curve448_libdecaf;
 check_curve448_module(Module) when is_atom(Module) ->
@@ -336,12 +374,44 @@ check_curve448_modules(Fallback, [Module | Modules]) ->
 	case code:ensure_loaded(Module) of
 		{module, Module} ->
 			_ = application:ensure_all_started(Module),
-			check_curve448_module(Module);
+			RealFallback = jose_jwa_curve448,
+			RealModule = check_curve448_module(Module),
+			try check_curve448_module_does_it_work(RealFallback, RealModule) of
+				true ->
+					RealModule;
+				false ->
+					check_curve448_modules(Fallback, Modules)
+			catch _Class:_Reason:_Stacktrace ->
+				% io:format("Class = ~p~nReason = ~p~nStacktrace = ~p~n", [_Class, _Reason, _Stacktrace]),
+				check_curve448_modules(Fallback, Modules)
+			end;
 		_ ->
 			check_curve448_modules(Fallback, Modules)
 	end;
 check_curve448_modules(Fallback, []) ->
 	Fallback.
+
+%% @private
+check_curve448_module_does_it_work(Fallback, Module) ->
+	{PK, SK = <<Secret:57/binary, _:57/binary>>} = Module:eddsa_keypair(),
+	{PK, SK} = Module:eddsa_keypair(Secret),
+	PK = Module:eddsa_secret_to_public(Secret),
+	Message = crypto:strong_rand_bytes(16),
+	Signature = Module:ed448_sign(Message, SK),
+	true = Module:ed448_verify(Signature, Message, PK),
+	true = Fallback:ed448_verify(Signature, Message, PK),
+	%% NOTE: Ed448ph is lower priority, no need to check for now.
+	% Ctx = <<"ctx">>,
+	% CtxSignature = Module:ed448_sign(Message, SK, Ctx),
+	% true = Module:ed448_verify(CtxSignature, Message, PK, Ctx),
+	% true = Fallback:ed448_verify(CtxSignature, Message, PK, Ctx),
+	% PHSignature = Module:ed448ph_sign(Message, SK),
+	% true = Module:ed448ph_verify(PHSignature, Message, PK),
+	% true = Fallback:ed448ph_verify(PHSignature, Message, PK),
+	% CtxPHSignature = Module:ed448ph_sign(Message, SK, Ctx),
+	% true = Module:ed448ph_verify(CtxPHSignature, Message, PK, Ctx),
+	% true = Fallback:ed448ph_verify(CtxPHSignature, Message, PK, Ctx),
+	true.
 
 %% @private
 check_json(_Fallback, Entries) ->
@@ -446,6 +516,8 @@ check_sha3(Fallback, Entries) ->
 					check_sha3_module(M)
 			end
 	end,
+	%% Potentially used by Ed448 related functions below, needs to be inserted early.
+	true = ets:insert(?TAB, {sha3_module, SHA3Module}),
 	[{sha3_module, SHA3Module} | Entries].
 
 %% @private
@@ -598,7 +670,7 @@ check_xchacha20_poly1305(Fallback, Entries) ->
 		[] ->
 			case application:get_env(jose, xchacha20_poly1305_module, undefined) of
 				undefined ->
-					check_xchacha20_poly1305_modules(Fallback, [crypto]);
+					check_xchacha20_poly1305_modules(Fallback, [libsodium, crypto]);
 				M when is_atom(M) ->
 					check_xchacha20_poly1305_module(M)
 			end
@@ -608,6 +680,8 @@ check_xchacha20_poly1305(Fallback, Entries) ->
 %% @private
 check_xchacha20_poly1305_module(crypto) ->
 	jose_xchacha20_poly1305_crypto;
+check_xchacha20_poly1305_module(libsodium) ->
+	jose_xchacha20_poly1305_libsodium;
 check_xchacha20_poly1305_module(Module) when is_atom(Module) ->
 	Module.
 

@@ -18,15 +18,19 @@
 -export([eddsa_secret_to_public/1]).
 -export([ed25519_sign/2]).
 -export([ed25519_verify/3]).
+-export([ed25519ctx_sign/3]).
+-export([ed25519ctx_verify/4]).
 -export([ed25519ph_sign/2]).
+-export([ed25519ph_sign/3]).
 -export([ed25519ph_verify/3]).
+-export([ed25519ph_verify/4]).
 -export([x25519_keypair/0]).
 -export([x25519_keypair/1]).
 -export([x25519_secret_to_public/1]).
 -export([x25519_shared_secret/2]).
 
 %% Macros
--define(unsupported, erlang:error(curve25519_unsupported)).
+-define(unsupported, erlang:error(operation_not_supported)).
 
 %%====================================================================
 %% jose_curve25519 callbacks
@@ -49,11 +53,24 @@ ed25519_sign(_Message, _SecretKey) ->
 ed25519_verify(_Signature, _Message, _PublicKey) ->
 	?unsupported.
 
+% Ed25519ctx
+ed25519ctx_sign(_Message, _SecretKey, _Context) ->
+	?unsupported.
+
+ed25519ctx_verify(_Signature, _Message, _PublicKey, _Context) ->
+	?unsupported.
+
 % Ed25519ph
 ed25519ph_sign(_Message, _SecretKey) ->
 	?unsupported.
 
+ed25519ph_sign(_Message, _SecretKey, _Context) ->
+	?unsupported.
+
 ed25519ph_verify(_Signature, _Message, _PublicKey) ->
+	?unsupported.
+
+ed25519ph_verify(_Signature, _Message, _PublicKey, _Context) ->
 	?unsupported.
 
 % X25519

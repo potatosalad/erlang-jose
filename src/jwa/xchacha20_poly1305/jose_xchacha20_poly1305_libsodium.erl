@@ -6,27 +6,32 @@
 %%% @doc
 %%%
 %%% @end
-%%% Created :  31 May 2016 by Andrew Bennett <potatosaladx@gmail.com>
+%%% Created :  31 Aug 2022 by Andrew Bennett <potatosaladx@gmail.com>
 %%%-------------------------------------------------------------------
--module(jose_chacha20_poly1305_libsodium).
+-module(jose_xchacha20_poly1305_libsodium).
 
--behaviour(jose_chacha20_poly1305).
+-behaviour(jose_xchacha20_poly1305).
 
-%% jose_chacha20_poly1305 callbacks
+%% jose_xchacha20_poly1305 callbacks
 -export([decrypt/5]).
 -export([encrypt/4]).
 -export([authenticate/3]).
 -export([verify/4]).
 
 %%====================================================================
-%% jose_chacha20_poly1305 callbacks
+%% jose_xchacha20_poly1305 callbacks
 %%====================================================================
 
 decrypt(CipherText, CipherTag, AAD, IV, CEK) ->
-	libsodium_crypto_aead_chacha20poly1305:ietf_decrypt_detached(CipherText, CipherTag, AAD, IV, CEK).
+	case libsodium_crypto_aead_xchacha20poly1305:ietf_decrypt_detached(CipherText, CipherTag, AAD, IV, CEK) of
+		-1 ->
+			error;
+		PlainText when is_binary(PlainText) ->
+			PlainText
+	end.
 
 encrypt(PlainText, AAD, IV, CEK) ->
-	libsodium_crypto_aead_chacha20poly1305:ietf_encrypt_detached(PlainText, AAD, IV, CEK).
+	libsodium_crypto_aead_xchacha20poly1305:ietf_encrypt_detached(PlainText, AAD, IV, CEK).
 
 authenticate(Message, Key, Nonce) ->
 	OTK = one_time_key(Key, Nonce),
@@ -47,4 +52,4 @@ verify(MAC, Message, Key, Nonce) ->
 
 %% @private
 one_time_key(Key, Nonce) ->
-	libsodium_crypto_stream_chacha20:ietf_xor_ic(<< 0:256 >>, Nonce, 0, Key).
+	libsodium_crypto_stream_xchacha20:xor_ic(<< 0:256 >>, Nonce, 0, Key).

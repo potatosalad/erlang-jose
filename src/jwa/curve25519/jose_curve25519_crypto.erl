@@ -19,12 +19,19 @@
 -export([eddsa_secret_to_public/1]).
 -export([ed25519_sign/2]).
 -export([ed25519_verify/3]).
+-export([ed25519ctx_sign/3]).
+-export([ed25519ctx_verify/4]).
 -export([ed25519ph_sign/2]).
+-export([ed25519ph_sign/3]).
 -export([ed25519ph_verify/3]).
+-export([ed25519ph_verify/4]).
 -export([x25519_keypair/0]).
 -export([x25519_keypair/1]).
 -export([x25519_secret_to_public/1]).
 -export([x25519_shared_secret/2]).
+
+%% Macros
+-define(FALLBACK_MOD, jose_curve25519_fallback).
 
 %%====================================================================
 %% jose_curve25519 callbacks
@@ -50,14 +57,25 @@ ed25519_sign(Message, <<Secret:32/binary, _:32/binary>>) ->
 ed25519_verify(Signature, Message, <<PublicKey:32/binary>>) ->
 	crypto:verify(eddsa, none, Message, Signature, [PublicKey, ed25519]).
 
+% Ed25519ctx
+ed25519ctx_sign(Message, SecretKey, Context) ->
+	?FALLBACK_MOD:ed25519ctx_sign(Message, SecretKey, Context).
+
+ed25519ctx_verify(Signature, Message, PublicKey, Context) ->
+	?FALLBACK_MOD:ed25519ctx_verify(Signature, Message, PublicKey, Context).
+
 % Ed25519ph
 ed25519ph_sign(Message, SecretKey) ->
-	Hash = crypto:hash(sha512, Message),
-	ed25519_sign(Hash, SecretKey).
+	?FALLBACK_MOD:ed25519ph_sign(Message, SecretKey).
+
+ed25519ph_sign(Message, SecretKey, Context) ->
+	?FALLBACK_MOD:ed25519ph_sign(Message, SecretKey, Context).
 
 ed25519ph_verify(Signature, Message, PublicKey) ->
-	Hash = crypto:hash(sha512, Message),
-	ed25519_verify(Signature, Hash, PublicKey).
+	?FALLBACK_MOD:ed25519ph_verify(Signature, Message, PublicKey).
+
+ed25519ph_verify(Signature, Message, PublicKey, Context) ->
+	?FALLBACK_MOD:ed25519ph_verify(Signature, Message, PublicKey, Context).
 
 % X25519
 x25519_keypair() ->

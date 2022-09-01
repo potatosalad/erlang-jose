@@ -2,9 +2,14 @@
 
 ## 1.12.0 (2022-??-??)
 
+* Enhancements
+  * Add support for native `crypto` operations for Ed25519 and Ed448, thanks to [@brettbeatty](https://github.com/brettbeatty); see [#123](https://github.com/potatosalad/erlang-jose/pull/123).
+  * Add support for native `crypto` operations for ChaCha20-Poly1305 and XChaCha20-Poly1305, when available.
+  * Add support for `libsodium` operations for XChaCha20-Poly1305, when available.
 * Fixes
   * Version mismatch causing `rebar3` to constantly try to update; see [#122](https://github.com/potatosalad/erlang-jose/pull/122).
   * Fix Ed25519 and Ed448 key DER/PEM encode/decode for OTP 25.
+  * Fix Ed25519ctx, Ed25519ph, Ed448, and Ed448ph when dealing with contexts so the implementation matches [IETF RFC 8032](https://datatracker.ietf.org/doc/html/rfc8032).
 
 ## 1.11.2 (2021-08-06)
 

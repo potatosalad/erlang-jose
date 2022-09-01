@@ -3,8 +3,8 @@
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
-%%% @doc Edwards-curve Digital Signature Algorithm (EdDSA) - Ed448
-%%% See https://tools.ietf.org/html/draft-irtf-cfrg-eddsa
+%%% @doc Edwards-curve Digital Signature Algorithm (EdDSA) - Ed448, Ed448ph
+%%% See https://datatracker.ietf.org/doc/html/rfc8032
 %%% @end
 %%% Created :  20 Jan 2016 by Andrew Bennett <potatosaladx@gmail.com>
 %%%-------------------------------------------------------------------
@@ -29,20 +29,23 @@
 -export([sk_to_pk/1]).
 -export([sk_to_curve448/1]).
 -export([pk_to_curve448/1]).
--export([sign/2]).
--export([sign/3]).
--export([sign_with_prehash/2]).
--export([sign_with_prehash/3]).
--export([verify/3]).
--export([verify/4]).
--export([verify_with_prehash/3]).
--export([verify_with_prehash/4]).
+-export([dom4/2]).
+-export([sign_internal/4]).
+-export([ed448_sign/2]).
+-export([ed448_sign/3]).
+-export([ed448ph_sign/2]).
+-export([ed448ph_sign/3]).
+-export([verify_internal/5]).
+-export([ed448_verify/3]).
+-export([ed448_verify/4]).
+-export([ed448ph_verify/3]).
+-export([ed448ph_verify/4]).
 
 %% Macros
 -define(math, jose_jwa_math).
 -define(inv(Z), ?math:expmod(Z, ?p - 2, ?p)). % $= z^{-1} \mod p$, for z != 0
-% 3. EdDSA Algorithm - https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-3
-% 5.2. Ed448ph and Ed448 - https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.2
+% 3. EdDSA Algorithm - https://datatracker.ietf.org/doc/html/rfc8032#section-3
+% 5.2. Ed448ph and Ed448 - https://datatracker.ietf.org/doc/html/rfc8032#section-5.2
 -define(d, -39081). % -39081
 % -define(d, 611975850744529176160423220965553317543219696871016626328968936415087860042636474891785599283666020414768678979989378147065462815545017).
 %% 1. An odd prime power p.  EdDSA uses an elliptic curve over the
@@ -72,8 +75,6 @@
 -define(HBytes, 114). % (?Hbits + 7) div 8
 % -define(H(M), jose_sha3:shake256(<< "SigEd448", 16#00, 16#00, M/binary >>, ?HBytes)).
 -define(H(M), jose_sha3:shake256(M, ?HBytes)).
--define(HdomHash(C, M), << "SigEd448", 16#01, (byte_size(C)):8/integer, C/binary, M/binary >>).
--define(HdomPure(C, M), << "SigEd448", 16#00, (byte_size(C)):8/integer, C/binary, M/binary >>).
 %% 5. An integer c that is 2 or 3.  Secret EdDSA scalars are multiples
 %%    of 2^c.  The integer c is the base-2 logarithm of the so called
 %%    cofactor.
@@ -104,6 +105,7 @@
 -define(PHBits, 512).
 -define(PHBytes, 64). % (?PHBits + 7) div 8
 -define(PH(C, M), jose_sha3:shake256(<< "SigEd448", 16#02, (byte_size(C)):8/integer, C/binary, M/binary >>, ?PHBytes)).
+% -define(PH(M), jose_sha3:shake256(M, ?PHBytes)).
 
 -define(secretbytes,    57). % (?b + 7) div 8
 -define(publickeybytes, 57). % (?b + 7) div 8
@@ -113,7 +115,7 @@
 %% API
 %%====================================================================
 
-% 5.2.1. Modular arithmetic - https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.2.1
+% 5.2.1. Modular arithmetic - https://datatracker.ietf.org/doc/html/rfc8032#section-5.2.1
 
 xrecover(Y, Xb) ->
 	YY = Y * Y,
@@ -138,7 +140,7 @@ xrecover(Y, Xb) ->
 			erlang:error(badarg)
 	end.
 
-% 5.2.2. Encoding - https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.2.2
+% 5.2.2. Encoding - https://datatracker.ietf.org/doc/html/rfc8032#section-5.2.2
 
 encode_point({X, Y, Z}) ->
 	Zi = ?inv(Z),
@@ -147,7 +149,7 @@ encode_point({X, Y, Z}) ->
 	<< YpHead:(?b - 8)/bitstring, _:1/bitstring, YpTail:7/bitstring >> = << Yp:?b/unsigned-little-integer-unit:1 >>,
 	<< YpHead/bitstring, (Xp band 1):1/integer, YpTail:7/bitstring >>.
 
-% 5.2.3. Decoding - https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.2.3
+% 5.2.3. Decoding - https://datatracker.ietf.org/doc/html/rfc8032#section-5.2.3
 
 decode_point(<< YpHead:(?b - 8)/bitstring, Xb:1, YpTail:7/bitstring >>) ->
 	<< Y:?b/unsigned-little-integer-unit:1 >> = << YpHead/bitstring, 0:1, YpTail/bitstring >>,
@@ -159,7 +161,7 @@ decode_point(<< YpHead:(?b - 8)/bitstring, Xb:1, YpTail:7/bitstring >>) ->
 			{X, Y, 1}
 	end.
 
-% 5.2.4. Point addition - https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.2.4
+% 5.2.4. Point addition - https://datatracker.ietf.org/doc/html/rfc8032#section-5.2.4
 
 edwards_add({X1, Y1, Z1}, {X2, Y2, Z2}) ->
 	Xcp = (X1 * X2) rem ?p,
@@ -220,7 +222,7 @@ normalize_point({X, Y, Z}) ->
 	Zp = ?math:mod((Z * Zi), ?p),
 	{Xp, Yp, Zp}.
 
-% 5.2.5. Key Generation - https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.2.5
+% 5.2.5. Key Generation - https://datatracker.ietf.org/doc/html/rfc8032#section-5.2.5
 
 secret() ->
 	crypto:strong_rand_bytes(?secretbytes).
@@ -264,94 +266,70 @@ pk_to_curve448(<< PK:?publickeybytes/binary >>) ->
 	% v = (2 - x^2 - y^2)*y/x^3
 	<< U:?b_curve448/unsigned-little-integer-unit:1 >>.
 
-% 5.2.6. Sign - https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.2.6
+% 5.2.6. Sign - https://datatracker.ietf.org/doc/html/rfc8032#section-5.2.6
 
-sign(M, SK = << _:?secretkeybytes/binary >>) when is_binary(M) ->
-	sign(M, SK, <<>>).
+dom4(PHFlag, C) when (PHFlag =:= 0 orelse PHFlag =:= 1) andalso is_binary(C) ->
+	<<"SigEd448", PHFlag:8, (byte_size(C)):8/integer, C/binary>>.
 
-sign(M, << Secret:?secretbytes/binary, PK:?publickeybytes/binary >>, C)
-		when is_binary(C)
-		andalso byte_size(C) =< 255
-		andalso is_binary(M) ->
+sign_internal(M, << Secret:?secretbytes/binary, PK:?publickeybytes/binary >>, PHFlag, C)
+		when is_binary(M)
+		andalso (PHFlag =:= 0 orelse PHFlag =:= 1)
+		andalso is_binary(C) ->
+	% Recalculate PK to prevent misuse as described in https://github.com/MystenLabs/ed25519-unsafe-libs
+	PK = secret_to_pk(Secret),
+	Dom4 = dom4(PHFlag, C),
 	<< HHead0:6/bitstring, _:2/bitstring, HBody:54/binary, _:1/bitstring, HKnee0:7/bitstring, _HFoot0:8/integer, HTail:57/binary >> = ?H(Secret),
 	<< HHead:8/integer >> = << HHead0:6/bitstring, 0:2/integer >>,
 	<< HKnee:8/integer >> = << 0:1/integer, HKnee0:7/bitstring >>,
 	HFoot = 0,
 	<< Scalar:?b/unsigned-little-integer-unit:1 >> = << HHead:8/integer, HBody/binary, HKnee:8/integer, HFoot:8/integer >>,
 	As = jose_jwa_x448:clamp_scalar(Scalar),
-	<< Ri:?HBits/unsigned-little-integer-unit:1 >> = ?H(?HdomPure(C, (<< HTail/binary, M/binary >>))),
+	<< Ri:?HBits/unsigned-little-integer-unit:1 >> = ?H(<< Dom4/binary, HTail/binary, M/binary >>),
 	Rs = ?math:mod(Ri, ?l),
 	R = encode_point(scalarmult(?B, Rs)),
-	<< Ki:?HBits/unsigned-little-integer-unit:1 >> = ?H(?HdomPure(C, (<< R/binary, PK/binary, M/binary >>))),
+	<< Ki:?HBits/unsigned-little-integer-unit:1 >> = ?H(<< Dom4/binary, R/binary, PK/binary, M/binary >>),
 	K = ?math:mod(Ki, ?l),
 	S = ?math:mod(Rs + (K * As), ?l),
 	<< R/binary, S:?b/unsigned-little-integer-unit:1 >>.
 
-sign_with_prehash(M, SK = << _:?secretkeybytes/binary >>) when is_binary(M) ->
-	sign_with_prehash(M, SK, <<>>).
+ed448_sign(M, SK = << _:?secretkeybytes/binary >>) when is_binary(M) ->
+	sign_internal(M, SK, 0, <<>>).
 
-sign_with_prehash(M, << Secret:?secretbytes/binary, PK:?publickeybytes/binary >>, C)
-		when is_binary(C)
-		andalso byte_size(C) =< 255
-		andalso is_binary(M) ->
-	HM = ?PH(C, M),
-	<< HHead0:6/bitstring, _:2/bitstring, HBody:54/binary, _:1/bitstring, HKnee0:7/bitstring, _HFoot0:8/integer, HTail:57/binary >> = ?H(Secret),
-	<< HHead:8/integer >> = << HHead0:6/bitstring, 0:2/integer >>,
-	<< HKnee:8/integer >> = << 0:1/integer, HKnee0:7/bitstring >>,
-	HFoot = 0,
-	<< Scalar:?b/unsigned-little-integer-unit:1 >> = << HHead:8/integer, HBody/binary, HKnee:8/integer, HFoot:8/integer >>,
-	As = jose_jwa_x448:clamp_scalar(Scalar),
-	<< Ri:?HBits/unsigned-little-integer-unit:1 >> = ?H(?HdomHash(C, (<< HTail/binary, HM/binary >>))),
-	Rs = ?math:mod(Ri, ?l),
-	R = encode_point(scalarmult(?B, Rs)),
-	<< Ki:?HBits/unsigned-little-integer-unit:1 >> = ?H(?HdomHash(C, (<< R/binary, PK/binary, HM/binary >>))),
-	K = ?math:mod(Ki, ?l),
-	S = ?math:mod(Rs + (K * As), ?l),
-	<< R/binary, S:?b/unsigned-little-integer-unit:1 >>.
+ed448_sign(M, SK = << _:?secretkeybytes/binary >>, C) when is_binary(M) andalso is_binary(C) ->
+	sign_internal(M, SK, 0, C).
 
-% 5.2.7. Verify - https://tools.ietf.org/html/draft-irtf-cfrg-eddsa#section-5.2.7
+ed448ph_sign(M, SK = << _:?secretkeybytes/binary >>) when is_binary(M) ->
+	sign_internal(?PH(<<>>, M), SK, 1, <<>>).
 
-verify(Sig, M, PK = << _:?publickeybytes/binary >>)
-		when is_binary(Sig)
-		andalso is_binary(M) ->
-	verify(Sig, M, PK, <<>>).
+ed448ph_sign(M, SK = << _:?secretkeybytes/binary >>, C) when is_binary(M) andalso is_binary(C) ->
+	sign_internal(?PH(C, M), SK, 1, C).
 
-verify(<< R:?b/bitstring, S:?b/unsigned-little-integer-unit:1 >>, M, PK = << _:?publickeybytes/binary >>, C)
-		when is_binary(C)
-		andalso byte_size(C) =< 255
-		andalso is_binary(M)
-		andalso S >= 0
-		andalso S < ?l ->
+% 5.2.7. Verify - https://datatracker.ietf.org/doc/html/rfc8032#section-5.2.7
+
+verify_internal(<< R:?b/bitstring, S:?b/unsigned-little-integer-unit:1 >>, M, PK = << _:?publickeybytes/binary >>, PHFlag, C)
+		when is_binary(M)
+		andalso (PHFlag =:= 0 orelse PHFlag =:= 1)
+		andalso is_binary(C) ->
+	Dom4 = dom4(PHFlag, C),
 	A = decode_point(PK),
-	<< Ki:?HBits/unsigned-little-integer-unit:1 >> = ?H(?HdomPure(C, (<< R/binary, PK/binary, M/binary >>))),
+	<< Ki:?HBits/unsigned-little-integer-unit:1 >> = ?H(<< Dom4/binary, R/binary, PK/binary, M/binary >>),
 	K = ?math:mod(Ki, ?l),
 	edwards_equal(scalarmult(?B, S), edwards_add(decode_point(R), scalarmult(A, K)));
-verify(Sig, M, << _:?publickeybytes/binary >>, C)
+verify_internal(Sig, M, _PK = << _:?publickeybytes/binary >>, PHFlag, C)
 		when is_binary(Sig)
-		andalso is_binary(C)
-		andalso byte_size(C) =< 255
-		andalso is_binary(M) ->
-	false.
-
-verify_with_prehash(Sig, M, PK = << _:?publickeybytes/binary >>)
-		when is_binary(Sig)
-		andalso is_binary(M) ->
-	verify_with_prehash(Sig, M, PK, <<>>).
-
-verify_with_prehash(<< R:?b/bitstring, S:?b/unsigned-little-integer-unit:1 >>, M, PK = << _:?publickeybytes/binary >>, C)
-		when is_binary(C)
-		andalso byte_size(C) =< 255
 		andalso is_binary(M)
-		andalso S >= 0
-		andalso S < ?l ->
-	HM = ?PH(C, M),
-	A = decode_point(PK),
-	<< Ki:?HBits/unsigned-little-integer-unit:1 >> = ?H(?HdomHash(C, (<< R/binary, PK/binary, HM/binary >>))),
-	K = ?math:mod(Ki, ?l),
-	edwards_equal(scalarmult(?B, S), edwards_add(decode_point(R), scalarmult(A, K)));
-verify_with_prehash(Sig, M, << _:?publickeybytes/binary >>, C)
-		when is_binary(Sig)
-		andalso is_binary(C)
-		andalso byte_size(C) =< 255
-		andalso is_binary(M) ->
+		andalso (PHFlag =:= 0 orelse PHFlag =:= 1)
+		andalso is_binary(C) ->
 	false.
+
+ed448_verify(Sig, M, PK = << _:?publickeybytes/binary >>) when is_binary(Sig) andalso is_binary(M) ->
+	verify_internal(Sig, M, PK, 0, <<>>).
+
+ed448_verify(Sig, M, PK = << _:?publickeybytes/binary >>, C) when is_binary(Sig) andalso is_binary(M) andalso is_binary(C) ->
+	verify_internal(Sig, M, PK, 0, C).
+
+ed448ph_verify(Sig, M, PK = << _:?publickeybytes/binary >>) when is_binary(Sig) andalso is_binary(M) ->
+	verify_internal(Sig, ?PH(<<>>, M), PK, 1, <<>>).
+
+ed448ph_verify(Sig, M, PK = << _:?publickeybytes/binary >>, C) when is_binary(Sig) andalso is_binary(M) andalso is_binary(C) ->
+	verify_internal(Sig, ?PH(C, M), PK, 1, C).

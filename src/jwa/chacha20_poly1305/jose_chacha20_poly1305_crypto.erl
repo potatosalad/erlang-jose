@@ -17,38 +17,45 @@
 -export([encrypt/4]).
 -export([authenticate/3]).
 -export([verify/4]).
+%% Internal API
+-export([poly1305_key_gen/2]).
+
+%% Types
+-type chacha20_key() :: <<_:256>>.
+-type chacha20_nonce() :: <<_:96>>.
+-type poly1305_otk() :: <<_:256>>.
 
 %%====================================================================
 %% jose_chacha20_poly1305 callbacks
 %%====================================================================
 
 decrypt(CipherText, CipherTag, AAD, IV, CEK) ->
-	%% NOTE: As of OTP 22, crypto does not seem to validate the CipherTag :-(
-	MacData = <<
-		AAD/binary,
-		(jose_jwa_chacha20_poly1305:pad16(AAD))/binary,
-		CipherText/binary,
-		(jose_jwa_chacha20_poly1305:pad16(CipherText))/binary,
-		(byte_size(AAD)):64/unsigned-little-integer-unit:1,
-		(byte_size(CipherText)):64/unsigned-little-integer-unit:1
-	>>,
-	case verify(CipherTag, MacData, CEK, IV) of
-		true ->
-			crypto:crypto_one_time_aead(chacha20_poly1305, CEK, IV, CipherText, AAD, CipherTag, false);
-		false ->
-			error
-	end.
+	crypto:crypto_one_time_aead(chacha20_poly1305, CEK, IV, CipherText, AAD, CipherTag, false).
 
 encrypt(PlainText, AAD, IV, CEK) ->
 	crypto:crypto_one_time_aead(chacha20_poly1305, CEK, IV, PlainText, AAD, true).
 
 authenticate(Message, Key, Nonce) ->
-	OTK = jose_jwa_chacha20_poly1305:poly1305_key_gen(Key, Nonce),
+	OTK = poly1305_key_gen(Key, Nonce),
 	jose_crypto_compat:mac(poly1305, OTK, Message).
 
 verify(MAC, Message, Key, Nonce) ->
-	Challenge = jose_jwa_chacha20_poly1305:authenticate(Message, Key, Nonce),
+	Challenge = authenticate(Message, Key, Nonce),
 	jose_jwa:constant_time_compare(MAC, Challenge).
+
+%%====================================================================
+%% Internal API Functions
+%%====================================================================
+
+-spec poly1305_key_gen(
+	Key :: chacha20_key(),
+	Nonce :: chacha20_nonce()
+) -> poly1305_otk().
+poly1305_key_gen(
+	<<Key:256/bitstring>>,
+	<<Nonce:96/bitstring>>
+) ->
+	crypto:crypto_one_time(chacha20, Key, <<0:32, Nonce:96/bits>>, <<0:256>>, true).
 
 %%%-------------------------------------------------------------------
 %%% Internal functions
