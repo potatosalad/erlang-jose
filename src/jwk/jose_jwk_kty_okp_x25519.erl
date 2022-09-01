@@ -149,6 +149,14 @@ block_encryptor(KTY, Fields=#{ <<"alg">> := <<"ECDH-1PU", _/binary>> }) ->
 		end,
 		<<"use">> => <<"enc">>
 	}));
+block_encryptor(KTY, Fields=#{ <<"alg">> := <<"ECDH-SS", _/binary>> }) ->
+	block_encryptor(KTY, maps:merge(Fields, #{
+		<<"enc">> => case jose_jwa:is_block_cipher_supported({aes_gcm, 128}) of
+			false -> <<"A128CBC-HS256">>;
+			true  -> <<"A128GCM">>
+		end,
+		<<"use">> => <<"enc">>
+	}));
 block_encryptor(KTY, Fields) ->
 	block_encryptor(KTY, maps:merge(Fields, #{
 		<<"alg">> => <<"ECDH-ES">>,

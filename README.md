@@ -465,7 +465,7 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 - [X] `A256KW`
 - [X] `C20PKW` <sup>[draft-amringer-jose-chacha](https://datatracker.ietf.org/doc/html/draft-amringer-jose-chacha-02)</sup>
 - [X] `dir`
-- [X] `ECDH-1PU` <sup>non-standard, [draft-madden-jose-ecdh-1pu](https://datatracker.ietf.org/doc/html/draft-madden-jose-ecdh-1pu-04)</sup>
+- [X] `ECDH-1PU` <sup>[draft-madden-jose-ecdh-1pu](https://datatracker.ietf.org/doc/html/draft-madden-jose-ecdh-1pu-04)</sup>
 - [X] `ECDH-1PU+A128GCMKW` <sup>non-standard, [draft-madden-jose-ecdh-1pu](https://datatracker.ietf.org/doc/html/draft-madden-jose-ecdh-1pu-04)</sup>
 - [X] `ECDH-1PU+A192GCMKW` <sup>non-standard, [draft-madden-jose-ecdh-1pu](https://datatracker.ietf.org/doc/html/draft-madden-jose-ecdh-1pu-04)</sup>
 - [X] `ECDH-1PU+A256GCMKW` <sup>non-standard, [draft-madden-jose-ecdh-1pu](https://datatracker.ietf.org/doc/html/draft-madden-jose-ecdh-1pu-04)</sup>
@@ -483,6 +483,15 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 - [X] `ECDH-ES+A256KW`
 - [X] `ECDH-ES+C20PKW` <sup>[draft-amringer-jose-chacha](https://datatracker.ietf.org/doc/html/draft-amringer-jose-chacha-02)</sup>
 - [X] `ECDH-ES+XC20PKW` <sup>[draft-amringer-jose-chacha](https://datatracker.ietf.org/doc/html/draft-amringer-jose-chacha-02)</sup>
+- [X] `ECDH-SS` <sup>[draft-amringer-jose-ecdh-ss](https://datatracker.ietf.org/doc/html/draft-amringer-jose-ecdh-ss-00)</sup>
+- [X] `ECDH-SS+A128GCMKW` <sup>non-standard, [draft-amringer-jose-ecdh-ss](https://datatracker.ietf.org/doc/html/draft-amringer-jose-ecdh-ss-00)</sup>
+- [X] `ECDH-SS+A192GCMKW` <sup>non-standard, [draft-amringer-jose-ecdh-ss](https://datatracker.ietf.org/doc/html/draft-amringer-jose-ecdh-ss-00)</sup>
+- [X] `ECDH-SS+A256GCMKW` <sup>non-standard, [draft-amringer-jose-ecdh-ss](https://datatracker.ietf.org/doc/html/draft-amringer-jose-ecdh-ss-00)</sup>
+- [X] `ECDH-SS+A128KW` <sup>[draft-amringer-jose-ecdh-ss](https://datatracker.ietf.org/doc/html/draft-amringer-jose-ecdh-ss-00)</sup>
+- [X] `ECDH-SS+A192KW` <sup>[draft-amringer-jose-ecdh-ss](https://datatracker.ietf.org/doc/html/draft-amringer-jose-ecdh-ss-00)</sup>
+- [X] `ECDH-SS+A256KW` <sup>[draft-amringer-jose-ecdh-ss](https://datatracker.ietf.org/doc/html/draft-amringer-jose-ecdh-ss-00)</sup>
+- [X] `ECDH-SS+C20PKW` <sup>[draft-amringer-jose-chacha](https://datatracker.ietf.org/doc/html/draft-amringer-jose-chacha-02), [draft-amringer-jose-ecdh-ss](https://datatracker.ietf.org/doc/html/draft-amringer-jose-ecdh-ss-00)</sup>
+- [X] `ECDH-SS+XC20PKW` <sup>[draft-amringer-jose-chacha](https://datatracker.ietf.org/doc/html/draft-amringer-jose-chacha-02), [draft-amringer-jose-ecdh-ss](https://datatracker.ietf.org/doc/html/draft-amringer-jose-ecdh-ss-00)</sup>
 - [X] `PBES2-HS256+A128GCMKW` <sup>non-standard</sup>
 - [X] `PBES2-HS384+A192GCMKW` <sup>non-standard</sup>
 - [X] `PBES2-HS512+A256GCMKW` <sup>non-standard</sup>

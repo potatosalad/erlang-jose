@@ -54,6 +54,7 @@
 -define(ALG_DIR_MODULE,      jose_jwe_alg_dir).
 -define(ALG_ECDH_1PU_MODULE, jose_jwe_alg_ecdh_1pu).
 -define(ALG_ECDH_ES_MODULE,  jose_jwe_alg_ecdh_es).
+-define(ALG_ECDH_SS_MODULE,  jose_jwe_alg_ecdh_ss).
 -define(ALG_PBES2_MODULE,    jose_jwe_alg_pbes2).
 -define(ALG_RSA_MODULE,      jose_jwe_alg_rsa).
 -define(ENC_AES_MODULE,      jose_jwe_enc_aes).
@@ -114,6 +115,8 @@ from_map({JWE, Modules, Map=#{ <<"alg">> := << "ECDH-1PU", _/binary >> }}) ->
 	from_map({JWE, Modules#{ alg => ?ALG_ECDH_1PU_MODULE }, Map});
 from_map({JWE, Modules, Map=#{ <<"alg">> := << "ECDH-ES", _/binary >> }}) ->
 	from_map({JWE, Modules#{ alg => ?ALG_ECDH_ES_MODULE }, Map});
+from_map({JWE, Modules, Map=#{ <<"alg">> := << "ECDH-SS", _/binary >> }}) ->
+	from_map({JWE, Modules#{ alg => ?ALG_ECDH_SS_MODULE }, Map});
 from_map({JWE, Modules, Map=#{ <<"alg">> := << "PBES2", _/binary >> }}) ->
 	from_map({JWE, Modules#{ alg => ?ALG_PBES2_MODULE }, Map});
 from_map({JWE, Modules, Map=#{ <<"alg">> := << "RSA", _/binary >> }}) ->

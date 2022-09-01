@@ -15,6 +15,15 @@ defmodule JOSE.JWE do
     * `"A192KW"`
     * `"A256KW"`
     * `"dir"`
+    * `"ECDH-1PU"`
+    * `"ECDH-1PU+A128GCMKW"`
+    * `"ECDH-1PU+A192GCMKW"`
+    * `"ECDH-1PU+A256GCMKW"`
+    * `"ECDH-1PU+A128KW"`
+    * `"ECDH-1PU+A192KW"`
+    * `"ECDH-1PU+A256KW"`
+    * `"ECDH-1PU+C20PKW"`
+    * `"ECDH-1PU+XC20PKW"`
     * `"ECDH-ES"`
     * `"ECDH-ES+A128GCMKW"`
     * `"ECDH-ES+A192GCMKW"`
@@ -24,9 +33,23 @@ defmodule JOSE.JWE do
     * `"ECDH-ES+A256KW"`
     * `"ECDH-ES+C20PKW"`
     * `"ECDH-ES+XC20PKW"`
+    * `"ECDH-SS"`
+    * `"ECDH-SS+A128GCMKW"`
+    * `"ECDH-SS+A192GCMKW"`
+    * `"ECDH-SS+A256GCMKW"`
+    * `"ECDH-SS+A128KW"`
+    * `"ECDH-SS+A192KW"`
+    * `"ECDH-SS+A256KW"`
+    * `"ECDH-SS+C20PKW"`
+    * `"ECDH-SS+XC20PKW"`
+    * `"PBES2-HS256+A128GCMKW"`
+    * `"PBES2-HS384+A192GCMKW"`
+    * `"PBES2-HS512+A256GCMKW"`
     * `"PBES2-HS256+A128KW"`
     * `"PBES2-HS384+A192KW"`
     * `"PBES2-HS512+A256KW"`
+    * `"PBES2-HS512+C20PKW"`
+    * `"PBES2-HS512+XC20PKW"`
     * `"RSA1_5"`
     * `"RSA-OAEP"`
     * `"RSA-OAEP-256"`

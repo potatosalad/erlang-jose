@@ -9,16 +9,17 @@ dep_jsone = hex 1.7.0
 dep_jsx = hex 3.1.0
 # dep_keccakf1600 = hex 3.0.0
 dep_libdecaf = hex 2.1.1
-dep_libsodium = hex 2.0.0
+dep_libsodium = hex 2.0.1
 dep_ojson = hex 1.0.0
 dep_thoas = hex 0.4.0
 dep_proper = git https://github.com/proper-testing/proper.git bfd7d862dd5082eeca65c192a7021d0e4de5973e
 
 include erlang.mk
 
-.PHONY: docker-build docker-load docker-setup docker-save docker-shell docker-test
+.PHONY: docker-build docker-load docker-setup docker-save docker-shell docker-test docker-test-build
 
 DOCKER_OTP_VERSION ?= 25.0.4-alpine-3.16.1
+CT_SUITES ?=
 
 docker-build::
 	$(gen_verbose) docker build \
@@ -50,7 +51,23 @@ docker-shell::
 		--volume "$(shell pwd)":"/build/jose" --rm --interactive --tty "${DOCKER_OTP_VERSION}" \
 		/bin/bash -l
 
+ifeq ($(CT_SUITES),)
 docker-test::
 	$(gen_verbose) docker run \
-		--volume "$(shell pwd)":"/build/jose" "${DOCKER_OTP_VERSION}" \
+		--volume "$(shell pwd)":"/build/jose" \
+		"${DOCKER_OTP_VERSION}" \
 		sh -c 'cd jose && make ct'
+else
+docker-test::
+	$(gen_verbose) docker run \
+		--volume "$(shell pwd)":"/build/jose" \
+		-e CT_SUITES="${CT_SUITES}" \
+		"${DOCKER_OTP_VERSION}" \
+		sh -c 'cd jose && make ct'
+endif
+
+docker-test-build::
+	$(gen_verbose) docker run \
+		--volume "$(shell pwd)":"/build/jose" \
+		"${DOCKER_OTP_VERSION}" \
+		sh -c 'cd jose && make test-build'

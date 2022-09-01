@@ -118,6 +118,10 @@
 -export([box_encrypt_ecdh_es/2]).
 -export([box_encrypt_ecdh_es/3]).
 -export([box_encrypt_ecdh_es/4]).
+-export([box_decrypt_ecdh_ss/2]).
+-export([box_encrypt_ecdh_ss/2]).
+-export([box_encrypt_ecdh_ss/3]).
+-export([box_encrypt_ecdh_ss/4]).
 -export([generate_key/1]).
 -export([merge/2]).
 -export([shared_secret/2]).
@@ -854,6 +858,90 @@ box_encrypt_ecdh_es(PlainText, JWEMap, VStaticPublicKey, UEphemeralSecretKey) wh
 box_encrypt_ecdh_es(PlainText, JWE, VStaticPublicKey, UEphemeralSecretKey) ->
 	box_encrypt_ecdh_es(PlainText, JWE, from(VStaticPublicKey), from(UEphemeralSecretKey)).
 
+box_decrypt_ecdh_ss(Encrypted, VStaticSecretKey0) ->
+	VStaticSecretKey =
+		case VStaticSecretKey0 of
+			#jose_jwk{} ->
+				VStaticSecretKey0;
+			_ ->
+				from(VStaticSecretKey0)
+		end,
+	jose_jwe:block_decrypt(VStaticSecretKey, Encrypted).
+
+%% @doc Generates a new static secret key based on receiver public key curve.
+box_encrypt_ecdh_ss(PlainText, VStaticPublicKey0) ->
+	VStaticPublicKey =
+		case VStaticPublicKey0 of
+			#jose_jwk{} ->
+				VStaticPublicKey0;
+			_ ->
+				from(VStaticPublicKey0)
+		end,
+	UStaticSecretKey = generate_key(VStaticPublicKey),
+	{box_encrypt_ecdh_ss(PlainText, VStaticPublicKey, UStaticSecretKey), UStaticSecretKey}.
+
+box_encrypt_ecdh_ss(PlainText, VStaticPublicKey0, UStaticSecretKey0) ->
+	VStaticPublicKey =
+		case VStaticPublicKey0 of
+			#jose_jwk{} ->
+				VStaticPublicKey0;
+			_ ->
+				from(VStaticPublicKey0)
+		end,
+	UStaticSecretKey =
+		case UStaticSecretKey0 of
+			#jose_jwk{} ->
+				UStaticSecretKey0;
+			_ ->
+				from(UStaticSecretKey0)
+		end,
+	UStaticPublicKey0 = #jose_jwk{fields=Fields0} = to_public(UStaticSecretKey),
+	Fields1 = maps:put(<<"spk">>, element(2, to_map(UStaticPublicKey0)), Fields0),
+	Fields2 =
+		case Fields1 of
+			#{ <<"alg">> := _ } ->
+				Fields1;
+			_ ->
+				maps:put(<<"alg">>, <<"ECDH-SS">>, Fields1)
+		end,
+	UStaticPublicKey = UStaticPublicKey0#jose_jwk{fields=Fields2},
+	JWEFields = block_encryptor(UStaticPublicKey),
+	box_encrypt_ecdh_ss(PlainText, JWEFields, VStaticPublicKey, UStaticSecretKey).
+
+box_encrypt_ecdh_ss(PlainText, JWE0, VStaticPublicKey0, UStaticSecretKey0) ->
+	VStaticPublicKey =
+		case VStaticPublicKey0 of
+			#jose_jwk{} ->
+				VStaticPublicKey0;
+			_ ->
+				from(VStaticPublicKey0)
+		end,
+	UStaticSecretKey =
+		case UStaticSecretKey0 of
+			#jose_jwk{} ->
+				UStaticSecretKey0;
+			_ ->
+				from(UStaticSecretKey0)
+		end,
+	JWE =
+		case JWE0 of
+			#jose_jwe{} ->
+				JWE0;
+			{JWEModules, JWEMap=#{ <<"apu">> := _, <<"spk">> := _ }} ->
+				jose_jwe:from({JWEModules, JWEMap});
+			{JWEModules, JWEMap0} when is_map(JWEMap0) ->
+				Keys = [<<"apu">>, <<"apv">>, <<"spk">>] -- maps:keys(JWEMap0),
+				JWEMap1 = normalize_ecdh_ss(Keys, JWEMap0, VStaticPublicKey, UStaticSecretKey),
+				jose_jwe:from({JWEModules, JWEMap1});
+			JWEMap0 when is_map(JWEMap0) ->
+				Keys = [<<"apu">>, <<"apv">>, <<"spk">>] -- maps:keys(JWEMap0),
+				JWEMap1 = normalize_ecdh_ss(Keys, JWEMap0, VStaticPublicKey, UStaticSecretKey),
+				jose_jwe:from_map(JWEMap1);
+			_ ->
+				jose_jwe:from(JWE0)
+		end,
+	jose_jwe:block_encrypt({VStaticPublicKey, UStaticSecretKey}, PlainText, JWE).
+
 generate_key(#jose_jwk{kty={Module, KTY}, fields=Fields}) ->
 	{NewKTY, NewFields} = Module:generate_key(KTY, Fields),
 	#jose_jwk{kty={Module, NewKTY}, fields=NewFields};
@@ -1009,6 +1097,19 @@ normalize_ecdh_es([<<"epk">> | Keys], Map, VStaticPublicKey, UEphemeralSecretKey
 	{_, UEphemeralPublicKeyMap} = to_public_map(UEphemeralSecretKey),
 	normalize_ecdh_es(Keys, Map#{ <<"epk">> => UEphemeralPublicKeyMap }, VStaticPublicKey, UEphemeralSecretKey);
 normalize_ecdh_es([], Map, _, _) ->
+	Map.
+
+%% @private
+normalize_ecdh_ss([<<"apu">> | Keys], Map, VStaticPublicKey, UStaticSecretKey) ->
+	normalize_ecdh_ss(Keys, Map#{ <<"apu">> => jose_jwa_base64url:encode(crypto:strong_rand_bytes(64)) }, VStaticPublicKey, UStaticSecretKey);
+normalize_ecdh_ss([<<"apv">> | Keys], Map, VStaticPublicKey=#jose_jwk{fields=#{ <<"kid">> := KID }}, UStaticSecretKey) ->
+	normalize_ecdh_ss(Keys, Map#{ <<"apv">> => KID }, VStaticPublicKey, UStaticSecretKey);
+normalize_ecdh_ss([<<"apv">> | Keys], Map, VStaticPublicKey, UStaticSecretKey) ->
+	normalize_ecdh_ss(Keys, Map#{ <<"apv">> => thumbprint(VStaticPublicKey) }, VStaticPublicKey, UStaticSecretKey);
+normalize_ecdh_ss([<<"spk">> | Keys], Map, VStaticPublicKey, UStaticSecretKey) ->
+	{_, UStaticPublicKeyMap} = to_public_map(UStaticSecretKey),
+	normalize_ecdh_ss(Keys, Map#{ <<"spk">> => UStaticPublicKeyMap }, VStaticPublicKey, UStaticSecretKey);
+normalize_ecdh_ss([], Map, _, _) ->
 	Map.
 
 %% @private
