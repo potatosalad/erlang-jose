@@ -11,27 +11,38 @@
 %%%-------------------------------------------------------------------
 -module(jose_curve25519_crypto).
 
+-behaviour(jose_provider).
 -behaviour(jose_curve25519).
 
+%% jose_provider callbacks
+-export([provider_info/0]).
 %% jose_curve25519 callbacks
--export([eddsa_keypair/0]).
--export([eddsa_keypair/1]).
--export([eddsa_secret_to_public/1]).
--export([ed25519_sign/2]).
--export([ed25519_verify/3]).
--export([ed25519ctx_sign/3]).
--export([ed25519ctx_verify/4]).
--export([ed25519ph_sign/2]).
--export([ed25519ph_sign/3]).
--export([ed25519ph_verify/3]).
--export([ed25519ph_verify/4]).
--export([x25519_keypair/0]).
--export([x25519_keypair/1]).
--export([x25519_secret_to_public/1]).
--export([x25519_shared_secret/2]).
+-export([
+	eddsa_keypair/0,
+	eddsa_keypair/1,
+	eddsa_secret_to_public/1,
+	ed25519_sign/2,
+	ed25519_verify/3,
+	x25519_keypair/0,
+	x25519_keypair/1,
+	x25519_secret_to_public/1,
+	x25519_shared_secret/2
+]).
 
-%% Macros
--define(FALLBACK_MOD, jose_curve25519_fallback).
+%%====================================================================
+%% jose_provider callbacks
+%%====================================================================
+
+-spec provider_info() -> jose_provider:info().
+provider_info() ->
+	#{
+		behaviour => jose_curve25519,
+		priority => high,
+		requirements => [
+			{app, crypto},
+			crypto
+		]
+	}.
 
 %%====================================================================
 %% jose_curve25519 callbacks
@@ -56,26 +67,6 @@ ed25519_sign(Message, <<Secret:32/binary, _:32/binary>>) ->
 
 ed25519_verify(Signature, Message, <<PublicKey:32/binary>>) ->
 	crypto:verify(eddsa, none, Message, Signature, [PublicKey, ed25519]).
-
-% Ed25519ctx
-ed25519ctx_sign(Message, SecretKey, Context) ->
-	?FALLBACK_MOD:ed25519ctx_sign(Message, SecretKey, Context).
-
-ed25519ctx_verify(Signature, Message, PublicKey, Context) ->
-	?FALLBACK_MOD:ed25519ctx_verify(Signature, Message, PublicKey, Context).
-
-% Ed25519ph
-ed25519ph_sign(Message, SecretKey) ->
-	?FALLBACK_MOD:ed25519ph_sign(Message, SecretKey).
-
-ed25519ph_sign(Message, SecretKey, Context) ->
-	?FALLBACK_MOD:ed25519ph_sign(Message, SecretKey, Context).
-
-ed25519ph_verify(Signature, Message, PublicKey) ->
-	?FALLBACK_MOD:ed25519ph_verify(Signature, Message, PublicKey).
-
-ed25519ph_verify(Signature, Message, PublicKey, Context) ->
-	?FALLBACK_MOD:ed25519ph_verify(Signature, Message, PublicKey, Context).
 
 % X25519
 x25519_keypair() ->

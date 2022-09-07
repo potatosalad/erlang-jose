@@ -365,6 +365,14 @@ cbc_block_encrypt(St, RoundKey, IV, << Block:128/bitstring, PlainText/bitstring 
 %%%-------------------------------------------------------------------
 
 %% @private
+ctr_from_gcm_key_len(128) ->
+	{fun jose_aes_ctr:aes_128_ctr_stream_init/2, fun jose_aes_ctr:aes_128_ctr_stream_exor/2, fun jose_aes_ctr:aes_128_ctr_stream_final/1};
+ctr_from_gcm_key_len(192) ->
+	{fun jose_aes_ctr:aes_192_ctr_stream_init/2, fun jose_aes_ctr:aes_192_ctr_stream_exor/2, fun jose_aes_ctr:aes_192_ctr_stream_final/1};
+ctr_from_gcm_key_len(256) ->
+	{fun jose_aes_ctr:aes_256_ctr_stream_init/2, fun jose_aes_ctr:aes_256_ctr_stream_exor/2, fun jose_aes_ctr:aes_256_ctr_stream_final/1}.
+
+%% @private
 gcm_block_decrypt(H, K, IV, A, C, T) ->
 	Y0 = case bit_size(IV) of
 		96 ->
@@ -373,9 +381,9 @@ gcm_block_decrypt(H, K, IV, A, C, T) ->
 			gcm_ghash(H, <<>>, IV)
 	end,
 	KeyLen = bit_size(K),
-	Cipher = list_to_atom("aes_" ++ integer_to_list(KeyLen) ++ "_ctr"),
-	S0 = jose_crypto_compat:crypto_init(Cipher, K, Y0, true),
-	{S1, EKY0xor} = jose_crypto_compat:crypto_update_encrypt(S0, Y0),
+	Ctr = {CtrInit, CtrUpdate, _CtrFinal} = ctr_from_gcm_key_len(KeyLen),
+	S0 = CtrInit(Y0, K),
+	{S1, EKY0xor} = CtrUpdate(S0, Y0),
 	EKY0 = crypto:exor(EKY0xor, Y0),
 	<< Y0int:128/unsigned-big-integer-unit:1 >> = Y0,
 	Y1 = << (Y0int + 1):128/unsigned-big-integer-unit:1 >>,
@@ -386,7 +394,7 @@ gcm_block_decrypt(H, K, IV, A, C, T) ->
 		false ->
 			error;
 		true ->
-			P = gcm_exor(S1, Y1, C, <<>>),
+			P = gcm_exor(Ctr, S1, Y1, C, <<>>),
 			P
 	end.
 
@@ -399,32 +407,34 @@ gcm_block_encrypt(H, K, IV, A, P) ->
 			gcm_ghash(H, <<>>, IV)
 	end,
 	KeyLen = bit_size(K),
-	Cipher = list_to_atom("aes_" ++ integer_to_list(KeyLen) ++ "_ctr"),
-	S0 = jose_crypto_compat:crypto_init(Cipher, K, Y0, true),
-	{S1, EKY0xor} = jose_crypto_compat:crypto_update_encrypt(S0, Y0),
+	Ctr = {CtrInit, CtrUpdate, _CtrFinal} = ctr_from_gcm_key_len(KeyLen),
+	S0 = CtrInit(Y0, K),
+	{S1, EKY0xor} = CtrUpdate(S0, Y0),
 	EKY0 = crypto:exor(EKY0xor, Y0),
 	<< Y0int:128/unsigned-big-integer-unit:1 >> = Y0,
 	Y1 = << (Y0int + 1):128/unsigned-big-integer-unit:1 >>,
-	C = gcm_exor(S1, Y1, P, <<>>),
+	C = gcm_exor(Ctr, S1, Y1, P, <<>>),
 	GHASH = gcm_ghash(H, A, C),
 	T = crypto:exor(GHASH, EKY0),
 	{C, T}.
 
 %% @private
-gcm_exor(_S, _Y, <<>>, C) ->
+gcm_exor(_Ctr = {_CtrInit, _CtrUpdate, CtrFinal}, S, _Y, <<>>, C) ->
+	<<>> = CtrFinal(S),
 	C;
-gcm_exor(S0, Y0, << B:128/bitstring, P/bitstring >>, C0) ->
-	{S1, EKY0xor} = jose_crypto_compat:crypto_update_encrypt(S0, Y0),
+gcm_exor(Ctr = {_CtrInit, CtrUpdate, _CtrFinal}, S0, Y0, << B:128/bitstring, P/bitstring >>, C0) ->
+	{S1, EKY0xor} = CtrUpdate(S0, Y0),
 	EKY0 = crypto:exor(EKY0xor, Y0),
 	<< Y0int:128/unsigned-big-integer-unit:1 >> = Y0,
 	Y1 = << (Y0int + 1):128/unsigned-big-integer-unit:1 >>,
 	C1 = << C0/binary, (crypto:exor(B, EKY0))/binary >>,
-	gcm_exor(S1, Y1, P, C1);
-gcm_exor(S0, Y0, P, C0) ->
+	gcm_exor(Ctr, S1, Y1, P, C1);
+gcm_exor(_Ctr = {_CtrInit, CtrUpdate, CtrFinal}, S0, Y0, P, C0) ->
 	PBits = bit_size(P),
-	{_S1, EKY0xor} = jose_crypto_compat:crypto_update_encrypt(S0, Y0),
+	{S1, EKY0xor} = CtrUpdate(S0, Y0),
 	<< EKY0:PBits/bitstring, _/bitstring >> = crypto:exor(EKY0xor, Y0),
 	C1 = << C0/binary, (crypto:exor(P, EKY0))/binary >>,
+	<<>> = CtrFinal(S1),
 	C1.
 
 %% @private

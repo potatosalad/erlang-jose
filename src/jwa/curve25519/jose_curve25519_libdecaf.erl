@@ -10,24 +10,44 @@
 %%%-------------------------------------------------------------------
 -module(jose_curve25519_libdecaf).
 
+-behaviour(jose_provider).
 -behaviour(jose_curve25519).
 
+%% jose_provider callbacks
+-export([provider_info/0]).
 %% jose_curve25519 callbacks
--export([eddsa_keypair/0]).
--export([eddsa_keypair/1]).
--export([eddsa_secret_to_public/1]).
--export([ed25519_sign/2]).
--export([ed25519_verify/3]).
--export([ed25519ctx_sign/3]).
--export([ed25519ctx_verify/4]).
--export([ed25519ph_sign/2]).
--export([ed25519ph_sign/3]).
--export([ed25519ph_verify/3]).
--export([ed25519ph_verify/4]).
--export([x25519_keypair/0]).
--export([x25519_keypair/1]).
--export([x25519_secret_to_public/1]).
--export([x25519_shared_secret/2]).
+-export([
+	eddsa_keypair/0,
+	eddsa_keypair/1,
+	eddsa_secret_to_public/1,
+	ed25519_sign/2,
+	ed25519_verify/3,
+	ed25519ctx_sign/3,
+	ed25519ctx_verify/4,
+	ed25519ph_sign/2,
+	ed25519ph_sign/3,
+	ed25519ph_verify/3,
+	ed25519ph_verify/4,
+	x25519_keypair/0,
+	x25519_keypair/1,
+	x25519_secret_to_public/1,
+	x25519_shared_secret/2
+]).
+
+%%====================================================================
+%% jose_provider callbacks
+%%====================================================================
+
+-spec provider_info() -> jose_provider:info().
+provider_info() ->
+	#{
+		behaviour => jose_curve25519,
+		priority => normal,
+		requirements => [
+			{app, libdecaf},
+			libdecaf_curve25519
+		]
+	}.
 
 %%====================================================================
 %% jose_curve25519 callbacks

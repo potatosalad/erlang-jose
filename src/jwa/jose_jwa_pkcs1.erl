@@ -13,36 +13,40 @@
 -include_lib("public_key/include/public_key.hrl").
 
 %% Public Key API
--export([decrypt_private/3]).
--export([encrypt_public/3]).
--export([sign/4]).
--export([verify/5]).
+-export([
+	decrypt_private/3,
+	encrypt_public/3,
+	sign/4,
+	verify/5
+]).
 %% API
--export([eme_oaep_decode/4]).
--export([eme_oaep_encode/5]).
--export([eme_pkcs1_decode/2]).
--export([eme_pkcs1_encode/2]).
--export([emsa_pkcs1_encode/4]).
--export([emsa_pss_encode/3]).
--export([emsa_pss_encode/4]).
--export([emsa_pss_verify/4]).
--export([emsa_pss_verify/5]).
--export([mgf1/3]).
--export([rsaes_oaep_decrypt/3]).
--export([rsaes_oaep_decrypt/4]).
--export([rsaes_oaep_encrypt/3]).
--export([rsaes_oaep_encrypt/4]).
--export([rsaes_oaep_encrypt/5]).
--export([rsaes_pkcs1_decrypt/2]).
--export([rsaes_pkcs1_encrypt/2]).
--export([rsassa_pkcs1_sign/3]).
--export([rsassa_pkcs1_sign/4]).
--export([rsassa_pkcs1_verify/4]).
--export([rsassa_pkcs1_verify/5]).
--export([rsassa_pss_sign/3]).
--export([rsassa_pss_sign/4]).
--export([rsassa_pss_verify/4]).
--export([rsassa_pss_verify/5]).
+-export([
+	eme_oaep_decode/4,
+	eme_oaep_encode/5,
+	eme_pkcs1_decode/2,
+	eme_pkcs1_encode/2,
+	emsa_pkcs1_encode/4,
+	emsa_pss_encode/3,
+	emsa_pss_encode/4,
+	emsa_pss_verify/4,
+	emsa_pss_verify/5,
+	mgf1/3,
+	rsaes_oaep_decrypt/3,
+	rsaes_oaep_decrypt/4,
+	rsaes_oaep_encrypt/3,
+	rsaes_oaep_encrypt/4,
+	rsaes_oaep_encrypt/5,
+	rsaes_pkcs1_decrypt/2,
+	rsaes_pkcs1_encrypt/2,
+	rsassa_pkcs1_sign/3,
+	rsassa_pkcs1_sign/4,
+	rsassa_pkcs1_verify/4,
+	rsassa_pkcs1_verify/5,
+	rsassa_pss_sign/3,
+	rsassa_pss_sign/4,
+	rsassa_pss_verify/4,
+	rsassa_pss_verify/5
+]).
 
 %% Types
 -type rsa_digest_type() :: 'md5' | 'sha' | 'sha224' | 'sha256' | 'sha384' | 'sha512'.

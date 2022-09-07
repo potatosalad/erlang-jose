@@ -11,35 +11,39 @@
 -module(jose_sup).
 -behaviour(supervisor).
 
--define(SERVER, ?MODULE).
+-define(SUPERVISOR, ?MODULE).
 
-%% API
+%% OTP API
 -export([start_link/0]).
-
-%% Supervisor callbacks
+%% supervisor callbacks
 -export([init/1]).
 
-%% Helper macro for declaring children of supervisor
--define(CHILD(I, Type), {I, {I, start_link, []}, permanent, 5000, Type, [I]}).
-
 %%%===================================================================
-%%% API functions
+%%% OTP API functions
 %%%===================================================================
 
+-spec start_link() -> {ok, pid()} | ignore | {error, supervisor:startlink_err()}.
 start_link() ->
-	supervisor:start_link({local, ?SERVER}, ?MODULE, []).
+	supervisor:start_link({local, ?SUPERVISOR}, ?MODULE, []).
 
 %%%===================================================================
-%%% Supervisor callbacks
+%%% supervisor callbacks
 %%%===================================================================
 
-%% @private
+-spec init([]) -> {ok, {SupFlags, [ChildSpec]}} | ignore
+	when SupFlags :: supervisor:sup_flags(), ChildSpec :: supervisor:child_spec().
 init([]) ->
 	ChildSpecs = [
-		?CHILD(jose_server, worker)
+		jose_support_check_sup:child_spec(),
+		jose_support_resolve_sup:child_spec(),
+		jose_support_statem:child_spec()
 	],
-	Restart = {one_for_one, 10, 10},
-	{ok, {Restart, ChildSpecs}}.
+	SupFlags = #{
+		strategy => rest_for_one,
+		intensity => 5,
+		period => 10
+	},
+	{ok, {SupFlags, ChildSpecs}}.
 
 %%%-------------------------------------------------------------------
 %%% Internal functions

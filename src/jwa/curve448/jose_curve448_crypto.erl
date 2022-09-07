@@ -11,27 +11,38 @@
 %%%-------------------------------------------------------------------
 -module(jose_curve448_crypto).
 
+-behaviour(jose_provider).
 -behaviour(jose_curve448).
 
+%% jose_provider callbacks
+-export([provider_info/0]).
 %% jose_curve448 callbacks
--export([eddsa_keypair/0]).
--export([eddsa_keypair/1]).
--export([eddsa_secret_to_public/1]).
--export([ed448_sign/2]).
--export([ed448_sign/3]).
--export([ed448_verify/3]).
--export([ed448_verify/4]).
--export([ed448ph_sign/2]).
--export([ed448ph_sign/3]).
--export([ed448ph_verify/3]).
--export([ed448ph_verify/4]).
--export([x448_keypair/0]).
--export([x448_keypair/1]).
--export([x448_secret_to_public/1]).
--export([x448_shared_secret/2]).
+-export([
+	eddsa_keypair/0,
+	eddsa_keypair/1,
+	eddsa_secret_to_public/1,
+	ed448_sign/2,
+	ed448_verify/3,
+	x448_keypair/0,
+	x448_keypair/1,
+	x448_secret_to_public/1,
+	x448_shared_secret/2
+]).
 
-%% Macros
--define(FALLBACK_MOD, jose_curve448_fallback).
+%%====================================================================
+%% jose_provider callbacks
+%%====================================================================
+
+-spec provider_info() -> jose_provider:info().
+provider_info() ->
+	#{
+		behaviour => jose_curve448,
+		priority => high,
+		requirements => [
+			{app, crypto},
+			crypto
+		]
+	}.
 
 %%====================================================================
 %% jose_curve448 callbacks
@@ -54,27 +65,8 @@ eddsa_secret_to_public(<<Secret:57/binary>>) ->
 ed448_sign(Message, <<Secret:57/binary, _:57/binary>>) ->
 	crypto:sign(eddsa, none, Message, [Secret, ed448]).
 
-ed448_sign(Message, SecretKey, Context) ->
-	?FALLBACK_MOD:ed448_sign(Message, SecretKey, Context).
-
 ed448_verify(Signature, Message, <<PublicKey:57/binary>>) ->
 	crypto:verify(eddsa, none, Message, Signature, [PublicKey, ed448]).
-
-ed448_verify(Signature, Message, PublicKey, Context) ->
-	?FALLBACK_MOD:ed448_verify(Signature, Message, PublicKey, Context).
-
-% Ed448ph
-ed448ph_sign(Message, SecretKey) ->
-	?FALLBACK_MOD:ed448ph_sign(Message, SecretKey).
-
-ed448ph_sign(Message, SecretKey, Context) ->
-	?FALLBACK_MOD:ed448ph_sign(Message, SecretKey, Context).
-
-ed448ph_verify(Signature, Message, PublicKey) ->
-	?FALLBACK_MOD:ed448ph_verify(Signature, Message, PublicKey).
-
-ed448ph_verify(Signature, Message, PublicKey, Context) ->
-	?FALLBACK_MOD:ed448ph_verify(Signature, Message, PublicKey, Context).
 
 % X448
 x448_keypair() ->

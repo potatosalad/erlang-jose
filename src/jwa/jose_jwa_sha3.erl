@@ -10,25 +10,88 @@
 %%%-------------------------------------------------------------------
 -module(jose_jwa_sha3).
 
-%% API
--export([rol64/2]).
--export([load64/1]).
--export([store64/1]).
--export([keccak_f_1600/1]).
--export([load_lanes/1]).
--export([store_lanes/1]).
--export([keccak/5]).
--export([keccak_absorb/4]).
--export([keccak_pad/4]).
--export([shake128/2]).
--export([shake256/2]).
--export([sha3_224/1]).
--export([sha3_256/1]).
--export([sha3_384/1]).
--export([sha3_512/1]).
+-behaviour(jose_provider).
+-behaviour(jose_sha3).
+
+%% jose_provider callbacks
+-export([provider_info/0]).
+%% jose_sha3 callbacks
+-export([
+	sha3_224/1,
+	sha3_256/1,
+	sha3_384/1,
+	sha3_512/1,
+	shake128/2,
+	shake256/2
+]).
+%% Internal API
+-export([
+	rol64/2,
+	load64/1,
+	store64/1,
+	keccak_f_1600/1,
+	load_lanes/1,
+	store_lanes/1,
+	keccak/5,
+	keccak_absorb/4,
+	keccak_pad/4
+]).
 
 %%====================================================================
-%% API functions
+%% jose_provider callbacks
+%%====================================================================
+
+-spec provider_info() -> jose_provider:info().
+provider_info() ->
+	#{
+		behaviour => jose_sha3,
+		priority => low,
+		requirements => [
+			{app, crypto},
+			crypto
+		]
+	}.
+
+%%====================================================================
+%% jose_sha3 callbacks
+%%====================================================================
+
+-spec sha3_224(Input) -> Output when
+	Input :: jose_sha3:input(), Output :: jose_sha3:sha3_224_output().
+sha3_224(Input) ->
+	keccak(1152, 448, Input, 16#06, 224 div 8).
+
+-spec sha3_256(Input) -> Output when
+	Input :: jose_sha3:input(), Output :: jose_sha3:sha3_256_output().
+sha3_256(Input) ->
+	keccak(1088, 512, Input, 16#06, 256 div 8).
+
+-spec sha3_384(Input) -> Output when
+	Input :: jose_sha3:input(), Output :: jose_sha3:sha3_384_output().
+sha3_384(Input) ->
+	keccak(832, 768, Input, 16#06, 384 div 8).
+
+-spec sha3_512(Input) -> Output when
+	Input :: jose_sha3:input(), Output :: jose_sha3:sha3_512_output().
+sha3_512(Input) ->
+	keccak(576, 1024, Input, 16#06, 512 div 8).
+
+-spec shake128(Input, OutputSize) -> Output when
+	Input :: jose_sha3:input(), OutputSize :: jose_sha3:shake128_output_size(), Output :: jose_sha3:shake128_output().
+shake128(Input, OutputSize)
+		when is_binary(Input)
+		andalso (is_integer(OutputSize) andalso OutputSize >= 0) ->
+	keccak(1344, 256, Input, 16#1F, OutputSize).
+
+-spec shake256(Input, OutputSize) -> Output when
+	Input :: jose_sha3:input(), OutputSize :: jose_sha3:shake256_output_size(), Output :: jose_sha3:shake256_output().
+shake256(Input, OutputSize)
+		when is_binary(Input)
+		andalso (is_integer(OutputSize) andalso OutputSize >= 0) ->
+	keccak(1088, 512, Input, 16#1F, OutputSize).
+
+%%====================================================================
+%% Internal API functions
 %%====================================================================
 
 rol64(A, N) ->
@@ -195,30 +258,6 @@ keccak_squeeze(RateInBytes, OutputByteLen, StateBytes, OutputBytes)
 	keccak_squeeze(RateInBytes, NewOutputByteLen, State, << OutputBytes/binary, StateBlock/binary >>);
 keccak_squeeze(_RateInBytes, _OutputByteLen, _StateBytes, OutputBytes) ->
 	OutputBytes.
-
-shake128(InputBytes, OutputByteLen)
-		when is_binary(InputBytes)
-		andalso is_integer(OutputByteLen)
-		andalso OutputByteLen >= 0 ->
-	keccak(1344, 256, InputBytes, 16#1F, OutputByteLen).
-
-shake256(InputBytes, OutputByteLen)
-		when is_binary(InputBytes)
-		andalso is_integer(OutputByteLen)
-		andalso OutputByteLen >= 0 ->
-	keccak(1088, 512, InputBytes, 16#1F, OutputByteLen).
-
-sha3_224(InputBytes) ->
-	keccak(1152, 448, InputBytes, 16#06, 224 div 8).
-
-sha3_256(InputBytes) ->
-	keccak(1088, 512, InputBytes, 16#06, 256 div 8).
-
-sha3_384(InputBytes) ->
-	keccak(832, 768, InputBytes, 16#06, 384 div 8).
-
-sha3_512(InputBytes) ->
-	keccak(576, 1024, InputBytes, 16#06, 512 div 8).
 
 %%%-------------------------------------------------------------------
 %%% Internal functions

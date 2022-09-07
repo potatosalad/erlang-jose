@@ -10,6 +10,15 @@
 %%%-------------------------------------------------------------------
 -module(jose_jwa_poly1305).
 
+-behaviour(jose_provider).
+-behaviour(jose_poly1305).
+
+%% jose_provider callbacks
+-export([provider_info/0]).
+%% jose_poly1305 callbacks
+-export([
+	poly1305_mac/2
+]).
 %% API
 -export([mac/2]).
 -export([mac_init/1]).
@@ -20,6 +29,32 @@
 -define(math, jose_jwa_math).
 -define(clamp(R), R band 16#0ffffffc0ffffffc0ffffffc0fffffff).
 -define(p, 16#3fffffffffffffffffffffffffffffffb).
+
+%%====================================================================
+%% jose_provider callbacks
+%%====================================================================
+
+-spec provider_info() -> jose_provider:info().
+provider_info() ->
+    #{
+        behaviour => jose_poly1305,
+        priority => low,
+        requirements => [
+            {app, jose},
+            jose_jwa_math
+        ]
+    }.
+
+%%====================================================================
+%% jose_poly1305 callbacks
+%%====================================================================
+
+-spec poly1305_mac(Message, OneTimeKey) -> Tag when
+	Message :: jose_poly1305:message(),
+    OneTimeKey :: jose_poly1305:poly1305_one_time_key(),
+    Tag :: jose_poly1305:poly1305_tag().
+poly1305_mac(Message, OneTimeKey) when bit_size(OneTimeKey) =:= 256 ->
+	mac(Message, OneTimeKey).
 
 %%====================================================================
 %% API functions

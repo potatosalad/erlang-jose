@@ -90,7 +90,7 @@ init([]) ->
 		ordered_set,
 		{read_concurrency, true}
 	]),
-	ok = support_check(),
+	% ok = support_check(),
 	{ok, #state{}}.
 
 %% @private

@@ -10,24 +10,47 @@
 %%%-------------------------------------------------------------------
 -module(jose_jwa_curve448).
 
+-behaviour(jose_provider).
 -behaviour(jose_curve448).
 
+%% jose_provider callbacks
+-export([provider_info/0]).
 %% jose_curve448 callbacks
--export([eddsa_keypair/0]).
--export([eddsa_keypair/1]).
--export([eddsa_secret_to_public/1]).
--export([ed448_sign/2]).
--export([ed448_sign/3]).
--export([ed448_verify/3]).
--export([ed448_verify/4]).
--export([ed448ph_sign/2]).
--export([ed448ph_sign/3]).
--export([ed448ph_verify/3]).
--export([ed448ph_verify/4]).
--export([x448_keypair/0]).
--export([x448_keypair/1]).
--export([x448_secret_to_public/1]).
--export([x448_shared_secret/2]).
+-export([
+	eddsa_keypair/0,
+	eddsa_keypair/1,
+	eddsa_secret_to_public/1,
+	ed448_sign/2,
+	ed448_sign/3,
+	ed448_verify/3,
+	ed448_verify/4,
+	ed448ph_sign/2,
+	ed448ph_sign/3,
+	ed448ph_verify/3,
+	ed448ph_verify/4,
+	x448_keypair/0,
+	x448_keypair/1,
+	x448_secret_to_public/1,
+	x448_shared_secret/2
+]).
+
+%%====================================================================
+%% jose_provider callbacks
+%%====================================================================
+
+-spec provider_info() -> jose_provider:info().
+provider_info() ->
+	#{
+		behaviour => jose_curve448,
+		priority => low,
+		requirements => [
+			{app, crypto},
+			crypto,
+			{app, jose},
+			jose_jwa_ed448,
+			jose_jwa_x448
+		]
+	}.
 
 %%====================================================================
 %% jose_curve448 callbacks

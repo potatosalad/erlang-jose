@@ -10,6 +10,18 @@
 %%%-------------------------------------------------------------------
 -module(jose_jwa_chacha20).
 
+-behaviour(jose_provider).
+-behaviour(jose_chacha20).
+
+%% jose_provider callbacks
+-export([provider_info/0]).
+%% jose_chacha20 callbacks
+-export([
+	chacha20_exor/4,
+	chacha20_stream_init/3,
+	chacha20_stream_exor/2,
+	chacha20_stream_final/1
+]).
 %% API
 -export([quarter_round/1]).
 -export([column_round/1]).
@@ -21,6 +33,76 @@
 -define(math, jose_jwa_math).
 -define(p, 16#100000000).
 -define(rotl(X, R), ?math:mod((X bsl R) bor (X bsr (32 - R)), ?p)).
+
+%% Records
+-record(jose_jwa_chacha20, {
+	key = <<0:256>> :: jose_chacha20:chacha20_key(),
+	count = <<0:32>> :: jose_chacha20:chacha20_count(),
+	nonce = <<0:96>> :: jose_chacha20:chacha20_nonce(),
+	block = <<>> :: binary()
+}).
+
+%%====================================================================
+%% jose_provider callbacks
+%%====================================================================
+
+-spec provider_info() -> jose_provider:info().
+provider_info() ->
+	#{
+		behaviour => jose_chacha20,
+		priority => low,
+		requirements => [
+			{app, crypto},
+			crypto
+		]
+	}.
+
+%%====================================================================
+%% jose_chacha20 callbacks
+%%====================================================================
+
+-spec chacha20_exor(Input, Count, Nonce, Key) -> Output when
+	Input :: jose_chacha20:input(),
+	Count :: jose_chacha20:chacha20_count(),
+	Nonce :: jose_chacha20:chacha20_nonce(),
+	Key :: jose_chacha20:chacha20_key(),
+	Output :: jose_chacha20:output().
+chacha20_exor(Input, Count, Nonce, Key)
+		when is_binary(Input)
+		andalso bit_size(Count) =:= 32
+		andalso bit_size(Nonce) =:= 96
+		andalso bit_size(Key) =:= 256 ->
+	State0 = jose_chacha20:chacha20_stream_init(Count, Nonce, Key),
+	{State1, Output} = jose_chacha20:chacha20_stream_exor(State0, Input),
+	<<>> = jose_chacha20:chacha20_stream_final(State1),
+	Output.
+
+-spec chacha20_stream_init(Count, Nonce, Key) -> ChaCha20State when
+	Count :: jose_chacha20:chacha20_count(),
+	Nonce :: jose_chacha20:chacha20_nonce(),
+	Key :: jose_chacha20:chacha20_key(),
+	ChaCha20State :: jose_chacha20:chacha20_state().
+chacha20_stream_init(Count, Nonce, Key)
+		when bit_size(Count) =:= 32
+		andalso bit_size(Nonce) =:= 96
+		andalso bit_size(Key) =:= 256 ->
+	#jose_jwa_chacha20{key = Key, count = Count, nonce = Nonce, block = <<>>}.
+
+-spec chacha20_stream_exor(ChaCha20State, Input) -> {NewChaCha20State, Output} when
+	ChaCha20State :: jose_chacha20:chacha20_state(),
+	Input :: jose_chacha20:input(),
+	NewChaCha20State :: jose_chacha20:chacha20_state(),
+	Output :: jose_chacha20:output().
+chacha20_stream_exor(State = #jose_jwa_chacha20{}, Input = <<>>) ->
+	{State, Input};
+chacha20_stream_exor(#jose_jwa_chacha20{key = Key, count = Count, nonce = Nonce, block = Block}, Input) when byte_size(Input) > 0 ->
+	chacha20_stream_exor(Count, Nonce, Key, Block, Input, <<>>).
+
+-spec chacha20_stream_final(ChaCha20State) -> Output when
+	ChaCha20State :: jose_chacha20:chacha20_state(),
+	Output :: jose_chacha20:output().
+chacha20_stream_final(_State = #jose_jwa_chacha20{}) ->
+	<<>>.
 
 %%====================================================================
 %% API functions
@@ -127,3 +209,24 @@ serialize({Z00, Z01, Z02, Z03, Z04, Z05, Z06, Z07, Z08, Z09, Z10, Z11, Z12, Z13,
 		Z14:32/unsigned-little-integer-unit:1,
 		Z15:32/unsigned-little-integer-unit:1
 	>>.
+
+%% @private
+chacha20_stream_exor(Count, Nonce, Key, Block, <<>>, Output) ->
+	State = #jose_jwa_chacha20{key = Key, count = Count, nonce = Nonce, block = Block},
+	{State, Output};
+chacha20_stream_exor(<<Counter:1/unsigned-little-integer-unit:32>>, Nonce, Key, <<>>, Input, Output) ->
+	Block = block(Key, Counter, Nonce),
+	Count1 = <<(Counter + 1):1/unsigned-little-integer-unit:32>>,
+	chacha20_stream_exor(Count1, Nonce, Key, Block, Input, Output);
+chacha20_stream_exor(Count, Nonce, Key, Block, Input, Output) ->
+	BlockSize = byte_size(Block),
+	InputSize = byte_size(Input),
+	case Input of
+		<<InputNext:BlockSize/binary, InputRest/binary>> ->
+			OutputNext = crypto:exor(Block, InputNext),
+			chacha20_stream_exor(Count, Nonce, Key, <<>>, InputRest, <<Output/binary, OutputNext/binary>>);
+		_ ->
+			<<BlockNext:InputSize/binary, BlockRest/binary>> = Block,
+			OutputNext = crypto:exor(BlockNext, Input),
+			chacha20_stream_exor(Count, Nonce, Key, BlockRest, <<>>, <<Output/binary, OutputNext/binary>>)
+	end.

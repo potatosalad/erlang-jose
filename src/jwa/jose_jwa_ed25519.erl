@@ -66,7 +66,7 @@
 %% 4. A cryptographic hash function H producing 2*b-bit output.
 %%    Conservative hash functions are recommended and do not have much
 %%    impact on the total cost of EdDSA.
--define(H(M), crypto:hash(sha512, M)).
+-define(H(M), jose_sha2:sha512(M)).
 -define(HBits, 512). % ?b * 2
 %% 5. An integer c that is 2 or 3.  Secret EdDSA scalars are multiples
 %%    of 2^c.  The integer c is the base-2 logarithm of the so called
@@ -95,7 +95,7 @@
 %%     identity function, i.e., PH(M) = M.  HashEdDSA means EdDSA where
 %%     PH generates a short output, no matter how long the message is;
 %%     for example, PH(M) = SHA-512(M).
--define(PH(M), crypto:hash(sha512, M)).
+-define(PH(M), jose_sha2:sha512(M)).
 
 -define(secretbytes,    32). % (?b + 7) div 8
 -define(publickeybytes, 32). % (?b + 7) div 8

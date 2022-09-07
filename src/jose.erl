@@ -96,6 +96,8 @@ unsecured_signing() ->
 unsecured_signing(Boolean) when is_boolean(Boolean) ->
 	jose_jwa:unsecured_signing(Boolean).
 
+% whereis(Operation) ->
+
 xchacha20_poly1305_module() ->
 	?MAYBE_START_JOSE(ets:lookup_element(?TAB, xchacha20_poly1305_module, 2)).
 
