@@ -10,7 +10,7 @@
 %%%-------------------------------------------------------------------
 -module(jose_jwa_pkcs1).
 
--include_lib("public_key/include/public_key.hrl").
+-include("jose_rsa.hrl").
 
 %% Public Key API
 -export([
@@ -51,8 +51,8 @@
 %% Types
 -type rsa_digest_type() :: 'md5' | 'sha' | 'sha224' | 'sha256' | 'sha384' | 'sha512'.
 -type rsa_hash_fun()    :: rsa_digest_type() | {hmac, rsa_digest_type(), iodata()} | fun((iodata()) -> binary()).
--type rsa_public_key()  :: #'RSAPublicKey'{}.
--type rsa_private_key() :: #'RSAPrivateKey'{}.
+-type rsa_public_key()  :: jose_rsa:rsa_public_key().
+-type rsa_private_key() :: jose_rsa:rsa_private_key().
 
 -define(PSS_TRAILER_FIELD, 16#BC).
 
@@ -60,7 +60,7 @@
 %% Public Key API functions
 %%====================================================================
 
-decrypt_private(CipherText, RSAPrivateKey=#'RSAPrivateKey'{}, Options)
+decrypt_private(CipherText, RSAPrivateKey=#jose_rsa_private_key{}, Options)
 		when is_list(Options) ->
 	case proplists:get_value(rsa_padding, Options) of
 		rsa_pkcs1_oaep_padding ->
@@ -75,7 +75,7 @@ decrypt_private(CipherText, RSAPrivateKey=#'RSAPrivateKey'{}, Options)
 decrypt_private(CipherText, PrivateKey, Options) ->
 	erlang:error(badarg, [CipherText, PrivateKey, Options]).
 
-encrypt_public(PlainText, RSAPublicKey=#'RSAPublicKey'{}, Options)
+encrypt_public(PlainText, RSAPublicKey=#jose_rsa_public_key{}, Options)
 		when is_list(Options) ->
 	Res = case proplists:get_value(rsa_padding, Options) of
 		rsa_pkcs1_oaep_padding ->
@@ -96,7 +96,7 @@ encrypt_public(PlainText, RSAPublicKey=#'RSAPublicKey'{}, Options)
 encrypt_public(PlainText, PublicKey, Options) ->
 	erlang:error(badarg, [PlainText, PublicKey, Options]).
 
-sign(Message, DigestType, RSAPrivateKey=#'RSAPrivateKey'{}, Options)
+sign(Message, DigestType, RSAPrivateKey=#jose_rsa_private_key{}, Options)
 		when is_list(Options) ->
 	Res = case proplists:get_value(rsa_padding, Options) of
 		rsa_pkcs1_pss_padding ->
@@ -116,7 +116,7 @@ sign(Message, DigestType, RSAPrivateKey=#'RSAPrivateKey'{}, Options)
 sign(Message, DigestType, PrivateKey, Options) ->
 	erlang:error(badarg, [Message, DigestType, PrivateKey, Options]).
 
-verify(Message, DigestType, Signature, RSAPublicKey=#'RSAPublicKey'{}, Options)
+verify(Message, DigestType, Signature, RSAPublicKey=#jose_rsa_public_key{}, Options)
 		when is_list(Options) ->
 	case proplists:get_value(rsa_padding, Options) of
 		rsa_pkcs1_pss_padding ->
@@ -532,7 +532,7 @@ mgf1(Hash, Seed, MaskLen)
 		CipherText    :: binary(),
 		RSAPrivateKey :: rsa_private_key(),
 		PlainText     :: binary().
-rsaes_oaep_decrypt(Hash, CipherText, RSAPrivateKey=#'RSAPrivateKey'{})
+rsaes_oaep_decrypt(Hash, CipherText, RSAPrivateKey=#jose_rsa_private_key{})
 		when is_function(Hash, 1)
 		andalso is_binary(CipherText) ->
 	rsaes_oaep_decrypt(Hash, CipherText, <<>>, RSAPrivateKey);
@@ -550,12 +550,12 @@ rsaes_oaep_decrypt(Hash, CipherText, RSAPrivateKey)
 		Label         :: binary(),
 		RSAPrivateKey :: rsa_private_key(),
 		PlainText     :: binary().
-rsaes_oaep_decrypt(Hash, CipherText, Label, RSAPrivateKey=#'RSAPrivateKey'{modulus=N})
+rsaes_oaep_decrypt(Hash, CipherText, Label, RSAPrivateKey=#jose_rsa_private_key{n=N})
 		when is_function(Hash, 1)
 		andalso is_binary(CipherText)
 		andalso is_binary(Label) ->
 	HLen = byte_size(Hash(<<>>)),
-	K = int_to_byte_size(N),
+	K = byte_size(N),
 	case {byte_size(CipherText), K < ((2 * HLen) + 2)} of
 		{K, false} ->
 			EM = pad_to_key_size(K, dp(CipherText, RSAPrivateKey)),
@@ -576,7 +576,7 @@ rsaes_oaep_decrypt(Hash, CipherText, Label, RSAPrivateKey)
 		PlainText    :: binary(),
 		RSAPublicKey :: rsa_public_key(),
 		CipherText   :: binary().
-rsaes_oaep_encrypt(Hash, PlainText, RSAPublicKey=#'RSAPublicKey'{})
+rsaes_oaep_encrypt(Hash, PlainText, RSAPublicKey=#jose_rsa_public_key{})
 		when is_function(Hash, 1)
 		andalso is_binary(PlainText) ->
 	rsaes_oaep_encrypt(Hash, PlainText, <<>>, RSAPublicKey);
@@ -594,7 +594,7 @@ rsaes_oaep_encrypt(Hash, PlainText, RSAPublicKey)
 		Label        :: binary(),
 		RSAPublicKey :: rsa_public_key(),
 		CipherText   :: binary().
-rsaes_oaep_encrypt(Hash, PlainText, Label, RSAPublicKey=#'RSAPublicKey'{})
+rsaes_oaep_encrypt(Hash, PlainText, Label, RSAPublicKey=#jose_rsa_public_key{})
 		when is_function(Hash, 1)
 		andalso is_binary(PlainText)
 		andalso is_binary(Label) ->
@@ -616,14 +616,14 @@ rsaes_oaep_encrypt(Hash, PlainText, Label, RSAPublicKey)
 		Seed         :: binary(),
 		RSAPublicKey :: rsa_public_key(),
 		CipherText   :: binary().
-rsaes_oaep_encrypt(Hash, PlainText, Label, Seed, RSAPublicKey=#'RSAPublicKey'{modulus=N})
+rsaes_oaep_encrypt(Hash, PlainText, Label, Seed, RSAPublicKey=#jose_rsa_public_key{n=N})
 		when is_function(Hash, 1)
 		andalso is_binary(PlainText)
 		andalso is_binary(Label)
 		andalso is_binary(Seed) ->
 	HLen = byte_size(Hash(<<>>)),
 	MLen = byte_size(PlainText),
-	K = int_to_byte_size(N),
+	K = byte_size(N),
 	case MLen > (K - (2 * HLen) - 2) of
 		false ->
 			case eme_oaep_encode(Hash, PlainText, Label, Seed, K) of
@@ -648,9 +648,9 @@ rsaes_oaep_encrypt(Hash, PlainText, Label, Seed, RSAPublicKey)
 		CipherText    :: binary(),
 		RSAPrivateKey :: rsa_private_key(),
 		PlainText     :: binary().
-rsaes_pkcs1_decrypt(CipherText, RSAPrivateKey=#'RSAPrivateKey'{modulus=N})
+rsaes_pkcs1_decrypt(CipherText, RSAPrivateKey=#jose_rsa_private_key{n=N})
 		when is_binary(CipherText) ->
-	K = int_to_byte_size(N),
+	K = byte_size(N),
 	case {byte_size(CipherText), K < 11} of
 		{K, false} ->
 			EM = pad_to_key_size(K, dp(CipherText, RSAPrivateKey)),
@@ -665,10 +665,10 @@ rsaes_pkcs1_decrypt(CipherText, RSAPrivateKey=#'RSAPrivateKey'{modulus=N})
 		PlainText    :: binary(),
 		RSAPublicKey :: rsa_public_key(),
 		CipherText   :: binary().
-rsaes_pkcs1_encrypt(PlainText, RSAPublicKey=#'RSAPublicKey'{modulus=N})
+rsaes_pkcs1_encrypt(PlainText, RSAPublicKey=#jose_rsa_public_key{n=N})
 		when is_binary(PlainText) ->
 	MLen = byte_size(PlainText),
-	K = int_to_byte_size(N),
+	K = byte_size(N),
 	case MLen > (K - 11) of
 		false ->
 			case eme_pkcs1_encode(PlainText, K) of
@@ -703,20 +703,20 @@ rsassa_pkcs1_sign(Hash, Message, RSAPrivateKey)
 		RSAPrivateKey :: rsa_private_key(),
 		Signature     :: binary(),
 		Reason        :: term().
-rsassa_pkcs1_sign(Hash, Algorithm, Message, RSAPrivateKey=#'RSAPrivateKey'{modulus=Modulus})
+rsassa_pkcs1_sign(Hash, Algorithm, Message, RSAPrivateKey=#jose_rsa_private_key{n=Modulus})
 		when is_function(Hash, 1)
 		andalso (is_atom(Algorithm) orelse is_binary(Algorithm))
 		andalso is_binary(Message) ->
-	ModBits = int_to_bit_size(Modulus),
+	ModBits = bit_size(Modulus),
 	case emsa_pkcs1_encode(Hash, Algorithm, Message, ModBits - 1) of
 		{ok, EM} ->
-			ModBytes = int_to_byte_size(Modulus),
+			ModBytes = byte_size(Modulus),
 			S = pad_to_key_size(ModBytes, dp(EM, RSAPrivateKey)),
 			{ok, S};
 		EncodingError ->
 			EncodingError
 	end;
-rsassa_pkcs1_sign(Hash, Algorithm, Message, RSAPrivateKey=#'RSAPrivateKey'{})
+rsassa_pkcs1_sign(Hash, Algorithm, Message, RSAPrivateKey=#jose_rsa_private_key{})
 		when is_atom(Hash) ->
 	HashFun = resolve_hash(Hash),
 	rsassa_pkcs1_sign(HashFun, Algorithm, Message, RSAPrivateKey).
@@ -740,14 +740,14 @@ rsassa_pkcs1_verify(Hash, Message, Signature, RSAPublicKey)
 		Message      :: binary(),
 		Signature    :: binary(),
 		RSAPublicKey :: rsa_public_key().
-rsassa_pkcs1_verify(Hash, Algorithm, Message, Signature, RSAPublicKey=#'RSAPublicKey'{modulus=Modulus})
+rsassa_pkcs1_verify(Hash, Algorithm, Message, Signature, RSAPublicKey=#jose_rsa_public_key{n=Modulus})
 		when is_function(Hash, 1)
 		andalso is_binary(Message)
 		andalso is_binary(Signature) ->
-	ModBytes = int_to_byte_size(Modulus),
+	ModBytes = byte_size(Modulus),
 	case byte_size(Signature) =:= ModBytes of
 		true ->
-			ModBits = int_to_bit_size(Modulus),
+			ModBits = bit_size(Modulus),
 			EM = pad_to_key_size(ceiling((ModBits - 1) / 8), ep(Signature, RSAPublicKey)),
 			case emsa_pkcs1_encode(Hash, Algorithm, Message, ModBits - 1) of
 				{ok, EMPrime} ->
@@ -758,7 +758,7 @@ rsassa_pkcs1_verify(Hash, Algorithm, Message, Signature, RSAPublicKey=#'RSAPubli
 		false ->
 			false
 	end;
-rsassa_pkcs1_verify(Hash, Algorithm, Message, Signature, RSAPublicKey=#'RSAPublicKey'{})
+rsassa_pkcs1_verify(Hash, Algorithm, Message, Signature, RSAPublicKey=#jose_rsa_public_key{})
 		when is_atom(Hash) ->
 	HashFun = resolve_hash(Hash),
 	rsassa_pkcs1_verify(HashFun, Algorithm, Message, Signature, RSAPublicKey).
@@ -771,19 +771,19 @@ rsassa_pkcs1_verify(Hash, Algorithm, Message, Signature, RSAPublicKey=#'RSAPubli
 		RSAPrivateKey :: rsa_private_key(),
 		Signature     :: binary(),
 		Reason        :: term().
-rsassa_pss_sign(Hash, Message, RSAPrivateKey=#'RSAPrivateKey'{modulus=Modulus})
+rsassa_pss_sign(Hash, Message, RSAPrivateKey=#jose_rsa_private_key{n=Modulus})
 		when is_function(Hash, 1)
 		andalso is_binary(Message) ->
-	ModBits = int_to_bit_size(Modulus),
+	ModBits = bit_size(Modulus),
 	case emsa_pss_encode(Hash, Message, ModBits - 1) of
 		{ok, EM} ->
-			ModBytes = int_to_byte_size(Modulus),
+			ModBytes = byte_size(Modulus),
 			S = pad_to_key_size(ModBytes, dp(EM, RSAPrivateKey)),
 			{ok, S};
 		EncodingError ->
 			EncodingError
 	end;
-rsassa_pss_sign(Hash, Message, RSAPrivateKey=#'RSAPrivateKey'{})
+rsassa_pss_sign(Hash, Message, RSAPrivateKey=#jose_rsa_private_key{})
 		when is_tuple(Hash)
 		orelse is_atom(Hash) ->
 	HashFun = resolve_hash(Hash),
@@ -798,20 +798,20 @@ rsassa_pss_sign(Hash, Message, RSAPrivateKey=#'RSAPrivateKey'{})
 		RSAPrivateKey :: rsa_private_key(),
 		Signature     :: binary(),
 		Reason        :: term().
-rsassa_pss_sign(Hash, Message, Salt, RSAPrivateKey=#'RSAPrivateKey'{modulus=Modulus})
+rsassa_pss_sign(Hash, Message, Salt, RSAPrivateKey=#jose_rsa_private_key{n=Modulus})
 		when is_function(Hash, 1)
 		andalso is_binary(Message)
 		andalso (is_binary(Salt) orelse is_integer(Salt)) ->
-	ModBits = int_to_bit_size(Modulus),
+	ModBits = bit_size(Modulus),
 	case emsa_pss_encode(Hash, Message, Salt, ModBits - 1) of
 		{ok, EM} ->
-			ModBytes = int_to_byte_size(Modulus),
+			ModBytes = byte_size(Modulus),
 			S = pad_to_key_size(ModBytes, dp(EM, RSAPrivateKey)),
 			{ok, S};
 		EncodingError ->
 			EncodingError
 	end;
-rsassa_pss_sign(Hash, Message, Salt, RSAPrivateKey=#'RSAPrivateKey'{})
+rsassa_pss_sign(Hash, Message, Salt, RSAPrivateKey=#jose_rsa_private_key{})
 		when is_tuple(Hash)
 		orelse is_atom(Hash) ->
 	HashFun = resolve_hash(Hash),
@@ -824,20 +824,20 @@ rsassa_pss_sign(Hash, Message, Salt, RSAPrivateKey=#'RSAPrivateKey'{})
 		Message      :: binary(),
 		Signature    :: binary(),
 		RSAPublicKey :: rsa_public_key().
-rsassa_pss_verify(Hash, Message, Signature, RSAPublicKey=#'RSAPublicKey'{modulus=Modulus})
+rsassa_pss_verify(Hash, Message, Signature, RSAPublicKey=#jose_rsa_public_key{n=Modulus})
 		when is_function(Hash, 1)
 		andalso is_binary(Message)
 		andalso is_binary(Signature) ->
-	ModBytes = int_to_byte_size(Modulus),
+	ModBytes = byte_size(Modulus),
 	case byte_size(Signature) =:= ModBytes of
 		true ->
-			ModBits = int_to_bit_size(Modulus),
+			ModBits = bit_size(Modulus),
 			EM = pad_to_key_size(ceiling((ModBits - 1) / 8), ep(Signature, RSAPublicKey)),
 			emsa_pss_verify(Hash, Message, EM, ModBits - 1);
 		false ->
 			false
 	end;
-rsassa_pss_verify(Hash, Message, Signature, RSAPublicKey=#'RSAPublicKey'{})
+rsassa_pss_verify(Hash, Message, Signature, RSAPublicKey=#jose_rsa_public_key{})
 		when is_tuple(Hash)
 		orelse is_atom(Hash) ->
 	HashFun = resolve_hash(Hash),
@@ -851,21 +851,21 @@ rsassa_pss_verify(Hash, Message, Signature, RSAPublicKey=#'RSAPublicKey'{})
 		Signature    :: binary(),
 		SaltLen      :: integer(),
 		RSAPublicKey :: rsa_public_key().
-rsassa_pss_verify(Hash, Message, Signature, SaltLen, RSAPublicKey=#'RSAPublicKey'{modulus=Modulus})
+rsassa_pss_verify(Hash, Message, Signature, SaltLen, RSAPublicKey=#jose_rsa_public_key{n=Modulus})
 		when is_function(Hash, 1)
 		andalso is_binary(Message)
 		andalso is_binary(Signature)
 		andalso is_integer(SaltLen) ->
-	ModBytes = int_to_byte_size(Modulus),
+	ModBytes = byte_size(Modulus),
 	case byte_size(Signature) =:= ModBytes of
 		true ->
-			ModBits = int_to_bit_size(Modulus),
+			ModBits = bit_size(Modulus),
 			EM = pad_to_key_size(ceiling((ModBits - 1) / 8), ep(Signature, RSAPublicKey)),
 			emsa_pss_verify(Hash, Message, EM, SaltLen, ModBits - 1);
 		false ->
 			false
 	end;
-rsassa_pss_verify(Hash, Message, Signature, SaltLen, RSAPublicKey=#'RSAPublicKey'{})
+rsassa_pss_verify(Hash, Message, Signature, SaltLen, RSAPublicKey=#jose_rsa_public_key{})
 		when is_tuple(Hash)
 		orelse is_atom(Hash) ->
 	HashFun = resolve_hash(Hash),
@@ -896,32 +896,32 @@ derive_mgf1(Hash, Counter, Reps, Seed, MaskLen, T) ->
 	derive_mgf1(Hash, Counter + 1, Reps, Seed, MaskLen, NewT).
 
 %% @private
-dp(B, #'RSAPrivateKey'{modulus=N, privateExponent=E}) ->
+dp(B, #jose_rsa_private_key{n=N, d=E}) ->
 	crypto:mod_pow(B, E, N).
 
 %% @private
-ep(B, #'RSAPublicKey'{modulus=N, publicExponent=E}) ->
+ep(B, #jose_rsa_public_key{n=N, e=E}) ->
 	crypto:mod_pow(B, E, N).
 
-%% @private
-int_to_bit_size(I) ->
-	int_to_bit_size(I, 0).
+% %% @private
+% int_to_bit_size(I) ->
+% 	int_to_bit_size(I, 0).
 
-%% @private
-int_to_bit_size(0, B) ->
-	B;
-int_to_bit_size(I, B) ->
-	int_to_bit_size(I bsr 1, B + 1).
+% %% @private
+% int_to_bit_size(0, B) ->
+% 	B;
+% int_to_bit_size(I, B) ->
+% 	int_to_bit_size(I bsr 1, B + 1).
 
-%% @private
-int_to_byte_size(I) ->
-	int_to_byte_size(I, 0).
+% %% @private
+% int_to_byte_size(I) ->
+% 	int_to_byte_size(I, 0).
 
-%% @private
-int_to_byte_size(0, B) ->
-	B;
-int_to_byte_size(I, B) ->
-	int_to_byte_size(I bsr 8, B + 1).
+% %% @private
+% int_to_byte_size(0, B) ->
+% 	B;
+% int_to_byte_size(I, B) ->
+% 	int_to_byte_size(I bsr 8, B + 1).
 
 %% @private
 non_zero_strong_random_byte() ->

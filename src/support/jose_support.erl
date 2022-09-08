@@ -91,6 +91,7 @@ builtin_support_modules() ->
 		jose_hmac,
 		jose_pbkdf2_hmac,
 		jose_poly1305,
+		jose_rsa,
 		jose_sha1,
 		jose_sha2,
 		jose_sha3,
@@ -149,6 +150,9 @@ builtin_provider_modules() ->
 		jose_jwa_poly1305,
 		jose_poly1305_crypto,
 		jose_poly1305_libsodium,
+		%% RSA
+		jose_jwa_rsa,
+		jose_rsa_crypto,
 		%% SHA-1
 		jose_sha1_crypto,
 		%% SHA-2
