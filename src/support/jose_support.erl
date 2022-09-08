@@ -1,13 +1,24 @@
+%% -*- mode: erlang; tab-width: 4; indent-tabs-mode: 1; st-rulers: [70] -*-
+%% vim: ts=4 sw=4 ft=erlang noet
+%%%-------------------------------------------------------------------
+%%% @author Andrew Bennett <potatosaladx@gmail.com>
+%%% @copyright 2014-2022, Andrew Bennett
+%%% @doc
+%%%
+%%% @end
+%%% Created :  04 Sep 2022 by Andrew Bennett <potatosaladx@gmail.com>
+%%%-------------------------------------------------------------------
 -module(jose_support).
 
+%% API
 -export([
 	builtin_support_modules/0,
 	builtin_provider_modules/0,
 	deps/0,
+	expect/1,
 	expect/4,
-	expect_multi/1,
-	expect_report/5,
-	check/0
+	expect/5,
+	expect_report/5
 ]).
 
 -type behaviour() :: module().
@@ -75,6 +86,7 @@ builtin_support_modules() ->
 		jose_chacha20_poly1305,
 		jose_curve25519,
 		jose_curve448,
+		jose_ec,
 		jose_hchacha20,
 		jose_hmac,
 		jose_pbkdf2_hmac,
@@ -122,6 +134,8 @@ builtin_provider_modules() ->
 		jose_jwa_curve448,
 		jose_curve448_crypto,
 		jose_curve448_libdecaf,
+		%% EC
+		jose_ec_crypto,
 		%% HChaCha20
 		jose_jwa_hchacha20,
 		jose_hchacha20_crypto,
@@ -160,34 +174,46 @@ builtin_provider_modules() ->
 deps() ->
 	graph(builtin_support_modules(), builtin_provider_modules()).
 
-check() ->
-	{Operations, Providers} = deps(),
-	check_operations(Operations, Providers, maps:new(), maps:new(), maps:new()).
+expect([{Expected, Module, Function, Arguments} | Rest])
+		when is_atom(Module)
+		andalso is_atom(Function)
+		andalso is_list(Arguments) ->
+	case expect(Expected, Module, Function, Arguments) of
+		ok ->
+			expect(Rest);
+		Error = {error, _Reason} ->
+			Error
+	end;
+expect([{Expected, Actual, Module, Function, Arguments} | Rest])
+		when is_atom(Module)
+		andalso is_atom(Function)
+		andalso is_list(Arguments) ->
+	case expect(Expected, Actual, Module, Function, Arguments) of
+		ok ->
+			expect(Rest);
+		Error = {error, _Reason} ->
+			Error
+	end;
+expect([]) ->
+	ok.
 
 expect(Expected, Module, Function, Arguments)
 		when is_atom(Module)
 		andalso is_atom(Function)
 		andalso is_list(Arguments) ->
 	Actual = erlang:apply(Module, Function, Arguments),
+	expect(Expected, Actual, Module, Function, Arguments).
+
+expect(Expected, Actual, Module, Function, Arguments)
+		when is_atom(Module)
+		andalso is_atom(Function)
+		andalso is_list(Arguments) ->
 	case Actual =:= Expected of
 		true ->
 			ok;
 		false ->
 			{error, expect_report(Module, Function, Arguments, Actual, Expected)}
 	end.
-
-expect_multi([{Expected, Actual, Module, Function, Arguments} | Rest])
-		when is_atom(Module)
-		andalso is_atom(Function)
-		andalso is_list(Arguments) ->
-	case Actual =:= Expected of
-		true ->
-			expect_multi(Rest);
-		false ->
-			{error, expect_report(Module, Function, Arguments, Actual, Expected)}
-	end;
-expect_multi([]) ->
-	ok.
 
 expect_report(Module, Function, Arguments, Actual, Expected) ->
 	MFA = {Module, Function, Arguments},
