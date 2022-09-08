@@ -124,7 +124,7 @@ support_check(Module, chacha20_stream_init, 3) ->
 	Nonce = ?TV_CHACHA20_Nonce(),
 	Key = ?TV_CHACHA20_Key(),
 	State = Module:chacha20_stream_init(Count, Nonce, Key),
-	_ = catch Module:chacha20_stream_final(State),
+	_ = Module:chacha20_stream_final(State),
 	ok;
 support_check(Module, chacha20_stream_exor, 2) ->
 	Count = ?TV_CHACHA20_Count(),
@@ -140,7 +140,7 @@ support_check(Module, chacha20_stream_exor, 2) ->
 	{State1, ActualCipherText0} = Module:chacha20_stream_exor(State0, PlainText0),
 	{State2, ActualCipherText1} = Module:chacha20_stream_exor(State1, PlainText1),
 	{State3, ActualCipherText2} = Module:chacha20_stream_exor(State2, PlainText2),
-	_ = catch Module:chacha20_stream_final(State3),
+	_ = Module:chacha20_stream_final(State3),
 	?expect([
 		{{State1, CipherText0}, {State1, ActualCipherText0}, Module, chacha20_stream_exor, [State0, PlainText0]},
 		{{State2, CipherText1}, {State2, ActualCipherText1}, Module, chacha20_stream_exor, [State1, PlainText1]},

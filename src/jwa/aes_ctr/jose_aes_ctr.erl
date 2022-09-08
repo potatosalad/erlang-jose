@@ -201,7 +201,7 @@ support_check(Module, aes_128_ctr_stream_init, 2) ->
 	IV = ?TV_AES_CTR_IV(),
 	Key = ?TV_AES_128_CTR_Key(),
 	State = Module:aes_128_ctr_stream_init(IV, Key),
-	_ = catch Module:aes_128_ctr_stream_final(State),
+	_ = Module:aes_128_ctr_stream_final(State),
 	ok;
 support_check(Module, aes_128_ctr_stream_exor, 2) ->
 	IV = ?TV_AES_CTR_IV(),
@@ -216,7 +216,7 @@ support_check(Module, aes_128_ctr_stream_exor, 2) ->
 	{State1, ActualCipherText0} = Module:aes_128_ctr_stream_exor(State0, PlainText0),
 	{State2, ActualCipherText1} = Module:aes_128_ctr_stream_exor(State1, PlainText1),
 	{State3, ActualCipherText2} = Module:aes_128_ctr_stream_exor(State2, PlainText2),
-	_ = catch Module:aes_128_ctr_stream_final(State3),
+	_ = Module:aes_128_ctr_stream_final(State3),
 	?expect([
 		{{State1, CipherText0}, {State1, ActualCipherText0}, Module, aes_128_cbc_stream_exor, [State0, PlainText0]},
 		{{State2, CipherText1}, {State2, ActualCipherText1}, Module, aes_128_cbc_stream_exor, [State1, PlainText1]},
@@ -249,7 +249,7 @@ support_check(Module, aes_192_ctr_stream_init, 2) ->
 	IV = ?TV_AES_CTR_IV(),
 	Key = ?TV_AES_192_CTR_Key(),
 	State = Module:aes_192_ctr_stream_init(IV, Key),
-	_ = catch Module:aes_192_ctr_stream_final(State),
+	_ = Module:aes_192_ctr_stream_final(State),
 	ok;
 support_check(Module, aes_192_ctr_stream_exor, 2) ->
 	IV = ?TV_AES_CTR_IV(),
@@ -264,7 +264,7 @@ support_check(Module, aes_192_ctr_stream_exor, 2) ->
 	{State1, ActualCipherText0} = Module:aes_192_ctr_stream_exor(State0, PlainText0),
 	{State2, ActualCipherText1} = Module:aes_192_ctr_stream_exor(State1, PlainText1),
 	{State3, ActualCipherText2} = Module:aes_192_ctr_stream_exor(State2, PlainText2),
-	_ = catch Module:aes_192_ctr_stream_final(State3),
+	_ = Module:aes_192_ctr_stream_final(State3),
 	?expect([
 		{{State1, CipherText0}, {State1, ActualCipherText0}, Module, aes_192_cbc_stream_exor, [State0, PlainText0]},
 		{{State2, CipherText1}, {State2, ActualCipherText1}, Module, aes_192_cbc_stream_exor, [State1, PlainText1]},
@@ -297,7 +297,7 @@ support_check(Module, aes_256_ctr_stream_init, 2) ->
 	IV = ?TV_AES_CTR_IV(),
 	Key = ?TV_AES_256_CTR_Key(),
 	State = Module:aes_256_ctr_stream_init(IV, Key),
-	_ = catch Module:aes_256_ctr_stream_final(State),
+	_ = Module:aes_256_ctr_stream_final(State),
 	ok;
 support_check(Module, aes_256_ctr_stream_exor, 2) ->
 	IV = ?TV_AES_CTR_IV(),
@@ -312,7 +312,7 @@ support_check(Module, aes_256_ctr_stream_exor, 2) ->
 	{State1, ActualCipherText0} = Module:aes_256_ctr_stream_exor(State0, PlainText0),
 	{State2, ActualCipherText1} = Module:aes_256_ctr_stream_exor(State1, PlainText1),
 	{State3, ActualCipherText2} = Module:aes_256_ctr_stream_exor(State2, PlainText2),
-	_ = catch Module:aes_256_ctr_stream_final(State3),
+	_ = Module:aes_256_ctr_stream_final(State3),
 	?expect([
 		{{State1, CipherText0}, {State1, ActualCipherText0}, Module, aes_256_cbc_stream_exor, [State0, PlainText0]},
 		{{State2, CipherText1}, {State2, ActualCipherText1}, Module, aes_256_cbc_stream_exor, [State1, PlainText1]},
