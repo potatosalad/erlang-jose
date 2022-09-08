@@ -26,15 +26,15 @@
 	rsa_private_to_public/1,
 	rsaes_pkcs1_v1_5_private_decrypt/2,
 	rsaes_pkcs1_v1_5_public_encrypt/2,
-    rsaes_oaep_private_decrypt/2,
+	rsaes_oaep_private_decrypt/2,
 	rsaes_oaep_public_encrypt/2,
-    rsaes_oaep_sha256_mgf1_sha256_private_decrypt/2,
+	rsaes_oaep_sha256_mgf1_sha256_private_decrypt/2,
 	rsaes_oaep_sha256_mgf1_sha256_public_encrypt/2,
-    rsaes_oaep_sha384_mgf1_sha384_private_decrypt/2,
+	rsaes_oaep_sha384_mgf1_sha384_private_decrypt/2,
 	rsaes_oaep_sha384_mgf1_sha384_public_encrypt/2,
-    rsaes_oaep_sha512_mgf1_sha512_private_decrypt/2,
+	rsaes_oaep_sha512_mgf1_sha512_private_decrypt/2,
 	rsaes_oaep_sha512_mgf1_sha512_public_encrypt/2,
-    rsassa_pkcs1_v1_5_sha1_sign/2,
+	rsassa_pkcs1_v1_5_sha1_sign/2,
 	rsassa_pkcs1_v1_5_sha1_verify/3,
 	rsassa_pkcs1_v1_5_sha256_sign/2,
 	rsassa_pkcs1_v1_5_sha256_verify/3,
@@ -92,32 +92,32 @@ rsa_keypair(ModulusSize, PublicExponent)
 		when (is_integer(ModulusSize) andalso ModulusSize >= 1)
 		andalso (is_binary(PublicExponent) andalso byte_size(PublicExponent) >= 1) ->
 	{CryptoPK, CryptoSK} = crypto:generate_key(rsa, {ModulusSize, PublicExponent}),
-    PK = public_key_crypto_to_record(CryptoPK),
-    SK = private_key_crypto_to_record(CryptoSK),
-    {PK, SK}.
+	PK = public_key_crypto_to_record(CryptoPK),
+	SK = private_key_crypto_to_record(CryptoSK),
+	{PK, SK}.
 
 -spec rsa_private_to_public(PrivateKey) -> PublicKey when
 	PrivateKey :: jose_rsa:rsa_private_key(),
 	PublicKey :: jose_rsa:rsa_public_key().
 rsa_private_to_public(_PrivateKey = #jose_rsa_private_key{e = PublicExponent, n = Modulus}) ->
-    #jose_rsa_public_key{e = PublicExponent, n = Modulus}.
+	#jose_rsa_public_key{e = PublicExponent, n = Modulus}.
 
 -spec rsaes_pkcs1_v1_5_private_decrypt(CipherText, PrivateKey) -> PlainText | error when
 	CipherText :: jose_rsa:cipher_text(),
 	PrivateKey :: jose_rsa:rsa_private_key(),
 	PlainText :: jose_rsa:plain_text().
 rsaes_pkcs1_v1_5_private_decrypt(CipherText, PrivateKey = #jose_rsa_private_key{}) when is_binary(CipherText) ->
-    CryptoSK = private_key_record_to_crypto(PrivateKey),
-    Options = [
-        {rsa_padding, rsa_pkcs1_padding}
-    ],
-    try crypto:private_decrypt(rsa, CipherText, CryptoSK, Options) of
-        PlainText when is_binary(PlainText) ->
-            PlainText
-    catch
-        error:{error, {"pkey.c", _}, "Couldn't get the result"} ->
-            error
-    end.
+	CryptoSK = private_key_record_to_crypto(PrivateKey),
+	Options = [
+		{rsa_padding, rsa_pkcs1_padding}
+	],
+	try crypto:private_decrypt(rsa, CipherText, CryptoSK, Options) of
+		PlainText when is_binary(PlainText) ->
+			PlainText
+	catch
+		error:{error, {"pkey.c", _}, "Couldn't get the result"} ->
+			error
+	end.
 
 -spec rsaes_pkcs1_v1_5_public_encrypt(PlainText, PublicKey) -> CipherText | {error, Reason} when
 	PlainText :: jose_rsa:plain_text(),
@@ -125,30 +125,30 @@ rsaes_pkcs1_v1_5_private_decrypt(CipherText, PrivateKey = #jose_rsa_private_key{
 	CipherText :: jose_rsa:cipher_text(),
 	Reason :: message_too_long.
 rsaes_pkcs1_v1_5_public_encrypt(PlainText, PublicKey = #jose_rsa_public_key{}) when is_binary(PlainText) ->
-    CryptoPK = public_key_record_to_crypto(PublicKey),
-    Options = [
-        {rsa_padding, rsa_pkcs1_padding}
-    ],
-    crypto:public_encrypt(rsa, PlainText, CryptoPK, Options).
+	CryptoPK = public_key_record_to_crypto(PublicKey),
+	Options = [
+		{rsa_padding, rsa_pkcs1_padding}
+	],
+	crypto:public_encrypt(rsa, PlainText, CryptoPK, Options).
 
 -spec rsaes_oaep_private_decrypt(CipherText, PrivateKey) -> PlainText | error when
 	CipherText :: jose_rsa:cipher_text(),
 	PrivateKey :: jose_rsa:rsa_private_key(),
 	PlainText :: jose_rsa:plain_text().
 rsaes_oaep_private_decrypt(CipherText, PrivateKey = #jose_rsa_private_key{}) when is_binary(CipherText) ->
-    CryptoSK = private_key_record_to_crypto(PrivateKey),
-    Options = [
-        {rsa_padding, rsa_pkcs1_oaep_padding},
-        {rsa_oaep_label, <<>>},
-        {rsa_oaep_md, sha}
-    ],
-    try crypto:private_decrypt(rsa, CipherText, CryptoSK, Options) of
-        PlainText when is_binary(PlainText) ->
-            PlainText
-    catch
-        error:{error, {"pkey.c", _}, "Couldn't get the result"} ->
-            error
-    end.
+	CryptoSK = private_key_record_to_crypto(PrivateKey),
+	Options = [
+		{rsa_padding, rsa_pkcs1_oaep_padding},
+		{rsa_oaep_label, <<>>},
+		{rsa_oaep_md, sha}
+	],
+	try crypto:private_decrypt(rsa, CipherText, CryptoSK, Options) of
+		PlainText when is_binary(PlainText) ->
+			PlainText
+	catch
+		error:{error, {"pkey.c", _}, "Couldn't get the result"} ->
+			error
+	end.
 
 -spec rsaes_oaep_public_encrypt(PlainText, PublicKey) -> CipherText | {error, Reason} when
 	PlainText :: jose_rsa:plain_text(),
@@ -156,13 +156,13 @@ rsaes_oaep_private_decrypt(CipherText, PrivateKey = #jose_rsa_private_key{}) whe
 	CipherText :: jose_rsa:cipher_text(),
 	Reason :: message_too_long.
 rsaes_oaep_public_encrypt(PlainText, PublicKey = #jose_rsa_public_key{}) when is_binary(PlainText) ->
-    CryptoPK = public_key_record_to_crypto(PublicKey),
-    Options = [
-        {rsa_padding, rsa_pkcs1_oaep_padding},
-        {rsa_oaep_label, <<>>},
-        {rsa_oaep_md, sha}
-    ],
-    crypto:public_encrypt(rsa, PlainText, CryptoPK, Options).
+	CryptoPK = public_key_record_to_crypto(PublicKey),
+	Options = [
+		{rsa_padding, rsa_pkcs1_oaep_padding},
+		{rsa_oaep_label, <<>>},
+		{rsa_oaep_md, sha}
+	],
+	crypto:public_encrypt(rsa, PlainText, CryptoPK, Options).
 
 -spec rsaes_oaep_sha256_mgf1_sha256_private_decrypt(CipherText, PrivateKey) -> PlainText | error when
 	CipherText :: jose_rsa:cipher_text(),
@@ -170,19 +170,19 @@ rsaes_oaep_public_encrypt(PlainText, PublicKey = #jose_rsa_public_key{}) when is
 	PlainText :: jose_rsa:plain_text().
 rsaes_oaep_sha256_mgf1_sha256_private_decrypt(CipherText, PrivateKey = #jose_rsa_private_key{}) when is_binary(CipherText) ->
 	CryptoSK = private_key_record_to_crypto(PrivateKey),
-    Options = [
-        {rsa_padding, rsa_pkcs1_oaep_padding},
-        {rsa_oaep_label, <<>>},
-        {rsa_oaep_md, sha256},
-        {rsa_mgf1_md, sha256}
-    ],
-    try crypto:private_decrypt(rsa, CipherText, CryptoSK, Options) of
-        PlainText when is_binary(PlainText) ->
-            PlainText
-    catch
-        error:{error, {"pkey.c", _}, "Couldn't get the result"} ->
-            error
-    end.
+	Options = [
+		{rsa_padding, rsa_pkcs1_oaep_padding},
+		{rsa_oaep_label, <<>>},
+		{rsa_oaep_md, sha256},
+		{rsa_mgf1_md, sha256}
+	],
+	try crypto:private_decrypt(rsa, CipherText, CryptoSK, Options) of
+		PlainText when is_binary(PlainText) ->
+			PlainText
+	catch
+		error:{error, {"pkey.c", _}, "Couldn't get the result"} ->
+			error
+	end.
 
 -spec rsaes_oaep_sha256_mgf1_sha256_public_encrypt(PlainText, PublicKey) -> CipherText | {error, Reason} when
 	PlainText :: jose_rsa:plain_text(),
@@ -191,13 +191,13 @@ rsaes_oaep_sha256_mgf1_sha256_private_decrypt(CipherText, PrivateKey = #jose_rsa
 	Reason :: message_too_long.
 rsaes_oaep_sha256_mgf1_sha256_public_encrypt(PlainText, PublicKey = #jose_rsa_public_key{}) when is_binary(PlainText) ->
 	CryptoPK = public_key_record_to_crypto(PublicKey),
-    Options = [
-        {rsa_padding, rsa_pkcs1_oaep_padding},
-        {rsa_oaep_label, <<>>},
-        {rsa_oaep_md, sha256},
-        {rsa_mgf1_md, sha256}
-    ],
-    crypto:public_encrypt(rsa, PlainText, CryptoPK, Options).
+	Options = [
+		{rsa_padding, rsa_pkcs1_oaep_padding},
+		{rsa_oaep_label, <<>>},
+		{rsa_oaep_md, sha256},
+		{rsa_mgf1_md, sha256}
+	],
+	crypto:public_encrypt(rsa, PlainText, CryptoPK, Options).
 
 -spec rsaes_oaep_sha384_mgf1_sha384_private_decrypt(CipherText, PrivateKey) -> PlainText | error when
 	CipherText :: jose_rsa:cipher_text(),
@@ -205,19 +205,19 @@ rsaes_oaep_sha256_mgf1_sha256_public_encrypt(PlainText, PublicKey = #jose_rsa_pu
 	PlainText :: jose_rsa:plain_text().
 rsaes_oaep_sha384_mgf1_sha384_private_decrypt(CipherText, PrivateKey = #jose_rsa_private_key{}) when is_binary(CipherText) ->
 	CryptoSK = private_key_record_to_crypto(PrivateKey),
-    Options = [
-        {rsa_padding, rsa_pkcs1_oaep_padding},
-        {rsa_oaep_label, <<>>},
-        {rsa_oaep_md, sha384},
-        {rsa_mgf1_md, sha384}
-    ],
-    try crypto:private_decrypt(rsa, CipherText, CryptoSK, Options) of
-        PlainText when is_binary(PlainText) ->
-            PlainText
-    catch
-        error:{error, {"pkey.c", _}, "Couldn't get the result"} ->
-            error
-    end.
+	Options = [
+		{rsa_padding, rsa_pkcs1_oaep_padding},
+		{rsa_oaep_label, <<>>},
+		{rsa_oaep_md, sha384},
+		{rsa_mgf1_md, sha384}
+	],
+	try crypto:private_decrypt(rsa, CipherText, CryptoSK, Options) of
+		PlainText when is_binary(PlainText) ->
+			PlainText
+	catch
+		error:{error, {"pkey.c", _}, "Couldn't get the result"} ->
+			error
+	end.
 
 -spec rsaes_oaep_sha384_mgf1_sha384_public_encrypt(PlainText, PublicKey) -> CipherText | {error, Reason} when
 	PlainText :: jose_rsa:plain_text(),
@@ -226,13 +226,13 @@ rsaes_oaep_sha384_mgf1_sha384_private_decrypt(CipherText, PrivateKey = #jose_rsa
 	Reason :: message_too_long.
 rsaes_oaep_sha384_mgf1_sha384_public_encrypt(PlainText, PublicKey = #jose_rsa_public_key{}) when is_binary(PlainText) ->
 	CryptoPK = public_key_record_to_crypto(PublicKey),
-    Options = [
-        {rsa_padding, rsa_pkcs1_oaep_padding},
-        {rsa_oaep_label, <<>>},
-        {rsa_oaep_md, sha384},
-        {rsa_mgf1_md, sha384}
-    ],
-    crypto:public_encrypt(rsa, PlainText, CryptoPK, Options).
+	Options = [
+		{rsa_padding, rsa_pkcs1_oaep_padding},
+		{rsa_oaep_label, <<>>},
+		{rsa_oaep_md, sha384},
+		{rsa_mgf1_md, sha384}
+	],
+	crypto:public_encrypt(rsa, PlainText, CryptoPK, Options).
 
 -spec rsaes_oaep_sha512_mgf1_sha512_private_decrypt(CipherText, PrivateKey) -> PlainText | error when
 	CipherText :: jose_rsa:cipher_text(),
@@ -240,19 +240,19 @@ rsaes_oaep_sha384_mgf1_sha384_public_encrypt(PlainText, PublicKey = #jose_rsa_pu
 	PlainText :: jose_rsa:plain_text().
 rsaes_oaep_sha512_mgf1_sha512_private_decrypt(CipherText, PrivateKey = #jose_rsa_private_key{}) when is_binary(CipherText) ->
 	CryptoSK = private_key_record_to_crypto(PrivateKey),
-    Options = [
-        {rsa_padding, rsa_pkcs1_oaep_padding},
-        {rsa_oaep_label, <<>>},
-        {rsa_oaep_md, sha512},
-        {rsa_mgf1_md, sha512}
-    ],
-    try crypto:private_decrypt(rsa, CipherText, CryptoSK, Options) of
-        PlainText when is_binary(PlainText) ->
-            PlainText
-    catch
-        error:{error, {"pkey.c", _}, "Couldn't get the result"} ->
-            error
-    end.
+	Options = [
+		{rsa_padding, rsa_pkcs1_oaep_padding},
+		{rsa_oaep_label, <<>>},
+		{rsa_oaep_md, sha512},
+		{rsa_mgf1_md, sha512}
+	],
+	try crypto:private_decrypt(rsa, CipherText, CryptoSK, Options) of
+		PlainText when is_binary(PlainText) ->
+			PlainText
+	catch
+		error:{error, {"pkey.c", _}, "Couldn't get the result"} ->
+			error
+	end.
 
 -spec rsaes_oaep_sha512_mgf1_sha512_public_encrypt(PlainText, PublicKey) -> CipherText | {error, Reason} when
 	PlainText :: jose_rsa:plain_text(),
@@ -261,13 +261,13 @@ rsaes_oaep_sha512_mgf1_sha512_private_decrypt(CipherText, PrivateKey = #jose_rsa
 	Reason :: message_too_long.
 rsaes_oaep_sha512_mgf1_sha512_public_encrypt(PlainText, PublicKey = #jose_rsa_public_key{}) when is_binary(PlainText) ->
 	CryptoPK = public_key_record_to_crypto(PublicKey),
-    Options = [
-        {rsa_padding, rsa_pkcs1_oaep_padding},
-        {rsa_oaep_label, <<>>},
-        {rsa_oaep_md, sha512},
-        {rsa_mgf1_md, sha512}
-    ],
-    crypto:public_encrypt(rsa, PlainText, CryptoPK, Options).
+	Options = [
+		{rsa_padding, rsa_pkcs1_oaep_padding},
+		{rsa_oaep_label, <<>>},
+		{rsa_oaep_md, sha512},
+		{rsa_mgf1_md, sha512}
+	],
+	crypto:public_encrypt(rsa, PlainText, CryptoPK, Options).
 
 -spec rsassa_pkcs1_v1_5_sha1_sign(Message, PrivateKey) -> Signature when
 	Message :: jose_rsa:message(),
@@ -275,10 +275,10 @@ rsaes_oaep_sha512_mgf1_sha512_public_encrypt(PlainText, PublicKey = #jose_rsa_pu
 	Signature :: jose_rsa:rsassa_pkcs1_v1_5_sha1_signature().
 rsassa_pkcs1_v1_5_sha1_sign(Message, PrivateKey = #jose_rsa_private_key{}) when is_binary(Message) ->
 	CryptoSK = private_key_record_to_crypto(PrivateKey),
-    Options = [
-        {rsa_padding, rsa_pkcs1_padding}
-    ],
-    crypto:sign(rsa, sha, Message, CryptoSK, Options).
+	Options = [
+		{rsa_padding, rsa_pkcs1_padding}
+	],
+	crypto:sign(rsa, sha, Message, CryptoSK, Options).
 
 -spec rsassa_pkcs1_v1_5_sha1_verify(Signature, Message, PublicKey) -> boolean() when
 	Signature :: jose_rsa:maybe_invalid_signature(jose_rsa:rsassa_pkcs1_v1_5_sha1_signature()),
@@ -288,10 +288,10 @@ rsassa_pkcs1_v1_5_sha1_verify(Signature, Message, PublicKey = #jose_rsa_public_k
   		when is_binary(Signature)
 		andalso is_binary(Message) ->
 	CryptoPK = public_key_record_to_crypto(PublicKey),
-    Options = [
-        {rsa_padding, rsa_pkcs1_padding}
-    ],
-    crypto:verify(rsa, sha, Message, Signature, CryptoPK, Options).
+	Options = [
+		{rsa_padding, rsa_pkcs1_padding}
+	],
+	crypto:verify(rsa, sha, Message, Signature, CryptoPK, Options).
 
 -spec rsassa_pkcs1_v1_5_sha256_sign(Message, PrivateKey) -> Signature when
 	Message :: jose_rsa:message(),
@@ -299,10 +299,10 @@ rsassa_pkcs1_v1_5_sha1_verify(Signature, Message, PublicKey = #jose_rsa_public_k
 	Signature :: jose_rsa:rsassa_pkcs1_v1_5_sha256_signature().
 rsassa_pkcs1_v1_5_sha256_sign(Message, PrivateKey = #jose_rsa_private_key{}) when is_binary(Message) ->
 	CryptoSK = private_key_record_to_crypto(PrivateKey),
-    Options = [
-        {rsa_padding, rsa_pkcs1_padding}
-    ],
-    crypto:sign(rsa, sha256, Message, CryptoSK, Options).
+	Options = [
+		{rsa_padding, rsa_pkcs1_padding}
+	],
+	crypto:sign(rsa, sha256, Message, CryptoSK, Options).
 
 -spec rsassa_pkcs1_v1_5_sha256_verify(Signature, Message, PublicKey) -> boolean() when
 	Signature :: jose_rsa:maybe_invalid_signature(jose_rsa:rsassa_pkcs1_v1_5_sha256_signature()),
@@ -312,10 +312,10 @@ rsassa_pkcs1_v1_5_sha256_verify(Signature, Message, PublicKey = #jose_rsa_public
   		when is_binary(Signature)
 		andalso is_binary(Message) ->
 	CryptoPK = public_key_record_to_crypto(PublicKey),
-    Options = [
-        {rsa_padding, rsa_pkcs1_padding}
-    ],
-    crypto:verify(rsa, sha256, Message, Signature, CryptoPK, Options).
+	Options = [
+		{rsa_padding, rsa_pkcs1_padding}
+	],
+	crypto:verify(rsa, sha256, Message, Signature, CryptoPK, Options).
 
 -spec rsassa_pkcs1_v1_5_sha384_sign(Message, PrivateKey) -> Signature when
 	Message :: jose_rsa:message(),
@@ -323,10 +323,10 @@ rsassa_pkcs1_v1_5_sha256_verify(Signature, Message, PublicKey = #jose_rsa_public
 	Signature :: jose_rsa:rsassa_pkcs1_v1_5_sha384_signature().
 rsassa_pkcs1_v1_5_sha384_sign(Message, PrivateKey = #jose_rsa_private_key{}) when is_binary(Message) ->
 	CryptoSK = private_key_record_to_crypto(PrivateKey),
-    Options = [
-        {rsa_padding, rsa_pkcs1_padding}
-    ],
-    crypto:sign(rsa, sha384, Message, CryptoSK, Options).
+	Options = [
+		{rsa_padding, rsa_pkcs1_padding}
+	],
+	crypto:sign(rsa, sha384, Message, CryptoSK, Options).
 
 -spec rsassa_pkcs1_v1_5_sha384_verify(Signature, Message, PublicKey) -> boolean() when
 	Signature :: jose_rsa:maybe_invalid_signature(jose_rsa:rsassa_pkcs1_v1_5_sha384_signature()),
@@ -336,10 +336,10 @@ rsassa_pkcs1_v1_5_sha384_verify(Signature, Message, PublicKey = #jose_rsa_public
   		when is_binary(Signature)
 		andalso is_binary(Message) ->
 	CryptoPK = public_key_record_to_crypto(PublicKey),
-    Options = [
-        {rsa_padding, rsa_pkcs1_padding}
-    ],
-    crypto:verify(rsa, sha384, Message, Signature, CryptoPK, Options).
+	Options = [
+		{rsa_padding, rsa_pkcs1_padding}
+	],
+	crypto:verify(rsa, sha384, Message, Signature, CryptoPK, Options).
 
 -spec rsassa_pkcs1_v1_5_sha512_sign(Message, PrivateKey) -> Signature when
 	Message :: jose_rsa:message(),
@@ -347,10 +347,10 @@ rsassa_pkcs1_v1_5_sha384_verify(Signature, Message, PublicKey = #jose_rsa_public
 	Signature :: jose_rsa:rsassa_pkcs1_v1_5_sha512_signature().
 rsassa_pkcs1_v1_5_sha512_sign(Message, PrivateKey = #jose_rsa_private_key{}) when is_binary(Message) ->
 	CryptoSK = private_key_record_to_crypto(PrivateKey),
-    Options = [
-        {rsa_padding, rsa_pkcs1_padding}
-    ],
-    crypto:sign(rsa, sha512, Message, CryptoSK, Options).
+	Options = [
+		{rsa_padding, rsa_pkcs1_padding}
+	],
+	crypto:sign(rsa, sha512, Message, CryptoSK, Options).
 
 -spec rsassa_pkcs1_v1_5_sha512_verify(Signature, Message, PublicKey) -> boolean() when
 	Signature :: jose_rsa:maybe_invalid_signature(jose_rsa:rsassa_pkcs1_v1_5_sha512_signature()),
@@ -360,10 +360,10 @@ rsassa_pkcs1_v1_5_sha512_verify(Signature, Message, PublicKey = #jose_rsa_public
   		when is_binary(Signature)
 		andalso is_binary(Message) ->
 	CryptoPK = public_key_record_to_crypto(PublicKey),
-    Options = [
-        {rsa_padding, rsa_pkcs1_padding}
-    ],
-    crypto:verify(rsa, sha512, Message, Signature, CryptoPK, Options).
+	Options = [
+		{rsa_padding, rsa_pkcs1_padding}
+	],
+	crypto:verify(rsa, sha512, Message, Signature, CryptoPK, Options).
 
 -spec rsassa_pss_sha256_mgf1_sha256_sign(Message, PrivateKey) -> Signature when
 	Message :: jose_rsa:message(),
@@ -371,12 +371,12 @@ rsassa_pkcs1_v1_5_sha512_verify(Signature, Message, PublicKey = #jose_rsa_public
 	Signature :: jose_rsa:rsassa_pss_sha256_mgf1_sha256_signature().
 rsassa_pss_sha256_mgf1_sha256_sign(Message, PrivateKey = #jose_rsa_private_key{}) when is_binary(Message) ->
 	CryptoSK = private_key_record_to_crypto(PrivateKey),
-    Options = [
-        {rsa_mgf1_md, sha256},
-        {rsa_padding, rsa_pkcs1_pss_padding},
-        {rsa_pss_saltlen, -1}
-    ],
-    crypto:sign(rsa, sha256, Message, CryptoSK, Options).
+	Options = [
+		{rsa_mgf1_md, sha256},
+		{rsa_padding, rsa_pkcs1_pss_padding},
+		{rsa_pss_saltlen, -1}
+	],
+	crypto:sign(rsa, sha256, Message, CryptoSK, Options).
 
 -spec rsassa_pss_sha256_mgf1_sha256_verify(Signature, Message, PublicKey) -> boolean() when
 	Signature :: jose_rsa:maybe_invalid_signature(jose_rsa:rsassa_pss_sha256_mgf1_sha256_signature()),
@@ -385,13 +385,13 @@ rsassa_pss_sha256_mgf1_sha256_sign(Message, PrivateKey = #jose_rsa_private_key{}
 rsassa_pss_sha256_mgf1_sha256_verify(Signature, Message, PublicKey = #jose_rsa_public_key{})
   		when is_binary(Signature)
 		andalso is_binary(Message) ->
-    CryptoPK = public_key_record_to_crypto(PublicKey),
-    Options = [
-        {rsa_mgf1_md, sha256},
-        {rsa_padding, rsa_pkcs1_pss_padding},
-        {rsa_pss_saltlen, -1}
-    ],
-    crypto:verify(rsa, sha256, Message, Signature, CryptoPK, Options).
+	CryptoPK = public_key_record_to_crypto(PublicKey),
+	Options = [
+		{rsa_mgf1_md, sha256},
+		{rsa_padding, rsa_pkcs1_pss_padding},
+		{rsa_pss_saltlen, -1}
+	],
+	crypto:verify(rsa, sha256, Message, Signature, CryptoPK, Options).
 
 -spec rsassa_pss_sha384_mgf1_sha384_sign(Message, PrivateKey) -> Signature when
 	Message :: jose_rsa:message(),
@@ -399,12 +399,12 @@ rsassa_pss_sha256_mgf1_sha256_verify(Signature, Message, PublicKey = #jose_rsa_p
 	Signature :: jose_rsa:rsassa_pss_sha384_mgf1_sha384_signature().
 rsassa_pss_sha384_mgf1_sha384_sign(Message, PrivateKey = #jose_rsa_private_key{}) when is_binary(Message) ->
 	CryptoSK = private_key_record_to_crypto(PrivateKey),
-    Options = [
-        {rsa_mgf1_md, sha384},
-        {rsa_padding, rsa_pkcs1_pss_padding},
-        {rsa_pss_saltlen, -1}
-    ],
-    crypto:sign(rsa, sha384, Message, CryptoSK, Options).
+	Options = [
+		{rsa_mgf1_md, sha384},
+		{rsa_padding, rsa_pkcs1_pss_padding},
+		{rsa_pss_saltlen, -1}
+	],
+	crypto:sign(rsa, sha384, Message, CryptoSK, Options).
 
 -spec rsassa_pss_sha384_mgf1_sha384_verify(Signature, Message, PublicKey) -> boolean() when
 	Signature :: jose_rsa:maybe_invalid_signature(jose_rsa:rsassa_pss_sha384_mgf1_sha384_signature()),
@@ -413,13 +413,13 @@ rsassa_pss_sha384_mgf1_sha384_sign(Message, PrivateKey = #jose_rsa_private_key{}
 rsassa_pss_sha384_mgf1_sha384_verify(Signature, Message, PublicKey = #jose_rsa_public_key{})
   		when is_binary(Signature)
 		andalso is_binary(Message) ->
-    CryptoPK = public_key_record_to_crypto(PublicKey),
-    Options = [
-        {rsa_mgf1_md, sha384},
-        {rsa_padding, rsa_pkcs1_pss_padding},
-        {rsa_pss_saltlen, -1}
-    ],
-    crypto:verify(rsa, sha384, Message, Signature, CryptoPK, Options).
+	CryptoPK = public_key_record_to_crypto(PublicKey),
+	Options = [
+		{rsa_mgf1_md, sha384},
+		{rsa_padding, rsa_pkcs1_pss_padding},
+		{rsa_pss_saltlen, -1}
+	],
+	crypto:verify(rsa, sha384, Message, Signature, CryptoPK, Options).
 
 -spec rsassa_pss_sha512_mgf1_sha512_sign(Message, PrivateKey) -> Signature when
 	Message :: jose_rsa:message(),
@@ -427,12 +427,12 @@ rsassa_pss_sha384_mgf1_sha384_verify(Signature, Message, PublicKey = #jose_rsa_p
 	Signature :: jose_rsa:rsassa_pss_sha512_mgf1_sha512_signature().
 rsassa_pss_sha512_mgf1_sha512_sign(Message, PrivateKey = #jose_rsa_private_key{}) when is_binary(Message) ->
 	CryptoSK = private_key_record_to_crypto(PrivateKey),
-    Options = [
-        {rsa_mgf1_md, sha512},
-        {rsa_padding, rsa_pkcs1_pss_padding},
-        {rsa_pss_saltlen, -1}
-    ],
-    crypto:sign(rsa, sha512, Message, CryptoSK, Options).
+	Options = [
+		{rsa_mgf1_md, sha512},
+		{rsa_padding, rsa_pkcs1_pss_padding},
+		{rsa_pss_saltlen, -1}
+	],
+	crypto:sign(rsa, sha512, Message, CryptoSK, Options).
 
 -spec rsassa_pss_sha512_mgf1_sha512_verify(Signature, Message, PublicKey) -> boolean() when
 	Signature :: jose_rsa:maybe_invalid_signature(jose_rsa:rsassa_pss_sha512_mgf1_sha512_signature()),
@@ -441,13 +441,13 @@ rsassa_pss_sha512_mgf1_sha512_sign(Message, PrivateKey = #jose_rsa_private_key{}
 rsassa_pss_sha512_mgf1_sha512_verify(Signature, Message, PublicKey = #jose_rsa_public_key{})
   		when is_binary(Signature)
 		andalso is_binary(Message) ->
-    CryptoPK = public_key_record_to_crypto(PublicKey),
-    Options = [
-        {rsa_mgf1_md, sha512},
-        {rsa_padding, rsa_pkcs1_pss_padding},
-        {rsa_pss_saltlen, -1}
-    ],
-    crypto:verify(rsa, sha512, Message, Signature, CryptoPK, Options).
+	CryptoPK = public_key_record_to_crypto(PublicKey),
+	Options = [
+		{rsa_mgf1_md, sha512},
+		{rsa_padding, rsa_pkcs1_pss_padding},
+		{rsa_pss_saltlen, -1}
+	],
+	crypto:verify(rsa, sha512, Message, Signature, CryptoPK, Options).
 
 %%%-------------------------------------------------------------------
 %%% Internal functions
@@ -455,78 +455,78 @@ rsassa_pss_sha512_mgf1_sha512_verify(Signature, Message, PublicKey = #jose_rsa_p
 
 %% @private
 private_key_crypto_to_record([E, N, D])
-        when ?is_rsa_key_integer(E)
-        andalso ?is_rsa_key_integer(N)
-        andalso ?is_rsa_key_integer(D) ->
-    #jose_rsa_private_key{
-        e = E,
-        n = N,
-        d = D
-    };
+		when ?is_rsa_key_integer(E)
+		andalso ?is_rsa_key_integer(N)
+		andalso ?is_rsa_key_integer(D) ->
+	#jose_rsa_private_key{
+		e = E,
+		n = N,
+		d = D
+	};
 private_key_crypto_to_record([E, N, D, P1, P2, E1, E2, C])
-        when ?is_rsa_key_integer(E)
-        andalso ?is_rsa_key_integer(N)
-        andalso ?is_rsa_key_integer(D)
-        andalso ?is_rsa_key_integer(P1)
-        andalso ?is_rsa_key_integer(P2)
-        andalso ?is_rsa_key_integer(E1)
-        andalso ?is_rsa_key_integer(E2)
-        andalso ?is_rsa_key_integer(C) ->
-    #jose_rsa_private_key{
-        e = E,
-        n = N,
-        d = D,
-        p = P1,
-        q = P2,
-        dp = E1,
-        dq = E2,
-        qi = C
-    }.
+		when ?is_rsa_key_integer(E)
+		andalso ?is_rsa_key_integer(N)
+		andalso ?is_rsa_key_integer(D)
+		andalso ?is_rsa_key_integer(P1)
+		andalso ?is_rsa_key_integer(P2)
+		andalso ?is_rsa_key_integer(E1)
+		andalso ?is_rsa_key_integer(E2)
+		andalso ?is_rsa_key_integer(C) ->
+	#jose_rsa_private_key{
+		e = E,
+		n = N,
+		d = D,
+		p = P1,
+		q = P2,
+		dp = E1,
+		dq = E2,
+		qi = C
+	}.
 
 %% @private
 private_key_record_to_crypto(#jose_rsa_private_key{
-        e = E,
-        n = N,
-        d = D,
-        p = P1,
-        q = P2,
-        dp = E1,
-        dq = E2,
-        qi = C
-    })
-        when ?is_rsa_key_integer(E)
-        andalso ?is_rsa_key_integer(N)
-        andalso ?is_rsa_key_integer(D)
-        andalso ?is_rsa_key_integer(P1)
-        andalso ?is_rsa_key_integer(P2)
-        andalso ?is_rsa_key_integer(E1)
-        andalso ?is_rsa_key_integer(E2)
-        andalso ?is_rsa_key_integer(C) ->
-    [E, N, D, P1, P2, E1, E2, C];
+		e = E,
+		n = N,
+		d = D,
+		p = P1,
+		q = P2,
+		dp = E1,
+		dq = E2,
+		qi = C
+	})
+		when ?is_rsa_key_integer(E)
+		andalso ?is_rsa_key_integer(N)
+		andalso ?is_rsa_key_integer(D)
+		andalso ?is_rsa_key_integer(P1)
+		andalso ?is_rsa_key_integer(P2)
+		andalso ?is_rsa_key_integer(E1)
+		andalso ?is_rsa_key_integer(E2)
+		andalso ?is_rsa_key_integer(C) ->
+	[E, N, D, P1, P2, E1, E2, C];
 private_key_record_to_crypto(#jose_rsa_private_key{
-        e = E,
-        n = N,
-        d = D
-    })
-        when ?is_rsa_key_integer(E)
-        andalso ?is_rsa_key_integer(N)
-        andalso ?is_rsa_key_integer(D) ->
-    [E, N, D].
+		e = E,
+		n = N,
+		d = D
+	})
+		when ?is_rsa_key_integer(E)
+		andalso ?is_rsa_key_integer(N)
+		andalso ?is_rsa_key_integer(D) ->
+	[E, N, D].
 
 %% @private
 public_key_crypto_to_record([E, N])
-        when ?is_rsa_key_integer(E)
-        andalso ?is_rsa_key_integer(N) ->
-    #jose_rsa_public_key{
-        e = E,
-        n = N
-    }.
+		when ?is_rsa_key_integer(E)
+		andalso ?is_rsa_key_integer(N) ->
+	#jose_rsa_public_key{
+		e = E,
+		n = N
+	}.
 
 %% @private
 public_key_record_to_crypto(#jose_rsa_public_key{
-        e = E,
-        n = N
-    })
-        when ?is_rsa_key_integer(E)
-        andalso ?is_rsa_key_integer(N) ->
-    [E, N].
+		e = E,
+		n = N
+	})
+		when ?is_rsa_key_integer(E)
+		andalso ?is_rsa_key_integer(N) ->
+	[E, N].
