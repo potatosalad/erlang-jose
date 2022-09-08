@@ -20,7 +20,7 @@
 -type maybe_invalid_signature(T) :: binary() | T.
 -type plain_text() :: binary().
 -type cipher_text() :: binary().
--type rsa_integer() :: nonempty_binary().
+-type rsa_integer() :: <<_:8, _:_*8>>.
 -type rsa_modulus_size() :: pos_integer().
 
 -type rsa_public_exponent() :: rsa_integer().
