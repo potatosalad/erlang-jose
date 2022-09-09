@@ -57,7 +57,8 @@
 -define(ALG_ECDH_SS_MODULE,  jose_jwe_alg_ecdh_ss).
 -define(ALG_PBES2_MODULE,    jose_jwe_alg_pbes2).
 -define(ALG_RSA_MODULE,      jose_jwe_alg_rsa).
--define(ENC_AES_MODULE,      jose_jwe_enc_aes).
+-define(ENC_AES_CBC_HMAC_MODULE, jose_jwe_enc_aes_cbc_hmac).
+-define(ENC_AES_GCM_MODULE, jose_jwe_enc_aes_gcm).
 -define(ENC_C20P_MODULE,     jose_jwe_enc_c20p).
 -define(ENC_XC20P_MODULE,    jose_jwe_enc_xc20p).
 -define(ZIP_MODULE,          jose_jwe_zip).
@@ -123,8 +124,10 @@ from_map({JWE, Modules, Map=#{ <<"alg">> := << "RSA", _/binary >> }}) ->
 	from_map({JWE, Modules#{ alg => ?ALG_RSA_MODULE }, Map});
 from_map({JWE, Modules, Map=#{ <<"alg">> := << "XC20PKW" >> }}) ->
 	from_map({JWE, Modules#{ alg => ?ALG_XC20P_KW_MODULE }, Map});
-from_map({JWE, Modules, Map=#{ <<"enc">> := << "A", _/binary >> }}) ->
-	from_map({JWE, Modules#{ enc => ?ENC_AES_MODULE }, Map});
+from_map({JWE, Modules, Map=#{ <<"enc">> := << "A", _, _, _, "CBC-HS", _, _, _ >> }}) ->
+	from_map({JWE, Modules#{ enc => ?ENC_AES_CBC_HMAC_MODULE }, Map});
+from_map({JWE, Modules, Map=#{ <<"enc">> := << "A", _, _, _, "GCM" >> }}) ->
+	from_map({JWE, Modules#{ enc => ?ENC_AES_GCM_MODULE }, Map});
 from_map({JWE, Modules, Map=#{ <<"enc">> := << "C20P" >> }}) ->
 	from_map({JWE, Modules#{ enc => ?ENC_C20P_MODULE }, Map});
 from_map({JWE, Modules, Map=#{ <<"enc">> := << "XC20P" >> }}) ->
@@ -198,7 +201,8 @@ block_decrypt(Key, {Modules, EncryptedMap=#{
 				error ->
 					{error, JWE};
 				CEK when is_binary(CEK) ->
-					PlainText = uncompress(ENCModule:block_decrypt({Protected, CipherText, CipherTag}, CEK, IV, ENC), JWE),
+					CompressedPlainText = ENCModule:content_decrypt(ENC, CipherText, CipherTag, Protected, IV, CEK),
+					PlainText = uncompress(CompressedPlainText, JWE),
 					{PlainText, JWE}
 			end;
 		true ->
@@ -213,7 +217,8 @@ block_decrypt(Key, {Modules, EncryptedMap=#{
 				error ->
 					{error, JWE};
 				CEK when is_binary(CEK) ->
-					PlainText = uncompress(ENCModule:block_decrypt({ConcatAAD, CipherText, CipherTag}, CEK, IV, ENC), JWE),
+					CompressedPlainText = ENCModule:content_decrypt(ENC, CipherText, CipherTag, ConcatAAD, IV, CEK),
+					PlainText = uncompress(CompressedPlainText, JWE),
 					{PlainText, JWE}
 			end
 	end.
@@ -235,7 +240,8 @@ block_encrypt(Key, PlainText, CEK, IV, JWE0=#jose_jwe{enc={ENCModule, ENC}})
 	{EncryptedKey, JWE1} = key_encrypt(Key, CEK, JWE0),
 	{Modules, ProtectedBinary} = to_binary(JWE1),
 	Protected = jose_jwa_base64url:encode(ProtectedBinary),
-	{CipherText, CipherTag} = ENCModule:block_encrypt({Protected, compress(PlainText, JWE1)}, CEK, IV, ENC),
+	CompressedPlainText = compress(PlainText, JWE1),
+	{CipherText, CipherTag} = ENCModule:content_encrypt(ENC, CompressedPlainText, Protected, IV, CEK),
 	{Modules, #{
 		<<"protected">> => Protected,
 		<<"encrypted_key">> => jose_jwa_base64url:encode(EncryptedKey),
@@ -251,7 +257,8 @@ block_encrypt(Key, {AAD0, PlainText}, CEK, IV, JWE0=#jose_jwe{enc={ENCModule, EN
 	Protected = jose_jwa_base64url:encode(ProtectedBinary),
 	AAD1 = jose_jwa_base64url:encode(AAD0),
 	ConcatAAD = << Protected/binary, $., AAD1/binary >>,
-	{CipherText, CipherTag} = ENCModule:block_encrypt({ConcatAAD, compress(PlainText, JWE1)}, CEK, IV, ENC),
+	CompressedPlainText = compress(PlainText, JWE1),
+	{CipherText, CipherTag} = ENCModule:content_encrypt(ENC, CompressedPlainText, ConcatAAD, IV, CEK),
 	{Modules, #{
 		<<"protected">> => Protected,
 		<<"encrypted_key">> => jose_jwa_base64url:encode(EncryptedKey),
@@ -346,7 +353,7 @@ next_cek(Key, Other) ->
 	next_cek(Key, from(Other)).
 
 next_iv(#jose_jwe{enc={ENCModule, ENC}}) ->
-	ENCModule:next_iv(ENC);
+	ENCModule:generate_nonce(ENC);
 next_iv(Other) ->
 	next_iv(from(Other)).
 

@@ -9,22 +9,40 @@
 %%% Created :  20 Aug 2015 by Andrew Bennett <potatosaladx@gmail.com>
 %%%-------------------------------------------------------------------
 -module(jose_json_jsone).
+-behaviour(jose_provider).
 -behaviour(jose_json).
 
+%% jose_provider callbacks
+-export([provider_info/0]).
 %% jose_json callbacks
--export([decode/1]).
--export([encode/1]).
+-export([
+    decode/1,
+    encode/1
+]).
+
+%%====================================================================
+%% jose_provider callbacks
+%%====================================================================
+
+-spec provider_info() -> jose_provider:info().
+provider_info() ->
+    #{
+        behaviour => jose_json,
+        priority => normal,
+        requirements => [
+            {app, jsone},
+            jsone
+        ]
+    }.
 
 %%====================================================================
 %% jose_json callbacks
 %%====================================================================
 
-decode(Binary) ->
-	jsone:decode(Binary).
+-spec decode(JSON) -> Term when JSON :: jose_json:json(), Term :: term().
+decode(JSON) when is_binary(JSON) ->
+    jsone:decode(JSON).
 
+-spec encode(Term) -> JSON when Term :: term(), JSON :: jose_json:json().
 encode(Term) ->
-	jsone:encode(Term, [canonical_form]).
-
-%%%-------------------------------------------------------------------
-%%% Internal functions
-%%%-------------------------------------------------------------------
+    jsone:encode(Term, [canonical_form]).

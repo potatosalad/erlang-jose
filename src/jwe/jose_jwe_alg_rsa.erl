@@ -73,7 +73,7 @@ key_encrypt(#jose_jwk{kty={KTYModule, KTY}}, DecryptedKey, JWERSA=#jose_jwe_alg_
 	{KTYModule:encrypt_public(DecryptedKey, Algorithm, KTY), JWERSA}.
 
 next_cek(_Key, {ENCModule, ENC}, ALG=#jose_jwe_alg_rsa{}) ->
-	{ENCModule:next_cek(ENC), ALG}.
+	{ENCModule:generate_content_encryption_key(ENC), ALG}.
 
 %%====================================================================
 %% API functions

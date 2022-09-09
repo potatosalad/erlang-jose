@@ -84,11 +84,13 @@ builtin_support_modules() ->
 		jose_aes_kw,
 		jose_chacha20,
 		jose_chacha20_poly1305,
+		jose_csprng,
 		jose_curve25519,
 		jose_curve448,
 		jose_ec,
 		jose_hchacha20,
 		jose_hmac,
+		jose_json,
 		jose_pbkdf2_hmac,
 		jose_poly1305,
 		jose_rsa,
@@ -126,6 +128,10 @@ builtin_provider_modules() ->
 		jose_jwa_chacha20_poly1305,
 		jose_chacha20_poly1305_crypto,
 		jose_chacha20_poly1305_libsodium,
+		%% CSPRNG
+		jose_csprng_crypto,
+		jose_csprng_libdecaf,
+		jose_csprng_libsodium,
 		%% Curve25519
 		jose_jwa_curve25519,
 		jose_curve25519_crypto,
@@ -143,6 +149,16 @@ builtin_provider_modules() ->
 		jose_hchacha20_libsodium,
 		%% HMAC
 		jose_hmac_crypto,
+		%% JSON
+		jose_json_jason,
+		jose_json_jiffy,
+		jose_json_jsone,
+		jose_json_jsx,
+		jose_json_ojson,
+		% jose_json_poison,
+		jose_json_poison_compat_encoder,
+		jose_json_poison_lexical_encoder,
+		jose_json_thoas,
 		%% PBKDF2-HMAC
 		jose_jwa_pbkdf2_hmac,
 		jose_pbkdf2_hmac_crypto,

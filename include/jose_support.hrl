@@ -17,6 +17,7 @@
 -define(expect(Expected, Module, Function, Arguments), jose_support:expect(Expected, Module, Function, Arguments)).
 -define(expect(Expected, Actual, Module, Function, Arguments), jose_support:expect(Expected, Actual, Module, Function, Arguments)).
 -define(expect_report(Module, Function, Arguments, Actual, Expected), jose_support:expect_report(Module, Function, Arguments, Actual, Expected)).
+-define(format(Format, Arguments), lists:flatten(io_lib:format(Format, Arguments))).
 -define(resolve(Arguments),
 	case ets:whereis(jose_jwa_resolved) of
 		undefined ->

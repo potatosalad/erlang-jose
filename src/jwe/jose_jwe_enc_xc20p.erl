@@ -9,66 +9,104 @@
 %%% Created :  14 Sep 2019 by Andrew Bennett <potatosaladx@gmail.com>
 %%%-------------------------------------------------------------------
 -module(jose_jwe_enc_xc20p).
+
 -behaviour(jose_jwe).
 -behaviour(jose_jwe_enc).
 
 %% jose_jwe callbacks
--export([from_map/1]).
--export([to_map/2]).
+-export([
+    from_map/1,
+    to_map/2
+]).
 %% jose_jwe_enc callbacks
--export([algorithm/1]).
--export([bits/1]).
--export([block_decrypt/4]).
--export([block_encrypt/4]).
--export([next_cek/1]).
--export([next_iv/1]).
-%% API
--export([cipher_supported/0]).
+-export([
+    algorithm/1,
+    key_bit_size/1,
+    content_decrypt/6,
+    content_encrypt/5,
+    generate_content_encryption_key/1,
+    generate_nonce/1
+]).
 
 %% Types
--type enc() :: {xchacha20_poly1305, 256}.
+-type state() :: xchacha20_poly1305.
 
--export_type([enc/0]).
+-export_type([
+    state/0
+]).
 
 %% Macros
--define(XCHACHA20_POLY1305, {xchacha20_poly1305, 256}).
+-define(is_state(X), ((X) =:= xchacha20_poly1305)).
 
 %%====================================================================
 %% jose_jwe callbacks
 %%====================================================================
 
-from_map(F = #{ <<"enc">> := <<"XC20P">> }) ->
-	{?XCHACHA20_POLY1305, maps:remove(<<"enc">>, F)}.
+from_map(F = #{<<"enc">> := <<"XC20P">>}) ->
+    {xchacha20_poly1305, maps:remove(<<"enc">>, F)}.
 
-to_map(?XCHACHA20_POLY1305, F) ->
-	F#{ <<"enc">> => <<"XC20P">> }.
+to_map(xchacha20_poly1305, F) ->
+    F#{<<"enc">> => <<"XC20P">>}.
 
 %%====================================================================
 %% jose_jwe_enc callbacks
 %%====================================================================
 
-algorithm(?XCHACHA20_POLY1305) -> <<"XC20P">>.
+-spec algorithm(ENC) -> Algorithm when
+    ENC :: jose_jwe_enc:internal_state(state()),
+    Algorithm :: jose_jwe_enc:algorithm().
+algorithm(xchacha20_poly1305) -> <<"XC20P">>.
 
-bits(?XCHACHA20_POLY1305) -> 256.
+-spec key_bit_size(ENC) -> KeyBitSize when
+    ENC :: jose_jwe_enc:internal_state(state()),
+    KeyBitSize :: jose_jwe_enc:key_bit_size().
+key_bit_size(xchacha20_poly1305) -> 256.
 
-block_decrypt({AAD, CipherText, CipherTag}, CEK, IV, ?XCHACHA20_POLY1305) ->
-	jose_jwa:block_decrypt(?XCHACHA20_POLY1305, CEK, IV, {AAD, CipherText, CipherTag}).
+-spec content_decrypt(ENC, CipherText, CipherTag, AAD, Nonce, CEK) -> PlainText | error when
+    ENC :: jose_jwe_enc:internal_state(state()),
+    CipherText :: jose_xchacha20_poly1305:cipher_text(),
+    CipherTag :: jose_xchacha20_poly1305:xchacha20_poly1305_mac(),
+    AAD :: jose_xchacha20_poly1305:additional_authenticated_data(),
+    Nonce :: jose_xchacha20_poly1305:xchacha20_poly1305_nonce(),
+    CEK :: jose_xchacha20_poly1305:xchacha20_poly1305_key(),
+    PlainText :: jose_xchacha20_poly1305:plain_text().
+content_decrypt(xchacha20_poly1305, CipherText, CipherTag, AAD, Nonce, CEK) when
+    is_bitstring(CipherText) andalso
+        bit_size(CipherTag) =:= 128 andalso
+        is_bitstring(AAD) andalso
+        bit_size(Nonce) =:= 192 andalso
+        bit_size(CEK) =:= 256
+->
+    jose_xchacha20_poly1305:xchacha20_poly1305_decrypt(CipherText, CipherTag, AAD, Nonce, CEK).
 
-block_encrypt({AAD, PlainText}, CEK, IV, ?XCHACHA20_POLY1305) ->
-	jose_jwa:block_encrypt(?XCHACHA20_POLY1305, CEK, IV, {AAD, PlainText}).
+-spec content_encrypt(ENC, PlainText, AAD, Nonce, CEK) -> {CipherText, CipherTag} when
+    ENC :: jose_jwe_enc:internal_state(state()),
+    PlainText :: jose_xchacha20_poly1305:plain_text(),
+    AAD :: jose_xchacha20_poly1305:additional_authenticated_data(),
+    Nonce :: jose_xchacha20_poly1305:xchacha20_poly1305_nonce(),
+    CEK :: jose_xchacha20_poly1305:xchacha20_poly1305_key(),
+    CipherText :: jose_xchacha20_poly1305:cipher_text(),
+    CipherTag :: jose_xchacha20_poly1305:xchacha20_poly1305_mac().
+content_encrypt(xchacha20_poly1305, PlainText, AAD, Nonce, CEK) when
+    is_bitstring(PlainText) andalso
+        is_bitstring(AAD) andalso
+        bit_size(Nonce) =:= 192 andalso
+        bit_size(CEK) =:= 256
+->
+    jose_xchacha20_poly1305:xchacha20_poly1305_encrypt(PlainText, AAD, Nonce, CEK).
 
-next_cek(?XCHACHA20_POLY1305) ->
-	crypto:strong_rand_bytes(32).
+-spec generate_content_encryption_key(ENC) -> CEK when
+    ENC :: jose_jwe_enc:internal_state(state()),
+    CEK :: jose_jwe_enc:content_encryption_key().
+generate_content_encryption_key(ENC) when ?is_state(ENC) ->
+    KeyBitSize = key_bit_size(ENC),
+    jose_csprng:random_bits(KeyBitSize).
 
-next_iv(?XCHACHA20_POLY1305) ->
-	crypto:strong_rand_bytes(24).
-
-%%====================================================================
-%% API functions
-%%====================================================================
-
-cipher_supported() ->
-	[xchacha20_poly1305].
+-spec generate_nonce(ENC) -> Nonce when
+    ENC :: jose_jwe_enc:internal_state(),
+    Nonce :: jose_jwe_enc:nonce().
+generate_nonce(ENC) when ?is_state(ENC) ->
+    jose_csprng:random_bits(96).
 
 %%%-------------------------------------------------------------------
 %%% Internal functions

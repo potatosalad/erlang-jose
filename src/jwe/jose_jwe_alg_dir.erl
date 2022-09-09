@@ -44,7 +44,7 @@ to_map(dir, F) ->
 %%====================================================================
 
 generate_key(_Fields, {ENCModule, ENC}, dir) ->
-	jose_jwe_alg:generate_key({oct, (ENCModule:bits(ENC) div 8)}, <<"dir">>, ENCModule:algorithm(ENC)).
+	jose_jwe_alg:generate_key({oct, (ENCModule:key_bit_size(ENC) div 8)}, <<"dir">>, ENCModule:algorithm(ENC)).
 
 key_decrypt(Key, _EncryptedKey, dir) when is_binary(Key) ->
 	Key;

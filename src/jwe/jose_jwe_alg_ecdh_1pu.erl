@@ -123,7 +123,7 @@ key_decrypt({UStaticPublicKey=#jose_jwk{}, VStaticSecretKey=#jose_jwk{}}, Encryp
 	key_decrypt(Z, EncryptedKey, JWEECDH1PU);
 key_decrypt(Z, {ENCModule, ENC, <<>>}, #jose_jwe_alg_ecdh_1pu{apu=APU, apv=APV, wrap=undefined, bits=undefined}) when is_binary(Z) ->
 	Algorithm = ENCModule:algorithm(ENC),
-	KeyDataLen = ENCModule:bits(ENC),
+	KeyDataLen = ENCModule:key_bit_size(ENC),
 	SuppPubInfo = << KeyDataLen:1/unsigned-big-integer-unit:32 >>,
 	DerivedKey = jose_jwa_concat_kdf:kdf(sha256, Z, {Algorithm, APU, APV, SuppPubInfo}, KeyDataLen),
 	DerivedKey;
@@ -231,12 +231,12 @@ next_cek(#jose_jwk{kty={KTYModule, KTY}}, {ENC, ENCModule}, JWEECDH1PU=#jose_jwe
 	next_cek(DerivedKey, {ENCModule, ENC}, JWEECDH1PU);
 next_cek(Z, {ENCModule, ENC}, JWEECDH1PU=#jose_jwe_alg_ecdh_1pu{apu=APU, apv=APV, wrap=undefined, bits=undefined}) when is_binary(Z) ->
 	Algorithm = ENCModule:algorithm(ENC),
-	KeyDataLen = ENCModule:bits(ENC),
+	KeyDataLen = ENCModule:key_bit_size(ENC),
 	SuppPubInfo = << KeyDataLen:1/unsigned-big-integer-unit:32 >>,
 	DerivedKey = jose_jwa_concat_kdf:kdf(sha256, Z, {Algorithm, APU, APV, SuppPubInfo}, KeyDataLen),
 	{DerivedKey, JWEECDH1PU};
 next_cek(_Key, {ENCModule, ENC}, JWEECDH1PU=#jose_jwe_alg_ecdh_1pu{}) ->
-	{ENCModule:next_cek(ENC), JWEECDH1PU}.
+	{ENCModule:generate_content_encryption_key(ENC), JWEECDH1PU}.
 
 %%====================================================================
 %% API functions

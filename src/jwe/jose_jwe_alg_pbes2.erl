@@ -169,7 +169,7 @@ key_encrypt(#jose_jwk{kty={KTYModule, KTY}}, DecryptedKey, JWEPBES2=#jose_jwe_al
 	key_encrypt(KTYModule:derive_key(KTY), DecryptedKey, JWEPBES2).
 
 next_cek(_Key, {ENCModule, ENC}, ALG=#jose_jwe_alg_pbes2{}) ->
-	{ENCModule:next_cek(ENC), ALG}.
+	{ENCModule:generate_content_encryption_key(ENC), ALG}.
 
 %%====================================================================
 %% API functions
