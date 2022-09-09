@@ -18,7 +18,7 @@
 -export([provider_info/0]).
 %% jose_poly1305 callbacks
 -export([
-	poly1305_mac/2
+    poly1305_mac/2
 ]).
 %% API
 -export([mac/2]).
@@ -51,78 +51,88 @@ provider_info() ->
 %%====================================================================
 
 -spec poly1305_mac(Message, OneTimeKey) -> Tag when
-	Message :: jose_poly1305:message(),
+    Message :: jose_poly1305:message(),
     OneTimeKey :: jose_poly1305:poly1305_one_time_key(),
     Tag :: jose_poly1305:poly1305_tag().
 poly1305_mac(Message, OneTimeKey) when bit_size(OneTimeKey) =:= 256 ->
-	mac(Message, OneTimeKey).
+    mac(Message, OneTimeKey).
 
 %%====================================================================
 %% API functions
 %%====================================================================
 
-mac(M, K)
-		when is_binary(M)
-		andalso is_binary(K)
-		andalso bit_size(K) =:= 256 ->
-	mac_final(mac_update(mac_init(K), M)).
+mac(M, K) when
+    is_binary(M) andalso
+        is_binary(K) andalso
+        bit_size(K) =:= 256
+->
+    mac_final(mac_update(mac_init(K), M)).
 
-mac_init(<< R:128/unsigned-little-integer-unit:1, S:128/unsigned-little-integer-unit:1 >>) ->
-	A = 0,
-	<<
-		(?clamp(R)):128/unsigned-little-integer-unit:1,
-		A:136/unsigned-little-integer-unit:1,
-		S:128/unsigned-little-integer-unit:1,
-		0:1656
-	>>.
+mac_init(<<R:128/unsigned-little-integer-unit:1, S:128/unsigned-little-integer-unit:1>>) ->
+    A = 0,
+    <<
+        (?clamp(R)):128/unsigned-little-integer-unit:1,
+        A:136/unsigned-little-integer-unit:1,
+        S:128/unsigned-little-integer-unit:1,
+        0:1656
+    >>.
 
-mac_update(C = << _:392, 0:1656 >>, <<>>) ->
-	C;
-mac_update(<<
-			R:128/unsigned-little-integer-unit:1,
-			A:136/unsigned-little-integer-unit:1,
-			S:128/unsigned-little-integer-unit:1,
-			0:1656
-		>>, <<
-			Block:128/bitstring,
-			Rest/binary
-		>>) ->
-	<< B:136/unsigned-little-integer-unit:1 >> = <<
-		Block:128/bitstring,
-		1:8/unsigned-little-integer-unit:1
-	>>,
-	mac_update(<<
-		R:128/unsigned-little-integer-unit:1,
-		(?math:mod((A + B) * R, ?p)):136/unsigned-little-integer-unit:1,
-		S:128/unsigned-little-integer-unit:1,
-		0:1656
-	>>, Rest);
-mac_update(<<
-			R:128/unsigned-little-integer-unit:1,
-			A:136/unsigned-little-integer-unit:1,
-			S:128/unsigned-little-integer-unit:1,
-			0:1656
-		>>, <<
-			Block/binary
-		>>) ->
-	BlockBits = bit_size(Block),
-	PadBits = 136 - BlockBits - 8,
-	<< B:136/unsigned-little-integer-unit:1 >> = <<
-		Block/binary,
-		1:8/unsigned-little-integer-unit:1,
-		0:PadBits/unsigned-little-integer-unit:1
-	>>,
-	<<
-		R:128/unsigned-little-integer-unit:1,
-		(?math:mod((A + B) * R, ?p)):136/unsigned-little-integer-unit:1,
-		S:128/unsigned-little-integer-unit:1,
-		0:1656
-	>>.
+mac_update(C = <<_:392, 0:1656>>, <<>>) ->
+    C;
+mac_update(
+    <<
+        R:128/unsigned-little-integer-unit:1,
+        A:136/unsigned-little-integer-unit:1,
+        S:128/unsigned-little-integer-unit:1,
+        0:1656
+    >>,
+    <<
+        Block:128/bitstring,
+        Rest/binary
+    >>
+) ->
+    <<B:136/unsigned-little-integer-unit:1>> = <<
+        Block:128/bitstring,
+        1:8/unsigned-little-integer-unit:1
+    >>,
+    mac_update(
+        <<
+            R:128/unsigned-little-integer-unit:1,
+            (?math:mod((A + B) * R, ?p)):136/unsigned-little-integer-unit:1,
+            S:128/unsigned-little-integer-unit:1,
+            0:1656
+        >>,
+        Rest
+    );
+mac_update(
+    <<
+        R:128/unsigned-little-integer-unit:1,
+        A:136/unsigned-little-integer-unit:1,
+        S:128/unsigned-little-integer-unit:1,
+        0:1656
+    >>,
+    <<
+        Block/binary
+    >>
+) ->
+    BlockBits = bit_size(Block),
+    PadBits = 136 - BlockBits - 8,
+    <<B:136/unsigned-little-integer-unit:1>> = <<
+        Block/binary,
+        1:8/unsigned-little-integer-unit:1,
+        0:PadBits/unsigned-little-integer-unit:1
+    >>,
+    <<
+        R:128/unsigned-little-integer-unit:1,
+        (?math:mod((A + B) * R, ?p)):136/unsigned-little-integer-unit:1,
+        S:128/unsigned-little-integer-unit:1,
+        0:1656
+    >>.
 
 mac_final(<<
-			_R:128/unsigned-little-integer-unit:1,
-			A:136/unsigned-little-integer-unit:1,
-			S:128/unsigned-little-integer-unit:1,
-			0:1656
-		>>) ->
-	<< (A + S):128/unsigned-little-integer-unit:1 >>.
+    _R:128/unsigned-little-integer-unit:1,
+    A:136/unsigned-little-integer-unit:1,
+    S:128/unsigned-little-integer-unit:1,
+    0:1656
+>>) ->
+    <<(A + S):128/unsigned-little-integer-unit:1>>.

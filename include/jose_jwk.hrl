@@ -13,9 +13,9 @@
 -ifndef(JOSE_JWK_HRL).
 
 -record(jose_jwk, {
-	keys   = undefined :: undefined | {module(), any()},
-	kty    = undefined :: undefined | {module(), any()},
-	fields = #{}       :: map()
+    keys = undefined :: undefined | {module(), any()},
+    kty = undefined :: undefined | {module(), any()},
+    fields = #{} :: map()
 }).
 
 -define(JOSE_JWK_HRL, 1).

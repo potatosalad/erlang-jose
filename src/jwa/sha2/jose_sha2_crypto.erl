@@ -18,10 +18,10 @@
 -export([provider_info/0]).
 %% jose_sha2 callbacks
 -export([
-	sha224/1,
-	sha256/1,
-	sha384/1,
-	sha512/1
+    sha224/1,
+    sha256/1,
+    sha384/1,
+    sha512/1
 ]).
 
 %%====================================================================
@@ -44,21 +44,21 @@ provider_info() ->
 %%====================================================================
 
 -spec sha224(Input) -> Output when
-	Input :: jose_sha2:input(), Output :: jose_sha2:sha224_output().
+    Input :: jose_sha2:input(), Output :: jose_sha2:sha224_output().
 sha224(Input) ->
-	crypto:hash(sha224, Input).
+    crypto:hash(sha224, Input).
 
 -spec sha256(Input) -> Output when
-	Input :: jose_sha2:input(), Output :: jose_sha2:sha256_output().
+    Input :: jose_sha2:input(), Output :: jose_sha2:sha256_output().
 sha256(Input) ->
-	crypto:hash(sha256, Input).
+    crypto:hash(sha256, Input).
 
 -spec sha384(Input) -> Output when
-	Input :: jose_sha2:input(), Output :: jose_sha2:sha384_output().
+    Input :: jose_sha2:input(), Output :: jose_sha2:sha384_output().
 sha384(Input) ->
-	crypto:hash(sha384, Input).
+    crypto:hash(sha384, Input).
 
 -spec sha512(Input) -> Output when
-	Input :: jose_sha2:input(), Output :: jose_sha2:sha512_output().
+    Input :: jose_sha2:input(), Output :: jose_sha2:sha512_output().
 sha512(Input) ->
-	crypto:hash(sha512, Input).
+    crypto:hash(sha512, Input).

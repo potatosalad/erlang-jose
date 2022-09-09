@@ -18,7 +18,7 @@
 -export([provider_info/0]).
 %% jose_poly1305 callbacks
 -export([
-	poly1305_mac/2
+    poly1305_mac/2
 ]).
 
 %%====================================================================
@@ -41,8 +41,8 @@ provider_info() ->
 %%====================================================================
 
 -spec poly1305_mac(Message, OneTimeKey) -> Tag when
-	Message :: jose_poly1305:message(),
+    Message :: jose_poly1305:message(),
     OneTimeKey :: jose_poly1305:poly1305_one_time_key(),
     Tag :: jose_poly1305:poly1305_tag().
 poly1305_mac(Message, OneTimeKey) when bit_size(OneTimeKey) =:= 256 ->
-	libsodium_crypto_onetimeauth_poly1305:crypto_onetimeauth_poly1305(Message, OneTimeKey).
+    libsodium_crypto_onetimeauth_poly1305:crypto_onetimeauth_poly1305(Message, OneTimeKey).

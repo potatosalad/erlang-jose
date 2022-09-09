@@ -18,7 +18,7 @@
 -export([provider_info/0]).
 %% jose_sha2 callbacks
 -export([
-	sha512/1
+    sha512/1
 ]).
 
 %%====================================================================
@@ -41,6 +41,6 @@ provider_info() ->
 %%====================================================================
 
 -spec sha512(Input) -> Output when
-	Input :: jose_sha2:input(), Output :: jose_sha2:sha512_output().
+    Input :: jose_sha2:input(), Output :: jose_sha2:sha512_output().
 sha512(Input) ->
-	libdecaf_sha2:hash(sha2_512, Input).
+    libdecaf_sha2:hash(sha2_512, Input).

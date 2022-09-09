@@ -21,29 +21,29 @@
 -type hchacha20_subkey() :: <<_:256>>.
 
 -export_type([
-	hchacha20_key/0,
-	hchacha20_nonce/0,
-	hchacha20_subkey/0
+    hchacha20_key/0,
+    hchacha20_nonce/0,
+    hchacha20_subkey/0
 ]).
 
 %% Callbacks
 -callback hchacha20_subkey(Nonce, Key) -> Subkey when
-	Nonce :: jose_hchacha20:hchacha20_nonce(),
-	Key :: jose_hchacha20:hchacha20_key(),
-	Subkey :: jose_hchacha20:hchacha20_subkey().
+    Nonce :: jose_hchacha20:hchacha20_nonce(),
+    Key :: jose_hchacha20:hchacha20_key(),
+    Subkey :: jose_hchacha20:hchacha20_subkey().
 
 -optional_callbacks([
-	hchacha20_subkey/2
+    hchacha20_subkey/2
 ]).
 
 %% jose_support callbacks
 -export([
-	support_info/0,
-	support_check/3
+    support_info/0,
+    support_check/3
 ]).
 %% jose_hchacha20 callbacks
 -export([
-	hchacha20_subkey/2
+    hchacha20_subkey/2
 ]).
 
 %% Macros
@@ -57,29 +57,31 @@
 
 -spec support_info() -> jose_support:info().
 support_info() ->
-	#{
-		stateful => [],
-		callbacks => [
-			{{hchacha20_subkey, 2}, []}
-		]
-	}.
+    #{
+        stateful => [],
+        callbacks => [
+            {{hchacha20_subkey, 2}, []}
+        ]
+    }.
 
--spec support_check(Module :: module(), FunctionName :: jose_support:function_name(), Arity :: arity()) -> jose_support:support_check_result().
+-spec support_check(Module :: module(), FunctionName :: jose_support:function_name(), Arity :: arity()) ->
+    jose_support:support_check_result().
 support_check(Module, hchacha20_subkey, 2) ->
-	Nonce = ?TV_HCHACHA20_Nonce(),
-	Key = ?TV_HCHACHA20_Key(),
-	Subkey = ?TV_HCHACHA20_Subkey(),
-	?expect(Subkey, Module, hchacha20_subkey, [Nonce, Key]).
+    Nonce = ?TV_HCHACHA20_Nonce(),
+    Key = ?TV_HCHACHA20_Key(),
+    Subkey = ?TV_HCHACHA20_Subkey(),
+    ?expect(Subkey, Module, hchacha20_subkey, [Nonce, Key]).
 
 %%====================================================================
 %% jose_hchacha20 callbacks
 %%====================================================================
 
 -spec hchacha20_subkey(Nonce, Key) -> Subkey when
-	Nonce :: jose_hchacha20:hchacha20_nonce(),
-	Key :: jose_hchacha20:hchacha20_key(),
-	Subkey :: jose_hchacha20:hchacha20_subkey().
-hchacha20_subkey(Nonce, Key)
-		when bit_size(Nonce) =:= 128
-		andalso bit_size(Key) =:= 256 ->
-	?resolve([Nonce, Key]).
+    Nonce :: jose_hchacha20:hchacha20_nonce(),
+    Key :: jose_hchacha20:hchacha20_key(),
+    Subkey :: jose_hchacha20:hchacha20_subkey().
+hchacha20_subkey(Nonce, Key) when
+    bit_size(Nonce) =:= 128 andalso
+        bit_size(Key) =:= 256
+->
+    ?resolve([Nonce, Key]).

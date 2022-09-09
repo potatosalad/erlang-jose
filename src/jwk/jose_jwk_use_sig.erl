@@ -11,28 +11,24 @@
 %%%-------------------------------------------------------------------
 -module(jose_jwk_use_sig).
 
--callback sign(Message, Options, KTY) -> Signature
-	when
-		Message   :: iodata(),
-		Options   :: any(),
-		KTY       :: any(),
-		Signature :: iodata().
--callback signer(KTY, Fields) -> JWSMap
-	when
-		KTY    :: any(),
-		Fields :: map(),
-		JWSMap :: map().
--callback verifier(KTY, Fields) -> [JWSALG]
-	when
-		KTY    :: any(),
-		Fields :: map(),
-		JWSALG :: iodata().
--callback verify(Message, Options, Signature, KTY) -> boolean()
-	when
-		Message   :: iodata(),
-		Options   :: any(),
-		Signature :: iodata(),
-		KTY       :: any().
+-callback sign(Message, Options, KTY) -> Signature when
+    Message :: iodata(),
+    Options :: any(),
+    KTY :: any(),
+    Signature :: iodata().
+-callback signer(KTY, Fields) -> JWSMap when
+    KTY :: any(),
+    Fields :: map(),
+    JWSMap :: map().
+-callback verifier(KTY, Fields) -> [JWSALG] when
+    KTY :: any(),
+    Fields :: map(),
+    JWSALG :: iodata().
+-callback verify(Message, Options, Signature, KTY) -> boolean() when
+    Message :: iodata(),
+    Options :: any(),
+    Signature :: iodata(),
+    KTY :: any().
 
 %%====================================================================
 %% API functions

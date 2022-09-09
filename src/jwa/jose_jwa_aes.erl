@@ -26,64 +26,70 @@
 %% jose_block_encryptor callbacks
 %%====================================================================
 
-block_decrypt({aes_ecb, Bits}, Key, CipherText)
-		when (Bits =:= 128
-			orelse Bits =:= 192
-			orelse Bits =:= 256)
-		andalso bit_size(Key) =:= Bits
-		andalso is_binary(CipherText) ->
-	{St, RoundKey} = aes_key_expansion(Bits, Key),
-	ecb_block_decrypt(St, RoundKey, CipherText, <<>>).
+block_decrypt({aes_ecb, Bits}, Key, CipherText) when
+    (Bits =:= 128 orelse
+        Bits =:= 192 orelse
+        Bits =:= 256) andalso
+        bit_size(Key) =:= Bits andalso
+        is_binary(CipherText)
+->
+    {St, RoundKey} = aes_key_expansion(Bits, Key),
+    ecb_block_decrypt(St, RoundKey, CipherText, <<>>).
 
-block_decrypt({aes_cbc, Bits}, Key, IV, CipherText)
-		when (Bits =:= 128
-			orelse Bits =:= 192
-			orelse Bits =:= 256)
-		andalso bit_size(Key) =:= Bits
-		andalso bit_size(IV) =:= 128
-		andalso is_binary(CipherText) ->
-	{St, RoundKey} = aes_key_expansion(Bits, Key),
-	cbc_block_decrypt(St, RoundKey, IV, CipherText, <<>>);
-block_decrypt({aes_gcm, Bits}, Key, IV, {AAD, CipherText, CipherTag})
-		when (Bits =:= 128
-			orelse Bits =:= 192
-			orelse Bits =:= 256)
-		andalso bit_size(Key) =:= Bits
-		andalso bit_size(IV) > 0
-		andalso is_binary(AAD)
-		andalso is_binary(CipherText)
-		andalso is_binary(CipherTag) ->
-	MasterKey = block_encrypt({aes_ecb, Bits}, Key, << 0:128 >>),
-	gcm_block_decrypt(MasterKey, Key, IV, AAD, CipherText, CipherTag).
+block_decrypt({aes_cbc, Bits}, Key, IV, CipherText) when
+    (Bits =:= 128 orelse
+        Bits =:= 192 orelse
+        Bits =:= 256) andalso
+        bit_size(Key) =:= Bits andalso
+        bit_size(IV) =:= 128 andalso
+        is_binary(CipherText)
+->
+    {St, RoundKey} = aes_key_expansion(Bits, Key),
+    cbc_block_decrypt(St, RoundKey, IV, CipherText, <<>>);
+block_decrypt({aes_gcm, Bits}, Key, IV, {AAD, CipherText, CipherTag}) when
+    (Bits =:= 128 orelse
+        Bits =:= 192 orelse
+        Bits =:= 256) andalso
+        bit_size(Key) =:= Bits andalso
+        bit_size(IV) > 0 andalso
+        is_binary(AAD) andalso
+        is_binary(CipherText) andalso
+        is_binary(CipherTag)
+->
+    MasterKey = block_encrypt({aes_ecb, Bits}, Key, <<0:128>>),
+    gcm_block_decrypt(MasterKey, Key, IV, AAD, CipherText, CipherTag).
 
-block_encrypt({aes_ecb, Bits}, Key, PlainText)
-		when (Bits =:= 128
-			orelse Bits =:= 192
-			orelse Bits =:= 256)
-		andalso bit_size(Key) =:= Bits
-		andalso is_binary(PlainText) ->
-	{St, RoundKey} = aes_key_expansion(Bits, Key),
-	ecb_block_encrypt(St, RoundKey, PlainText, <<>>).
+block_encrypt({aes_ecb, Bits}, Key, PlainText) when
+    (Bits =:= 128 orelse
+        Bits =:= 192 orelse
+        Bits =:= 256) andalso
+        bit_size(Key) =:= Bits andalso
+        is_binary(PlainText)
+->
+    {St, RoundKey} = aes_key_expansion(Bits, Key),
+    ecb_block_encrypt(St, RoundKey, PlainText, <<>>).
 
-block_encrypt({aes_cbc, Bits}, Key, IV, PlainText)
-		when (Bits =:= 128
-			orelse Bits =:= 192
-			orelse Bits =:= 256)
-		andalso bit_size(Key) =:= Bits
-		andalso bit_size(IV) =:= 128
-		andalso is_binary(PlainText) ->
-	{St, RoundKey} = aes_key_expansion(Bits, Key),
-	cbc_block_encrypt(St, RoundKey, IV, PlainText, <<>>);
-block_encrypt({aes_gcm, Bits}, Key, IV, {AAD, PlainText})
-		when (Bits =:= 128
-			orelse Bits =:= 192
-			orelse Bits =:= 256)
-		andalso bit_size(Key) =:= Bits
-		andalso bit_size(IV) > 0
-		andalso is_binary(AAD)
-		andalso is_binary(PlainText) ->
-	MasterKey = block_encrypt({aes_ecb, Bits}, Key, << 0:128 >>),
-	gcm_block_encrypt(MasterKey, Key, IV, AAD, PlainText).
+block_encrypt({aes_cbc, Bits}, Key, IV, PlainText) when
+    (Bits =:= 128 orelse
+        Bits =:= 192 orelse
+        Bits =:= 256) andalso
+        bit_size(Key) =:= Bits andalso
+        bit_size(IV) =:= 128 andalso
+        is_binary(PlainText)
+->
+    {St, RoundKey} = aes_key_expansion(Bits, Key),
+    cbc_block_encrypt(St, RoundKey, IV, PlainText, <<>>);
+block_encrypt({aes_gcm, Bits}, Key, IV, {AAD, PlainText}) when
+    (Bits =:= 128 orelse
+        Bits =:= 192 orelse
+        Bits =:= 256) andalso
+        bit_size(Key) =:= Bits andalso
+        bit_size(IV) > 0 andalso
+        is_binary(AAD) andalso
+        is_binary(PlainText)
+->
+    MasterKey = block_encrypt({aes_ecb, Bits}, Key, <<0:128>>),
+    gcm_block_encrypt(MasterKey, Key, IV, AAD, PlainText).
 
 %%%-------------------------------------------------------------------
 %%% Internal AES functions
@@ -91,253 +97,255 @@ block_encrypt({aes_gcm, Bits}, Key, IV, {AAD, PlainText})
 
 %% @private
 aes_add_round_key(B0, RoundKey, {Nb, _, _}, Round) ->
-	B1 = aes_add_round_key(0, 0, B0, RoundKey, Nb, Round),
-	B2 = aes_add_round_key(1, 0, B1, RoundKey, Nb, Round),
-	B3 = aes_add_round_key(2, 0, B2, RoundKey, Nb, Round),
-	B4 = aes_add_round_key(3, 0, B3, RoundKey, Nb, Round),
-	B4.
+    B1 = aes_add_round_key(0, 0, B0, RoundKey, Nb, Round),
+    B2 = aes_add_round_key(1, 0, B1, RoundKey, Nb, Round),
+    B3 = aes_add_round_key(2, 0, B2, RoundKey, Nb, Round),
+    B4 = aes_add_round_key(3, 0, B3, RoundKey, Nb, Round),
+    B4.
 
 %% @private
 aes_add_round_key(_I, 4, Block, _RoundKey, _Nb, _Round) ->
-	Block;
+    Block;
 aes_add_round_key(I, J, B0, RoundKey, Nb, Round) ->
-	RK = bget(RoundKey, Round * Nb * 4 + I * Nb + J),
-	BK = bget(B0, I * 4 + J),
-	B1 = bset(B0, I * 4 + J, BK bxor RK),
-	aes_add_round_key(I, J + 1, B1, RoundKey, Nb, Round).
+    RK = bget(RoundKey, Round * Nb * 4 + I * Nb + J),
+    BK = bget(B0, I * 4 + J),
+    B1 = bset(B0, I * 4 + J, BK bxor RK),
+    aes_add_round_key(I, J + 1, B1, RoundKey, Nb, Round).
 
 %% @private
 aes_key_expansion(Bits, Key) ->
-	% The number of columns comprising a state in AES.
-	Nb = 4,
-	% The number of 32 bit words in a key.
-	Nk = Bits div 32,
-	% The number of rounds in AES Cipher.
-	Nr = case Bits of
-		128 -> 10;
-		192 -> 12;
-		256 -> 14
-	end,
-	KeyLen = bit_size(Key),
-	KeysLen = Nb * (Nr + 1) * Nk * 8,
-	Keys = << Key/binary, 0:(KeysLen - KeyLen) >>,
-	St = {Nb, Nk, Nr},
-	{St, aes_key_expansion((KeyLen div 32), (Nb * (Nr + 1)), St, Keys)}.
+    % The number of columns comprising a state in AES.
+    Nb = 4,
+    % The number of 32 bit words in a key.
+    Nk = Bits div 32,
+    % The number of rounds in AES Cipher.
+    Nr =
+        case Bits of
+            128 -> 10;
+            192 -> 12;
+            256 -> 14
+        end,
+    KeyLen = bit_size(Key),
+    KeysLen = Nb * (Nr + 1) * Nk * 8,
+    Keys = <<Key/binary, 0:(KeysLen - KeyLen)>>,
+    St = {Nb, Nk, Nr},
+    {St, aes_key_expansion((KeyLen div 32), (Nb * (Nr + 1)), St, Keys)}.
 
 aes_key_expansion(Rs, Rs, _, RoundKey) ->
-	RoundKey;
-aes_key_expansion(I, Rs, St={Nb, Nk, _}, RoundKey) ->
-	T0 = bget(RoundKey, (I - 1) * Nb + 0),
-	T1 = bget(RoundKey, (I - 1) * Nb + 1),
-	T2 = bget(RoundKey, (I - 1) * Nb + 2),
-	T3 = bget(RoundKey, (I - 1) * Nb + 3),
-	{V0, V1, V2, V3} = case I rem Nk of
-		0 ->
-			% RotWord
-			RW0 = T1,
-			RW1 = T2,
-			RW2 = T3,
-			RW3 = T0,
-			% SubWord
-			SW0 = sBox(RW0) bxor rcon(I div Nk),
-			SW1 = sBox(RW1),
-			SW2 = sBox(RW2),
-			SW3 = sBox(RW3),
-			{
-				SW0,
-				SW1,
-				SW2,
-				SW3
-			};
-		4 when Nk > 6 ->
-			% SubWord
-			SW0 = sBox(T0),
-			SW1 = sBox(T1),
-			SW2 = sBox(T2),
-			SW3 = sBox(T3),
-			{
-				SW0,
-				SW1,
-				SW2,
-				SW3
-			};
-		_ ->
-			{
-				T0,
-				T1,
-				T2,
-				T3
-			}
-	end,
-	A0 = bget(RoundKey, (I - Nk) * Nb + 0) bxor V0,
-	A1 = bget(RoundKey, (I - Nk) * Nb + 1) bxor V1,
-	A2 = bget(RoundKey, (I - Nk) * Nb + 2) bxor V2,
-	A3 = bget(RoundKey, (I - Nk) * Nb + 3) bxor V3,
-	RK0 = bset(RoundKey, I * Nb + 0, A0),
-	RK1 = bset(RK0, I * Nb + 1, A1),
-	RK2 = bset(RK1, I * Nb + 2, A2),
-	RK3 = bset(RK2, I * Nb + 3, A3),
-	aes_key_expansion(I + 1, Rs, St, RK3).
+    RoundKey;
+aes_key_expansion(I, Rs, St = {Nb, Nk, _}, RoundKey) ->
+    T0 = bget(RoundKey, (I - 1) * Nb + 0),
+    T1 = bget(RoundKey, (I - 1) * Nb + 1),
+    T2 = bget(RoundKey, (I - 1) * Nb + 2),
+    T3 = bget(RoundKey, (I - 1) * Nb + 3),
+    {V0, V1, V2, V3} =
+        case I rem Nk of
+            0 ->
+                % RotWord
+                RW0 = T1,
+                RW1 = T2,
+                RW2 = T3,
+                RW3 = T0,
+                % SubWord
+                SW0 = sBox(RW0) bxor rcon(I div Nk),
+                SW1 = sBox(RW1),
+                SW2 = sBox(RW2),
+                SW3 = sBox(RW3),
+                {
+                    SW0,
+                    SW1,
+                    SW2,
+                    SW3
+                };
+            4 when Nk > 6 ->
+                % SubWord
+                SW0 = sBox(T0),
+                SW1 = sBox(T1),
+                SW2 = sBox(T2),
+                SW3 = sBox(T3),
+                {
+                    SW0,
+                    SW1,
+                    SW2,
+                    SW3
+                };
+            _ ->
+                {
+                    T0,
+                    T1,
+                    T2,
+                    T3
+                }
+        end,
+    A0 = bget(RoundKey, (I - Nk) * Nb + 0) bxor V0,
+    A1 = bget(RoundKey, (I - Nk) * Nb + 1) bxor V1,
+    A2 = bget(RoundKey, (I - Nk) * Nb + 2) bxor V2,
+    A3 = bget(RoundKey, (I - Nk) * Nb + 3) bxor V3,
+    RK0 = bset(RoundKey, I * Nb + 0, A0),
+    RK1 = bset(RK0, I * Nb + 1, A1),
+    RK2 = bset(RK1, I * Nb + 2, A2),
+    RK3 = bset(RK2, I * Nb + 3, A3),
+    aes_key_expansion(I + 1, Rs, St, RK3).
 
 %%%-------------------------------------------------------------------
 %%% Internal AES decrypt functions
 %%%-------------------------------------------------------------------
 
 %% @private
-aes_inverse_cipher(St={_, _, Nr}, RoundKey, B0) ->
-	B1 = aes_add_round_key(B0, RoundKey, St, Nr),
-	B2 = aes_inverse_cipher_rounds(Nr - 1, St, RoundKey, B1),
-	B3 = aes_inverse_shift_rows(B2),
-	B4 = aes_inverse_sub_bytes(B3),
-	B5 = aes_add_round_key(B4, RoundKey, St, 0),
-	B5.
+aes_inverse_cipher(St = {_, _, Nr}, RoundKey, B0) ->
+    B1 = aes_add_round_key(B0, RoundKey, St, Nr),
+    B2 = aes_inverse_cipher_rounds(Nr - 1, St, RoundKey, B1),
+    B3 = aes_inverse_shift_rows(B2),
+    B4 = aes_inverse_sub_bytes(B3),
+    B5 = aes_add_round_key(B4, RoundKey, St, 0),
+    B5.
 
 %% @private
 aes_inverse_cipher_rounds(0, _St, _RoundKey, B) ->
-	B;
+    B;
 aes_inverse_cipher_rounds(Round, St, RoundKey, B0) ->
-	B1 = aes_inverse_shift_rows(B0),
-	B2 = aes_inverse_sub_bytes(B1),
-	B3 = aes_add_round_key(B2, RoundKey, St, Round),
-	B4 = aes_inverse_mix_columns(B3),
-	aes_inverse_cipher_rounds(Round - 1, St, RoundKey, B4).
+    B1 = aes_inverse_shift_rows(B0),
+    B2 = aes_inverse_sub_bytes(B1),
+    B3 = aes_add_round_key(B2, RoundKey, St, Round),
+    B4 = aes_inverse_mix_columns(B3),
+    aes_inverse_cipher_rounds(Round - 1, St, RoundKey, B4).
 
 %% @private
 aes_inverse_mix_columns(B) ->
-	aes_inverse_mix_columns(0, B).
+    aes_inverse_mix_columns(0, B).
 
 %% @private
 aes_inverse_mix_columns(4, B) ->
-	B;
+    B;
 aes_inverse_mix_columns(I, B0) ->
-	A = bget(B0, I * 4 + 0),
-	B = bget(B0, I * 4 + 1),
-	C = bget(B0, I * 4 + 2),
-	D = bget(B0, I * 4 + 3),
-	B1 = bset(B0, I * 4 + 0, gex(A) bxor gbx(B) bxor gdx(C) bxor g9x(D)),
-	B2 = bset(B1, I * 4 + 1, g9x(A) bxor gex(B) bxor gbx(C) bxor gdx(D)),
-	B3 = bset(B2, I * 4 + 2, gdx(A) bxor g9x(B) bxor gex(C) bxor gbx(D)),
-	B4 = bset(B3, I * 4 + 3, gbx(A) bxor gdx(B) bxor g9x(C) bxor gex(D)),
-	aes_inverse_mix_columns(I + 1, B4).
+    A = bget(B0, I * 4 + 0),
+    B = bget(B0, I * 4 + 1),
+    C = bget(B0, I * 4 + 2),
+    D = bget(B0, I * 4 + 3),
+    B1 = bset(B0, I * 4 + 0, gex(A) bxor gbx(B) bxor gdx(C) bxor g9x(D)),
+    B2 = bset(B1, I * 4 + 1, g9x(A) bxor gex(B) bxor gbx(C) bxor gdx(D)),
+    B3 = bset(B2, I * 4 + 2, gdx(A) bxor g9x(B) bxor gex(C) bxor gbx(D)),
+    B4 = bset(B3, I * 4 + 3, gbx(A) bxor gdx(B) bxor g9x(C) bxor gex(D)),
+    aes_inverse_mix_columns(I + 1, B4).
 
 %% @private
 aes_inverse_shift_rows(B0) ->
-	% Rotate first row 1 columns to right
-	T0 = bget(B0, 3 * 4 + 1),
-	B1 = bset(B0, 3 * 4 + 1, bget(B0, 2 * 4 + 1)),
-	B2 = bset(B1, 2 * 4 + 1, bget(B1, 1 * 4 + 1)),
-	B3 = bset(B2, 1 * 4 + 1, bget(B2, 0 * 4 + 1)),
-	B4 = bset(B3, 0 * 4 + 1, T0),
-	% Rotate second row 2 columns to right
-	T1 = bget(B4, 0 * 4 + 2),
-	B5 = bset(B4, 0 * 4 + 2, bget(B4, 2 * 4 + 2)),
-	B6 = bset(B5, 2 * 4 + 2, T1),
-	T2 = bget(B6, 1 * 4 + 2),
-	B7 = bset(B6, 1 * 4 + 2, bget(B6, 3 * 4 + 2)),
-	B8 = bset(B7, 3 * 4 + 2, T2),
-	% Rotate third row 3 columns to right
-	T3 = bget(B8, 0 * 4 + 3),
-	B9 = bset(B8, 0 * 4 + 3, bget(B8, 1 * 4 + 3)),
-	BA = bset(B9, 1 * 4 + 3, bget(B9, 2 * 4 + 3)),
-	BB = bset(BA, 2 * 4 + 3, bget(BA, 3 * 4 + 3)),
-	BC = bset(BB, 3 * 4 + 3, T3),
-	BC.
+    % Rotate first row 1 columns to right
+    T0 = bget(B0, 3 * 4 + 1),
+    B1 = bset(B0, 3 * 4 + 1, bget(B0, 2 * 4 + 1)),
+    B2 = bset(B1, 2 * 4 + 1, bget(B1, 1 * 4 + 1)),
+    B3 = bset(B2, 1 * 4 + 1, bget(B2, 0 * 4 + 1)),
+    B4 = bset(B3, 0 * 4 + 1, T0),
+    % Rotate second row 2 columns to right
+    T1 = bget(B4, 0 * 4 + 2),
+    B5 = bset(B4, 0 * 4 + 2, bget(B4, 2 * 4 + 2)),
+    B6 = bset(B5, 2 * 4 + 2, T1),
+    T2 = bget(B6, 1 * 4 + 2),
+    B7 = bset(B6, 1 * 4 + 2, bget(B6, 3 * 4 + 2)),
+    B8 = bset(B7, 3 * 4 + 2, T2),
+    % Rotate third row 3 columns to right
+    T3 = bget(B8, 0 * 4 + 3),
+    B9 = bset(B8, 0 * 4 + 3, bget(B8, 1 * 4 + 3)),
+    BA = bset(B9, 1 * 4 + 3, bget(B9, 2 * 4 + 3)),
+    BB = bset(BA, 2 * 4 + 3, bget(BA, 3 * 4 + 3)),
+    BC = bset(BB, 3 * 4 + 3, T3),
+    BC.
 
 %% @private
 aes_inverse_sub_bytes(B0) ->
-	B1 = aes_inverse_sub_bytes(0, 0, B0),
-	B2 = aes_inverse_sub_bytes(1, 0, B1),
-	B3 = aes_inverse_sub_bytes(2, 0, B2),
-	B4 = aes_inverse_sub_bytes(3, 0, B3),
-	B4.
+    B1 = aes_inverse_sub_bytes(0, 0, B0),
+    B2 = aes_inverse_sub_bytes(1, 0, B1),
+    B3 = aes_inverse_sub_bytes(2, 0, B2),
+    B4 = aes_inverse_sub_bytes(3, 0, B3),
+    B4.
 
 %% @private
 aes_inverse_sub_bytes(_I, 4, B) ->
-	B;
+    B;
 aes_inverse_sub_bytes(I, J, B0) ->
-	T0 = bget(B0, J * 4 + I),
-	B1 = bset(B0, J * 4 + I, isBox(T0)),
-	aes_inverse_sub_bytes(I, J + 1, B1).
+    T0 = bget(B0, J * 4 + I),
+    B1 = bset(B0, J * 4 + I, isBox(T0)),
+    aes_inverse_sub_bytes(I, J + 1, B1).
 
 %%%-------------------------------------------------------------------
 %%% Internal AES encrypt functions
 %%%-------------------------------------------------------------------
 
 %% @private
-aes_cipher(St={_, _, Nr}, RoundKey, B0) ->
-	B1 = aes_add_round_key(B0, RoundKey, St, 0),
-	B2 = aes_cipher_rounds(1, St, RoundKey, B1),
-	B3 = aes_sub_bytes(B2),
-	B4 = aes_shift_rows(B3),
-	B5 = aes_add_round_key(B4, RoundKey, St, Nr),
-	B5.
+aes_cipher(St = {_, _, Nr}, RoundKey, B0) ->
+    B1 = aes_add_round_key(B0, RoundKey, St, 0),
+    B2 = aes_cipher_rounds(1, St, RoundKey, B1),
+    B3 = aes_sub_bytes(B2),
+    B4 = aes_shift_rows(B3),
+    B5 = aes_add_round_key(B4, RoundKey, St, Nr),
+    B5.
 
 %% @private
-aes_cipher_rounds(Nr, _St={_, _, Nr}, _RoundKey, B) ->
-	B;
+aes_cipher_rounds(Nr, _St = {_, _, Nr}, _RoundKey, B) ->
+    B;
 aes_cipher_rounds(Round, St, RoundKey, B0) ->
-	B1 = aes_sub_bytes(B0),
-	B2 = aes_shift_rows(B1),
-	B3 = aes_mix_columns(B2),
-	B4 = aes_add_round_key(B3, RoundKey, St, Round),
-	aes_cipher_rounds(Round + 1, St, RoundKey, B4).
+    B1 = aes_sub_bytes(B0),
+    B2 = aes_shift_rows(B1),
+    B3 = aes_mix_columns(B2),
+    B4 = aes_add_round_key(B3, RoundKey, St, Round),
+    aes_cipher_rounds(Round + 1, St, RoundKey, B4).
 
 %% @private
 aes_mix_columns(B) ->
-	aes_mix_columns(0, B).
+    aes_mix_columns(0, B).
 
 %% @private
 aes_mix_columns(4, B) ->
-	B;
+    B;
 aes_mix_columns(I, B0) ->
-	A = bget(B0, I * 4 + 0),
-	B = bget(B0, I * 4 + 1),
-	C = bget(B0, I * 4 + 2),
-	D = bget(B0, I * 4 + 3),
-	B1 = bset(B0, I * 4 + 0, g2x(A) bxor g3x(B) bxor C bxor D),
-	B2 = bset(B1, I * 4 + 1, A bxor g2x(B) bxor g3x(C) bxor D),
-	B3 = bset(B2, I * 4 + 2, A bxor B bxor g2x(C) bxor g3x(D)),
-	B4 = bset(B3, I * 4 + 3, g3x(A) bxor B bxor C bxor g2x(D)),
-	aes_mix_columns(I + 1, B4).
+    A = bget(B0, I * 4 + 0),
+    B = bget(B0, I * 4 + 1),
+    C = bget(B0, I * 4 + 2),
+    D = bget(B0, I * 4 + 3),
+    B1 = bset(B0, I * 4 + 0, g2x(A) bxor g3x(B) bxor C bxor D),
+    B2 = bset(B1, I * 4 + 1, A bxor g2x(B) bxor g3x(C) bxor D),
+    B3 = bset(B2, I * 4 + 2, A bxor B bxor g2x(C) bxor g3x(D)),
+    B4 = bset(B3, I * 4 + 3, g3x(A) bxor B bxor C bxor g2x(D)),
+    aes_mix_columns(I + 1, B4).
 
 %% @private
 aes_shift_rows(B0) ->
-	% Rotate first row 1 columns to left
-	T0 = bget(B0, 0 * 4 + 1),
-	B1 = bset(B0, 0 * 4 + 1, bget(B0, 1 * 4 + 1)),
-	B2 = bset(B1, 1 * 4 + 1, bget(B1, 2 * 4 + 1)),
-	B3 = bset(B2, 2 * 4 + 1, bget(B2, 3 * 4 + 1)),
-	B4 = bset(B3, 3 * 4 + 1, T0),
-	% Rotate second row 2 columns to left
-	T1 = bget(B4, 0 * 4 + 2),
-	B5 = bset(B4, 0 * 4 + 2, bget(B4, 2 * 4 + 2)),
-	B6 = bset(B5, 2 * 4 + 2, T1),
-	T2 = bget(B6, 1 * 4 + 2),
-	B7 = bset(B6, 1 * 4 + 2, bget(B6, 3 * 4 + 2)),
-	B8 = bset(B7, 3 * 4 + 2, T2),
-	% Rotate third row 3 columns to left
-	T3 = bget(B8, 0 * 4 + 3),
-	B9 = bset(B8, 0 * 4 + 3, bget(B8, 3 * 4 + 3)),
-	BA = bset(B9, 3 * 4 + 3, bget(B9, 2 * 4 + 3)),
-	BB = bset(BA, 2 * 4 + 3, bget(BA, 1 * 4 + 3)),
-	BC = bset(BB, 1 * 4 + 3, T3),
-	BC.
+    % Rotate first row 1 columns to left
+    T0 = bget(B0, 0 * 4 + 1),
+    B1 = bset(B0, 0 * 4 + 1, bget(B0, 1 * 4 + 1)),
+    B2 = bset(B1, 1 * 4 + 1, bget(B1, 2 * 4 + 1)),
+    B3 = bset(B2, 2 * 4 + 1, bget(B2, 3 * 4 + 1)),
+    B4 = bset(B3, 3 * 4 + 1, T0),
+    % Rotate second row 2 columns to left
+    T1 = bget(B4, 0 * 4 + 2),
+    B5 = bset(B4, 0 * 4 + 2, bget(B4, 2 * 4 + 2)),
+    B6 = bset(B5, 2 * 4 + 2, T1),
+    T2 = bget(B6, 1 * 4 + 2),
+    B7 = bset(B6, 1 * 4 + 2, bget(B6, 3 * 4 + 2)),
+    B8 = bset(B7, 3 * 4 + 2, T2),
+    % Rotate third row 3 columns to left
+    T3 = bget(B8, 0 * 4 + 3),
+    B9 = bset(B8, 0 * 4 + 3, bget(B8, 3 * 4 + 3)),
+    BA = bset(B9, 3 * 4 + 3, bget(B9, 2 * 4 + 3)),
+    BB = bset(BA, 2 * 4 + 3, bget(BA, 1 * 4 + 3)),
+    BC = bset(BB, 1 * 4 + 3, T3),
+    BC.
 
 %% @private
 aes_sub_bytes(B0) ->
-	B1 = aes_sub_bytes(0, 0, B0),
-	B2 = aes_sub_bytes(1, 0, B1),
-	B3 = aes_sub_bytes(2, 0, B2),
-	B4 = aes_sub_bytes(3, 0, B3),
-	B4.
+    B1 = aes_sub_bytes(0, 0, B0),
+    B2 = aes_sub_bytes(1, 0, B1),
+    B3 = aes_sub_bytes(2, 0, B2),
+    B4 = aes_sub_bytes(3, 0, B3),
+    B4.
 
 %% @private
 aes_sub_bytes(_I, 4, B) ->
-	B;
+    B;
 aes_sub_bytes(I, J, B0) ->
-	T0 = bget(B0, J * 4 + I),
-	B1 = bset(B0, J * 4 + I, sBox(T0)),
-	aes_sub_bytes(I, J + 1, B1).
+    T0 = bget(B0, J * 4 + I),
+    B1 = bset(B0, J * 4 + I, sBox(T0)),
+    aes_sub_bytes(I, J + 1, B1).
 
 %%%-------------------------------------------------------------------
 %%% Internal CBC decrypt functions
@@ -345,10 +353,10 @@ aes_sub_bytes(I, J, B0) ->
 
 %% @private
 cbc_block_decrypt(_St, _RoundKey, _IV, <<>>, PlainText) ->
-	PlainText;
-cbc_block_decrypt(St, RoundKey, IV, << Block:128/bitstring, CipherText/bitstring >>, PlainText) ->
-	Decrypted = crypto:exor(aes_inverse_cipher(St, RoundKey, Block), IV),
-	cbc_block_decrypt(St, RoundKey, Block, CipherText, << PlainText/binary, Decrypted/binary >>).
+    PlainText;
+cbc_block_decrypt(St, RoundKey, IV, <<Block:128/bitstring, CipherText/bitstring>>, PlainText) ->
+    Decrypted = crypto:exor(aes_inverse_cipher(St, RoundKey, Block), IV),
+    cbc_block_decrypt(St, RoundKey, Block, CipherText, <<PlainText/binary, Decrypted/binary>>).
 
 %%%-------------------------------------------------------------------
 %%% Internal CBC encrypt functions
@@ -356,10 +364,10 @@ cbc_block_decrypt(St, RoundKey, IV, << Block:128/bitstring, CipherText/bitstring
 
 %% @private
 cbc_block_encrypt(_St, _RoundKey, _IV, <<>>, CipherText) ->
-	CipherText;
-cbc_block_encrypt(St, RoundKey, IV, << Block:128/bitstring, PlainText/bitstring >>, CipherText) ->
-	Encrypted = aes_cipher(St, RoundKey, crypto:exor(Block, IV)),
-	cbc_block_encrypt(St, RoundKey, Encrypted, PlainText, << CipherText/binary, Encrypted/binary >>).
+    CipherText;
+cbc_block_encrypt(St, RoundKey, IV, <<Block:128/bitstring, PlainText/bitstring>>, CipherText) ->
+    Encrypted = aes_cipher(St, RoundKey, crypto:exor(Block, IV)),
+    cbc_block_encrypt(St, RoundKey, Encrypted, PlainText, <<CipherText/binary, Encrypted/binary>>).
 
 %%%-------------------------------------------------------------------
 %%% Internal GCM functions
@@ -367,122 +375,136 @@ cbc_block_encrypt(St, RoundKey, IV, << Block:128/bitstring, PlainText/bitstring 
 
 %% @private
 ctr_from_gcm_key_len(128) ->
-	{fun jose_aes_ctr:aes_128_ctr_stream_init/2, fun jose_aes_ctr:aes_128_ctr_stream_exor/2, fun jose_aes_ctr:aes_128_ctr_stream_final/1};
+    {
+        fun jose_aes_ctr:aes_128_ctr_stream_init/2,
+        fun jose_aes_ctr:aes_128_ctr_stream_exor/2,
+        fun jose_aes_ctr:aes_128_ctr_stream_final/1
+    };
 ctr_from_gcm_key_len(192) ->
-	{fun jose_aes_ctr:aes_192_ctr_stream_init/2, fun jose_aes_ctr:aes_192_ctr_stream_exor/2, fun jose_aes_ctr:aes_192_ctr_stream_final/1};
+    {
+        fun jose_aes_ctr:aes_192_ctr_stream_init/2,
+        fun jose_aes_ctr:aes_192_ctr_stream_exor/2,
+        fun jose_aes_ctr:aes_192_ctr_stream_final/1
+    };
 ctr_from_gcm_key_len(256) ->
-	{fun jose_aes_ctr:aes_256_ctr_stream_init/2, fun jose_aes_ctr:aes_256_ctr_stream_exor/2, fun jose_aes_ctr:aes_256_ctr_stream_final/1}.
+    {
+        fun jose_aes_ctr:aes_256_ctr_stream_init/2,
+        fun jose_aes_ctr:aes_256_ctr_stream_exor/2,
+        fun jose_aes_ctr:aes_256_ctr_stream_final/1
+    }.
 
 %% @private
 gcm_block_decrypt(H, K, IV, A, C, T) ->
-	Y0 = case bit_size(IV) of
-		96 ->
-			<< IV/binary, 1:32/unsigned-big-integer-unit:1 >>;
-		_ ->
-			gcm_ghash(H, <<>>, IV)
-	end,
-	KeyLen = bit_size(K),
-	Ctr = {CtrInit, CtrUpdate, _CtrFinal} = ctr_from_gcm_key_len(KeyLen),
-	S0 = CtrInit(Y0, K),
-	{S1, EKY0xor} = CtrUpdate(S0, Y0),
-	EKY0 = crypto:exor(EKY0xor, Y0),
-	<< Y0int:128/unsigned-big-integer-unit:1 >> = Y0,
-	Y1 = << (Y0int + 1):128/unsigned-big-integer-unit:1 >>,
-	GHASH = gcm_ghash(H, A, C),
-	TBits = bit_size(T),
-	<< TPrime:TBits/bitstring, _/bitstring >> = crypto:exor(GHASH, EKY0),
-	case jose_jwa:constant_time_compare(T, TPrime) of
-		false ->
-			error;
-		true ->
-			P = gcm_exor(Ctr, S1, Y1, C, <<>>),
-			P
-	end.
+    Y0 =
+        case bit_size(IV) of
+            96 ->
+                <<IV/binary, 1:32/unsigned-big-integer-unit:1>>;
+            _ ->
+                gcm_ghash(H, <<>>, IV)
+        end,
+    KeyLen = bit_size(K),
+    Ctr = {CtrInit, CtrUpdate, _CtrFinal} = ctr_from_gcm_key_len(KeyLen),
+    S0 = CtrInit(Y0, K),
+    {S1, EKY0xor} = CtrUpdate(S0, Y0),
+    EKY0 = crypto:exor(EKY0xor, Y0),
+    <<Y0int:128/unsigned-big-integer-unit:1>> = Y0,
+    Y1 = <<(Y0int + 1):128/unsigned-big-integer-unit:1>>,
+    GHASH = gcm_ghash(H, A, C),
+    TBits = bit_size(T),
+    <<TPrime:TBits/bitstring, _/bitstring>> = crypto:exor(GHASH, EKY0),
+    case jose_jwa:constant_time_compare(T, TPrime) of
+        false ->
+            error;
+        true ->
+            P = gcm_exor(Ctr, S1, Y1, C, <<>>),
+            P
+    end.
 
 %% @private
 gcm_block_encrypt(H, K, IV, A, P) ->
-	Y0 = case bit_size(IV) of
-		96 ->
-			<< IV/binary, 1:32/unsigned-big-integer-unit:1 >>;
-		_ ->
-			gcm_ghash(H, <<>>, IV)
-	end,
-	KeyLen = bit_size(K),
-	Ctr = {CtrInit, CtrUpdate, _CtrFinal} = ctr_from_gcm_key_len(KeyLen),
-	S0 = CtrInit(Y0, K),
-	{S1, EKY0xor} = CtrUpdate(S0, Y0),
-	EKY0 = crypto:exor(EKY0xor, Y0),
-	<< Y0int:128/unsigned-big-integer-unit:1 >> = Y0,
-	Y1 = << (Y0int + 1):128/unsigned-big-integer-unit:1 >>,
-	C = gcm_exor(Ctr, S1, Y1, P, <<>>),
-	GHASH = gcm_ghash(H, A, C),
-	T = crypto:exor(GHASH, EKY0),
-	{C, T}.
+    Y0 =
+        case bit_size(IV) of
+            96 ->
+                <<IV/binary, 1:32/unsigned-big-integer-unit:1>>;
+            _ ->
+                gcm_ghash(H, <<>>, IV)
+        end,
+    KeyLen = bit_size(K),
+    Ctr = {CtrInit, CtrUpdate, _CtrFinal} = ctr_from_gcm_key_len(KeyLen),
+    S0 = CtrInit(Y0, K),
+    {S1, EKY0xor} = CtrUpdate(S0, Y0),
+    EKY0 = crypto:exor(EKY0xor, Y0),
+    <<Y0int:128/unsigned-big-integer-unit:1>> = Y0,
+    Y1 = <<(Y0int + 1):128/unsigned-big-integer-unit:1>>,
+    C = gcm_exor(Ctr, S1, Y1, P, <<>>),
+    GHASH = gcm_ghash(H, A, C),
+    T = crypto:exor(GHASH, EKY0),
+    {C, T}.
 
 %% @private
 gcm_exor(_Ctr = {_CtrInit, _CtrUpdate, CtrFinal}, S, _Y, <<>>, C) ->
-	<<>> = CtrFinal(S),
-	C;
-gcm_exor(Ctr = {_CtrInit, CtrUpdate, _CtrFinal}, S0, Y0, << B:128/bitstring, P/bitstring >>, C0) ->
-	{S1, EKY0xor} = CtrUpdate(S0, Y0),
-	EKY0 = crypto:exor(EKY0xor, Y0),
-	<< Y0int:128/unsigned-big-integer-unit:1 >> = Y0,
-	Y1 = << (Y0int + 1):128/unsigned-big-integer-unit:1 >>,
-	C1 = << C0/binary, (crypto:exor(B, EKY0))/binary >>,
-	gcm_exor(Ctr, S1, Y1, P, C1);
+    <<>> = CtrFinal(S),
+    C;
+gcm_exor(Ctr = {_CtrInit, CtrUpdate, _CtrFinal}, S0, Y0, <<B:128/bitstring, P/bitstring>>, C0) ->
+    {S1, EKY0xor} = CtrUpdate(S0, Y0),
+    EKY0 = crypto:exor(EKY0xor, Y0),
+    <<Y0int:128/unsigned-big-integer-unit:1>> = Y0,
+    Y1 = <<(Y0int + 1):128/unsigned-big-integer-unit:1>>,
+    C1 = <<C0/binary, (crypto:exor(B, EKY0))/binary>>,
+    gcm_exor(Ctr, S1, Y1, P, C1);
 gcm_exor(_Ctr = {_CtrInit, CtrUpdate, CtrFinal}, S0, Y0, P, C0) ->
-	PBits = bit_size(P),
-	{S1, EKY0xor} = CtrUpdate(S0, Y0),
-	<< EKY0:PBits/bitstring, _/bitstring >> = crypto:exor(EKY0xor, Y0),
-	C1 = << C0/binary, (crypto:exor(P, EKY0))/binary >>,
-	<<>> = CtrFinal(S1),
-	C1.
+    PBits = bit_size(P),
+    {S1, EKY0xor} = CtrUpdate(S0, Y0),
+    <<EKY0:PBits/bitstring, _/bitstring>> = crypto:exor(EKY0xor, Y0),
+    C1 = <<C0/binary, (crypto:exor(P, EKY0))/binary>>,
+    <<>> = CtrFinal(S1),
+    C1.
 
 %% @private
 gcm_ghash(Key, AAD, CipherText) ->
-	Data = << (gcm_pad(AAD))/binary, (gcm_pad(CipherText))/binary >>,
-	K = crypto:bytes_to_integer(Key),
-	gcm_ghash_block(K, AAD, CipherText, Data, << 0:128/unsigned-big-integer-unit:1 >>).
+    Data = <<(gcm_pad(AAD))/binary, (gcm_pad(CipherText))/binary>>,
+    K = crypto:bytes_to_integer(Key),
+    gcm_ghash_block(K, AAD, CipherText, Data, <<0:128/unsigned-big-integer-unit:1>>).
 
 %% @private
 gcm_ghash_block(K, AAD, CipherText, <<>>, GHash) ->
-	AADBits = bit_size(AAD),
-	CipherTextBits = bit_size(CipherText),
-	GHashMask = << ((AADBits bsl 64) bor CipherTextBits):128/unsigned-big-integer-unit:1 >>,
-	gcm_ghash_multiply(crypto:exor(GHash, GHashMask), K);
-gcm_ghash_block(K, AAD, CipherText, << Block:128/bitstring, Data/bitstring >>, GHash) ->
-	gcm_ghash_block(K, AAD, CipherText, Data, gcm_ghash_multiply(crypto:exor(GHash, Block), K)).
+    AADBits = bit_size(AAD),
+    CipherTextBits = bit_size(CipherText),
+    GHashMask = <<((AADBits bsl 64) bor CipherTextBits):128/unsigned-big-integer-unit:1>>,
+    gcm_ghash_multiply(crypto:exor(GHash, GHashMask), K);
+gcm_ghash_block(K, AAD, CipherText, <<Block:128/bitstring, Data/bitstring>>, GHash) ->
+    gcm_ghash_block(K, AAD, CipherText, Data, gcm_ghash_multiply(crypto:exor(GHash, Block), K)).
 
 %% @private
 gcm_ghash_multiply(GHash, K) ->
-	gcm_ghash_multiply(0, K, crypto:bytes_to_integer(GHash), 0).
+    gcm_ghash_multiply(0, K, crypto:bytes_to_integer(GHash), 0).
 
 %% @private
 gcm_ghash_multiply(16, _K, _GHash, Result) ->
-	<< Result:128/unsigned-big-integer-unit:1 >>;
+    <<Result:128/unsigned-big-integer-unit:1>>;
 gcm_ghash_multiply(I, K, GHash, Result) ->
-	J = (GHash band 16#FF),
-	Val = gf_2_128_mul(K, (J bsl (I * 8))),
-	gcm_ghash_multiply(I + 1, K, GHash bsr 8, Result bxor Val).
+    J = (GHash band 16#FF),
+    Val = gf_2_128_mul(K, (J bsl (I * 8))),
+    gcm_ghash_multiply(I + 1, K, GHash bsr 8, Result bxor Val).
 
 %% @private
 gcm_pad(Binary) when (byte_size(Binary) rem 16) =/= 0 ->
-	PadBits = (16 - (byte_size(Binary) rem 16)) * 8,
-	<< Binary/binary, 0:PadBits >>;
+    PadBits = (16 - (byte_size(Binary) rem 16)) * 8,
+    <<Binary/binary, 0:PadBits>>;
 gcm_pad(Binary) ->
-	Binary.
+    Binary.
 
 %% @private
 gf_2_128_mul(X, Y) ->
-	gf_2_128_mul(127, X, Y, 0).
+    gf_2_128_mul(127, X, Y, 0).
 
 %% @private
 gf_2_128_mul(-1, _X, _Y, R) ->
-	R;
+    R;
 gf_2_128_mul(I, X0, Y, R0) ->
-	R1 = (R0 bxor (X0 * ((Y bsr I) band 1))),
-	X1 = (X0 bsr 1) bxor ((X0 band 1) * 16#E1000000000000000000000000000000),
-	gf_2_128_mul(I - 1, X1, Y, R1).
+    R1 = (R0 bxor (X0 * ((Y bsr I) band 1))),
+    X1 = (X0 bsr 1) bxor ((X0 band 1) * 16#E1000000000000000000000000000000),
+    gf_2_128_mul(I - 1, X1, Y, R1).
 
 %%%-------------------------------------------------------------------
 %%% Internal ECB decrypt functions
@@ -490,10 +512,10 @@ gf_2_128_mul(I, X0, Y, R0) ->
 
 %% @private
 ecb_block_decrypt(_St, _RoundKey, <<>>, PlainText) ->
-	PlainText;
-ecb_block_decrypt(St, RoundKey, << Block:128/bitstring, CipherText/bitstring >>, PlainText) ->
-	Decrypted = aes_inverse_cipher(St, RoundKey, Block),
-	ecb_block_decrypt(St, RoundKey, CipherText, << PlainText/binary, Decrypted/binary >>).
+    PlainText;
+ecb_block_decrypt(St, RoundKey, <<Block:128/bitstring, CipherText/bitstring>>, PlainText) ->
+    Decrypted = aes_inverse_cipher(St, RoundKey, Block),
+    ecb_block_decrypt(St, RoundKey, CipherText, <<PlainText/binary, Decrypted/binary>>).
 
 %%%-------------------------------------------------------------------
 %%% Internal ECB encrypt functions
@@ -501,10 +523,10 @@ ecb_block_decrypt(St, RoundKey, << Block:128/bitstring, CipherText/bitstring >>,
 
 %% @private
 ecb_block_encrypt(_St, _RoundKey, <<>>, CipherText) ->
-	CipherText;
-ecb_block_encrypt(St, RoundKey, << Block:128/bitstring, PlainText/bitstring >>, CipherText) ->
-	Encrypted = aes_cipher(St, RoundKey, Block),
-	ecb_block_encrypt(St, RoundKey, PlainText, << CipherText/binary, Encrypted/binary >>).
+    CipherText;
+ecb_block_encrypt(St, RoundKey, <<Block:128/bitstring, PlainText/bitstring>>, CipherText) ->
+    Encrypted = aes_cipher(St, RoundKey, Block),
+    ecb_block_encrypt(St, RoundKey, PlainText, <<CipherText/binary, Encrypted/binary>>).
 
 %%%-------------------------------------------------------------------
 %%% Internal functions
@@ -512,20 +534,20 @@ ecb_block_encrypt(St, RoundKey, << Block:128/bitstring, PlainText/bitstring >>, 
 
 %% @private
 bget(B, Pos) when Pos >= 0 ->
-	binary:at(B, Pos);
+    binary:at(B, Pos);
 bget(B, Pos) ->
-	bget(B, byte_size(B) + Pos).
+    bget(B, byte_size(B) + Pos).
 
 %% @private
 bset(B, Pos, Val) when Pos =:= byte_size(B) ->
-	<< B/binary, Val >>;
-bset(<< _, B/binary >>, 0, Val) ->
-	<< Val, B/binary >>;
+    <<B/binary, Val>>;
+bset(<<_, B/binary>>, 0, Val) ->
+    <<Val, B/binary>>;
 bset(B, Pos, Val) when Pos >= 0 ->
-	<< Head:Pos/binary, _, Tail/binary >> = B,
-	<< Head/binary, Val, Tail/binary >>;
+    <<Head:Pos/binary, _, Tail/binary>> = B,
+    <<Head/binary, Val, Tail/binary>>;
 bset(B, Pos, Val) ->
-	bset(B, byte_size(B) + Pos, Val).
+    bset(B, byte_size(B) + Pos, Val).
 
 %%%-------------------------------------------------------------------
 %%% AES constant functions

@@ -18,10 +18,10 @@
 -export([provider_info/0]).
 %% jose_hmac callbacks
 -export([
-	hmac_sha1/2,
-	hmac_sha224/2,
-	hmac_sha256/2,
-	hmac_sha384/2,
+    hmac_sha1/2,
+    hmac_sha224/2,
+    hmac_sha256/2,
+    hmac_sha384/2,
     hmac_sha512/2
 ]).
 
@@ -45,26 +45,26 @@ provider_info() ->
 %%====================================================================
 
 -spec hmac_sha1(Key, Input) -> Output when
-	Key :: jose_hmac:hmac_key(), Input :: jose_hmac:input(), Output :: jose_hmac:hmac_sha1_output().
+    Key :: jose_hmac:hmac_key(), Input :: jose_hmac:input(), Output :: jose_hmac:hmac_sha1_output().
 hmac_sha1(Key, Input) ->
-	crypto:mac(hmac, sha, Key, Input).
+    crypto:mac(hmac, sha, Key, Input).
 
 -spec hmac_sha224(Key, Input) -> Output when
-	Key :: jose_hmac:hmac_key(), Input :: jose_hmac:input(), Output :: jose_hmac:hmac_sha224_output().
+    Key :: jose_hmac:hmac_key(), Input :: jose_hmac:input(), Output :: jose_hmac:hmac_sha224_output().
 hmac_sha224(Key, Input) ->
-	crypto:mac(hmac, sha224, Key, Input).
+    crypto:mac(hmac, sha224, Key, Input).
 
 -spec hmac_sha256(Key, Input) -> Output when
-	Key :: jose_hmac:hmac_key(), Input :: jose_hmac:input(), Output :: jose_hmac:hmac_sha256_output().
+    Key :: jose_hmac:hmac_key(), Input :: jose_hmac:input(), Output :: jose_hmac:hmac_sha256_output().
 hmac_sha256(Key, Input) ->
-	crypto:mac(hmac, sha256, Key, Input).
+    crypto:mac(hmac, sha256, Key, Input).
 
 -spec hmac_sha384(Key, Input) -> Output when
-	Key :: jose_hmac:hmac_key(), Input :: jose_hmac:input(), Output :: jose_hmac:hmac_sha384_output().
+    Key :: jose_hmac:hmac_key(), Input :: jose_hmac:input(), Output :: jose_hmac:hmac_sha384_output().
 hmac_sha384(Key, Input) ->
-	crypto:mac(hmac, sha384, Key, Input).
+    crypto:mac(hmac, sha384, Key, Input).
 
 -spec hmac_sha512(Key, Input) -> Output when
-	Key :: jose_hmac:hmac_key(), Input :: jose_hmac:input(), Output :: jose_hmac:hmac_sha512_output().
+    Key :: jose_hmac:hmac_key(), Input :: jose_hmac:input(), Output :: jose_hmac:hmac_sha512_output().
 hmac_sha512(Key, Input) ->
-	crypto:mac(hmac, sha512, Key, Input).
+    crypto:mac(hmac, sha512, Key, Input).

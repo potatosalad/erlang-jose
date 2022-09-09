@@ -22,15 +22,15 @@
 %%%===================================================================
 
 -spec start(StartType, StartArgs) -> {ok, Pid} | {ok, Pid, State} | {error, Reason} when
-	StartType :: application:start_type(), StartArgs :: term(), Pid :: pid(), State :: term(), Reason :: term().
+    StartType :: application:start_type(), StartArgs :: term(), Pid :: pid(), State :: term(), Reason :: term().
 start(_StartType, _StartArgs) ->
-	jose_sup:start_link().
+    jose_sup:start_link().
 
 -spec stop(State) -> Ignored when State :: term(), Ignored :: any().
 stop(_State) ->
-	ok.
+    ok.
 
 -spec config_change(Changed, New, Removed) -> ok when
-	Changed :: [{Par, Val}], New :: [{Par, Val}], Removed :: [Par], Par :: atom(), Val :: term().
+    Changed :: [{Par, Val}], New :: [{Par, Val}], Removed :: [Par], Par :: atom(), Val :: term().
 config_change(_Changed, _New, _Removed) ->
-	jose_server:config_change().
+    jose_server:config_change().

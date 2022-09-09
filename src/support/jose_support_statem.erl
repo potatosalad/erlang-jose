@@ -14,39 +14,40 @@
 
 %% OTP API
 -export([
-	child_spec/0,
-	start_link/0
+    child_spec/0,
+    start_link/0
 ]).
 %% API
 -export([
-	code_change/0,
-	ensure_all_resolved/0,
-	resolve/1
+    code_change/0,
+    ensure_all_resolved/0,
+    resolve/1
 ]).
 %% gen_statem callbacks
 -export([
-	callback_mode/0,
-	init/1,
-	handle_event/4
+    callback_mode/0,
+    init/1,
+    handle_event/4
 ]).
 
 %% Records
 -record(data, {
-	graph = undefined :: undefined | #{any() => any()},
-	plan = [] :: [{serial | parallel, jose_support:key()}],
-	resolved = maps:new() :: #{jose_support:key() => [{integer(), module()}]},
-	resolving = {maps:new(), maps:new()} :: {#{reference() => {pid(), jose_support:key()}}, #{jose_support:key() => reference()}},
-	resolving_tag = undefined :: undefined | reference()
+    graph = undefined :: undefined | #{any() => any()},
+    plan = [] :: [{serial | parallel, jose_support:key()}],
+    resolved = maps:new() :: #{jose_support:key() => [{integer(), module()}]},
+    resolving = {maps:new(), maps:new()} :: {#{reference() => {pid(), jose_support:key()}}, #{jose_support:key() => reference()}},
+    resolving_tag = undefined :: undefined | reference()
 }).
 
 %% Macros
 -define(ENSURE_JOSE_STARTED(F),
-	case application:ensure_all_started(jose) of
-		{ok, _} ->
-			F;
-		ApplicationStartError = {error, _} ->
-			ApplicationStartError
-	end).
+    case application:ensure_all_started(jose) of
+        {ok, _} ->
+            F;
+        ApplicationStartError = {error, _} ->
+            ApplicationStartError
+    end
+).
 -define(SERVER, ?MODULE).
 -define(RESOLVED_TABLE, jose_jwa_resolved).
 
@@ -56,17 +57,17 @@
 
 -spec child_spec() -> supervisor:child_spec().
 child_spec() ->
-	#{
-		id => ?SERVER,
-		start => {?MODULE, start_link, []},
-		restart => permanent,
-		shutdown => 5000,
-		type => worker
-	}.
+    #{
+        id => ?SERVER,
+        start => {?MODULE, start_link, []},
+        restart => permanent,
+        shutdown => 5000,
+        type => worker
+    }.
 
 -spec start_link() -> {ok, pid()} | ignore | {error, term()}.
 start_link() ->
-	gen_statem:start_link({local, ?SERVER}, ?MODULE, [], []).
+    gen_statem:start_link({local, ?SERVER}, ?MODULE, [], []).
 
 %%====================================================================
 %% API functions
@@ -74,19 +75,20 @@ start_link() ->
 
 -spec code_change() -> ok.
 code_change() ->
-	?ENSURE_JOSE_STARTED(gen_statem:call(?SERVER, code_change)).
+    ?ENSURE_JOSE_STARTED(gen_statem:call(?SERVER, code_change)).
 
 -spec ensure_all_resolved() -> ok.
 ensure_all_resolved() ->
-	?ENSURE_JOSE_STARTED(gen_statem:call(?SERVER, ensure_all_resolved)).
+    ?ENSURE_JOSE_STARTED(gen_statem:call(?SERVER, ensure_all_resolved)).
 
--spec resolve(Key) -> {ok, ResolvedModule} | {error, Reason}
-	when Key :: jose_support:key(), ResolvedModule :: module(), Reason :: term().
-resolve(Key = {Behaviour, {FunctionName, Arity}})
-		when is_atom(Behaviour)
-		andalso is_atom(FunctionName)
-		andalso (is_integer(Arity) andalso Arity >= 0 andalso Arity =< 255) ->
-	?ENSURE_JOSE_STARTED(gen_statem:call(?SERVER, {resolve, Key})).
+-spec resolve(Key) -> {ok, ResolvedModule} | {error, Reason} when
+    Key :: jose_support:key(), ResolvedModule :: module(), Reason :: term().
+resolve(Key = {Behaviour, {FunctionName, Arity}}) when
+    is_atom(Behaviour) andalso
+        is_atom(FunctionName) andalso
+        (is_integer(Arity) andalso Arity >= 0 andalso Arity =< 255)
+->
+    ?ENSURE_JOSE_STARTED(gen_statem:call(?SERVER, {resolve, Key})).
 
 %%====================================================================
 %% gen_statem callbacks
@@ -94,117 +96,117 @@ resolve(Key = {Behaviour, {FunctionName, Arity}})
 
 -spec callback_mode() -> gen_statem:callback_mode() | [gen_statem:callback_mode() | gen_statem:state_enter()].
 callback_mode() ->
-	[handle_event_function, state_enter].
+    [handle_event_function, state_enter].
 
 -spec init([]) -> {ok, State :: init, Data :: #data{}}.
 init([]) ->
-	?RESOLVED_TABLE = ets:new(?RESOLVED_TABLE, [
-		named_table,
-		protected,
-		set,
-		{read_concurrency, true}
-	]),
-	State = init,
-	Data = #data{},
-	{ok, State, Data}.
+    ?RESOLVED_TABLE = ets:new(?RESOLVED_TABLE, [
+        named_table,
+        protected,
+        set,
+        {read_concurrency, true}
+    ]),
+    State = init,
+    Data = #data{},
+    {ok, State, Data}.
 
 %% State Enter Events
 handle_event(enter, init, init, _Data) ->
-	Actions = [{state_timeout, 0, init}],
-	{keep_state_and_data, Actions};
+    Actions = [{state_timeout, 0, init}],
+    {keep_state_and_data, Actions};
 handle_event(enter, _OldState, resolving, _Data) ->
-	Actions = [{state_timeout, 0, resolve_next}],
-	{keep_state_and_data, Actions};
+    Actions = [{state_timeout, 0, resolve_next}],
+    {keep_state_and_data, Actions};
 handle_event(enter, _OldState, resolved, _Data) ->
-	keep_state_and_data;
+    keep_state_and_data;
 %% State Timeout Events
 handle_event(state_timeout, init, init, Data0 = #data{}) ->
-	{ok, Graph = #{plan := Plan}} = jose_support:deps(),
-	Data1 = Data0#data{graph = Graph, plan = Plan, resolving_tag = erlang:make_ref()},
-	{next_state, resolving, Data1};
+    {ok, Graph = #{plan := Plan}} = jose_support:deps(),
+    Data1 = Data0#data{graph = Graph, plan = Plan, resolving_tag = erlang:make_ref()},
+    {next_state, resolving, Data1};
 handle_event(state_timeout, resolve_next, resolving, Data0 = #data{plan = Plan0}) ->
-	case Plan0 of
-		[{serial, []} | Plan1] ->
-			Data1 = Data0#data{plan = Plan1},
-			Actions = [{state_timeout, 0, resolve_next}],
-			{keep_state, Data1, Actions};
-		[{serial, [SerialNext | SerialRest]} | PlanRest] ->
-			Plan1 = [{serial, SerialRest} | PlanRest],
-			Data1 = start_resolve(SerialNext, Data0#data{plan = Plan1}),
-			{keep_state, Data1};
-		[{parallel, []} | Plan1] ->
-			Data1 = Data0#data{plan = Plan1},
-			Actions = [{state_timeout, 0, resolve_next}],
-			{keep_state, Data1, Actions};
-		[{parallel, Parallel} | PlanRest] ->
-			Plan1 = [{parallel, []} | PlanRest],
-			Data1 = start_parallel(Parallel, Data0#data{plan = Plan1}),
-			{keep_state, Data1};
-		[] ->
-			{next_state, resolved, Data0}
-	end;
+    case Plan0 of
+        [{serial, []} | Plan1] ->
+            Data1 = Data0#data{plan = Plan1},
+            Actions = [{state_timeout, 0, resolve_next}],
+            {keep_state, Data1, Actions};
+        [{serial, [SerialNext | SerialRest]} | PlanRest] ->
+            Plan1 = [{serial, SerialRest} | PlanRest],
+            Data1 = start_resolve(SerialNext, Data0#data{plan = Plan1}),
+            {keep_state, Data1};
+        [{parallel, []} | Plan1] ->
+            Data1 = Data0#data{plan = Plan1},
+            Actions = [{state_timeout, 0, resolve_next}],
+            {keep_state, Data1, Actions};
+        [{parallel, Parallel} | PlanRest] ->
+            Plan1 = [{parallel, []} | PlanRest],
+            Data1 = start_parallel(Parallel, Data0#data{plan = Plan1}),
+            {keep_state, Data1};
+        [] ->
+            {next_state, resolved, Data0}
+    end;
 %% Call Events
 % handle_event({call, _From}, code_change, resolved, Data) ->
 % 	Actions = [postpone],
 % 	{next_state, init, }
 handle_event({call, From}, ensure_all_resolved, resolved, _Data) ->
-	Actions = [{reply, From, ok}],
-	{keep_state_and_data, Actions};
+    Actions = [{reply, From, ok}],
+    {keep_state_and_data, Actions};
 handle_event(info, EventContent, State, Data0 = #data{resolved = Resolved0, resolving_tag = ResolvingTag}) ->
-	case EventContent of
-		{ResolvingTag, {Key, ProviderKey, ok}} ->
-			ok =
-				case ets:lookup(?RESOLVED_TABLE, Key) of
-					[{Key, OtherProviderKey}] when OtherProviderKey =< ProviderKey ->
-						ok;
-					_ ->
-						true = ets:insert(?RESOLVED_TABLE, {Key, ProviderKey}),
-						ok
-				end,
-			Resolved1 =
-				case maps:find(Key, Resolved0) of
-					{ok, ExistingProviders} ->
-						maps:put(Key, ordsets:add_element(ProviderKey, ExistingProviders), Resolved0);
-					error ->
-						maps:put(Key, [ProviderKey], Resolved0)
-				end,
-			Data1 = Data0#data{resolved = Resolved1},
-			{keep_state, Data1};
-		{'DOWN', Mon, process, Pid, _Reason} ->
-			maybe_reap(Mon, Pid, State, Data0);
-		_ ->
-			io:format("info =~n~p~n", [EventContent]),
-			keep_state_and_data
-	end.
-	% keep_state_and_data.
+    case EventContent of
+        {ResolvingTag, {Key, ProviderKey, ok}} ->
+            ok =
+                case ets:lookup(?RESOLVED_TABLE, Key) of
+                    [{Key, OtherProviderKey}] when OtherProviderKey =< ProviderKey ->
+                        ok;
+                    _ ->
+                        true = ets:insert(?RESOLVED_TABLE, {Key, ProviderKey}),
+                        ok
+                end,
+            Resolved1 =
+                case maps:find(Key, Resolved0) of
+                    {ok, ExistingProviders} ->
+                        maps:put(Key, ordsets:add_element(ProviderKey, ExistingProviders), Resolved0);
+                    error ->
+                        maps:put(Key, [ProviderKey], Resolved0)
+                end,
+            Data1 = Data0#data{resolved = Resolved1},
+            {keep_state, Data1};
+        {'DOWN', Mon, process, Pid, _Reason} ->
+            maybe_reap(Mon, Pid, State, Data0);
+        _ ->
+            io:format("info =~n~p~n", [EventContent]),
+            keep_state_and_data
+    end.
+% keep_state_and_data.
 
 start_resolve(Key, Data0 = #data{graph = #{providers := Providers}, resolving = {M2K0, K2M0}, resolving_tag = ResolvingTag}) ->
-	ProviderModules = maps:get(Key, Providers),
-	{ok, Pid} = jose_support_resolve_sup:start_child(self(), ResolvingTag, Key, ProviderModules),
-	Mon = erlang:monitor(process, Pid),
-	M2K1 = maps:put(Mon, {Pid, Key}, M2K0),
-	K2M1 = maps:put(Key, Mon, K2M0),
-	Data1 = Data0#data{resolving = {M2K1, K2M1}},
-	Data1.
+    ProviderModules = maps:get(Key, Providers),
+    {ok, Pid} = jose_support_resolve_sup:start_child(self(), ResolvingTag, Key, ProviderModules),
+    Mon = erlang:monitor(process, Pid),
+    M2K1 = maps:put(Mon, {Pid, Key}, M2K0),
+    K2M1 = maps:put(Key, Mon, K2M0),
+    Data1 = Data0#data{resolving = {M2K1, K2M1}},
+    Data1.
 
 start_parallel([Key | Keys], Data0) ->
-	Data1 = start_resolve(Key, Data0),
-	start_parallel(Keys, Data1);
+    Data1 = start_resolve(Key, Data0),
+    start_parallel(Keys, Data1);
 start_parallel([], Data) ->
-	Data.
+    Data.
 
 maybe_reap(Mon, Pid, resolving, Data0 = #data{resolving = {M2K0, K2M0}}) ->
-	case maps:take(Mon, M2K0) of
-		{{Pid, Key}, M2K1} ->
-			{Mon, K2M1} = maps:take(Key, K2M0),
-			Data1 = Data0#data{resolving = {M2K1, K2M1}},
-			case map_size(M2K1) =:= 0 andalso map_size(K2M1) =:= 0 of
-				true ->
-					Actions = [{state_timeout, 0, resolve_next}],
-					{keep_state, Data1, Actions};
-				false ->
-					{keep_state, Data1}
-			end;
-		error ->
-			keep_state_and_data
-	end.
+    case maps:take(Mon, M2K0) of
+        {{Pid, Key}, M2K1} ->
+            {Mon, K2M1} = maps:take(Key, K2M0),
+            Data1 = Data0#data{resolving = {M2K1, K2M1}},
+            case map_size(M2K1) =:= 0 andalso map_size(K2M1) =:= 0 of
+                true ->
+                    Actions = [{state_timeout, 0, resolve_next}],
+                    {keep_state, Data1, Actions};
+                false ->
+                    {keep_state, Data1}
+            end;
+        error ->
+            keep_state_and_data
+    end.

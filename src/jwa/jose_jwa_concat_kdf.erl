@@ -20,58 +20,69 @@
 %%====================================================================
 
 kdf(Hash, Z, OtherInfo) ->
-	HashFun = resolve_hash(Hash),
-	KeyDataLen = bit_size(HashFun(<<>>)),
-	kdf(HashFun, Z, OtherInfo, KeyDataLen).
+    HashFun = resolve_hash(Hash),
+    KeyDataLen = bit_size(HashFun(<<>>)),
+    kdf(HashFun, Z, OtherInfo, KeyDataLen).
 
-kdf(Hash, Z, OtherInfo, KeyDataLen)
-		when is_function(Hash)
-		andalso is_binary(Z)
-		andalso is_binary(OtherInfo)
-		andalso is_integer(KeyDataLen) ->
-	HashLen = bit_size(Hash(<<>>)),
-	Reps = ceiling(KeyDataLen / HashLen),
-	case Reps of
-		1 ->
-			Concatenation = << 0, 0, 0, 1, Z/binary, OtherInfo/binary >>,
-			<< DerivedKey:KeyDataLen/bitstring, _/bitstring >> = Hash(Concatenation),
-			DerivedKey;
-		_ when Reps > 16#FFFFFFFF ->
-			erlang:error({badarg, [Hash, Z, OtherInfo, KeyDataLen]});
-		_ ->
-			derive_key(Hash, 1, Reps, KeyDataLen, << Z/binary, OtherInfo/binary >>, <<>>)
-	end;
-kdf(Hash, Z, OtherInfo, KeyDataLen)
-		when is_tuple(Hash)
-		orelse is_atom(Hash) ->
-	kdf(resolve_hash(Hash), Z, OtherInfo, KeyDataLen);
+kdf(Hash, Z, OtherInfo, KeyDataLen) when
+    is_function(Hash) andalso
+        is_binary(Z) andalso
+        is_binary(OtherInfo) andalso
+        is_integer(KeyDataLen)
+->
+    HashLen = bit_size(Hash(<<>>)),
+    Reps = ceiling(KeyDataLen / HashLen),
+    case Reps of
+        1 ->
+            Concatenation = <<0, 0, 0, 1, Z/binary, OtherInfo/binary>>,
+            <<DerivedKey:KeyDataLen/bitstring, _/bitstring>> = Hash(Concatenation),
+            DerivedKey;
+        _ when Reps > 16#FFFFFFFF ->
+            erlang:error({badarg, [Hash, Z, OtherInfo, KeyDataLen]});
+        _ ->
+            derive_key(Hash, 1, Reps, KeyDataLen, <<Z/binary, OtherInfo/binary>>, <<>>)
+    end;
+kdf(Hash, Z, OtherInfo, KeyDataLen) when
+    is_tuple(Hash) orelse
+        is_atom(Hash)
+->
+    kdf(resolve_hash(Hash), Z, OtherInfo, KeyDataLen);
 kdf(Hash, Z, {AlgorithmID, PartyUInfo, PartyVInfo}, KeyDataLen) ->
-	kdf(Hash, Z, {AlgorithmID, PartyUInfo, PartyVInfo, <<>>}, KeyDataLen);
+    kdf(Hash, Z, {AlgorithmID, PartyUInfo, PartyVInfo, <<>>}, KeyDataLen);
 kdf(Hash, Z, {AlgorithmID, PartyUInfo, PartyVInfo, SuppPubInfo}, KeyDataLen) ->
-	kdf(Hash, Z, {AlgorithmID, PartyUInfo, PartyVInfo, SuppPubInfo, <<>>}, KeyDataLen);
-kdf(Hash, Z, {AlgorithmID, PartyUInfo, PartyVInfo, SuppPubInfo, SuppPrivInfo}, KeyDataLen)
-		when is_binary(AlgorithmID)
-		andalso is_binary(PartyUInfo)
-		andalso is_binary(PartyVInfo)
-		andalso is_binary(SuppPubInfo)
-		andalso is_binary(SuppPrivInfo) ->
-	kdf(Hash, Z, <<
-		(byte_size(AlgorithmID)):1/unsigned-big-integer-unit:32, AlgorithmID/binary,
-		(byte_size(PartyUInfo)):1/unsigned-big-integer-unit:32, PartyUInfo/binary,
-		(byte_size(PartyVInfo)):1/unsigned-big-integer-unit:32, PartyVInfo/binary,
-		SuppPubInfo/binary,
-		SuppPrivInfo/binary
-	>>, KeyDataLen);
+    kdf(Hash, Z, {AlgorithmID, PartyUInfo, PartyVInfo, SuppPubInfo, <<>>}, KeyDataLen);
+kdf(Hash, Z, {AlgorithmID, PartyUInfo, PartyVInfo, SuppPubInfo, SuppPrivInfo}, KeyDataLen) when
+    is_binary(AlgorithmID) andalso
+        is_binary(PartyUInfo) andalso
+        is_binary(PartyVInfo) andalso
+        is_binary(SuppPubInfo) andalso
+        is_binary(SuppPrivInfo)
+->
+    kdf(
+        Hash,
+        Z,
+        <<
+            (byte_size(AlgorithmID)):1/unsigned-big-integer-unit:32,
+            AlgorithmID/binary,
+            (byte_size(PartyUInfo)):1/unsigned-big-integer-unit:32,
+            PartyUInfo/binary,
+            (byte_size(PartyVInfo)):1/unsigned-big-integer-unit:32,
+            PartyVInfo/binary,
+            SuppPubInfo/binary,
+            SuppPrivInfo/binary
+        >>,
+        KeyDataLen
+    );
 kdf(Hash, Z, {undefined, PartyUInfo, PartyVInfo, SuppPubInfo, SuppPrivInfo}, KeyDataLen) ->
-	kdf(Hash, Z, {<<>>, PartyUInfo, PartyVInfo, SuppPubInfo, SuppPrivInfo}, KeyDataLen);
+    kdf(Hash, Z, {<<>>, PartyUInfo, PartyVInfo, SuppPubInfo, SuppPrivInfo}, KeyDataLen);
 kdf(Hash, Z, {AlgorithmID, undefined, PartyVInfo, SuppPubInfo, SuppPrivInfo}, KeyDataLen) ->
-	kdf(Hash, Z, {AlgorithmID, <<>>, PartyVInfo, SuppPubInfo, SuppPrivInfo}, KeyDataLen);
+    kdf(Hash, Z, {AlgorithmID, <<>>, PartyVInfo, SuppPubInfo, SuppPrivInfo}, KeyDataLen);
 kdf(Hash, Z, {AlgorithmID, PartyUInfo, undefined, SuppPubInfo, SuppPrivInfo}, KeyDataLen) ->
-	kdf(Hash, Z, {AlgorithmID, PartyUInfo, <<>>, SuppPubInfo, SuppPrivInfo}, KeyDataLen);
+    kdf(Hash, Z, {AlgorithmID, PartyUInfo, <<>>, SuppPubInfo, SuppPrivInfo}, KeyDataLen);
 kdf(Hash, Z, {AlgorithmID, PartyUInfo, PartyVInfo, undefined, SuppPrivInfo}, KeyDataLen) ->
-	kdf(Hash, Z, {AlgorithmID, PartyUInfo, PartyVInfo, <<>>, SuppPrivInfo}, KeyDataLen);
+    kdf(Hash, Z, {AlgorithmID, PartyUInfo, PartyVInfo, <<>>, SuppPrivInfo}, KeyDataLen);
 kdf(Hash, Z, {AlgorithmID, PartyUInfo, PartyVInfo, SuppPubInfo, undefined}, KeyDataLen) ->
-	kdf(Hash, Z, {AlgorithmID, PartyUInfo, PartyVInfo, SuppPubInfo, <<>>}, KeyDataLen).
+    kdf(Hash, Z, {AlgorithmID, PartyUInfo, PartyVInfo, SuppPubInfo, <<>>}, KeyDataLen).
 
 %%%-------------------------------------------------------------------
 %%% Internal functions
@@ -79,33 +90,33 @@ kdf(Hash, Z, {AlgorithmID, PartyUInfo, PartyVInfo, SuppPubInfo, undefined}, KeyD
 
 %% @private
 ceiling(X) when X < 0 ->
-	trunc(X);
+    trunc(X);
 ceiling(X) ->
-	T = trunc(X),
-	case X - T == 0 of
-		false ->
-			T + 1;
-		true ->
-			T
-	end.
+    T = trunc(X),
+    case X - T == 0 of
+        false ->
+            T + 1;
+        true ->
+            T
+    end.
 
 %% @private
 derive_key(Hash, Reps, Reps, KeyDataLen, ZOtherInfo, DerivedKeyingMaterial) ->
-	Concatenation = << Reps:1/unsigned-big-integer-unit:32, ZOtherInfo/binary >>,
-	<< DerivedKey:KeyDataLen/bitstring, _/bitstring >> = << DerivedKeyingMaterial/binary, (Hash(Concatenation))/binary >>,
-	DerivedKey;
+    Concatenation = <<Reps:1/unsigned-big-integer-unit:32, ZOtherInfo/binary>>,
+    <<DerivedKey:KeyDataLen/bitstring, _/bitstring>> = <<DerivedKeyingMaterial/binary, (Hash(Concatenation))/binary>>,
+    DerivedKey;
 derive_key(Hash, Counter, Reps, KeyDataLen, ZOtherInfo, DerivedKeyingMaterial) ->
-	Concatenation = << Counter:1/unsigned-big-integer-unit:32, ZOtherInfo/binary >>,
-	derive_key(Hash, Counter + 1, Reps, KeyDataLen, ZOtherInfo, << DerivedKeyingMaterial/binary, (Hash(Concatenation))/binary >>).
+    Concatenation = <<Counter:1/unsigned-big-integer-unit:32, ZOtherInfo/binary>>,
+    derive_key(Hash, Counter + 1, Reps, KeyDataLen, ZOtherInfo, <<DerivedKeyingMaterial/binary, (Hash(Concatenation))/binary>>).
 
 %% @private
 resolve_hash(HashFun) when is_function(HashFun) ->
-	HashFun;
+    HashFun;
 resolve_hash(DigestType) when is_atom(DigestType) ->
-	fun(Data) ->
-		crypto:hash(DigestType, Data)
-	end;
+    fun(Data) ->
+        crypto:hash(DigestType, Data)
+    end;
 resolve_hash({hmac, DigestType, Key}) when is_atom(DigestType) ->
-	fun(Data) ->
-		jose_crypto_compat:mac(hmac, DigestType, Key, Data)
-	end.
+    fun(Data) ->
+        jose_crypto_compat:mac(hmac, DigestType, Key, Data)
+    end.

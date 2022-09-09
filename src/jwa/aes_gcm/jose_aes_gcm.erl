@@ -26,82 +26,82 @@
 -type aes_256_key() :: <<_:256>>.
 
 -export_type([
-	additional_authenticated_data/0,
-	plain_text/0,
-	cipher_text/0,
-	aes_gcm_gmac/0,
-	aes_gcm_iv/0,
-	aes_128_key/0,
-	aes_192_key/0,
-	aes_256_key/0
+    additional_authenticated_data/0,
+    plain_text/0,
+    cipher_text/0,
+    aes_gcm_gmac/0,
+    aes_gcm_iv/0,
+    aes_128_key/0,
+    aes_192_key/0,
+    aes_256_key/0
 ]).
 
 %% Callbacks
 -callback aes_128_gcm_decrypt(CipherText, CipherTag, AAD, IV, CEK) -> PlainText | error when
-	CipherText :: jose_aes_gcm:cipher_text(),
-	CipherTag  :: jose_aes_gcm:aes_gcm_gmac(),
-	AAD        :: jose_aes_gcm:additional_authenticated_data(),
-	IV         :: jose_aes_gcm:aes_gcm_iv(),
-	CEK        :: jose_aes_gcm:aes_128_key(),
-	PlainText  :: jose_aes_gcm:plain_text().
+    CipherText :: jose_aes_gcm:cipher_text(),
+    CipherTag :: jose_aes_gcm:aes_gcm_gmac(),
+    AAD :: jose_aes_gcm:additional_authenticated_data(),
+    IV :: jose_aes_gcm:aes_gcm_iv(),
+    CEK :: jose_aes_gcm:aes_128_key(),
+    PlainText :: jose_aes_gcm:plain_text().
 -callback aes_128_gcm_encrypt(PlainText, AAD, IV, CEK) -> {CipherText, CipherTag} when
-	PlainText  :: jose_aes_gcm:plain_text(),
-	AAD        :: jose_aes_gcm:additional_authenticated_data(),
-	IV         :: jose_aes_gcm:aes_gcm_iv(),
-	CEK        :: jose_aes_gcm:aes_128_key(),
-	CipherText :: jose_aes_gcm:cipher_text(),
-	CipherTag  :: jose_aes_gcm:aes_gcm_gmac().
+    PlainText :: jose_aes_gcm:plain_text(),
+    AAD :: jose_aes_gcm:additional_authenticated_data(),
+    IV :: jose_aes_gcm:aes_gcm_iv(),
+    CEK :: jose_aes_gcm:aes_128_key(),
+    CipherText :: jose_aes_gcm:cipher_text(),
+    CipherTag :: jose_aes_gcm:aes_gcm_gmac().
 -callback aes_192_gcm_decrypt(CipherText, CipherTag, AAD, IV, CEK) -> PlainText | error when
-	CipherText :: jose_aes_gcm:cipher_text(),
-	CipherTag  :: jose_aes_gcm:aes_gcm_gmac(),
-	AAD        :: jose_aes_gcm:additional_authenticated_data(),
-	IV         :: jose_aes_gcm:aes_gcm_iv(),
-	CEK        :: jose_aes_gcm:aes_192_key(),
-	PlainText  :: jose_aes_gcm:plain_text().
+    CipherText :: jose_aes_gcm:cipher_text(),
+    CipherTag :: jose_aes_gcm:aes_gcm_gmac(),
+    AAD :: jose_aes_gcm:additional_authenticated_data(),
+    IV :: jose_aes_gcm:aes_gcm_iv(),
+    CEK :: jose_aes_gcm:aes_192_key(),
+    PlainText :: jose_aes_gcm:plain_text().
 -callback aes_192_gcm_encrypt(PlainText, AAD, IV, CEK) -> {CipherText, CipherTag} when
-	PlainText  :: jose_aes_gcm:plain_text(),
-	AAD        :: jose_aes_gcm:additional_authenticated_data(),
-	IV         :: jose_aes_gcm:aes_gcm_iv(),
-	CEK        :: jose_aes_gcm:aes_192_key(),
-	CipherText :: jose_aes_gcm:cipher_text(),
-	CipherTag  :: jose_aes_gcm:aes_gcm_gmac().
+    PlainText :: jose_aes_gcm:plain_text(),
+    AAD :: jose_aes_gcm:additional_authenticated_data(),
+    IV :: jose_aes_gcm:aes_gcm_iv(),
+    CEK :: jose_aes_gcm:aes_192_key(),
+    CipherText :: jose_aes_gcm:cipher_text(),
+    CipherTag :: jose_aes_gcm:aes_gcm_gmac().
 -callback aes_256_gcm_decrypt(CipherText, CipherTag, AAD, IV, CEK) -> PlainText | error when
-	CipherText :: jose_aes_gcm:cipher_text(),
-	CipherTag  :: jose_aes_gcm:aes_gcm_gmac(),
-	AAD        :: jose_aes_gcm:additional_authenticated_data(),
-	IV         :: jose_aes_gcm:aes_gcm_iv(),
-	CEK        :: jose_aes_gcm:aes_256_key(),
-	PlainText  :: jose_aes_gcm:plain_text().
+    CipherText :: jose_aes_gcm:cipher_text(),
+    CipherTag :: jose_aes_gcm:aes_gcm_gmac(),
+    AAD :: jose_aes_gcm:additional_authenticated_data(),
+    IV :: jose_aes_gcm:aes_gcm_iv(),
+    CEK :: jose_aes_gcm:aes_256_key(),
+    PlainText :: jose_aes_gcm:plain_text().
 -callback aes_256_gcm_encrypt(PlainText, AAD, IV, CEK) -> {CipherText, CipherTag} when
-	PlainText  :: jose_aes_gcm:plain_text(),
-	AAD        :: jose_aes_gcm:additional_authenticated_data(),
-	IV         :: jose_aes_gcm:aes_gcm_iv(),
-	CEK        :: jose_aes_gcm:aes_256_key(),
-	CipherText :: jose_aes_gcm:cipher_text(),
-	CipherTag  :: jose_aes_gcm:aes_gcm_gmac().
+    PlainText :: jose_aes_gcm:plain_text(),
+    AAD :: jose_aes_gcm:additional_authenticated_data(),
+    IV :: jose_aes_gcm:aes_gcm_iv(),
+    CEK :: jose_aes_gcm:aes_256_key(),
+    CipherText :: jose_aes_gcm:cipher_text(),
+    CipherTag :: jose_aes_gcm:aes_gcm_gmac().
 
 -optional_callbacks([
-	aes_128_gcm_decrypt/5,
-	aes_128_gcm_encrypt/4,
-	aes_192_gcm_decrypt/5,
-	aes_192_gcm_encrypt/4,
-	aes_256_gcm_decrypt/5,
-	aes_256_gcm_encrypt/4
+    aes_128_gcm_decrypt/5,
+    aes_128_gcm_encrypt/4,
+    aes_192_gcm_decrypt/5,
+    aes_192_gcm_encrypt/4,
+    aes_256_gcm_decrypt/5,
+    aes_256_gcm_encrypt/4
 ]).
 
 %% jose_support callbacks
 -export([
-	support_info/0,
-	support_check/3
+    support_info/0,
+    support_check/3
 ]).
 %% jose_aes_gcm callbacks
 -export([
-	aes_128_gcm_decrypt/5,
-	aes_128_gcm_encrypt/4,
-	aes_192_gcm_decrypt/5,
-	aes_192_gcm_encrypt/4,
-	aes_256_gcm_decrypt/5,
-	aes_256_gcm_encrypt/4
+    aes_128_gcm_decrypt/5,
+    aes_128_gcm_encrypt/4,
+    aes_192_gcm_decrypt/5,
+    aes_192_gcm_encrypt/4,
+    aes_256_gcm_decrypt/5,
+    aes_256_gcm_encrypt/4
 ]).
 
 %% Macros
@@ -124,155 +124,174 @@
 
 -spec support_info() -> jose_support:info().
 support_info() ->
-	#{
-		stateful => [],
-		callbacks => [
-			{{aes_128_gcm_decrypt, 5}, [{jose_aes_ctr, [{aes_128_ctr_stream_init, 2}, {aes_128_ctr_stream_exor, 2}, {aes_128_ctr_stream_final, 1}]}]},
-			{{aes_128_gcm_encrypt, 4}, [{jose_aes_ctr, [{aes_128_ctr_stream_init, 2}, {aes_128_ctr_stream_exor, 2}, {aes_128_ctr_stream_final, 1}]}]},
-			{{aes_192_gcm_decrypt, 5}, [{jose_aes_ctr, [{aes_192_ctr_stream_init, 2}, {aes_192_ctr_stream_exor, 2}, {aes_192_ctr_stream_final, 1}]}]},
-			{{aes_192_gcm_encrypt, 4}, [{jose_aes_ctr, [{aes_192_ctr_stream_init, 2}, {aes_192_ctr_stream_exor, 2}, {aes_192_ctr_stream_final, 1}]}]},
-			{{aes_256_gcm_decrypt, 5}, [{jose_aes_ctr, [{aes_256_ctr_stream_init, 2}, {aes_256_ctr_stream_exor, 2}, {aes_256_ctr_stream_final, 1}]}]},
-			{{aes_256_gcm_encrypt, 4}, [{jose_aes_ctr, [{aes_256_ctr_stream_init, 2}, {aes_256_ctr_stream_exor, 2}, {aes_256_ctr_stream_final, 1}]}]}
-		]
-	}.
+    #{
+        stateful => [],
+        callbacks => [
+            {{aes_128_gcm_decrypt, 5}, [
+                {jose_aes_ctr, [{aes_128_ctr_stream_init, 2}, {aes_128_ctr_stream_exor, 2}, {aes_128_ctr_stream_final, 1}]}
+            ]},
+            {{aes_128_gcm_encrypt, 4}, [
+                {jose_aes_ctr, [{aes_128_ctr_stream_init, 2}, {aes_128_ctr_stream_exor, 2}, {aes_128_ctr_stream_final, 1}]}
+            ]},
+            {{aes_192_gcm_decrypt, 5}, [
+                {jose_aes_ctr, [{aes_192_ctr_stream_init, 2}, {aes_192_ctr_stream_exor, 2}, {aes_192_ctr_stream_final, 1}]}
+            ]},
+            {{aes_192_gcm_encrypt, 4}, [
+                {jose_aes_ctr, [{aes_192_ctr_stream_init, 2}, {aes_192_ctr_stream_exor, 2}, {aes_192_ctr_stream_final, 1}]}
+            ]},
+            {{aes_256_gcm_decrypt, 5}, [
+                {jose_aes_ctr, [{aes_256_ctr_stream_init, 2}, {aes_256_ctr_stream_exor, 2}, {aes_256_ctr_stream_final, 1}]}
+            ]},
+            {{aes_256_gcm_encrypt, 4}, [
+                {jose_aes_ctr, [{aes_256_ctr_stream_init, 2}, {aes_256_ctr_stream_exor, 2}, {aes_256_ctr_stream_final, 1}]}
+            ]}
+        ]
+    }.
 
--spec support_check(Module :: module(), FunctionName :: jose_support:function_name(), Arity :: arity()) -> jose_support:support_check_result().
+-spec support_check(Module :: module(), FunctionName :: jose_support:function_name(), Arity :: arity()) ->
+    jose_support:support_check_result().
 support_check(Module, aes_128_gcm_decrypt, 5) ->
-	CipherText = ?TV_AES_128_GCM_CipherText(),
-	CipherTag = ?TV_AES_128_GCM_CipherTag(),
-	AAD = ?TV_AAD(),
-	IV = ?TV_AES_GCM_IV(),
-	CEK = ?TV_AES_128_GCM_Key(),
-	PlainText = ?TV_PlainText(),
-	?expect(PlainText, Module, aes_128_gcm_decrypt, [CipherText, CipherTag, AAD, IV, CEK]);
+    CipherText = ?TV_AES_128_GCM_CipherText(),
+    CipherTag = ?TV_AES_128_GCM_CipherTag(),
+    AAD = ?TV_AAD(),
+    IV = ?TV_AES_GCM_IV(),
+    CEK = ?TV_AES_128_GCM_Key(),
+    PlainText = ?TV_PlainText(),
+    ?expect(PlainText, Module, aes_128_gcm_decrypt, [CipherText, CipherTag, AAD, IV, CEK]);
 support_check(Module, aes_128_gcm_encrypt, 4) ->
-	PlainText = ?TV_PlainText(),
-	AAD = ?TV_AAD(),
-	IV = ?TV_AES_GCM_IV(),
-	CEK = ?TV_AES_128_GCM_Key(),
-	CipherText = ?TV_AES_128_GCM_CipherText(),
-	CipherTag = ?TV_AES_128_GCM_CipherTag(),
-	?expect({CipherText, CipherTag}, Module, aes_128_gcm_encrypt, [PlainText, AAD, IV, CEK]);
+    PlainText = ?TV_PlainText(),
+    AAD = ?TV_AAD(),
+    IV = ?TV_AES_GCM_IV(),
+    CEK = ?TV_AES_128_GCM_Key(),
+    CipherText = ?TV_AES_128_GCM_CipherText(),
+    CipherTag = ?TV_AES_128_GCM_CipherTag(),
+    ?expect({CipherText, CipherTag}, Module, aes_128_gcm_encrypt, [PlainText, AAD, IV, CEK]);
 support_check(Module, aes_192_gcm_decrypt, 5) ->
-	CipherText = ?TV_AES_192_GCM_CipherText(),
-	CipherTag = ?TV_AES_192_GCM_CipherTag(),
-	AAD = ?TV_AAD(),
-	IV = ?TV_AES_GCM_IV(),
-	CEK = ?TV_AES_192_GCM_Key(),
-	PlainText = ?TV_PlainText(),
-	?expect(PlainText, Module, aes_192_gcm_decrypt, [CipherText, CipherTag, AAD, IV, CEK]);
+    CipherText = ?TV_AES_192_GCM_CipherText(),
+    CipherTag = ?TV_AES_192_GCM_CipherTag(),
+    AAD = ?TV_AAD(),
+    IV = ?TV_AES_GCM_IV(),
+    CEK = ?TV_AES_192_GCM_Key(),
+    PlainText = ?TV_PlainText(),
+    ?expect(PlainText, Module, aes_192_gcm_decrypt, [CipherText, CipherTag, AAD, IV, CEK]);
 support_check(Module, aes_192_gcm_encrypt, 4) ->
-	PlainText = ?TV_PlainText(),
-	AAD = ?TV_AAD(),
-	IV = ?TV_AES_GCM_IV(),
-	CEK = ?TV_AES_192_GCM_Key(),
-	CipherText = ?TV_AES_192_GCM_CipherText(),
-	CipherTag = ?TV_AES_192_GCM_CipherTag(),
-	?expect({CipherText, CipherTag}, Module, aes_192_gcm_encrypt, [PlainText, AAD, IV, CEK]);
+    PlainText = ?TV_PlainText(),
+    AAD = ?TV_AAD(),
+    IV = ?TV_AES_GCM_IV(),
+    CEK = ?TV_AES_192_GCM_Key(),
+    CipherText = ?TV_AES_192_GCM_CipherText(),
+    CipherTag = ?TV_AES_192_GCM_CipherTag(),
+    ?expect({CipherText, CipherTag}, Module, aes_192_gcm_encrypt, [PlainText, AAD, IV, CEK]);
 support_check(Module, aes_256_gcm_decrypt, 5) ->
-	CipherText = ?TV_AES_256_GCM_CipherText(),
-	CipherTag = ?TV_AES_256_GCM_CipherTag(),
-	AAD = ?TV_AAD(),
-	IV = ?TV_AES_GCM_IV(),
-	CEK = ?TV_AES_256_GCM_Key(),
-	PlainText = ?TV_PlainText(),
-	?expect(PlainText, Module, aes_256_gcm_decrypt, [CipherText, CipherTag, AAD, IV, CEK]);
+    CipherText = ?TV_AES_256_GCM_CipherText(),
+    CipherTag = ?TV_AES_256_GCM_CipherTag(),
+    AAD = ?TV_AAD(),
+    IV = ?TV_AES_GCM_IV(),
+    CEK = ?TV_AES_256_GCM_Key(),
+    PlainText = ?TV_PlainText(),
+    ?expect(PlainText, Module, aes_256_gcm_decrypt, [CipherText, CipherTag, AAD, IV, CEK]);
 support_check(Module, aes_256_gcm_encrypt, 4) ->
-	PlainText = ?TV_PlainText(),
-	AAD = ?TV_AAD(),
-	IV = ?TV_AES_GCM_IV(),
-	CEK = ?TV_AES_256_GCM_Key(),
-	CipherText = ?TV_AES_256_GCM_CipherText(),
-	CipherTag = ?TV_AES_256_GCM_CipherTag(),
-	?expect({CipherText, CipherTag}, Module, aes_256_gcm_encrypt, [PlainText, AAD, IV, CEK]).
+    PlainText = ?TV_PlainText(),
+    AAD = ?TV_AAD(),
+    IV = ?TV_AES_GCM_IV(),
+    CEK = ?TV_AES_256_GCM_Key(),
+    CipherText = ?TV_AES_256_GCM_CipherText(),
+    CipherTag = ?TV_AES_256_GCM_CipherTag(),
+    ?expect({CipherText, CipherTag}, Module, aes_256_gcm_encrypt, [PlainText, AAD, IV, CEK]).
 
 %%====================================================================
 %% jose_aes_gcm callbacks
 %%====================================================================
 
 -spec aes_128_gcm_decrypt(CipherText, CipherTag, AAD, IV, CEK) -> PlainText | error when
-	CipherText :: jose_aes_gcm:cipher_text(),
-	CipherTag  :: jose_aes_gcm:aes_gcm_gmac(),
-	AAD        :: jose_aes_gcm:additional_authenticated_data(),
-	IV         :: jose_aes_gcm:aes_gcm_iv(),
-	CEK        :: jose_aes_gcm:aes_128_key(),
-	PlainText  :: jose_aes_gcm:plain_text().
-aes_128_gcm_decrypt(CipherText, CipherTag, AAD, IV, CEK)
-		when is_bitstring(CipherText)
-		andalso bit_size(CipherTag) =:= 128
-		andalso is_bitstring(AAD)
-		andalso bit_size(IV) =:= 96
-		andalso bit_size(CEK) =:= 128 ->
-	?resolve([CipherText, CipherTag, AAD, IV, CEK]).
+    CipherText :: jose_aes_gcm:cipher_text(),
+    CipherTag :: jose_aes_gcm:aes_gcm_gmac(),
+    AAD :: jose_aes_gcm:additional_authenticated_data(),
+    IV :: jose_aes_gcm:aes_gcm_iv(),
+    CEK :: jose_aes_gcm:aes_128_key(),
+    PlainText :: jose_aes_gcm:plain_text().
+aes_128_gcm_decrypt(CipherText, CipherTag, AAD, IV, CEK) when
+    is_bitstring(CipherText) andalso
+        bit_size(CipherTag) =:= 128 andalso
+        is_bitstring(AAD) andalso
+        bit_size(IV) =:= 96 andalso
+        bit_size(CEK) =:= 128
+->
+    ?resolve([CipherText, CipherTag, AAD, IV, CEK]).
 
 -spec aes_128_gcm_encrypt(PlainText, AAD, IV, CEK) -> {CipherText, CipherTag} when
-	PlainText  :: jose_aes_gcm:plain_text(),
-	AAD        :: jose_aes_gcm:additional_authenticated_data(),
-	IV         :: jose_aes_gcm:aes_gcm_iv(),
-	CEK        :: jose_aes_gcm:aes_128_key(),
-	CipherText :: jose_aes_gcm:cipher_text(),
-	CipherTag  :: jose_aes_gcm:aes_gcm_gmac().
-aes_128_gcm_encrypt(PlainText, AAD, IV, CEK)
-		when is_bitstring(PlainText)
-		andalso is_bitstring(AAD)
-		andalso bit_size(IV) =:= 96
-		andalso bit_size(CEK) =:= 128 ->
-	?resolve([PlainText, AAD, IV, CEK]).
+    PlainText :: jose_aes_gcm:plain_text(),
+    AAD :: jose_aes_gcm:additional_authenticated_data(),
+    IV :: jose_aes_gcm:aes_gcm_iv(),
+    CEK :: jose_aes_gcm:aes_128_key(),
+    CipherText :: jose_aes_gcm:cipher_text(),
+    CipherTag :: jose_aes_gcm:aes_gcm_gmac().
+aes_128_gcm_encrypt(PlainText, AAD, IV, CEK) when
+    is_bitstring(PlainText) andalso
+        is_bitstring(AAD) andalso
+        bit_size(IV) =:= 96 andalso
+        bit_size(CEK) =:= 128
+->
+    ?resolve([PlainText, AAD, IV, CEK]).
 
 -spec aes_192_gcm_decrypt(CipherText, CipherTag, AAD, IV, CEK) -> PlainText | error when
-	CipherText :: jose_aes_gcm:cipher_text(),
-	CipherTag  :: jose_aes_gcm:aes_gcm_gmac(),
-	AAD        :: jose_aes_gcm:additional_authenticated_data(),
-	IV         :: jose_aes_gcm:aes_gcm_iv(),
-	CEK        :: jose_aes_gcm:aes_192_key(),
-	PlainText  :: jose_aes_gcm:plain_text().
-aes_192_gcm_decrypt(CipherText, CipherTag, AAD, IV, CEK)
-		when is_bitstring(CipherText)
-		andalso bit_size(CipherTag) =:= 128
-		andalso is_bitstring(AAD)
-		andalso bit_size(IV) =:= 96
-		andalso bit_size(CEK) =:= 192 ->
-	?resolve([CipherText, CipherTag, AAD, IV, CEK]).
+    CipherText :: jose_aes_gcm:cipher_text(),
+    CipherTag :: jose_aes_gcm:aes_gcm_gmac(),
+    AAD :: jose_aes_gcm:additional_authenticated_data(),
+    IV :: jose_aes_gcm:aes_gcm_iv(),
+    CEK :: jose_aes_gcm:aes_192_key(),
+    PlainText :: jose_aes_gcm:plain_text().
+aes_192_gcm_decrypt(CipherText, CipherTag, AAD, IV, CEK) when
+    is_bitstring(CipherText) andalso
+        bit_size(CipherTag) =:= 128 andalso
+        is_bitstring(AAD) andalso
+        bit_size(IV) =:= 96 andalso
+        bit_size(CEK) =:= 192
+->
+    ?resolve([CipherText, CipherTag, AAD, IV, CEK]).
 
 -spec aes_192_gcm_encrypt(PlainText, AAD, IV, CEK) -> {CipherText, CipherTag} when
-	PlainText  :: jose_aes_gcm:plain_text(),
-	AAD        :: jose_aes_gcm:additional_authenticated_data(),
-	IV         :: jose_aes_gcm:aes_gcm_iv(),
-	CEK        :: jose_aes_gcm:aes_192_key(),
-	CipherText :: jose_aes_gcm:cipher_text(),
-	CipherTag  :: jose_aes_gcm:aes_gcm_gmac().
-aes_192_gcm_encrypt(PlainText, AAD, IV, CEK)
-		when is_bitstring(PlainText)
-		andalso is_bitstring(AAD)
-		andalso bit_size(IV) =:= 96
-		andalso bit_size(CEK) =:= 192 ->
-	?resolve([PlainText, AAD, IV, CEK]).
+    PlainText :: jose_aes_gcm:plain_text(),
+    AAD :: jose_aes_gcm:additional_authenticated_data(),
+    IV :: jose_aes_gcm:aes_gcm_iv(),
+    CEK :: jose_aes_gcm:aes_192_key(),
+    CipherText :: jose_aes_gcm:cipher_text(),
+    CipherTag :: jose_aes_gcm:aes_gcm_gmac().
+aes_192_gcm_encrypt(PlainText, AAD, IV, CEK) when
+    is_bitstring(PlainText) andalso
+        is_bitstring(AAD) andalso
+        bit_size(IV) =:= 96 andalso
+        bit_size(CEK) =:= 192
+->
+    ?resolve([PlainText, AAD, IV, CEK]).
 
 -spec aes_256_gcm_decrypt(CipherText, CipherTag, AAD, IV, CEK) -> PlainText | error when
-	CipherText :: jose_aes_gcm:cipher_text(),
-	CipherTag  :: jose_aes_gcm:aes_gcm_gmac(),
-	AAD        :: jose_aes_gcm:additional_authenticated_data(),
-	IV         :: jose_aes_gcm:aes_gcm_iv(),
-	CEK        :: jose_aes_gcm:aes_256_key(),
-	PlainText  :: jose_aes_gcm:plain_text().
-aes_256_gcm_decrypt(CipherText, CipherTag, AAD, IV, CEK)
-		when is_bitstring(CipherText)
-		andalso bit_size(CipherTag) =:= 128
-		andalso is_bitstring(AAD)
-		andalso bit_size(IV) =:= 96
-		andalso bit_size(CEK) =:= 256 ->
-	?resolve([CipherText, CipherTag, AAD, IV, CEK]).
+    CipherText :: jose_aes_gcm:cipher_text(),
+    CipherTag :: jose_aes_gcm:aes_gcm_gmac(),
+    AAD :: jose_aes_gcm:additional_authenticated_data(),
+    IV :: jose_aes_gcm:aes_gcm_iv(),
+    CEK :: jose_aes_gcm:aes_256_key(),
+    PlainText :: jose_aes_gcm:plain_text().
+aes_256_gcm_decrypt(CipherText, CipherTag, AAD, IV, CEK) when
+    is_bitstring(CipherText) andalso
+        bit_size(CipherTag) =:= 128 andalso
+        is_bitstring(AAD) andalso
+        bit_size(IV) =:= 96 andalso
+        bit_size(CEK) =:= 256
+->
+    ?resolve([CipherText, CipherTag, AAD, IV, CEK]).
 
 -spec aes_256_gcm_encrypt(PlainText, AAD, IV, CEK) -> {CipherText, CipherTag} when
-	PlainText  :: jose_aes_gcm:plain_text(),
-	AAD        :: jose_aes_gcm:additional_authenticated_data(),
-	IV         :: jose_aes_gcm:aes_gcm_iv(),
-	CEK        :: jose_aes_gcm:aes_256_key(),
-	CipherText :: jose_aes_gcm:cipher_text(),
-	CipherTag  :: jose_aes_gcm:aes_gcm_gmac().
-aes_256_gcm_encrypt(PlainText, AAD, IV, CEK)
-		when is_bitstring(PlainText)
-		andalso is_bitstring(AAD)
-		andalso bit_size(IV) =:= 96
-		andalso bit_size(CEK) =:= 256 ->
-	?resolve([PlainText, AAD, IV, CEK]).
+    PlainText :: jose_aes_gcm:plain_text(),
+    AAD :: jose_aes_gcm:additional_authenticated_data(),
+    IV :: jose_aes_gcm:aes_gcm_iv(),
+    CEK :: jose_aes_gcm:aes_256_key(),
+    CipherText :: jose_aes_gcm:cipher_text(),
+    CipherTag :: jose_aes_gcm:aes_gcm_gmac().
+aes_256_gcm_encrypt(PlainText, AAD, IV, CEK) when
+    is_bitstring(PlainText) andalso
+        is_bitstring(AAD) andalso
+        bit_size(IV) =:= 96 andalso
+        bit_size(CEK) =:= 256
+->
+    ?resolve([PlainText, AAD, IV, CEK]).

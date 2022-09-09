@@ -70,7 +70,7 @@ lexical_encode(Integer) when is_integer(Integer) ->
     apply('Elixir.Poison.Encoder.Integer', 'encode', [Integer, #{}]);
 lexical_encode(Float) when is_float(Float) ->
     apply('Elixir.Poison.Encoder.Float', 'encode', [Float, #{}]);
-lexical_encode(Struct = #{ '__struct__' := Type }) ->
+lexical_encode(Struct = #{'__struct__' := Type}) ->
     lexical_encode_struct(Type, Struct);
 lexical_encode(Map) when is_map(Map) ->
     lexical_encode_map(Map);
@@ -85,19 +85,21 @@ lexical_encode_name(Binary) when is_binary(Binary) ->
 lexical_encode_name(Atom) when is_atom(Atom) ->
     'Elixir.Atom':'to_string'(Atom);
 lexical_encode_name(Any) ->
-    erlang:error('Elixir.Poison.EncodeError':'exception'([
-        {value, Any},
-        {message, <<
-            "expected string or atom key, got: ",
-            ('Elixir.Kernel':'inspect'(Any))/binary
-        >>}
-    ])).
+    erlang:error(
+        'Elixir.Poison.EncodeError':'exception'([
+            {value, Any},
+            {message, <<
+                "expected string or atom key, got: ",
+                ('Elixir.Kernel':'inspect'(Any))/binary
+            >>}
+        ])
+    ).
 
 %% @private
 lexical_encode_map(Map) when map_size(Map) < 1 ->
     <<"{}">>;
 lexical_encode_map(Map) when is_map(Map) ->
-    Folder = fun (Key, Acc) ->
+    Folder = fun(Key, Acc) ->
         [
             $,,
             apply('Elixir.Poison.Encoder.BitString', 'encode', [lexical_encode_name(Key), #{}]),
@@ -116,7 +118,7 @@ lexical_encode_map(Map) when is_map(Map) ->
 lexical_encode_list([]) ->
     <<"[]">>;
 lexical_encode_list(List) when is_list(List) ->
-    Folder = fun (Element, Acc) ->
+    Folder = fun(Element, Acc) ->
         [
             $,,
             lexical_encode(Element)
@@ -130,12 +132,13 @@ lexical_encode_list(List) when is_list(List) ->
     ].
 
 %% @private
-lexical_encode_struct(Type, Struct)
-        when Type == 'Elixir.Range'
-        orelse Type == 'Elixir.Stream'
-        orelse Type == 'Elixir.MapSet'
-        orelse Type == 'Elixir.HashSet' ->
-    FlatMapper = fun (Element) ->
+lexical_encode_struct(Type, Struct) when
+    Type == 'Elixir.Range' orelse
+        Type == 'Elixir.Stream' orelse
+        Type == 'Elixir.MapSet' orelse
+        Type == 'Elixir.HashSet'
+->
+    FlatMapper = fun(Element) ->
         [
             $,,
             lexical_encode(Element)
@@ -156,7 +159,7 @@ lexical_encode_struct('Elixir.HashDict', HashDict) ->
         true ->
             <<"{}">>;
         false ->
-            FlatMapper = fun ({Key, Value}) ->
+            FlatMapper = fun({Key, Value}) ->
                 [
                     $,,
                     apply('Elixir.Poison.Encoder.BitString', 'encode', [lexical_encode_name(Key), #{}]),
@@ -170,11 +173,12 @@ lexical_encode_struct('Elixir.HashDict', HashDict) ->
                 $}
             ]
     end;
-lexical_encode_struct(Type, Struct)
-        when Type == 'Elixir.Date'
-        orelse Type == 'Elixir.Time'
-        orelse Type == 'Elixir.NaiveDateTime'
-        orelse Type == 'Elixir.DateTime' ->
+lexical_encode_struct(Type, Struct) when
+    Type == 'Elixir.Date' orelse
+        Type == 'Elixir.Time' orelse
+        Type == 'Elixir.NaiveDateTime' orelse
+        Type == 'Elixir.DateTime'
+->
     apply('Elixir.Poison.Encoder.BitString', 'encode', [Type:'to_iso8601'(Struct), #{}]);
 lexical_encode_struct(Type, Struct) ->
     case find_encoder(Type) of
@@ -187,8 +191,8 @@ lexical_encode_struct(Type, Struct) ->
 %% @private
 find_encoder(ElixirType) ->
     case atom_to_binary(ElixirType, unicode) of
-        << "Elixir.", Type/binary >> ->
-            try binary_to_existing_atom(<< "Elixir.Poison.Encoder.", Type/binary >>, unicode) of
+        <<"Elixir.", Type/binary>> ->
+            try binary_to_existing_atom(<<"Elixir.Poison.Encoder.", Type/binary>>, unicode) of
                 EncoderType ->
                     case code:ensure_loaded(EncoderType) of
                         {module, EncoderType} ->

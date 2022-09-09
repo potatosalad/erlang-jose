@@ -18,7 +18,7 @@
 -export([provider_info/0]).
 %% jose_sha1 callbacks
 -export([
-	sha1/1
+    sha1/1
 ]).
 
 %%====================================================================
@@ -41,6 +41,6 @@ provider_info() ->
 %%====================================================================
 
 -spec sha1(Input) -> Output when
-	Input :: jose_sha1:input(), Output :: jose_sha1:sha1_output().
+    Input :: jose_sha1:input(), Output :: jose_sha1:sha1_output().
 sha1(Input) ->
-	crypto:hash(sha, Input).
+    crypto:hash(sha, Input).

@@ -13,9 +13,9 @@
 
 %% Types
 -type info() :: #{
-	behaviour := jose_support:behaviour(),
+    behaviour := jose_support:behaviour(),
     priority := jose_support:priority(),
-	requirements := list(jose_support:requirement())
+    requirements := list(jose_support:requirement())
 }.
 
 -export_type([

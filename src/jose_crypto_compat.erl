@@ -24,7 +24,8 @@
 %% API functions
 %%====================================================================
 
--ifdef(JOSE_CRYPTO_OTP_23). %% "New API" for OTP 23 and higher
+%% "New API" for OTP 23 and higher
+-ifdef(JOSE_CRYPTO_OTP_23).
 
 crypto_init(Cipher, Key, IV, FlagOrOptions) ->
     crypto:crypto_init(Cipher, Key, IV, FlagOrOptions).
@@ -33,9 +34,9 @@ crypto_one_time(Cipher, Key, Data, FlagOrOptions) ->
     crypto:crypto_one_time(Cipher, Key, Data, FlagOrOptions).
 
 crypto_one_time(Cipher, Key, IV, {AAD, PlainText}, FlagOrOptions) ->
-	crypto:crypto_one_time_aead(Cipher, Key, IV, PlainText, AAD, FlagOrOptions);
+    crypto:crypto_one_time_aead(Cipher, Key, IV, PlainText, AAD, FlagOrOptions);
 crypto_one_time(Cipher, Key, IV, {AAD, PlainText, TagOrTagLength}, FlagOrOptions) ->
-	crypto:crypto_one_time_aead(Cipher, Key, IV, PlainText, AAD, TagOrTagLength, FlagOrOptions);
+    crypto:crypto_one_time_aead(Cipher, Key, IV, PlainText, AAD, TagOrTagLength, FlagOrOptions);
 crypto_one_time(Cipher, Key, IV, Data, FlagOrOptions) ->
     crypto:crypto_one_time(Cipher, Key, IV, Data, FlagOrOptions).
 
@@ -49,7 +50,8 @@ mac(Type, Key, Data) ->
 mac(Type, SubType, Key, Data) ->
     crypto:mac(Type, SubType, Key, Data).
 
--else. %% "Old API" for OTP 22 and earlier
+%% "Old API" for OTP 22 and earlier
+-else.
 
 crypto_init(Cipher, Key, IV, _FlagOrOptions) ->
     crypto:stream_init(legacy_cipher_iv(Cipher), Key, IV).

@@ -20,7 +20,7 @@
 %%%===================================================================
 
 decode(Input) ->
-	jose_base64url:'decode!'(Input).
+    jose_base64url:'decode!'(Input).
 
 encode(Input) ->
-	jose_base64url:encode(Input, #{ padding => false }).
+    jose_base64url:encode(Input, #{padding => false}).

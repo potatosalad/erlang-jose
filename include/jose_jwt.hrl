@@ -13,7 +13,7 @@
 -ifndef(JOSE_JWT_HRL).
 
 -record(jose_jwt, {
-	fields = #{} :: map()
+    fields = #{} :: map()
 }).
 
 -define(JOSE_JWT_HRL, 1).

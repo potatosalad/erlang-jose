@@ -34,36 +34,36 @@
 %% jose_jws callbacks
 %%====================================================================
 
-from_map(F = #{ <<"alg">> := <<"PS256">> }) ->
-	{'PS256', maps:remove(<<"alg">>, F)};
-from_map(F = #{ <<"alg">> := <<"PS384">> }) ->
-	{'PS384', maps:remove(<<"alg">>, F)};
-from_map(F = #{ <<"alg">> := <<"PS512">> }) ->
-	{'PS512', maps:remove(<<"alg">>, F)}.
+from_map(F = #{<<"alg">> := <<"PS256">>}) ->
+    {'PS256', maps:remove(<<"alg">>, F)};
+from_map(F = #{<<"alg">> := <<"PS384">>}) ->
+    {'PS384', maps:remove(<<"alg">>, F)};
+from_map(F = #{<<"alg">> := <<"PS512">>}) ->
+    {'PS512', maps:remove(<<"alg">>, F)}.
 
 to_map('PS256', F) ->
-	F#{ <<"alg">> => <<"PS256">> };
+    F#{<<"alg">> => <<"PS256">>};
 to_map('PS384', F) ->
-	F#{ <<"alg">> => <<"PS384">> };
+    F#{<<"alg">> => <<"PS384">>};
 to_map('PS512', F) ->
-	F#{ <<"alg">> => <<"PS512">> }.
+    F#{<<"alg">> => <<"PS512">>}.
 
 %%====================================================================
 %% jose_jws_alg callbacks
 %%====================================================================
 
 generate_key('PS256', _Fields) ->
-	jose_jws_alg:generate_key({rsa, 2048}, <<"PS256">>);
+    jose_jws_alg:generate_key({rsa, 2048}, <<"PS256">>);
 generate_key('PS384', _Fields) ->
-	jose_jws_alg:generate_key({rsa, 3072}, <<"PS384">>);
+    jose_jws_alg:generate_key({rsa, 3072}, <<"PS384">>);
 generate_key('PS512', _Fields) ->
-	jose_jws_alg:generate_key({rsa, 4096}, <<"PS512">>).
+    jose_jws_alg:generate_key({rsa, 4096}, <<"PS512">>).
 
-sign(#jose_jwk{kty={KTYModule, KTY}}, Message, ALG) ->
-	KTYModule:sign(Message, ALG, KTY).
+sign(#jose_jwk{kty = {KTYModule, KTY}}, Message, ALG) ->
+    KTYModule:sign(Message, ALG, KTY).
 
-verify(#jose_jwk{kty={KTYModule, KTY}}, Message, Signature, ALG) ->
-	KTYModule:verify(Message, ALG, Signature, KTY).
+verify(#jose_jwk{kty = {KTYModule, KTY}}, Message, Signature, ALG) ->
+    KTYModule:verify(Message, ALG, Signature, KTY).
 
 %%====================================================================
 %% API functions

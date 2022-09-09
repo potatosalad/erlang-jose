@@ -28,32 +28,32 @@
 %%====================================================================
 
 block_decrypt(Cipher, _Key, _CipherText) ->
-	erlang:error({cipher_unsupported, [Cipher]}).
+    erlang:error({cipher_unsupported, [Cipher]}).
 
 block_decrypt(Cipher, _Key, _IV, _CipherText) ->
-	erlang:error({cipher_unsupported, [Cipher]}).
+    erlang:error({cipher_unsupported, [Cipher]}).
 
 block_encrypt(Cipher, _Key, _PlainText) ->
-	erlang:error({cipher_unsupported, [Cipher]}).
+    erlang:error({cipher_unsupported, [Cipher]}).
 
 block_encrypt(Cipher, _Key, _IV, _PlainText) ->
-	erlang:error({cipher_unsupported, [Cipher]}).
+    erlang:error({cipher_unsupported, [Cipher]}).
 
 %%====================================================================
 %% Public Key API functions
 %%====================================================================
 
 decrypt_private(_CipherText, _PrivateKey, Options) ->
-	erlang:error({crypt_unsupported, [Options]}).
+    erlang:error({crypt_unsupported, [Options]}).
 
 encrypt_public(_PlainText, _PublicKey, Options) ->
-	erlang:error({crypt_unsupported, [Options]}).
+    erlang:error({crypt_unsupported, [Options]}).
 
 sign(_Message, _DigestType, _PrivateKey, Options) ->
-	erlang:error({sign_unsupported, [Options]}).
+    erlang:error({sign_unsupported, [Options]}).
 
 verify(_Message, _DigestType, _Signature, _PublicKey, Options) ->
-	erlang:error({sign_unsupported, [Options]}).
+    erlang:error({sign_unsupported, [Options]}).
 
 %%%-------------------------------------------------------------------
 %%% Internal functions

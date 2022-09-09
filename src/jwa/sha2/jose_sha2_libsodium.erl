@@ -18,8 +18,8 @@
 -export([provider_info/0]).
 %% jose_sha2 callbacks
 -export([
-	sha256/1,
-	sha512/1
+    sha256/1,
+    sha512/1
 ]).
 
 %%====================================================================
@@ -33,8 +33,8 @@ provider_info() ->
         priority => normal,
         requirements => [
             {app, libsodium},
-			libsodium_crypto_hash_sha256,
-			libsodium_crypto_hash_sha512
+            libsodium_crypto_hash_sha256,
+            libsodium_crypto_hash_sha512
         ]
     }.
 
@@ -43,11 +43,11 @@ provider_info() ->
 %%====================================================================
 
 -spec sha256(Input) -> Output when
-	Input :: jose_sha2:input(), Output :: jose_sha2:sha256_output().
+    Input :: jose_sha2:input(), Output :: jose_sha2:sha256_output().
 sha256(Input) ->
-	libsodium_crypto_hash_sha256:crypto_hash_sha256(Input).
+    libsodium_crypto_hash_sha256:crypto_hash_sha256(Input).
 
 -spec sha512(Input) -> Output when
-	Input :: jose_sha2:input(), Output :: jose_sha2:sha512_output().
+    Input :: jose_sha2:input(), Output :: jose_sha2:sha512_output().
 sha512(Input) ->
-	libsodium_crypto_hash_sha512:crypto_hash_sha512(Input).
+    libsodium_crypto_hash_sha512:crypto_hash_sha512(Input).

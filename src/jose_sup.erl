@@ -25,26 +25,26 @@
 
 -spec start_link() -> {ok, pid()} | ignore | {error, supervisor:startlink_err()}.
 start_link() ->
-	supervisor:start_link({local, ?SUPERVISOR}, ?MODULE, []).
+    supervisor:start_link({local, ?SUPERVISOR}, ?MODULE, []).
 
 %%%===================================================================
 %%% supervisor callbacks
 %%%===================================================================
 
--spec init([]) -> {ok, {SupFlags, [ChildSpec]}} | ignore
-	when SupFlags :: supervisor:sup_flags(), ChildSpec :: supervisor:child_spec().
+-spec init([]) -> {ok, {SupFlags, [ChildSpec]}} | ignore when
+    SupFlags :: supervisor:sup_flags(), ChildSpec :: supervisor:child_spec().
 init([]) ->
-	ChildSpecs = [
-		jose_support_check_sup:child_spec(),
-		jose_support_resolve_sup:child_spec(),
-		jose_support_statem:child_spec()
-	],
-	SupFlags = #{
-		strategy => rest_for_one,
-		intensity => 5,
-		period => 10
-	},
-	{ok, {SupFlags, ChildSpecs}}.
+    ChildSpecs = [
+        jose_support_check_sup:child_spec(),
+        jose_support_resolve_sup:child_spec(),
+        jose_support_statem:child_spec()
+    ],
+    SupFlags = #{
+        strategy => rest_for_one,
+        intensity => 5,
+        period => 10
+    },
+    {ok, {SupFlags, ChildSpecs}}.
 
 %%%-------------------------------------------------------------------
 %%% Internal functions

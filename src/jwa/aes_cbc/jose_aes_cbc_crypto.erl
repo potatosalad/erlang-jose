@@ -18,12 +18,12 @@
 -export([provider_info/0]).
 %% jose_aes_cbc callbacks
 -export([
-	aes_128_cbc_decrypt/3,
-	aes_128_cbc_encrypt/3,
-	aes_192_cbc_decrypt/3,
-	aes_192_cbc_encrypt/3,
-	aes_256_cbc_decrypt/3,
-	aes_256_cbc_encrypt/3
+    aes_128_cbc_decrypt/3,
+    aes_128_cbc_encrypt/3,
+    aes_192_cbc_decrypt/3,
+    aes_192_cbc_encrypt/3,
+    aes_256_cbc_decrypt/3,
+    aes_256_cbc_encrypt/3
 ]).
 
 %%====================================================================
@@ -46,49 +46,61 @@ provider_info() ->
 %%====================================================================
 
 -spec aes_128_cbc_decrypt(CipherText, IV, CEK) -> PlainText when
-	CipherText :: jose_aes_cbc:cipher_text(),
-	IV :: jose_aes_cbc:aes_cbc_iv(),
-	CEK :: jose_aes_cbc:aes_128_key(),
-	PlainText :: jose_aes_cbc:plain_text().
-aes_128_cbc_decrypt(CipherText, IV, CEK) when bit_size(CipherText) rem 128 =:= 0 andalso bit_size(IV) =:= 128 andalso bit_size(CEK) =:= 128 ->
-	crypto:crypto_one_time(aes_128_cbc, CEK, IV, CipherText, false).
+    CipherText :: jose_aes_cbc:cipher_text(),
+    IV :: jose_aes_cbc:aes_cbc_iv(),
+    CEK :: jose_aes_cbc:aes_128_key(),
+    PlainText :: jose_aes_cbc:plain_text().
+aes_128_cbc_decrypt(CipherText, IV, CEK) when
+    bit_size(CipherText) rem 128 =:= 0 andalso bit_size(IV) =:= 128 andalso bit_size(CEK) =:= 128
+->
+    crypto:crypto_one_time(aes_128_cbc, CEK, IV, CipherText, false).
 
 -spec aes_128_cbc_encrypt(PlainText, IV, CEK) -> CipherText when
-	PlainText :: jose_aes_cbc:plain_text(),
-	IV :: jose_aes_cbc:aes_cbc_iv(),
-	CEK :: jose_aes_cbc:aes_128_key(),
-	CipherText :: jose_aes_cbc:cipher_text().
-aes_128_cbc_encrypt(PlainText, IV, CEK) when bit_size(PlainText) rem 128 =:= 0 andalso bit_size(IV) =:= 128 andalso bit_size(CEK) =:= 128 ->
-	crypto:crypto_one_time(aes_128_cbc, CEK, IV, PlainText, true).
+    PlainText :: jose_aes_cbc:plain_text(),
+    IV :: jose_aes_cbc:aes_cbc_iv(),
+    CEK :: jose_aes_cbc:aes_128_key(),
+    CipherText :: jose_aes_cbc:cipher_text().
+aes_128_cbc_encrypt(PlainText, IV, CEK) when
+    bit_size(PlainText) rem 128 =:= 0 andalso bit_size(IV) =:= 128 andalso bit_size(CEK) =:= 128
+->
+    crypto:crypto_one_time(aes_128_cbc, CEK, IV, PlainText, true).
 
 -spec aes_192_cbc_decrypt(CipherText, IV, CEK) -> PlainText when
-	CipherText :: jose_aes_cbc:cipher_text(),
-	IV :: jose_aes_cbc:aes_cbc_iv(),
-	CEK :: jose_aes_cbc:aes_192_key(),
-	PlainText :: jose_aes_cbc:plain_text().
-aes_192_cbc_decrypt(CipherText, IV, CEK) when bit_size(CipherText) rem 128 =:= 0 andalso bit_size(IV) =:= 128 andalso bit_size(CEK) =:= 192 ->
-	crypto:crypto_one_time(aes_192_cbc, CEK, IV, CipherText, false).
+    CipherText :: jose_aes_cbc:cipher_text(),
+    IV :: jose_aes_cbc:aes_cbc_iv(),
+    CEK :: jose_aes_cbc:aes_192_key(),
+    PlainText :: jose_aes_cbc:plain_text().
+aes_192_cbc_decrypt(CipherText, IV, CEK) when
+    bit_size(CipherText) rem 128 =:= 0 andalso bit_size(IV) =:= 128 andalso bit_size(CEK) =:= 192
+->
+    crypto:crypto_one_time(aes_192_cbc, CEK, IV, CipherText, false).
 
 -spec aes_192_cbc_encrypt(PlainText, IV, CEK) -> CipherText when
-	PlainText :: jose_aes_cbc:plain_text(),
-	IV :: jose_aes_cbc:aes_cbc_iv(),
-	CEK :: jose_aes_cbc:aes_192_key(),
-	CipherText :: jose_aes_cbc:cipher_text().
-aes_192_cbc_encrypt(PlainText, IV, CEK) when bit_size(PlainText) rem 128 =:= 0 andalso bit_size(IV) =:= 128 andalso bit_size(CEK) =:= 192 ->
-	crypto:crypto_one_time(aes_192_cbc, CEK, IV, PlainText, true).
+    PlainText :: jose_aes_cbc:plain_text(),
+    IV :: jose_aes_cbc:aes_cbc_iv(),
+    CEK :: jose_aes_cbc:aes_192_key(),
+    CipherText :: jose_aes_cbc:cipher_text().
+aes_192_cbc_encrypt(PlainText, IV, CEK) when
+    bit_size(PlainText) rem 128 =:= 0 andalso bit_size(IV) =:= 128 andalso bit_size(CEK) =:= 192
+->
+    crypto:crypto_one_time(aes_192_cbc, CEK, IV, PlainText, true).
 
 -spec aes_256_cbc_decrypt(CipherText, IV, CEK) -> PlainText when
-	CipherText :: jose_aes_cbc:cipher_text(),
-	IV :: jose_aes_cbc:aes_cbc_iv(),
-	CEK :: jose_aes_cbc:aes_256_key(),
-	PlainText :: jose_aes_cbc:plain_text().
-aes_256_cbc_decrypt(CipherText, IV, CEK) when bit_size(CipherText) rem 128 =:= 0 andalso bit_size(IV) =:= 128 andalso bit_size(CEK) =:= 256 ->
-	crypto:crypto_one_time(aes_256_cbc, CEK, IV, CipherText, false).
+    CipherText :: jose_aes_cbc:cipher_text(),
+    IV :: jose_aes_cbc:aes_cbc_iv(),
+    CEK :: jose_aes_cbc:aes_256_key(),
+    PlainText :: jose_aes_cbc:plain_text().
+aes_256_cbc_decrypt(CipherText, IV, CEK) when
+    bit_size(CipherText) rem 128 =:= 0 andalso bit_size(IV) =:= 128 andalso bit_size(CEK) =:= 256
+->
+    crypto:crypto_one_time(aes_256_cbc, CEK, IV, CipherText, false).
 
 -spec aes_256_cbc_encrypt(PlainText, IV, CEK) -> CipherText when
-	PlainText :: jose_aes_cbc:plain_text(),
-	IV :: jose_aes_cbc:aes_cbc_iv(),
-	CEK :: jose_aes_cbc:aes_256_key(),
-	CipherText :: jose_aes_cbc:cipher_text().
-aes_256_cbc_encrypt(PlainText, IV, CEK) when bit_size(PlainText) rem 128 =:= 0 andalso bit_size(IV) =:= 128 andalso bit_size(CEK) =:= 256 ->
-	crypto:crypto_one_time(aes_256_cbc, CEK, IV, PlainText, true).
+    PlainText :: jose_aes_cbc:plain_text(),
+    IV :: jose_aes_cbc:aes_cbc_iv(),
+    CEK :: jose_aes_cbc:aes_256_key(),
+    CipherText :: jose_aes_cbc:cipher_text().
+aes_256_cbc_encrypt(PlainText, IV, CEK) when
+    bit_size(PlainText) rem 128 =:= 0 andalso bit_size(IV) =:= 128 andalso bit_size(CEK) =:= 256
+->
+    crypto:crypto_one_time(aes_256_cbc, CEK, IV, PlainText, true).

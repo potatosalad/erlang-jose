@@ -35,7 +35,7 @@ provider_info() ->
         requirements => [
             {app, poison},
             'Elixir.Poison',
-			'Elixir.JOSE.Poison'
+            'Elixir.JOSE.Poison'
         ]
     }.
 

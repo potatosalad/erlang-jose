@@ -21,10 +21,10 @@
 %% API functions
 %%====================================================================
 
-from_map(F=#{ <<"keys">> := Keys }) ->
-	{[jose_jwk:from_map(Key) || Key <- Keys], maps:remove(<<"keys">>, F)}.
+from_map(F = #{<<"keys">> := Keys}) ->
+    {[jose_jwk:from_map(Key) || Key <- Keys], maps:remove(<<"keys">>, F)}.
 
 to_map(Keys, F) ->
-	F#{
-		<<"keys">> => [element(2, jose_jwk:to_map(Key)) || Key <- Keys]
-	}.
+    F#{
+        <<"keys">> => [element(2, jose_jwk:to_map(Key)) || Key <- Keys]
+    }.

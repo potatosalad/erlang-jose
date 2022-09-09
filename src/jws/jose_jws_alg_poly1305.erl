@@ -27,7 +27,7 @@
 
 %% Types
 -record('Poly1305', {
-	nonce = undefined :: undefined | << _:12 >>
+    nonce = undefined :: undefined | <<_:12>>
 }).
 
 -type alg() :: #'Poly1305'{}.
@@ -38,36 +38,38 @@
 %% jose_jws callbacks
 %%====================================================================
 
-from_map(F = #{ <<"alg">> := <<"Poly1305">> }) ->
-	from_map(maps:remove(<<"alg">>, F), #'Poly1305'{}).
+from_map(F = #{<<"alg">> := <<"Poly1305">>}) ->
+    from_map(maps:remove(<<"alg">>, F), #'Poly1305'{}).
 
-to_map(#'Poly1305'{nonce=undefined}, F) ->
-	F#{ <<"alg">> => <<"Poly1305">> };
-to_map(#'Poly1305'{nonce=Nonce}, F) ->
-	F#{ <<"alg">> => <<"Poly1305">>, <<"nonce">> => jose_jwa_base64url:encode(Nonce) }.
+to_map(#'Poly1305'{nonce = undefined}, F) ->
+    F#{<<"alg">> => <<"Poly1305">>};
+to_map(#'Poly1305'{nonce = Nonce}, F) ->
+    F#{<<"alg">> => <<"Poly1305">>, <<"nonce">> => jose_jwa_base64url:encode(Nonce)}.
 
 %%====================================================================
 %% jose_jws_alg callbacks
 %%====================================================================
 
 generate_key(#'Poly1305'{}, _Fields) ->
-	jose_jws_alg:generate_key({oct, 32}, <<"Poly1305">>).
+    jose_jws_alg:generate_key({oct, 32}, <<"Poly1305">>).
 
-presign(_Key, ALG=#'Poly1305'{nonce=undefined}) ->
-	Nonce = crypto:strong_rand_bytes(12),
-	ALG#'Poly1305'{nonce=Nonce};
+presign(_Key, ALG = #'Poly1305'{nonce = undefined}) ->
+    Nonce = crypto:strong_rand_bytes(12),
+    ALG#'Poly1305'{nonce = Nonce};
 presign(_Key, ALG) ->
-	ALG.
+    ALG.
 
-sign(#jose_jwk{kty={KTYModule, KTY}}, Message, ALG=#'Poly1305'{nonce=Nonce})
-		when is_binary(Nonce) andalso bit_size(Nonce) == 96 ->
-	KTYModule:sign(Message, ALG, KTY).
+sign(#jose_jwk{kty = {KTYModule, KTY}}, Message, ALG = #'Poly1305'{nonce = Nonce}) when
+    is_binary(Nonce) andalso bit_size(Nonce) == 96
+->
+    KTYModule:sign(Message, ALG, KTY).
 
-verify(_Key, _Message, _Signature, #'Poly1305'{nonce=undefined}) ->
-	false;
-verify(#jose_jwk{kty={KTYModule, KTY}}, Message, Signature, ALG=#'Poly1305'{nonce=Nonce})
-		when is_binary(Nonce) andalso bit_size(Nonce) == 96 ->
-	KTYModule:verify(Message, ALG, Signature, KTY).
+verify(_Key, _Message, _Signature, #'Poly1305'{nonce = undefined}) ->
+    false;
+verify(#jose_jwk{kty = {KTYModule, KTY}}, Message, Signature, ALG = #'Poly1305'{nonce = Nonce}) when
+    is_binary(Nonce) andalso bit_size(Nonce) == 96
+->
+    KTYModule:verify(Message, ALG, Signature, KTY).
 
 %%====================================================================
 %% API functions
@@ -78,7 +80,7 @@ verify(#jose_jwk{kty={KTYModule, KTY}}, Message, Signature, ALG=#'Poly1305'{nonc
 %%%-------------------------------------------------------------------
 
 %% @private
-from_map(F = #{ <<"nonce">> := Nonce }, ALG) ->
-	from_map(maps:remove(<<"nonce">>, F), ALG#'Poly1305'{nonce=jose_jwa_base64url:decode(Nonce)});
+from_map(F = #{<<"nonce">> := Nonce}, ALG) ->
+    from_map(maps:remove(<<"nonce">>, F), ALG#'Poly1305'{nonce = jose_jwa_base64url:decode(Nonce)});
 from_map(F, ALG) ->
-	{ALG, F}.
+    {ALG, F}.

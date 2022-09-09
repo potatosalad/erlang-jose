@@ -19,15 +19,15 @@
 -export([provider_info/0]).
 %% jose_curve25519 callbacks
 -export([
-	eddsa_keypair/0,
-	eddsa_keypair/1,
-	eddsa_secret_to_public/1,
-	ed25519_sign/2,
-	ed25519_verify/3,
-	x25519_keypair/0,
-	x25519_keypair/1,
-	x25519_secret_to_public/1,
-	x25519_shared_secret/2
+    eddsa_keypair/0,
+    eddsa_keypair/1,
+    eddsa_secret_to_public/1,
+    ed25519_sign/2,
+    ed25519_verify/3,
+    x25519_keypair/0,
+    x25519_keypair/1,
+    x25519_secret_to_public/1,
+    x25519_shared_secret/2
 ]).
 
 %%====================================================================
@@ -36,14 +36,14 @@
 
 -spec provider_info() -> jose_provider:info().
 provider_info() ->
-	#{
-		behaviour => jose_curve25519,
-		priority => high,
-		requirements => [
-			{app, crypto},
-			crypto
-		]
-	}.
+    #{
+        behaviour => jose_curve25519,
+        priority => high,
+        requirements => [
+            {app, crypto},
+            crypto
+        ]
+    }.
 
 %%====================================================================
 %% jose_curve25519 callbacks
@@ -51,34 +51,34 @@ provider_info() ->
 
 % EdDSA
 eddsa_keypair() ->
-	{PublicKey, Secret} = crypto:generate_key(eddsa, ed25519),
-	{PublicKey, <<Secret/binary, PublicKey/binary>>}.
+    {PublicKey, Secret} = crypto:generate_key(eddsa, ed25519),
+    {PublicKey, <<Secret/binary, PublicKey/binary>>}.
 
 eddsa_keypair(<<Secret:32/binary>>) ->
-	{PublicKey, Secret} = crypto:generate_key(eddsa, ed25519, Secret),
-	{PublicKey, <<Secret/binary, PublicKey/binary>>}.
+    {PublicKey, Secret} = crypto:generate_key(eddsa, ed25519, Secret),
+    {PublicKey, <<Secret/binary, PublicKey/binary>>}.
 
 eddsa_secret_to_public(<<Secret:32/binary>>) ->
-	{PublicKey, _} = crypto:generate_key(eddsa, ed25519, Secret),
-	PublicKey.
+    {PublicKey, _} = crypto:generate_key(eddsa, ed25519, Secret),
+    PublicKey.
 
 % Ed25519
 ed25519_sign(Message, <<Secret:32/binary, _:32/binary>>) ->
-	crypto:sign(eddsa, none, Message, [Secret, ed25519]).
+    crypto:sign(eddsa, none, Message, [Secret, ed25519]).
 
 ed25519_verify(Signature, Message, <<PublicKey:32/binary>>) ->
-	crypto:verify(eddsa, none, Message, Signature, [PublicKey, ed25519]).
+    crypto:verify(eddsa, none, Message, Signature, [PublicKey, ed25519]).
 
 % X25519
 x25519_keypair() ->
-	crypto:generate_key(ecdh, x25519).
+    crypto:generate_key(ecdh, x25519).
 
 x25519_keypair(<<Secret:32/binary>>) ->
-	crypto:generate_key(ecdh, x25519, Secret).
+    crypto:generate_key(ecdh, x25519, Secret).
 
 x25519_secret_to_public(<<Secret:32/binary>>) ->
-	{PublicKey, _} = crypto:generate_key(ecdh, x25519, Secret),
-	PublicKey.
+    {PublicKey, _} = crypto:generate_key(ecdh, x25519, Secret),
+    PublicKey.
 
 x25519_shared_secret(MySecretKey, YourPublicKey) ->
-	crypto:compute_key(ecdh, YourPublicKey, MySecretKey, x25519).
+    crypto:compute_key(ecdh, YourPublicKey, MySecretKey, x25519).

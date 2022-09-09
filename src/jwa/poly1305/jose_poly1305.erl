@@ -21,32 +21,34 @@
 -type poly1305_tag() :: <<_:128>>.
 
 -export_type([
-	message/0,
+    message/0,
     poly1305_one_time_key/0,
     poly1305_tag/0
 ]).
 
 -callback poly1305_mac(Message, OneTimeKey) -> Tag when
-	Message :: jose_poly1305:message(),
+    Message :: jose_poly1305:message(),
     OneTimeKey :: jose_poly1305:poly1305_one_time_key(),
     Tag :: jose_poly1305:poly1305_tag().
 
 -optional_callbacks([
-	poly1305_mac/2
+    poly1305_mac/2
 ]).
 
 %% jose_support callbacks
 -export([
-	support_info/0,
-	support_check/3
+    support_info/0,
+    support_check/3
 ]).
 %% jose_poly1305 callbacks
 -export([
-	poly1305_mac/2
+    poly1305_mac/2
 ]).
 
 %% Macros
--define(TV_Message(), <<"abcdefghijklmnopqrstuvwxyz012345">>). % 2 x 128-bit AES blocks
+
+% 2 x 128-bit AES blocks
+-define(TV_Message(), <<"abcdefghijklmnopqrstuvwxyz012345">>).
 -define(TV_POLY1305_OneTimeKey(), ?b16d("0101010101010101010101010101010101010101010101010101010101010101")).
 -define(TV_POLY1305_Tag(), ?b16d("dd2d06b9037d9e7ab9ec5cc55bec11c5")).
 
@@ -56,27 +58,28 @@
 
 -spec support_info() -> jose_support:info().
 support_info() ->
-	#{
-		stateful => [],
-		callbacks => [
-			{{poly1305_mac, 2}, []}
-		]
-	}.
+    #{
+        stateful => [],
+        callbacks => [
+            {{poly1305_mac, 2}, []}
+        ]
+    }.
 
--spec support_check(Module :: module(), FunctionName :: jose_support:function_name(), Arity :: arity()) -> jose_support:support_check_result().
+-spec support_check(Module :: module(), FunctionName :: jose_support:function_name(), Arity :: arity()) ->
+    jose_support:support_check_result().
 support_check(Module, poly1305_mac, 2) ->
-	Message = ?TV_Message(),
+    Message = ?TV_Message(),
     OneTimeKey = ?TV_POLY1305_OneTimeKey(),
     Tag = ?TV_POLY1305_Tag(),
-	?expect(Tag, Module, poly1305_mac, [Message, OneTimeKey]).
+    ?expect(Tag, Module, poly1305_mac, [Message, OneTimeKey]).
 
 %%====================================================================
 %% jose_poly1305 callbacks
 %%====================================================================
 
 -spec poly1305_mac(Message, OneTimeKey) -> Tag when
-	Message :: jose_poly1305:message(),
+    Message :: jose_poly1305:message(),
     OneTimeKey :: jose_poly1305:poly1305_one_time_key(),
     Tag :: jose_poly1305:poly1305_tag().
 poly1305_mac(Message, OneTimeKey) when bit_size(OneTimeKey) =:= 256 ->
-	?resolve([Message, OneTimeKey]).
+    ?resolve([Message, OneTimeKey]).

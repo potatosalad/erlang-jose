@@ -13,18 +13,21 @@
 -ifndef(JOSE_BASE_HRL).
 
 -define(bnotzero(X),
-	((((X) bor ((bnot (X)) + 1)) bsr 7) band 1)).
+    ((((X) bor ((bnot (X)) + 1)) bsr 7) band 1)
+).
 
 -define(is_iodata(I),
-	(is_binary(I) orelse is_list(I))).
+    (is_binary(I) orelse is_list(I))
+).
 
 -define(to_binary(I),
-	(case I of
-		_ when is_binary(I) ->
-			I;
-		_ when is_list(I) ->
-			erlang:iolist_to_binary(I)
-	end)).
+    (case I of
+        _ when is_binary(I) ->
+            I;
+        _ when is_list(I) ->
+            erlang:iolist_to_binary(I)
+    end)
+).
 
 -define(JOSE_BASE_HRL, 1).
 

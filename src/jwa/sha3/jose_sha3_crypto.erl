@@ -18,10 +18,10 @@
 -export([provider_info/0]).
 %% jose_sha3 callbacks
 -export([
-	sha3_224/1,
-	sha3_256/1,
-	sha3_384/1,
-	sha3_512/1
+    sha3_224/1,
+    sha3_256/1,
+    sha3_384/1,
+    sha3_512/1
 ]).
 
 %%====================================================================
@@ -44,21 +44,21 @@ provider_info() ->
 %%====================================================================
 
 -spec sha3_224(Input) -> Output when
-	Input :: jose_sha3:input(), Output :: jose_sha3:sha3_224_output().
+    Input :: jose_sha3:input(), Output :: jose_sha3:sha3_224_output().
 sha3_224(Input) ->
-	crypto:hash(sha3_224, Input).
+    crypto:hash(sha3_224, Input).
 
 -spec sha3_256(Input) -> Output when
-	Input :: jose_sha3:input(), Output :: jose_sha3:sha3_256_output().
+    Input :: jose_sha3:input(), Output :: jose_sha3:sha3_256_output().
 sha3_256(Input) ->
-	crypto:hash(sha3_256, Input).
+    crypto:hash(sha3_256, Input).
 
 -spec sha3_384(Input) -> Output when
-	Input :: jose_sha3:input(), Output :: jose_sha3:sha3_384_output().
+    Input :: jose_sha3:input(), Output :: jose_sha3:sha3_384_output().
 sha3_384(Input) ->
-	crypto:hash(sha3_384, Input).
+    crypto:hash(sha3_384, Input).
 
 -spec sha3_512(Input) -> Output when
-	Input :: jose_sha3:input(), Output :: jose_sha3:sha3_512_output().
+    Input :: jose_sha3:input(), Output :: jose_sha3:sha3_512_output().
 sha3_512(Input) ->
-	crypto:hash(sha3_512, Input).
+    crypto:hash(sha3_512, Input).

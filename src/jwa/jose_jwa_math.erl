@@ -5,7 +5,7 @@
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
-%%% 
+%%%
 %%% @end
 %%% Created :  06 Jan 2016 by Andrew Bennett <potatosaladx@gmail.com>
 %%%-------------------------------------------------------------------
@@ -29,30 +29,30 @@
 %%====================================================================
 
 expmod(B, E, M) ->
-	expmod_fast(B, E, M).
+    expmod_fast(B, E, M).
 
 exprem(B, E, M) ->
-	exprem_fast(B, E, M).
+    exprem_fast(B, E, M).
 
 intpow(B, E) when is_integer(B) andalso is_integer(E) andalso E >= 0 ->
-	case B of
-		0 ->
-			0;
-		1 ->
-			1;
-		2 ->
-			1 bsl E;
-		_ ->
-			intpow(B, E, 1)
-	end.
+    case B of
+        0 ->
+            0;
+        1 ->
+            1;
+        2 ->
+            1 bsl E;
+        _ ->
+            intpow(B, E, 1)
+    end.
 
 mod(B, M) ->
-	(B rem M + M) rem M.
+    (B rem M + M) rem M.
 
 mod_pow(B, E, M) ->
-	Bytes = crypto:mod_pow(B, E, M),
-	Size = byte_size(Bytes),
-	<< ((crypto:bytes_to_integer(Bytes) + M) rem M):Size/signed-big-integer-unit:8 >>.
+    Bytes = crypto:mod_pow(B, E, M),
+    Size = byte_size(Bytes),
+    <<((crypto:bytes_to_integer(Bytes) + M) rem M):Size/signed-big-integer-unit:8>>.
 
 %%====================================================================
 %% Private API
@@ -60,32 +60,32 @@ mod_pow(B, E, M) ->
 
 % @private
 expmod_fast(B, E, M) ->
-	(exprem_fast(B, E, M) + M) rem M.
+    (exprem_fast(B, E, M) + M) rem M.
 
 % @private
 expmod_slow(B, E, M) ->
-	(exprem_slow(B, E, M) + M) rem M.
+    (exprem_slow(B, E, M) + M) rem M.
 
 % @private
 exprem_fast(B, E, M) when B < 0 andalso E rem 2 =/= 0 ->
-	-exprem_fast(abs(B), E, M);
+    -exprem_fast(abs(B), E, M);
 exprem_fast(B, E, M) when B < 0 ->
-	exprem_fast(abs(B), E, M);
+    exprem_fast(abs(B), E, M);
 exprem_fast(B, E, M) ->
-	crypto:bytes_to_integer(crypto:mod_pow(B, E, M)).
+    crypto:bytes_to_integer(crypto:mod_pow(B, E, M)).
 
 %% @private
 exprem_slow(_B, 0, _M) ->
-	1;
+    1;
 exprem_slow(B, E, M) ->
-	T0 = exprem_slow(B, E div 2, M),
-	T = (T0 * T0) rem M,
-	case E rem 2 of
-		0 ->
-			T band M;
-		_ ->
-			(T * B) rem M
-	end.
+    T0 = exprem_slow(B, E div 2, M),
+    T = (T0 * T0) rem M,
+    case E rem 2 of
+        0 ->
+            T band M;
+        _ ->
+            (T * B) rem M
+    end.
 
 %%%-------------------------------------------------------------------
 %%% Internal functions
@@ -93,8 +93,8 @@ exprem_slow(B, E, M) ->
 
 %% @private
 intpow(B, E, R) when (E rem 2) =:= 0 ->
-	intpow(B * B, E div 2, R);
+    intpow(B * B, E div 2, R);
 intpow(B, E, R) when (E div 2) =:= 0 ->
-	B * R;
+    B * R;
 intpow(B, E, R) ->
-	intpow(B * B, E div 2, B * R).
+    intpow(B * B, E div 2, B * R).

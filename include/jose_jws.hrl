@@ -13,9 +13,9 @@
 -ifndef(JOSE_JWS_HRL).
 
 -record(jose_jws, {
-	alg    = undefined :: undefined | {module(), any()},
-	b64    = undefined :: undefined | boolean(),
-	fields = #{}       :: map()
+    alg = undefined :: undefined | {module(), any()},
+    b64 = undefined :: undefined | boolean(),
+    fields = #{} :: map()
 }).
 
 -define(JOSE_JWS_HRL, 1).

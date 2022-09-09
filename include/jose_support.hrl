@@ -17,30 +17,33 @@
 -define(expect(ExpectationSpec), jose_support:expect(ExpectationSpec)).
 -define(expect(Expected, Module, Function, Arguments), jose_support:expect(Expected, Module, Function, Arguments)).
 -define(expect(Expected, Actual, Module, Function, Arguments), jose_support:expect(Expected, Actual, Module, Function, Arguments)).
--define(expect_report(Module, Function, Arguments, Actual, Expected), jose_support:expect_report(Module, Function, Arguments, Actual, Expected)).
+-define(expect_report(Module, Function, Arguments, Actual, Expected),
+    jose_support:expect_report(Module, Function, Arguments, Actual, Expected)
+).
 -define(format(Format, Arguments), lists:flatten(io_lib:format(Format, Arguments))).
 -define(resolve(Arguments),
-	case ets:whereis(jose_jwa_resolved) of
-		undefined ->
-			case application:ensure_all_started(jose) of
-				{ok, _} ->
-					case ets:whereis(jose_jwa_resolved) of
-						undefined ->
-							erlang:error(operation_not_supported);
-						_ ->
-							erlang:apply(?MODULE, ?FUNCTION_NAME, Arguments)
-					end;
-				_ ->
-					erlang:error(operation_not_supported)
-			end;
-		ResolvedTableId when is_reference(ResolvedTableId) ->
-			case ets:lookup(ResolvedTableId, {?MODULE, {?FUNCTION_NAME, ?FUNCTION_ARITY}}) of
-				[{_, {_, ResolvedModule}}] ->
-					erlang:apply(ResolvedModule, ?FUNCTION_NAME, Arguments);
-				[] ->
-					erlang:error(operation_not_supported)
-			end
-	end).
+    case ets:whereis(jose_jwa_resolved) of
+        undefined ->
+            case application:ensure_all_started(jose) of
+                {ok, _} ->
+                    case ets:whereis(jose_jwa_resolved) of
+                        undefined ->
+                            erlang:error(operation_not_supported);
+                        _ ->
+                            erlang:apply(?MODULE, ?FUNCTION_NAME, Arguments)
+                    end;
+                _ ->
+                    erlang:error(operation_not_supported)
+            end;
+        ResolvedTableId when is_reference(ResolvedTableId) ->
+            case ets:lookup(ResolvedTableId, {?MODULE, {?FUNCTION_NAME, ?FUNCTION_ARITY}}) of
+                [{_, {_, ResolvedModule}}] ->
+                    erlang:apply(ResolvedModule, ?FUNCTION_NAME, Arguments);
+                [] ->
+                    erlang:error(operation_not_supported)
+            end
+    end
+).
 
 -define(JOSE_SUPPORT_HRL, 1).
 

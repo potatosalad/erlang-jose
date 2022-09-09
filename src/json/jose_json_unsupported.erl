@@ -21,10 +21,10 @@
 %%====================================================================
 
 decode(_Binary) ->
-	erlang:error(unsupported_json_module).
+    erlang:error(unsupported_json_module).
 
 encode(_Term) ->
-	erlang:error(unsupported_json_module).
+    erlang:error(unsupported_json_module).
 
 %%%-------------------------------------------------------------------
 %%% Internal functions

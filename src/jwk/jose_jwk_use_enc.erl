@@ -11,33 +11,28 @@
 %%%-------------------------------------------------------------------
 -module(jose_jwk_use_enc).
 
--callback block_encryptor(KTY, Fields) -> JWEMap
-	when
-		KTY    :: any(),
-		Fields :: map(),
-		JWEMap :: map().
+-callback block_encryptor(KTY, Fields) -> JWEMap when
+    KTY :: any(),
+    Fields :: map(),
+    JWEMap :: map().
 
--callback decrypt_private(CipherText, Options, KTY) -> PlainText
-	when
-		CipherText :: iodata(),
-		Options    :: any(),
-		KTY        :: any(),
-		PlainText  :: iodata().
--callback derive_key(KTY) -> DerivedKey
-	when
-		KTY        :: any(),
-		DerivedKey :: iodata().
--callback derive_key(OtherKTY, KTY) -> DerivedKey
-	when
-		OtherKTY   :: any(),
-		KTY        :: any(),
-		DerivedKey :: iodata().
--callback encrypt_public(PlainText, Options, KTY) -> CipherText
-	when
-		PlainText  :: iodata(),
-		Options    :: any(),
-		KTY        :: any(),
-		CipherText :: iodata().
+-callback decrypt_private(CipherText, Options, KTY) -> PlainText when
+    CipherText :: iodata(),
+    Options :: any(),
+    KTY :: any(),
+    PlainText :: iodata().
+-callback derive_key(KTY) -> DerivedKey when
+    KTY :: any(),
+    DerivedKey :: iodata().
+-callback derive_key(OtherKTY, KTY) -> DerivedKey when
+    OtherKTY :: any(),
+    KTY :: any(),
+    DerivedKey :: iodata().
+-callback encrypt_public(PlainText, Options, KTY) -> CipherText when
+    PlainText :: iodata(),
+    Options :: any(),
+    KTY :: any(),
+    CipherText :: iodata().
 
 -optional_callbacks([decrypt_private/3]).
 -optional_callbacks([derive_key/1]).

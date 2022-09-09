@@ -25,73 +25,75 @@
 -type aes_256_key() :: <<_:256>>.
 
 -export_type([
-	plain_text/0,
-	cipher_text/0,
-	aes_block/0,
-	aes_cbc_iv/0,
-	aes_128_key/0,
-	aes_192_key/0,
-	aes_256_key/0
+    plain_text/0,
+    cipher_text/0,
+    aes_block/0,
+    aes_cbc_iv/0,
+    aes_128_key/0,
+    aes_192_key/0,
+    aes_256_key/0
 ]).
 
 %% Callbacks
 -callback aes_128_cbc_decrypt(CipherText, IV, CEK) -> PlainText when
-	CipherText :: jose_aes_cbc:cipher_text(),
-	IV :: jose_aes_cbc:aes_cbc_iv(),
-	CEK :: jose_aes_cbc:aes_128_key(),
-	PlainText :: jose_aes_cbc:plain_text().
+    CipherText :: jose_aes_cbc:cipher_text(),
+    IV :: jose_aes_cbc:aes_cbc_iv(),
+    CEK :: jose_aes_cbc:aes_128_key(),
+    PlainText :: jose_aes_cbc:plain_text().
 -callback aes_128_cbc_encrypt(PlainText, IV, CEK) -> CipherText when
-	PlainText :: jose_aes_cbc:plain_text(),
-	IV :: jose_aes_cbc:aes_cbc_iv(),
-	CEK :: jose_aes_cbc:aes_128_key(),
-	CipherText :: jose_aes_cbc:cipher_text().
+    PlainText :: jose_aes_cbc:plain_text(),
+    IV :: jose_aes_cbc:aes_cbc_iv(),
+    CEK :: jose_aes_cbc:aes_128_key(),
+    CipherText :: jose_aes_cbc:cipher_text().
 -callback aes_192_cbc_decrypt(CipherText, IV, CEK) -> PlainText when
-	CipherText :: jose_aes_cbc:cipher_text(),
-	IV :: jose_aes_cbc:aes_cbc_iv(),
-	CEK :: jose_aes_cbc:aes_192_key(),
-	PlainText :: jose_aes_cbc:plain_text().
+    CipherText :: jose_aes_cbc:cipher_text(),
+    IV :: jose_aes_cbc:aes_cbc_iv(),
+    CEK :: jose_aes_cbc:aes_192_key(),
+    PlainText :: jose_aes_cbc:plain_text().
 -callback aes_192_cbc_encrypt(PlainText, IV, CEK) -> CipherText when
-	PlainText :: jose_aes_cbc:plain_text(),
-	IV :: jose_aes_cbc:aes_cbc_iv(),
-	CEK :: jose_aes_cbc:aes_192_key(),
-	CipherText :: jose_aes_cbc:cipher_text().
+    PlainText :: jose_aes_cbc:plain_text(),
+    IV :: jose_aes_cbc:aes_cbc_iv(),
+    CEK :: jose_aes_cbc:aes_192_key(),
+    CipherText :: jose_aes_cbc:cipher_text().
 -callback aes_256_cbc_decrypt(CipherText, IV, CEK) -> PlainText when
-	CipherText :: jose_aes_cbc:cipher_text(),
-	IV :: jose_aes_cbc:aes_cbc_iv(),
-	CEK :: jose_aes_cbc:aes_256_key(),
-	PlainText :: jose_aes_cbc:plain_text().
+    CipherText :: jose_aes_cbc:cipher_text(),
+    IV :: jose_aes_cbc:aes_cbc_iv(),
+    CEK :: jose_aes_cbc:aes_256_key(),
+    PlainText :: jose_aes_cbc:plain_text().
 -callback aes_256_cbc_encrypt(PlainText, IV, CEK) -> CipherText when
-	PlainText :: jose_aes_cbc:plain_text(),
-	IV :: jose_aes_cbc:aes_cbc_iv(),
-	CEK :: jose_aes_cbc:aes_256_key(),
-	CipherText :: jose_aes_cbc:cipher_text().
+    PlainText :: jose_aes_cbc:plain_text(),
+    IV :: jose_aes_cbc:aes_cbc_iv(),
+    CEK :: jose_aes_cbc:aes_256_key(),
+    CipherText :: jose_aes_cbc:cipher_text().
 
 -optional_callbacks([
-	aes_128_cbc_decrypt/3,
-	aes_128_cbc_encrypt/3,
-	aes_192_cbc_decrypt/3,
-	aes_192_cbc_encrypt/3,
-	aes_256_cbc_decrypt/3,
-	aes_256_cbc_encrypt/3
+    aes_128_cbc_decrypt/3,
+    aes_128_cbc_encrypt/3,
+    aes_192_cbc_decrypt/3,
+    aes_192_cbc_encrypt/3,
+    aes_256_cbc_decrypt/3,
+    aes_256_cbc_encrypt/3
 ]).
 
 %% jose_support callbacks
 -export([
-	support_info/0,
-	support_check/3
+    support_info/0,
+    support_check/3
 ]).
 %% jose_aes_cbc callbacks
 -export([
-	aes_128_cbc_decrypt/3,
-	aes_128_cbc_encrypt/3,
-	aes_192_cbc_decrypt/3,
-	aes_192_cbc_encrypt/3,
-	aes_256_cbc_decrypt/3,
-	aes_256_cbc_encrypt/3
+    aes_128_cbc_decrypt/3,
+    aes_128_cbc_encrypt/3,
+    aes_192_cbc_decrypt/3,
+    aes_192_cbc_encrypt/3,
+    aes_256_cbc_decrypt/3,
+    aes_256_cbc_encrypt/3
 ]).
 
 %% Macros
--define(TV_PlainText(), <<"abcdefghijklmnopqrstuvwxyz012345">>). % 2 x 128-bit AES blocks
+
+% 2 x 128-bit AES blocks
+-define(TV_PlainText(), <<"abcdefghijklmnopqrstuvwxyz012345">>).
 -define(TV_AES_CBC_IV(), ?b16d("00000000000000000000000000000000")).
 -define(TV_AES_128_CBC_Key(), ?b16d("00000000000000000000000000000000")).
 -define(TV_AES_128_CBC_CipherText(), ?b16d("c3af71addfe4fcac6941286a76ddedc2036cc8906710077cb94b25c663f21820")).
@@ -106,104 +108,117 @@
 
 -spec support_info() -> jose_support:info().
 support_info() ->
-	#{
-		stateful => [],
-		callbacks => [
-			{{aes_128_cbc_decrypt, 3}, [{jose_aes_ecb, [{aes_128_ecb_decrypt, 2}]}]},
-			{{aes_128_cbc_encrypt, 3}, [{jose_aes_ecb, [{aes_128_ecb_encrypt, 2}]}]},
-			{{aes_192_cbc_decrypt, 3}, [{jose_aes_ecb, [{aes_192_ecb_decrypt, 2}]}]},
-			{{aes_192_cbc_encrypt, 3}, [{jose_aes_ecb, [{aes_192_ecb_encrypt, 2}]}]},
-			{{aes_256_cbc_decrypt, 3}, [{jose_aes_ecb, [{aes_256_ecb_decrypt, 2}]}]},
-			{{aes_256_cbc_encrypt, 3}, [{jose_aes_ecb, [{aes_256_ecb_encrypt, 2}]}]}
-		]
-	}.
+    #{
+        stateful => [],
+        callbacks => [
+            {{aes_128_cbc_decrypt, 3}, [{jose_aes_ecb, [{aes_128_ecb_decrypt, 2}]}]},
+            {{aes_128_cbc_encrypt, 3}, [{jose_aes_ecb, [{aes_128_ecb_encrypt, 2}]}]},
+            {{aes_192_cbc_decrypt, 3}, [{jose_aes_ecb, [{aes_192_ecb_decrypt, 2}]}]},
+            {{aes_192_cbc_encrypt, 3}, [{jose_aes_ecb, [{aes_192_ecb_encrypt, 2}]}]},
+            {{aes_256_cbc_decrypt, 3}, [{jose_aes_ecb, [{aes_256_ecb_decrypt, 2}]}]},
+            {{aes_256_cbc_encrypt, 3}, [{jose_aes_ecb, [{aes_256_ecb_encrypt, 2}]}]}
+        ]
+    }.
 
--spec support_check(Module :: module(), FunctionName :: jose_support:function_name(), Arity :: arity()) -> jose_support:support_check_result().
+-spec support_check(Module :: module(), FunctionName :: jose_support:function_name(), Arity :: arity()) ->
+    jose_support:support_check_result().
 support_check(Module, aes_128_cbc_decrypt, 3) ->
-	CipherText = ?TV_AES_128_CBC_CipherText(),
-	IV = ?TV_AES_CBC_IV(),
-	CEK = ?TV_AES_128_CBC_Key(),
-	PlainText = ?TV_PlainText(),
-	?expect(PlainText, Module, aes_128_cbc_decrypt, [CipherText, IV, CEK]);
+    CipherText = ?TV_AES_128_CBC_CipherText(),
+    IV = ?TV_AES_CBC_IV(),
+    CEK = ?TV_AES_128_CBC_Key(),
+    PlainText = ?TV_PlainText(),
+    ?expect(PlainText, Module, aes_128_cbc_decrypt, [CipherText, IV, CEK]);
 support_check(Module, aes_128_cbc_encrypt, 3) ->
-	PlainText = ?TV_PlainText(),
-	IV = ?TV_AES_CBC_IV(),
-	CEK = ?TV_AES_128_CBC_Key(),
-	CipherText = ?TV_AES_128_CBC_CipherText(),
-	?expect(CipherText, Module, aes_128_cbc_encrypt, [PlainText, IV, CEK]);
+    PlainText = ?TV_PlainText(),
+    IV = ?TV_AES_CBC_IV(),
+    CEK = ?TV_AES_128_CBC_Key(),
+    CipherText = ?TV_AES_128_CBC_CipherText(),
+    ?expect(CipherText, Module, aes_128_cbc_encrypt, [PlainText, IV, CEK]);
 support_check(Module, aes_192_cbc_decrypt, 3) ->
-	CipherText = ?TV_AES_192_CBC_CipherText(),
-	IV = ?TV_AES_CBC_IV(),
-	CEK = ?TV_AES_192_CBC_Key(),
-	PlainText = ?TV_PlainText(),
-	?expect(PlainText, Module, aes_192_cbc_decrypt, [CipherText, IV, CEK]);
+    CipherText = ?TV_AES_192_CBC_CipherText(),
+    IV = ?TV_AES_CBC_IV(),
+    CEK = ?TV_AES_192_CBC_Key(),
+    PlainText = ?TV_PlainText(),
+    ?expect(PlainText, Module, aes_192_cbc_decrypt, [CipherText, IV, CEK]);
 support_check(Module, aes_192_cbc_encrypt, 3) ->
-	PlainText = ?TV_PlainText(),
-	IV = ?TV_AES_CBC_IV(),
-	CEK = ?TV_AES_192_CBC_Key(),
-	CipherText = ?TV_AES_192_CBC_CipherText(),
-	?expect(CipherText, Module, aes_192_cbc_encrypt, [PlainText, IV, CEK]);
+    PlainText = ?TV_PlainText(),
+    IV = ?TV_AES_CBC_IV(),
+    CEK = ?TV_AES_192_CBC_Key(),
+    CipherText = ?TV_AES_192_CBC_CipherText(),
+    ?expect(CipherText, Module, aes_192_cbc_encrypt, [PlainText, IV, CEK]);
 support_check(Module, aes_256_cbc_decrypt, 3) ->
-	CipherText = ?TV_AES_256_CBC_CipherText(),
-	IV = ?TV_AES_CBC_IV(),
-	CEK = ?TV_AES_256_CBC_Key(),
-	PlainText = ?TV_PlainText(),
-	?expect(PlainText, Module, aes_256_cbc_decrypt, [CipherText, IV, CEK]);
+    CipherText = ?TV_AES_256_CBC_CipherText(),
+    IV = ?TV_AES_CBC_IV(),
+    CEK = ?TV_AES_256_CBC_Key(),
+    PlainText = ?TV_PlainText(),
+    ?expect(PlainText, Module, aes_256_cbc_decrypt, [CipherText, IV, CEK]);
 support_check(Module, aes_256_cbc_encrypt, 3) ->
-	PlainText = ?TV_PlainText(),
-	IV = ?TV_AES_CBC_IV(),
-	CEK = ?TV_AES_256_CBC_Key(),
-	CipherText = ?TV_AES_256_CBC_CipherText(),
-	?expect(CipherText, Module, aes_256_cbc_encrypt, [PlainText, IV, CEK]).
+    PlainText = ?TV_PlainText(),
+    IV = ?TV_AES_CBC_IV(),
+    CEK = ?TV_AES_256_CBC_Key(),
+    CipherText = ?TV_AES_256_CBC_CipherText(),
+    ?expect(CipherText, Module, aes_256_cbc_encrypt, [PlainText, IV, CEK]).
 
 %%====================================================================
 %% jose_sha2 callbacks
 %%====================================================================
 
 -spec aes_128_cbc_decrypt(CipherText, IV, CEK) -> PlainText when
-	CipherText :: jose_aes_cbc:cipher_text(),
-	IV :: jose_aes_cbc:aes_cbc_iv(),
-	CEK :: jose_aes_cbc:aes_128_key(),
-	PlainText :: jose_aes_cbc:plain_text().
-aes_128_cbc_decrypt(CipherText, IV, CEK) when bit_size(CipherText) rem 128 =:= 0 andalso bit_size(IV) =:= 128 andalso bit_size(CEK) =:= 128 ->
-	?resolve([CipherText, IV, CEK]).
+    CipherText :: jose_aes_cbc:cipher_text(),
+    IV :: jose_aes_cbc:aes_cbc_iv(),
+    CEK :: jose_aes_cbc:aes_128_key(),
+    PlainText :: jose_aes_cbc:plain_text().
+aes_128_cbc_decrypt(CipherText, IV, CEK) when
+    bit_size(CipherText) rem 128 =:= 0 andalso bit_size(IV) =:= 128 andalso bit_size(CEK) =:= 128
+->
+    ?resolve([CipherText, IV, CEK]).
 
 -spec aes_128_cbc_encrypt(PlainText, IV, CEK) -> CipherText when
-	PlainText :: jose_aes_cbc:plain_text(),
-	IV :: jose_aes_cbc:aes_cbc_iv(),
-	CEK :: jose_aes_cbc:aes_128_key(),
-	CipherText :: jose_aes_cbc:cipher_text().
-aes_128_cbc_encrypt(PlainText, IV, CEK) when bit_size(PlainText) rem 128 =:= 0 andalso bit_size(IV) =:= 128 andalso bit_size(CEK) =:= 128 ->
-	?resolve([PlainText, IV, CEK]).
+    PlainText :: jose_aes_cbc:plain_text(),
+    IV :: jose_aes_cbc:aes_cbc_iv(),
+    CEK :: jose_aes_cbc:aes_128_key(),
+    CipherText :: jose_aes_cbc:cipher_text().
+aes_128_cbc_encrypt(PlainText, IV, CEK) when
+    bit_size(PlainText) rem 128 =:= 0 andalso bit_size(IV) =:= 128 andalso bit_size(CEK) =:= 128
+->
+    ?resolve([PlainText, IV, CEK]).
 
 -spec aes_192_cbc_decrypt(CipherText, IV, CEK) -> PlainText when
-	CipherText :: jose_aes_cbc:cipher_text(),
-	IV :: jose_aes_cbc:aes_cbc_iv(),
-	CEK :: jose_aes_cbc:aes_192_key(),
-	PlainText :: jose_aes_cbc:plain_text().
-aes_192_cbc_decrypt(CipherText, IV, CEK) when bit_size(CipherText) rem 128 =:= 0 andalso bit_size(IV) =:= 128 andalso bit_size(CEK) =:= 192 ->
-	?resolve([CipherText, IV, CEK]).
+    CipherText :: jose_aes_cbc:cipher_text(),
+    IV :: jose_aes_cbc:aes_cbc_iv(),
+    CEK :: jose_aes_cbc:aes_192_key(),
+    PlainText :: jose_aes_cbc:plain_text().
+aes_192_cbc_decrypt(CipherText, IV, CEK) when
+    bit_size(CipherText) rem 128 =:= 0 andalso bit_size(IV) =:= 128 andalso bit_size(CEK) =:= 192
+->
+    ?resolve([CipherText, IV, CEK]).
 
 -spec aes_192_cbc_encrypt(PlainText, IV, CEK) -> CipherText when
-	PlainText :: jose_aes_cbc:plain_text(),
-	IV :: jose_aes_cbc:aes_cbc_iv(),
-	CEK :: jose_aes_cbc:aes_192_key(),
-	CipherText :: jose_aes_cbc:cipher_text().
-aes_192_cbc_encrypt(PlainText, IV, CEK) when bit_size(PlainText) rem 128 =:= 0 andalso bit_size(IV) =:= 128 andalso bit_size(CEK) =:= 192 ->
-	?resolve([PlainText, IV, CEK]).
+    PlainText :: jose_aes_cbc:plain_text(),
+    IV :: jose_aes_cbc:aes_cbc_iv(),
+    CEK :: jose_aes_cbc:aes_192_key(),
+    CipherText :: jose_aes_cbc:cipher_text().
+aes_192_cbc_encrypt(PlainText, IV, CEK) when
+    bit_size(PlainText) rem 128 =:= 0 andalso bit_size(IV) =:= 128 andalso bit_size(CEK) =:= 192
+->
+    ?resolve([PlainText, IV, CEK]).
 
 -spec aes_256_cbc_decrypt(CipherText, IV, CEK) -> PlainText when
-	CipherText :: jose_aes_cbc:cipher_text(),
-	IV :: jose_aes_cbc:aes_cbc_iv(),
-	CEK :: jose_aes_cbc:aes_256_key(),
-	PlainText :: jose_aes_cbc:plain_text().
-aes_256_cbc_decrypt(CipherText, IV, CEK) when bit_size(CipherText) rem 128 =:= 0 andalso bit_size(IV) =:= 128 andalso bit_size(CEK) =:= 256 ->
-	?resolve([CipherText, IV, CEK]).
+    CipherText :: jose_aes_cbc:cipher_text(),
+    IV :: jose_aes_cbc:aes_cbc_iv(),
+    CEK :: jose_aes_cbc:aes_256_key(),
+    PlainText :: jose_aes_cbc:plain_text().
+aes_256_cbc_decrypt(CipherText, IV, CEK) when
+    bit_size(CipherText) rem 128 =:= 0 andalso bit_size(IV) =:= 128 andalso bit_size(CEK) =:= 256
+->
+    ?resolve([CipherText, IV, CEK]).
 
 -spec aes_256_cbc_encrypt(PlainText, IV, CEK) -> CipherText when
-	PlainText :: jose_aes_cbc:plain_text(),
-	IV :: jose_aes_cbc:aes_cbc_iv(),
-	CEK :: jose_aes_cbc:aes_256_key(),
-	CipherText :: jose_aes_cbc:cipher_text().
-aes_256_cbc_encrypt(PlainText, IV, CEK) when bit_size(PlainText) rem 128 =:= 0 andalso bit_size(IV) =:= 128 andalso bit_size(CEK) =:= 256 ->
-	?resolve([PlainText, IV, CEK]).
+    PlainText :: jose_aes_cbc:plain_text(),
+    IV :: jose_aes_cbc:aes_cbc_iv(),
+    CEK :: jose_aes_cbc:aes_256_key(),
+    CipherText :: jose_aes_cbc:cipher_text().
+aes_256_cbc_encrypt(PlainText, IV, CEK) when
+    bit_size(PlainText) rem 128 =:= 0 andalso bit_size(IV) =:= 128 andalso bit_size(CEK) =:= 256
+->
+    ?resolve([PlainText, IV, CEK]).

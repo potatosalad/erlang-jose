@@ -132,10 +132,10 @@ endif
 	$(verbose) rmdir --ignore-fail-on-non-empty $(ERLFMT_BUILD_DIR)
 
 erlfmt: $(ERLFMT)
-	$(verbose) $(ERLFMT) --write --require-pragma --print-width=132 {src,include,test}/**/*.{hrl,erl,app.src} rebar.config
+	$(verbose) $(ERLFMT) --write --require-pragma --print-width=132 '{src,include,test}/**/*.{hrl,erl,app.src}' rebar.config
 
 erlfmt-check: $(ERLFMT)
-	$(verbose) $(ERLFMT) --check --require-pragma --print-width=132 {src,include,test}/**/*.{hrl,erl,app.src} rebar.config
+	$(verbose) $(ERLFMT) --check --require-pragma --print-width=132 '{src,include,test}/**/*.{hrl,erl,app.src}' rebar.config
 
 distclean-erlfmt:
 	$(gen_verbose) rm -rf $(ERLFMT)

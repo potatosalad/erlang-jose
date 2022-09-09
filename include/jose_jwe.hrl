@@ -13,10 +13,10 @@
 -ifndef(JOSE_JWE_HRL).
 
 -record(jose_jwe, {
-	alg    = undefined :: undefined | {module(), any()},
-	enc    = undefined :: undefined | {module(), any()},
-	zip    = undefined :: undefined | {module(), any()},
-	fields = #{}       :: map()
+    alg = undefined :: undefined | {module(), any()},
+    enc = undefined :: undefined | {module(), any()},
+    zip = undefined :: undefined | {module(), any()},
+    fields = #{} :: map()
 }).
 
 -define(JOSE_JWE_HRL, 1).
