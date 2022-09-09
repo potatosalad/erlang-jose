@@ -1,5 +1,5 @@
-%% -*- mode: erlang; tab-width: 4; indent-tabs-mode: 1; st-rulers: [70] -*-
-%% vim: ts=4 sw=4 ft=erlang noet
+%% -*- mode: erlang; tab-width: 4; indent-tabs-mode: nil; st-rulers: [132] -*-
+%% vim: ts=4 sw=4 ft=erlang et
 %%%-------------------------------------------------------------------
 %%% @author Brett Beatty <brettbeatty@gmail.com>
 %%% @copyright 2021, Brett Beatty
