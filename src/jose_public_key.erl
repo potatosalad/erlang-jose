@@ -718,17 +718,21 @@ key_derivation_params(#'PBES2-params'{keyDerivationFunc = KeyDerivationFunc, enc
 %% This function currently matches a tuple that ougth to be the value
 %% ?'id-hmacWithSHA1, but we need some kind of ASN1-fix for this.
 pseudo_random_function(#'PBKDF2-params_prf'{algorithm = {_,_, _,'id-hmacWithSHA1'}}) ->
-	{fun crypto:hmac/4, sha, pseudo_output_length(?'id-hmacWithSHA1')};
+	{fun hmac/4, sha, pseudo_output_length(?'id-hmacWithSHA1')};
 pseudo_random_function(#'PBKDF2-params_prf'{algorithm = ?'id-hmacWithSHA1' = Algo}) ->
-	{fun crypto:hmac/4, sha, pseudo_output_length(Algo)};
+	{fun hmac/4, sha, pseudo_output_length(Algo)};
 pseudo_random_function(#'PBKDF2-params_prf'{algorithm = ?'id-hmacWithSHA224'= Algo}) ->
-	{fun crypto:hmac/4, sha224, pseudo_output_length(Algo)};
+	{fun hmac/4, sha224, pseudo_output_length(Algo)};
 pseudo_random_function(#'PBKDF2-params_prf'{algorithm = ?'id-hmacWithSHA256' = Algo}) ->
-	{fun crypto:hmac/4, sha256, pseudo_output_length(Algo)};
+	{fun hmac/4, sha256, pseudo_output_length(Algo)};
 pseudo_random_function(#'PBKDF2-params_prf'{algorithm = ?'id-hmacWithSHA384' = Algo}) ->
-	{fun crypto:hmac/4, sha384, pseudo_output_length(Algo)};
+	{fun hmac/4, sha384, pseudo_output_length(Algo)};
 pseudo_random_function(#'PBKDF2-params_prf'{algorithm = ?'id-hmacWithSHA512' = Algo}) ->
-	{fun crypto:hmac/4, sha512, pseudo_output_length(Algo)}.
+	{fun hmac/4, sha512, pseudo_output_length(Algo)}.
+
+%% @private
+hmac(SubType, Key, Data, MacLength) ->
+    jose_crypto_compat:mac(hmac, SubType, Key, Data, MacLength).
 
 %% @private
 pseudo_output_length(?'id-hmacWithSHA1') ->
