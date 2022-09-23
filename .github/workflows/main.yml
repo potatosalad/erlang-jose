@@ -2,6 +2,9 @@ name: CI
 
 on: [push, pull_request]
 
+env:
+  MIX_ENV: test
+
 jobs:
   test:
     name: Test
@@ -11,20 +14,51 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - erlang: 25.0.4-alpine-3.16.1
-          # - erlang: 24.3.4.4-alpine-3.16.1 # appears to have a broken 'ssl' library
-          - erlang: 23.3.4.16-alpine-3.16.0
+          - elixir: 1.14.0
+            otp: 25.1.0
+            lint: true
+
+          - elixir: 1.13.4
+            otp: 24.3.4
+
+          - elixir: 1.12.3
+            otp: 23.3.4
 
     steps:
       - uses: actions/checkout@v2
 
-      - name: Setup
-        run: |
-          make docker-setup DOCKER_OTP_VERSION=${{matrix.erlang}}
+      - name: Setup Beam
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
 
-      - name: Test
+      - name: Erlang Tests
         run: |
-          make docker-test DOCKER_OTP_VERSION=${{matrix.erlang}}
+          make distclean
+          make erlang-mk
+          make ct
+
+      - name: Retrieve Mix Dependencies Cache
+        uses: actions/cache@v1
+        id: mix-cache
+        with:
+          path: deps
+          key: ${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-mix-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
+
+      - name: Install Mix Dependencies
+        if: steps.mix-cache.outputs.cache-hit != 'true'
+        run: |
+          mix local.rebar --force
+          mix local.hex --force
+          mix deps.get
+
+      - name: Check Formatting
+        if: ${{ matrix.lint }}
+        run: mix format --check-formatted
+
+      - name: Elixir Tests
+        run: mix test
 
       - name: Logs
         uses: actions/upload-artifact@v2-preview

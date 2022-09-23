@@ -782,7 +782,7 @@ defmodule JOSE.JWK do
     :jose_jwk.box_encrypt_ecdh_es(plain_text, jwe, v_static_public_key, u_ephemeral_secret_key)
   end
 
-    @doc """
+  @doc """
   ECDH-SS Key Agreement decryption of the `encrypted` binary or map using `v_static_secret_key`.  See `box_encrypt_ecdh_ss/2` and `JOSE.JWE.block_decrypt/2`.
   """
   def box_decrypt_ecdh_ss(encrypted, v_static_secret_key) do
