@@ -1,6 +1,5 @@
 defmodule JOSETest do
   use ExUnit.Case, async: false
-  import ExUnit.CaptureIO
 
   setup_all do
     JOSE.crypto_fallback(true)
@@ -277,7 +276,18 @@ defmodule JOSETest do
     assert jwk == :erlang.element(2, JOSE.JWK.from_binary(password, JOSE.JWK.to_binary(password, jwk)))
     assert jwk == :erlang.element(2, JOSE.JWK.from_map(password, JOSE.JWK.to_map(password, jwk)))
     assert jwk == JOSE.JWK.from_pem(password, JOSE.JWK.to_pem(password, jwk))
-    # hide private attributes
+  end
+
+  test "JOSE.JWK display" do
+    map = %{
+      "crv" => "P-256",
+      "d" => "aJhYDBNS-5yrH97PAExzWNLlJGqJwFGZmv7iJvdG4p0",
+      "kty" => "EC",
+      "x" => "LksdLpZN3ijcn_TBfRK-_tgmvws0c5_V5k0bg14RLhU",
+      "y" => "ukc-JOEAWhW664SY5Q29xHlAVEDlrQwYF3-vQ_cdi1s"
+    }
+
+    jwk = JOSE.JWK.from_map(map)
     stdout = inspect(jwk)
     assert match?("#JOSE.JWK<" <> _, stdout)
     refute String.contains?(stdout, "kty")
