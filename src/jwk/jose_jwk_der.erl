@@ -10,7 +10,7 @@
 %%%-------------------------------------------------------------------
 -module(jose_jwk_der).
 
--include_lib("jose_public_key.hrl").
+-include("jose_public_key.hrl").
 
 %% API
 -export([from_binary/1]).

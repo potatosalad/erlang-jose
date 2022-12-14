@@ -10,7 +10,7 @@
 %%%-------------------------------------------------------------------
 -module(jose_jwk_kty).
 
--include_lib("jose_public_key.hrl").
+-include("jose_public_key.hrl").
 
 -callback generate_key(Parameters) -> KTY
 	when
