@@ -278,6 +278,21 @@ defmodule JOSETest do
     assert jwk == JOSE.JWK.from_pem(password, JOSE.JWK.to_pem(password, jwk))
   end
 
+  test "JOSE.JWK display" do
+    map = %{
+      "crv" => "P-256",
+      "d" => "aJhYDBNS-5yrH97PAExzWNLlJGqJwFGZmv7iJvdG4p0",
+      "kty" => "EC",
+      "x" => "LksdLpZN3ijcn_TBfRK-_tgmvws0c5_V5k0bg14RLhU",
+      "y" => "ukc-JOEAWhW664SY5Q29xHlAVEDlrQwYF3-vQ_cdi1s"
+    }
+
+    jwk = JOSE.JWK.from_map(map)
+    stdout = inspect(jwk)
+    assert match?("#JOSE.JWK<" <> _, stdout)
+    refute String.contains?(stdout, "kty")
+  end
+
   test "JOSE.JWS decode and encode" do
     map = %{"alg" => "HS256"}
     binary = JOSE.encode(map)
