@@ -13,7 +13,7 @@
 -behaviour(jose_jwk_kty).
 -behaviour(jose_jwk_use_enc).
 
--include_lib("jose_public_key.hrl").
+-include("jose_public_key.hrl").
 
 %% jose_jwk callbacks
 -export([from_map/1]).
