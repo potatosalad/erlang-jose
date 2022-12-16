@@ -48,7 +48,7 @@ For example, with Elixir and `mix.exs`
 defp deps() do
   [
     {:jose, "~> 1.11"},
-    {:jason, "~> 1.2"}
+    {:jason, "~> 1.4"}
   ]
 end
 ```

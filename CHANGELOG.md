@@ -1,16 +1,28 @@
 # Changelog
 
-## 1.12.0 (2022-??-??)
+## 1.11.4 (2022-12-15)
 
 * Enhancements
   * Add support for native `crypto` operations for Ed25519 and Ed448, thanks to [@brettbeatty](https://github.com/brettbeatty); see [#123](https://github.com/potatosalad/erlang-jose/pull/123).
   * Add support for native `crypto` operations for ChaCha20-Poly1305 and XChaCha20-Poly1305, when available.
   * Add support for `libsodium` operations for XChaCha20-Poly1305, when available.
   * Add support for [`thoas`](https://github.com/lpil/thoas) JSON encode/decode, thanks to [@michaelklishin](https://github.com/michaelklishin); see [#126](https://github.com/potatosalad/erlang-jose/pull/126).
+  * Add support for `ES256K` which uses the `secp256k1` curve and `RS1` signatures (see [291dbb8](https://github.com/potatosalad/erlang-jose/commit/291dbb86fb5e5c71a8395b3f68c16f31f8bd06db)).
+  * Add support for ECDH-1PU `JOSE.JWK.box_encrypt_ecdh_1pu` and ECDH-ES `JOSE.JWK.box_encrypt_ecdh_es` and document the deprecated `JOSE.JWK.box_encrypt`.
+  * Add support for ECDH-SS `JOSE.JWK.box_encrypt_ecdh_ss`.
+  * Hide `kty` field when inspecting `%JOSE.JWK{}` strict, thanks to [@spencerdcarlson](https://github.com/spencerdcarlson); see [#139](https://github.com/potatosalad/erlang-jose/pull/139)
 * Fixes
   * Version mismatch causing `rebar3` to constantly try to update; see [#122](https://github.com/potatosalad/erlang-jose/pull/122).
   * Fix Ed25519 and Ed448 key DER/PEM encode/decode for OTP 25.
   * Fix Ed25519ctx, Ed25519ph, Ed448, and Ed448ph when dealing with contexts so the implementation matches [IETF RFC 8032](https://datatracker.ietf.org/doc/html/rfc8032).
+  * Drop direct usage of `crypto:hmac/4`, thanks to [@thalesmg](https://github.com/thalesmg); see [#136](https://github.com/potatosalad/erlang-jose/pull/136)
+  * Replace incorrect usage of `-include_lib` with `-include`, thanks to [@Richiban](https://github.com/Richiban); see [#140](https://github.com/potatosalad/erlang-jose/pull/140)
+  * Update the CI jobs so they actually run the Elixir tests, thanks to [@moogle19](https://github.com/moogle19); see [#137](https://github.com/potatosalad/erlang-jose/pull/137)
+  * Change the `master` branch to `main`.
+
+## 1.11.3 (2022-08-28) - unreleased
+
+* This version was never actually released, but was referenced for a while on the `master` branch (see [43d3db4](https://github.com/potatosalad/erlang-jose/commit/43d3db467f909bbc932bd663ddcb1af93180dfd3)).
 
 ## 1.11.2 (2021-08-06)
 
