@@ -1,0 +1,3 @@
+*.beam
+*.encode_char.erl
+*.encode_pair.erl

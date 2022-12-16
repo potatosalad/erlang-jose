@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.11.5 (2022-12-16)
+
+* Fixes
+  * Remove dependency on `parse_transform` for `jose_base64` and `jose_base64url`.
+
 ## 1.11.4 (2022-12-15)
 
 * Enhancements
