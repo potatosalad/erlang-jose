@@ -647,7 +647,7 @@ check_rsa_sign(Fallback) ->
 			future
 	end,
 	SignEntries = [begin
-		case has_rsa_sign(Padding, Legacy, sha) of
+		case has_rsa_sign(Padding, Legacy, sha256) of
 			false ->
 				{{rsa_sign, Padding}, {Fallback, [{rsa_padding, Padding}]}};
 			{true, Module} ->
