@@ -1,24 +1,24 @@
 PROJECT = jose
 PROJECT_DESCRIPTION = JSON Object Signing and Encryption (JOSE) for Erlang and Elixir.
-PROJECT_VERSION = 1.11.5
+PROJECT_VERSION = 1.11.6
 
 TEST_DEPS = jiffy jsone jsx libdecaf libsodium ojson proper thoas
 
 dep_jiffy = hex 1.1.1
-dep_jsone = hex 1.7.0
+dep_jsone = hex 1.8.0
 dep_jsx = hex 3.1.0
 # dep_keccakf1600 = hex 3.0.0
 dep_libdecaf = hex 2.1.1
 dep_libsodium = hex 2.0.1
 dep_ojson = hex 1.0.0
-dep_thoas = hex 0.4.0
-dep_proper = git https://github.com/proper-testing/proper.git bfd7d862dd5082eeca65c192a7021d0e4de5973e
+dep_thoas = hex 1.0.0
+dep_proper = git https://github.com/proper-testing/proper.git def84f172df92635cc62f3356e3e7ad054638eb4
 
 include erlang.mk
 
 .PHONY: docker-build docker-load docker-setup docker-save docker-shell docker-test docker-test-build
 
-DOCKER_OTP_VERSION ?= 25.0.4-alpine-3.16.1
+DOCKER_OTP_VERSION ?= 26.0.2-alpine-3.18.2
 CT_SUITES ?=
 
 docker-build::
