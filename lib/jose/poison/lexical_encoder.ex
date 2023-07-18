@@ -149,7 +149,7 @@ if Code.ensure_loaded?(Poison) do
 
     defp escape("", _), do: []
 
-    for {char, seq} <- Enum.zip('"\\\n\t\r\f\b', '"\\ntrfb') do
+    for {char, seq} <- Enum.zip(~c"\"\\\n\t\r\f\b", ~c"\"\\ntrfb") do
       defp escape(<<unquote(char)>> <> rest, mode) do
         [unquote("\\" <> <<seq>>) | escape(rest, mode)]
       end
@@ -196,7 +196,7 @@ if Code.ensure_loaded?(Poison) do
     end
 
     defp chunk_size(<<char>> <> _, _mode, acc)
-         when char <= 0x1F or char in '"\\' do
+         when char <= 0x1F or char in ~c"\"\\" do
       acc
     end
 
