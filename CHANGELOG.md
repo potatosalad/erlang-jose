@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.11.6 (2023-07-18)
+
+* Fixes
+  * Use `sha256` instead of `sha` when validating RSA signing supportability, thanks to [@pavledjo](https://github.com/pavledjo); see [#142](https://github.com/potatosalad/erlang-jose/pull/142).
+
 ## 1.11.5 (2022-12-16)
 
 * Fixes
