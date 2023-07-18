@@ -142,20 +142,27 @@ JOSE.JWA.supports()
     ["A128GCMKW", "A128KW", "A192GCMKW", "A192KW", "A256GCMKW", "A256KW",
      "C20PKW", "ECDH-1PU", "ECDH-1PU+A128GCMKW", "ECDH-1PU+A128KW",
      "ECDH-1PU+A192GCMKW", "ECDH-1PU+A192KW", "ECDH-1PU+A256GCMKW",
-     "ECDH-1PU+A256KW", "ECDH-1PU+C20PKW", "ECDH-ES", "ECDH-ES+A128GCMKW",
-     "ECDH-ES+A128KW", "ECDH-ES+A192GCMKW", "ECDH-ES+A192KW",
-     "ECDH-ES+A256GCMKW", "ECDH-ES+A256KW", "ECDH-ES+C20PKW",
+     "ECDH-1PU+A256KW", "ECDH-1PU+C20PKW", "ECDH-1PU+XC20PKW", "ECDH-ES",
+     "ECDH-ES+A128GCMKW", "ECDH-ES+A128KW", "ECDH-ES+A192GCMKW",
+     "ECDH-ES+A192KW", "ECDH-ES+A256GCMKW", "ECDH-ES+A256KW", "ECDH-ES+C20PKW",
+     "ECDH-ES+XC20PKW", "ECDH-SS", "ECDH-SS+A128GCMKW", "ECDH-SS+A128KW",
+     "ECDH-SS+A192GCMKW", "ECDH-SS+A192KW", "ECDH-SS+A256GCMKW",
+     "ECDH-SS+A256KW", "ECDH-SS+C20PKW", "ECDH-SS+XC20PKW",
      "PBES2-HS256+A128GCMKW", "PBES2-HS256+A128KW", "PBES2-HS384+A192GCMKW",
      "PBES2-HS384+A192KW", "PBES2-HS512+A256GCMKW", "PBES2-HS512+A256KW",
-     "PBES2-HS512+C20PKW", "RSA-OAEP", "RSA-OAEP-256", "RSA1_5", "dir"]},
+     "PBES2-HS512+C20PKW", "PBES2-HS512+XC20PKW", "RSA-OAEP", "RSA-OAEP-256",
+     "RSA1_5", "XC20PKW", "dir"]},
    {:enc,
     ["A128CBC-HS256", "A128GCM", "A192CBC-HS384", "A192GCM", "A256CBC-HS512",
-     "A256GCM", "C20P"]}, {:zip, ["DEF"]}},
-  {:jwk, {:kty, ["EC", "OKP", "RSA", "oct"]}, {:kty_OKP_crv, []}},
+     "A256GCM", "C20P", "XC20P"]}, {:zip, ["DEF"]}},
+  {:jwk, {:kty, ["EC", "OKP", "RSA", "oct"]},
+   {:kty_OKP_crv,
+    ["Ed25519", "Ed25519ph", "Ed448", "Ed448ph", "X25519", "X448"]}},
   {:jws,
    {:alg,
-    ["ES256", "ES384", "ES512", "HS256", "HS384", "HS512", "PS256", "PS384",
-     "PS512", "Poly1305", "RS256", "RS384", "RS512"]}}
+    ["ES256", "ES256K", "ES384", "ES512", "Ed25519", "Ed25519ph", "Ed448",
+     "Ed448ph", "EdDSA", "HS256", "HS384", "HS512", "PS256", "PS384", "PS512",
+     "Poly1305", "RS1", "RS256", "RS384", "RS512"]}}
 ]
 
 # setting crypto_fallback to true
@@ -173,10 +180,13 @@ JOSE.JWA.supports()
      "ECDH-1PU+A256KW", "ECDH-1PU+C20PKW", "ECDH-1PU+XC20PKW", "ECDH-ES",
      "ECDH-ES+A128GCMKW", "ECDH-ES+A128KW", "ECDH-ES+A192GCMKW",
      "ECDH-ES+A192KW", "ECDH-ES+A256GCMKW", "ECDH-ES+A256KW", "ECDH-ES+C20PKW",
-     "ECDH-ES+XC20PKW", "PBES2-HS256+A128GCMKW", "PBES2-HS256+A128KW",
-     "PBES2-HS384+A192GCMKW", "PBES2-HS384+A192KW", "PBES2-HS512+A256GCMKW",
-     "PBES2-HS512+A256KW", "PBES2-HS512+C20PKW", "PBES2-HS512+XC20PKW",
-     "RSA-OAEP", "RSA-OAEP-256", "RSA1_5", "XC20PKW", "dir"]},
+     "ECDH-ES+XC20PKW", "ECDH-SS", "ECDH-SS+A128GCMKW", "ECDH-SS+A128KW",
+     "ECDH-SS+A192GCMKW", "ECDH-SS+A192KW", "ECDH-SS+A256GCMKW",
+     "ECDH-SS+A256KW", "ECDH-SS+C20PKW", "ECDH-SS+XC20PKW",
+     "PBES2-HS256+A128GCMKW", "PBES2-HS256+A128KW", "PBES2-HS384+A192GCMKW",
+     "PBES2-HS384+A192KW", "PBES2-HS512+A256GCMKW", "PBES2-HS512+A256KW",
+     "PBES2-HS512+C20PKW", "PBES2-HS512+XC20PKW", "RSA-OAEP", "RSA-OAEP-256",
+     "RSA1_5", "XC20PKW", "dir"]},
    {:enc,
     ["A128CBC-HS256", "A128GCM", "A192CBC-HS384", "A192GCM", "A256CBC-HS512",
      "A256GCM", "C20P", "XC20P"]}, {:zip, ["DEF"]}},
@@ -185,9 +195,9 @@ JOSE.JWA.supports()
     ["Ed25519", "Ed25519ph", "Ed448", "Ed448ph", "X25519", "X448"]}},
   {:jws,
    {:alg,
-    ["ES256", "ES384", "ES512", "Ed25519", "Ed25519ph", "Ed448", "Ed448ph",
-     "HS256", "HS384", "HS512", "PS256", "PS384", "PS512", "Poly1305", "RS256",
-     "RS384", "RS512"]}}
+    ["ES256", "ES256K", "ES384", "ES512", "Ed25519", "Ed25519ph", "Ed448",
+     "Ed448ph", "EdDSA", "HS256", "HS384", "HS512", "PS256", "PS384", "PS512",
+     "Poly1305", "RS1", "RS256", "RS384", "RS512"]}}
 ]
 ```
 
@@ -239,9 +249,9 @@ You may also enable the `"none"` algorithm as an application environment variabl
 JOSE.JWA.supports[:jws]
 
 {:alg,
- ["ES256", "ES384", "ES512", "Ed25519", "Ed25519ph", "Ed448", "Ed448ph",
-  "HS256", "HS384", "HS512", "PS256", "PS384", "PS512", "Poly1305", "RS256",
-  "RS384", "RS512"]}
+ ["ES256", "ES256K", "ES384", "ES512", "Ed25519", "Ed25519ph", "Ed448",
+  "Ed448ph", "EdDSA", "HS256", "HS384", "HS512", "PS256", "PS384", "PS512",
+  "Poly1305", "RS1", "RS256", "RS384", "RS512"]}
 
 # setting unsecured_signing to true
 JOSE.unsecured_signing(true)
@@ -250,9 +260,9 @@ JOSE.unsecured_signing(true)
 JOSE.JWA.supports[:jws]
 
 {:alg,
- ["ES256", "ES384", "ES512", "Ed25519", "Ed25519ph", "Ed448", "Ed448ph",
-  "HS256", "HS384", "HS512", "PS256", "PS384", "PS512", "Poly1305", "RS256",
-  "RS384", "RS512", "none"]}
+ ["ES256", "ES256K", "ES384", "ES512", "Ed25519", "Ed25519ph", "Ed448",
+  "Ed448ph", "EdDSA", "HS256", "HS384", "HS512", "PS256", "PS384", "PS512",
+  "Poly1305", "RS1", "RS256", "RS384", "RS512", "none"]}
 ```
 
 ## Usage
