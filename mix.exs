@@ -14,16 +14,27 @@ defmodule JOSE.Mixfile do
       source_url: "https://github.com/potatosalad/erlang-jose",
       docs: fn ->
         {ref, 0} = System.cmd("git", ["rev-parse", "--verify", "--quiet", "HEAD"])
-        [source_ref: ref, main: "JOSE", extras: ["README.md", "CHANGELOG.md", "examples/KEY-GENERATION.md", "ALGORITHMS.md"]]
+
+        [
+          source_ref: ref,
+          main: "JOSE",
+          extras: ["README.md", "CHANGELOG.md", "examples/KEY-GENERATION.md", "ALGORITHMS.md"],
+          groups_for_modules: ["Elixir": [~r/JOSE/], Erlang: [~r/jose/]]
+        ]
       end,
       description: description(),
-      package: package()
+      package: package(),
+      aliases: [docs: ["compile", &edoc_chunks/1, "docs"]]
     ]
   end
 
   def application() do
-    [mod: {:jose_app, []}, extra_applications: [:crypto, :asn1, :public_key]]
+    [mod: {:jose_app, []}, extra_applications: extra_applications(Mix.env())]
   end
+
+  defp extra_applications(env)
+  defp extra_applications(:dev), do: [:crypto, :asn1, :public_key, :edoc, :xmerl]
+  defp extra_applications(_env), do: [:crypto, :asn1, :public_key]
 
   defp deps() do
     [
@@ -69,5 +80,18 @@ defmodule JOSE.Mixfile do
       licenses: ["MIT"],
       links: %{"Github" => "https://github.com/potatosalad/erlang-jose", "Docs" => "https://hexdocs.pm/jose"}
     ]
+  end
+
+  defp edoc_chunks(_args) do
+    base_path = Path.dirname(__ENV__.file)
+    doc_chunk_path = Application.app_dir(:jose, "doc")
+
+    :ok =
+      :edoc.application(:jose, String.to_charlist(base_path),
+        doclet: :edoc_doclet_chunks,
+        layout: :edoc_layout_chunks,
+        preprocess: true,
+        dir: String.to_charlist(doc_chunk_path)
+      )
   end
 end
