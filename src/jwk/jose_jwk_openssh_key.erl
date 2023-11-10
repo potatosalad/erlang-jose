@@ -127,7 +127,7 @@ parse_key(<< W, Rest/binary >>, Body)
 		orelse W =:= $\t ->
 	parse_key(Rest, Body);
 parse_key(<< ?OPENSSH_TAIL, Rest/binary >>, Body) ->
-	case parse_key(jose_base64:decode(Body)) of
+	case parse_key(jose_base64:'decode!'(Body)) of
 		{true, Key} ->
 			{Key, Rest};
 		false ->
