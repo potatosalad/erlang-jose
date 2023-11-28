@@ -48,7 +48,13 @@ defmodule JOSE.JWT do
 
   @doc """
   Converts a `JOSE.JWT` struct to a `:jose_jwt` record.
+
+  This also works for converting a list of `JOSE.JWT` structs to a list of `:jose_jwt` records.
   """
+  @spec to_record(t()) :: tuple()
+  @spec to_record([t()]) :: [tuple()]
+  def to_record(jose_jwt)
+
   def to_record(%JOSE.JWT{unquote_splicing(pairs)}) do
     {:jose_jwt, unquote_splicing(vals)}
   end
@@ -57,7 +63,11 @@ defmodule JOSE.JWT do
 
   @doc """
   Converts a `:jose_jwt` record into a `JOSE.JWT`.
+
+  This also works for converting a list of `:jose_jwt` records into a list of `JOSE.JWT` structs.
   """
+  @spec from_record(tuple()) :: t()
+  @spec from_record([tuple()]) :: [t()]
   def from_record(jose_jwt)
 
   def from_record({:jose_jwt, unquote_splicing(vals)}) do
@@ -90,6 +100,7 @@ defmodule JOSE.JWT do
   @doc """
   Reads file and calls `from_binary/1` to convert into a `JOSE.JWT`.
   """
+  @spec from_file(String.t() | charlist()) :: t()
   def from_file(file), do: :jose_jwt.from_file(file) |> from_record()
 
   @doc """
