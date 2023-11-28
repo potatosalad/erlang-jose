@@ -76,7 +76,7 @@ defmodule JOSE do
   Currently supported Curve448 modules (first found is used as default):
 
     * [`libdecaf`](https://github.com/potatosalad/erlang-libdecaf)
-    * `jose_jwa_curve448` - only supported when `crypto_fallback/0` is `true` 
+    * `jose_jwa_curve448` - only supported when `crypto_fallback/0` is `true`
 
   Additional modules that implement the `jose_curve448` behavior may also be used.
   """

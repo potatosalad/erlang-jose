@@ -176,18 +176,25 @@ defmodule JOSE.JWT do
   def merge(left, right), do: :jose_jwt.merge(left, right) |> from_record()
 
   @doc """
-  See `peek_payload/1`.
+  Same as `peek_payload/1`.
   """
+  @spec peek(binary()) :: t()
   def peek(signed), do: from_record(:jose_jwt.peek(signed))
 
   @doc """
-  Returns the decoded payload as a `JOSE.JWT` of a signed binary or map without verifying the signature.  See `JOSE.JWS.peek_payload/1`.
+  Returns the decoded payload as a `JOSE.JWT` of a signed binary or map without verifying the signature.
+
+  See `JOSE.JWS.peek_payload/1`.
   """
+  @spec peek_payload(binary()) :: t()
   def peek_payload(signed), do: from_record(:jose_jwt.peek_payload(signed))
 
   @doc """
-  Returns the decoded protected as a `JOSE.JWS` of a signed binary or map without verifying the signature.  See `JOSE.JWS.peek_protected/1`.
+  Returns the decoded protected as a `JOSE.JWS` of a signed binary or map without verifying the signature.
+
+  See `JOSE.JWS.peek_protected/1`.
   """
+  @spec peek_protected(binary()) :: JOSE.JWS.t()
   def peek_protected(signed), do: JOSE.JWS.from_record(:jose_jwt.peek_protected(signed))
 
   @doc """
@@ -243,6 +250,7 @@ defmodule JOSE.JWT do
   @doc """
   Verifies the `signed` using the `jwk` and calls `from/1` on the payload.  See `JOSE.JWS.verify/2`.
   """
+  @spec verify(t(), binary()) :: {valid? :: boolean(), jwt :: t(), jws :: JOSE.JWS.t()}
   def verify(jwk = %JOSE.JWK{}, signed), do: verify(JOSE.JWK.to_record(jwk), signed)
 
   def verify(jwk = [%JOSE.JWK{} | _], signed) do
@@ -290,6 +298,7 @@ defmodule JOSE.JWT do
   @doc """
   Verifies the `signed` using the `jwk`, whitelists the `"alg"` using `allow`, and calls `from/1` on the payload.  See `JOSE.JWS.verify_strict/3`.
   """
+  @spec verify_strict(t(), [String.t()], binary()) :: {valid? :: boolean(), jwt :: t(), jws :: JOSE.JWS.t()}
   def verify_strict(jwk = %JOSE.JWK{}, allow, signed), do: verify_strict(JOSE.JWK.to_record(jwk), allow, signed)
 
   def verify_strict(jwk = [%JOSE.JWK{} | _], allow, signed) do
