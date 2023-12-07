@@ -23,11 +23,11 @@ decode(Binary) ->
 	jiffy:decode(Binary, [return_maps]).
 
 encode(Map) when is_map(Map) ->
-	jiffy:encode(sort(Map));
+	ensure_binary(jiffy:encode(sort(Map)));
 encode(List) when is_list(List) ->
-	jiffy:encode(sort(List));
+	ensure_binary(jiffy:encode(sort(List)));
 encode(Term) ->
-	jiffy:encode(Term).
+	ensure_binary(jiffy:encode(Term)).
 
 %%%-------------------------------------------------------------------
 %%% Internal functions
@@ -40,3 +40,11 @@ sort(List) when is_list(List) ->
 	[sort(Term) || Term <- List];
 sort(Term) ->
 	Term.
+
+%% @private
+%% NOTE: jiffy may return an iolist instead of a binary when encoding
+%%       big objects.
+ensure_binary(List) when is_list(List) ->
+	iolist_to_binary(List);
+ensure_binary(Binary) ->
+	Binary.
