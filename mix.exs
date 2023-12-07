@@ -24,7 +24,8 @@ defmodule JOSE.Mixfile do
       end,
       description: description(),
       package: package(),
-      aliases: [docs: ["compile", &edoc_chunks/1, "docs"]]
+      aliases: [docs: ["compile", &edoc_chunks/1, "docs"]],
+      dialyzer: [list_unused_filters: true]
     ]
   end
 
@@ -50,7 +51,11 @@ defmodule JOSE.Mixfile do
       {:poison, "~> 3.0 or ~> 4.0 or ~> 5.0", optional: true},
       {:thoas, "~> 1.0", only: [:dev, :test]},
       {:ex_doc, "~> 0.30", only: :dev},
-      {:earmark, "~> 1.4", only: :dev}
+      {:earmark, "~> 1.4", only: :dev},
+      # TODO: Switch to released version once the following PRs are released:
+      # - https://github.com/jeremyjh/dialyxir/pull/526
+      # - https://github.com/jeremyjh/dialyxir/pull/527
+      {:dialyxir, github: "maennchen/dialyxir", branch: "master"}
     ]
   end
 
