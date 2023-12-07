@@ -48,7 +48,13 @@ defmodule JOSE.JWT do
 
   @doc """
   Converts a `JOSE.JWT` struct to a `:jose_jwt` record.
+
+  This also works for converting a list of `JOSE.JWT` structs to a list of `:jose_jwt` records.
   """
+  @spec to_record(t()) :: tuple()
+  @spec to_record([t()]) :: [tuple()]
+  def to_record(jose_jwt)
+
   def to_record(%JOSE.JWT{unquote_splicing(pairs)}) do
     {:jose_jwt, unquote_splicing(vals)}
   end
@@ -57,7 +63,11 @@ defmodule JOSE.JWT do
 
   @doc """
   Converts a `:jose_jwt` record into a `JOSE.JWT`.
+
+  This also works for converting a list of `:jose_jwt` records into a list of `JOSE.JWT` structs.
   """
+  @spec from_record(tuple()) :: t()
+  @spec from_record([tuple()]) :: [t()]
   def from_record(jose_jwt)
 
   def from_record({:jose_jwt, unquote_splicing(vals)}) do
@@ -90,6 +100,7 @@ defmodule JOSE.JWT do
   @doc """
   Reads file and calls `from_binary/1` to convert into a `JOSE.JWT`.
   """
+  @spec from_file(String.t() | charlist()) :: t()
   def from_file(file), do: :jose_jwt.from_file(file) |> from_record()
 
   @doc """
@@ -176,18 +187,25 @@ defmodule JOSE.JWT do
   def merge(left, right), do: :jose_jwt.merge(left, right) |> from_record()
 
   @doc """
-  See `peek_payload/1`.
+  Same as `peek_payload/1`.
   """
+  @spec peek(binary()) :: t()
   def peek(signed), do: from_record(:jose_jwt.peek(signed))
 
   @doc """
-  Returns the decoded payload as a `JOSE.JWT` of a signed binary or map without verifying the signature.  See `JOSE.JWS.peek_payload/1`.
+  Returns the decoded payload as a `JOSE.JWT` of a signed binary or map without verifying the signature.
+
+  See `JOSE.JWS.peek_payload/1`.
   """
+  @spec peek_payload(binary()) :: t()
   def peek_payload(signed), do: from_record(:jose_jwt.peek_payload(signed))
 
   @doc """
-  Returns the decoded protected as a `JOSE.JWS` of a signed binary or map without verifying the signature.  See `JOSE.JWS.peek_protected/1`.
+  Returns the decoded protected as a `JOSE.JWS` of a signed binary or map without verifying the signature.
+
+  See `JOSE.JWS.peek_protected/1`.
   """
+  @spec peek_protected(binary()) :: JOSE.JWS.t()
   def peek_protected(signed), do: JOSE.JWS.from_record(:jose_jwt.peek_protected(signed))
 
   @doc """
@@ -243,6 +261,7 @@ defmodule JOSE.JWT do
   @doc """
   Verifies the `signed` using the `jwk` and calls `from/1` on the payload.  See `JOSE.JWS.verify/2`.
   """
+  @spec verify(t(), binary()) :: {valid? :: boolean(), jwt :: t(), jws :: JOSE.JWS.t()}
   def verify(jwk = %JOSE.JWK{}, signed), do: verify(JOSE.JWK.to_record(jwk), signed)
 
   def verify(jwk = [%JOSE.JWK{} | _], signed) do
@@ -290,6 +309,7 @@ defmodule JOSE.JWT do
   @doc """
   Verifies the `signed` using the `jwk`, whitelists the `"alg"` using `allow`, and calls `from/1` on the payload.  See `JOSE.JWS.verify_strict/3`.
   """
+  @spec verify_strict(t(), [String.t()], binary()) :: {valid? :: boolean(), jwt :: t(), jws :: JOSE.JWS.t()}
   def verify_strict(jwk = %JOSE.JWK{}, allow, signed), do: verify_strict(JOSE.JWK.to_record(jwk), allow, signed)
 
   def verify_strict(jwk = [%JOSE.JWK{} | _], allow, signed) do
