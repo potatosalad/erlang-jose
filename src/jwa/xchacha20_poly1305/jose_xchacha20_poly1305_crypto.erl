@@ -27,9 +27,10 @@
 -type chacha20_nonce() :: <<_:96>>.
 -type hchacha20_nonce() :: <<_:128>>.
 -type hchacha20_block() :: <<_:256>>.
-% -type poly1305_mac() :: <<_:128>>.
 -type poly1305_otk() :: <<_:256>>.
 -type xchacha20_nonce() :: <<_:192>>.
+
+% -type poly1305_mac() :: <<_:128>>.
 
 %%====================================================================
 %% jose_xchacha20_poly1305 callbacks

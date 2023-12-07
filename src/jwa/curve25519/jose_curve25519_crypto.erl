@@ -2,8 +2,7 @@
 %% vim: ts=4 sw=4 ft=erlang noet
 %%%-------------------------------------------------------------------
 %%% @author Brett Beatty <brettbeatty@gmail.com>
-%%% @copyright 2021, Brett Beatty
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright 2014-2022, Andrew Bennett, 2021, Brett Beatty
 %%% @doc
 %%%
 %%% @end
