@@ -66,3 +66,34 @@ jobs:
         with:
           name: ct-logs-${{matrix.erlang}}
           path: logs/*
+  
+  dialyzer:
+    name: Dialyzer
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup Beam
+        id: setupBeam
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: 1.15.4
+          otp-version: 26.0.2
+
+      - name: Retrieve Mix Dependencies Cache
+        uses: actions/cache@v1
+        id: mix-cache
+        with:
+          path: deps
+          key: ${{ runner.os }}-${{ steps.setupBEAM.outputs.otp-version }}-${{ steps.setupBEAM.outputs.otp-version }}-mix-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
+  
+      - name: Install Mix Dependencies
+        if: steps.mix-cache.outputs.cache-hit != 'true'
+        run: |
+          mix local.rebar --force
+          mix local.hex --force
+          mix deps.get
+
+      - name: Dialyzer
+        run: mix dialyzer --format github
