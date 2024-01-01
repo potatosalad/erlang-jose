@@ -544,4 +544,12 @@ defmodule JOSETest do
     assert({:error, _} = JOSE.JWT.verify(jwk, nil))
     assert({:error, _} = JOSE.JWT.verify_strict(jwk, [], nil))
   end
+
+  # See https://github.com/potatosalad/erlang-jose/issues/96
+  test "reads valid openssh keys" do
+    input =
+      "-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW\nQyNTUxOQAAACAvwUoBPsC8rc4wpR1xbN3Onjuuo+2gqLNECWvmUlDEpQAAAKA6FC8aOhQv\nGgAAAAtzc2gtZWQyNTUxOQAAACAvwUoBPsC8rc4wpR1xbN3Onjuuo+2gqLNECWvmUlDEpQ\nAAAEBXwZ8kolKDzWxBdcPJT0KXilyZEfbF/GjyGa4AOf2d5C/BSgE+wLytzjClHXFs3c6e\nO66j7aCos0QJa+ZSUMSlAAAAFmRtb3JuQHNpbHZlci5mcml0ei5ib3gBAgMEBQYH\n-----END OPENSSH PRIVATE KEY-----\n"
+
+    assert %JOSE.JWK{kty: {:jose_jwk_kty_okp_ed25519, _}} = JOSE.JWK.from_openssh_key(input)
+  end
 end
