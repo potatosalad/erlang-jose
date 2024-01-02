@@ -28,6 +28,7 @@ defmodule JOSE.JWA do
     * `{:aes_ecb, 192}` - AES ECB with 192-bit `key` size
     * `{:aes_ecb, 256}` - AES ECB with 256-bit `key` size
   """
+  @spec block_decrypt(term(), binary(), binary()) :: binary()
   defdelegate block_decrypt(cipher, key, cipher_text), to: :jose_jwa
 
   @doc """
@@ -43,6 +44,7 @@ defmodule JOSE.JWA do
     * `{:aes_gcm, 256}` - AES GCM with 256-bit `key` size and variable `iv` size
     * `{:chacha20_poly1305, 256}` - ChaCha20/Poly1305 with 256-bit `key` size and 96-bit `iv` size
   """
+  @spec block_decrypt(term(), binary(), binary(), binary()) :: binary()
   defdelegate block_decrypt(cipher, key, iv, cipher_text), to: :jose_jwa
 
   @doc """
@@ -54,6 +56,7 @@ defmodule JOSE.JWA do
     * `{:aes_ecb, 192}` - AES ECB with 192-bit `key` size
     * `{:aes_ecb, 256}` - AES ECB with 256-bit `key` size
   """
+  @spec block_encrypt(term(), binary(), binary()) :: binary()
   defdelegate block_encrypt(cipher, key, plain_text), to: :jose_jwa
 
   @doc """
@@ -69,6 +72,7 @@ defmodule JOSE.JWA do
     * `{:aes_gcm, 256}` - AES GCM with 256-bit `key` size and variable `iv` size
     * `{:chacha20_poly1305, 256}` - ChaCha20/Poly1305 with 256-bit `key` size and 96-bit `iv` size
   """
+  @spec block_encrypt(term(), binary(), binary(), binary()) :: binary()
   defdelegate block_encrypt(cipher, key, iv, plain_text), to: :jose_jwa
 
   ## Public Key API
@@ -82,6 +86,7 @@ defmodule JOSE.JWA do
     * `:rsa_oaep_md` - sets the hashing algorithm for `:rsa_pkcs1_oaep_padding`, defaults to `:sha`
     * `:rsa_oaep_label` - sets the label for `:rsa_pkcs1_oaep_padding`, defaults to `<<>>`
   """
+  @spec decrypt_private(binary(), :public_key.rsa_private_key(), atom() | keyword()) :: binary()
   defdelegate decrypt_private(cipher_text, private_key, options), to: :jose_jwa
 
   @doc """
@@ -93,6 +98,7 @@ defmodule JOSE.JWA do
     * `:rsa_oaep_md` - sets the hashing algorithm for `:rsa_pkcs1_oaep_padding`, defaults to `:sha`
     * `:rsa_oaep_label` - sets the label for `:rsa_pkcs1_oaep_padding`, defaults to `<<>>`
   """
+  @spec encrypt_public(binary(), :public_key.rsa_public_key(), atom() | keyword()) :: binary()
   defdelegate encrypt_public(plain_text, public_key, options), to: :jose_jwa
 
   @doc """
@@ -106,6 +112,7 @@ defmodule JOSE.JWA do
       * `-1` - use hash length for salt length
       * any number higher than `-1` is used as the actual salt length
   """
+  @spec sign(binary() | {:digest, binary()}, :public_key.digest_type(), :public_key.private_key(), atom() | keyword()) :: binary()
   defdelegate sign(message, digest_type, private_key, options), to: :jose_jwa
 
   @doc """
@@ -119,6 +126,8 @@ defmodule JOSE.JWA do
       * `-1` - use hash length for salt length
       * any number higher than `-1` is used as the actual salt length
   """
+  @spec verify(binary() | {:digest, binary()}, :public_key.digest_type(), binary(), :public_key.public_key(), atom() | keyword()) ::
+          boolean()
   defdelegate verify(message, digest_type, signature, public_key, options), to: :jose_jwa
 
   ## API
@@ -136,6 +145,7 @@ defmodule JOSE.JWA do
       {:jose_jwa_aes, {:aes_cbc, 192}}
 
   """
+  @spec block_cipher(term()) :: {module(), term()}
   defdelegate block_cipher(cipher), to: :jose_jwa
 
   @doc """
@@ -150,16 +160,19 @@ defmodule JOSE.JWA do
        {{:chacha20_poly1305, 256}, :jose_chacha20_poly1305}]
 
   """
+  @spec crypto_ciphers() :: [{term(), module()}]
   defdelegate crypto_ciphers(), to: :jose_jwa
 
   @doc """
   See `JOSE.crypto_fallback/0`
   """
+  @spec crypto_fallback() :: boolean()
   defdelegate crypto_fallback(), to: :jose_jwa
 
   @doc """
   See `JOSE.crypto_fallback/1`
   """
+  @spec crypto_fallback(boolean()) :: :ok
   defdelegate crypto_fallback(boolean), to: :jose_jwa
 
   @doc """
@@ -175,36 +188,43 @@ defmodule JOSE.JWA do
        rsa_sign: [:rsa_pkcs1_padding, :rsa_pkcs1_pss_padding]]
 
   """
+  @spec crypto_supports() :: keyword()
   defdelegate crypto_supports(), to: :jose_jwa
 
   @doc """
   Performs a constant time comparison between two binaries to help avoid [timing attacks](https://en.wikipedia.org/wiki/Timing_attack).
   """
+  @spec constant_time_compare(binary(), binary()) :: boolean()
   defdelegate constant_time_compare(a, b), to: :jose_jwa
 
   @doc """
   Returns either `:binary` or `:list` depending on the detected runtime behavior for EC keys.
   """
+  @spec ec_key_mode() :: :binary | :list
   defdelegate ec_key_mode(), to: :jose_jwa
 
   @doc """
   Checks whether the `cipher` is natively supported by `:crypto` or not.
   """
+  @spec is_block_cipher_supported(term()) :: boolean()
   defdelegate is_block_cipher_supported(cipher), to: :jose_jwa
 
   @doc """
   Checks whether ChaCha20/Poly1305 support is available or not.
   """
+  @spec is_chacha20_poly1305_supported() :: boolean()
   defdelegate is_chacha20_poly1305_supported(), to: :jose_jwa
 
   @doc """
   Checks whether the `padding` is natively supported by `:public_key` or not.
   """
+  @spec is_rsa_crypt_supported(atom()) :: boolean()
   defdelegate is_rsa_crypt_supported(padding), to: :jose_jwa
 
   @doc """
   Checks whether the `padding` is natively supported by `:public_key` or not.
   """
+  @spec is_rsa_sign_supported(atom()) :: boolean()
   defdelegate is_rsa_sign_supported(padding), to: :jose_jwa
 
   @doc """
@@ -230,15 +250,18 @@ defmodule JOSE.JWA do
           "RS384", "RS512", "none"]}}]
 
   """
+  @spec supports() :: [{:jwe | :jwk | :jws, keyword()}, ...]
   defdelegate supports(), to: :jose_jwa
 
   @doc """
   See `JOSE.unsecured_signing/0`
   """
+  @spec unsecured_signing() :: boolean()
   defdelegate unsecured_signing(), to: :jose_jwa
 
   @doc """
   See `JOSE.unsecured_signing/1`
   """
+  @spec unsecured_signing(boolean()) :: :ok
   defdelegate unsecured_signing(boolean), to: :jose_jwa
 end
