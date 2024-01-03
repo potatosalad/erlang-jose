@@ -1,5 +1,6 @@
-%% -*- mode: erlang; tab-width: 4; indent-tabs-mode: 1; st-rulers: [70] -*-
-%% vim: ts=4 sw=4 ft=erlang noet
+%% -*- mode: erlang; tab-width: 4; indent-tabs-mode: nil; st-rulers: [132] -*-
+%% vim: ts=4 sw=4 ft=erlang et
+%%% % @format
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
@@ -20,10 +21,10 @@
 %% API functions
 %%====================================================================
 
-from_map(F=#{ <<"keys">> := Keys }) ->
-	{[jose_jwk:from_map(Key) || Key <- Keys], maps:remove(<<"keys">>, F)}.
+from_map(F = #{<<"keys">> := Keys}) ->
+    {[jose_jwk:from_map(Key) || Key <- Keys], maps:remove(<<"keys">>, F)}.
 
 to_map(Keys, F) ->
-	F#{
-		<<"keys">> => [element(2, jose_jwk:to_map(Key)) || Key <- Keys]
-	}.
+    F#{
+        <<"keys">> => [element(2, jose_jwk:to_map(Key)) || Key <- Keys]
+    }.

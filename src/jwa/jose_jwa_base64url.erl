@@ -1,5 +1,6 @@
-%% -*- mode: erlang; tab-width: 4; indent-tabs-mode: 1; st-rulers: [70] -*-
-%% vim: ts=4 sw=4 ft=erlang noet
+%% -*- mode: erlang; tab-width: 4; indent-tabs-mode: nil; st-rulers: [132] -*-
+%% vim: ts=4 sw=4 ft=erlang et
+%%% % @format
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
@@ -19,7 +20,7 @@
 %%%===================================================================
 
 decode(Input) ->
-	jose_base64url:'decode!'(Input).
+    jose_base64url:'decode!'(Input).
 
 encode(Input) ->
-	jose_base64url:encode(Input, #{ padding => false }).
+    jose_base64url:encode(Input, #{padding => false}).

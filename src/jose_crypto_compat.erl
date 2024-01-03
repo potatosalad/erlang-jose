@@ -1,5 +1,6 @@
-%% -*- mode: erlang; tab-width: 4; indent-tabs-mode: 1; st-rulers: [70] -*-
-%% vim: ts=4 sw=4 ft=erlang noet
+%% -*- mode: erlang; tab-width: 4; indent-tabs-mode: nil; st-rulers: [132] -*-
+%% vim: ts=4 sw=4 ft=erlang et
+%%% % @format
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
@@ -24,7 +25,8 @@
 %% API functions
 %%====================================================================
 
--ifdef(JOSE_CRYPTO_OTP_23). %% "New API" for OTP 23 and higher
+%% "New API" for OTP 23 and higher
+-ifdef(JOSE_CRYPTO_OTP_23).
 
 crypto_init(Cipher, Key, IV, FlagOrOptions) ->
     crypto:crypto_init(Cipher, Key, IV, FlagOrOptions).
@@ -33,9 +35,9 @@ crypto_one_time(Cipher, Key, Data, FlagOrOptions) ->
     crypto:crypto_one_time(Cipher, Key, Data, FlagOrOptions).
 
 crypto_one_time(Cipher, Key, IV, {AAD, PlainText}, FlagOrOptions) ->
-	crypto:crypto_one_time_aead(Cipher, Key, IV, PlainText, AAD, FlagOrOptions);
+    crypto:crypto_one_time_aead(Cipher, Key, IV, PlainText, AAD, FlagOrOptions);
 crypto_one_time(Cipher, Key, IV, {AAD, PlainText, TagOrTagLength}, FlagOrOptions) ->
-	crypto:crypto_one_time_aead(Cipher, Key, IV, PlainText, AAD, TagOrTagLength, FlagOrOptions);
+    crypto:crypto_one_time_aead(Cipher, Key, IV, PlainText, AAD, TagOrTagLength, FlagOrOptions);
 crypto_one_time(Cipher, Key, IV, Data, FlagOrOptions) ->
     crypto:crypto_one_time(Cipher, Key, IV, Data, FlagOrOptions).
 

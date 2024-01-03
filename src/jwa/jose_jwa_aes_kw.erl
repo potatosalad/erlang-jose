@@ -1,5 +1,6 @@
-%% -*- mode: erlang; tab-width: 4; indent-tabs-mode: 1; st-rulers: [70] -*-
-%% vim: ts=4 sw=4 ft=erlang noet
+%% -*- mode: erlang; tab-width: 4; indent-tabs-mode: nil; st-rulers: [132] -*-
+%% vim: ts=4 sw=4 ft=erlang et
+%%% % @format
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
@@ -10,84 +11,168 @@
 %%%-------------------------------------------------------------------
 -module(jose_jwa_aes_kw).
 
-%% API
--export([wrap/2]).
--export([wrap/3]).
--export([unwrap/2]).
--export([unwrap/3]).
+-behaviour(jose_provider).
+-behaviour(jose_aes_kw).
 
--define(MSB64,      1/unsigned-big-integer-unit:64).
--define(DEFAULT_IV, << 16#A6A6A6A6A6A6A6A6:?MSB64 >>).
+%% jose_provider callbacks
+-export([provider_info/0]).
+%% jose_aes_kw callbacks
+-export([
+    aes_128_kw_unwrap/2,
+    aes_128_kw_wrap/2,
+    aes_192_kw_unwrap/2,
+    aes_192_kw_wrap/2,
+    aes_256_kw_unwrap/2,
+    aes_256_kw_wrap/2
+]).
+%% Internal API
+-export([
+    wrap/3,
+    wrap/4,
+    unwrap/3,
+    unwrap/4
+]).
+
+%% Macros
+-define(MSB64, 1 / unsigned - big - integer - unit:64).
+-define(DEFAULT_IV, <<16#A6A6A6A6A6A6A6A6:?MSB64>>).
 
 %%====================================================================
-%% API functions
+%% jose_provider callbacks
 %%====================================================================
 
-wrap(PlainText, KEK) ->
-	wrap(PlainText, KEK, ?DEFAULT_IV).
+-spec provider_info() -> jose_provider:info().
+provider_info() ->
+    #{
+        behaviour => jose_aes_kw,
+        priority => low,
+        requirements => [
+            {app, crypto},
+            crypto,
+            {app, jose},
+            jose_aes_ecb
+        ]
+    }.
 
-wrap(PlainText, KEK, IV)
-		when (byte_size(PlainText) rem 8) =:= 0
-		andalso (bit_size(KEK) =:= 128
-			orelse bit_size(KEK) =:= 192
-			orelse bit_size(KEK) =:= 256) ->
-	Buffer = << IV/binary, PlainText/binary >>,
-	BlockCount = (byte_size(Buffer) div 8) - 1,
-	do_wrap(Buffer, 0, BlockCount, KEK).
+%%====================================================================
+%% jose_aes_kw callbacks
+%%====================================================================
 
-unwrap(CipherText, KEK) ->
-	unwrap(CipherText, KEK, ?DEFAULT_IV).
+-spec aes_128_kw_unwrap(CipherText, KEK) -> PlainText | error when
+    CipherText :: jose_aes_kw:cipher_text(),
+    KEK :: jose_aes_kw:aes_128_key(),
+    PlainText :: jose_aes_kw:plain_text().
+aes_128_kw_unwrap(CipherText, KEK) when bit_size(CipherText) rem 64 =:= 0 andalso bit_size(KEK) =:= 128 ->
+    unwrap(fun jose_aes_ecb:aes_128_ecb_decrypt/2, CipherText, KEK).
 
-unwrap(CipherText, KEK, IV)
-		when (byte_size(CipherText) rem 8) =:= 0
-		andalso (bit_size(KEK) =:= 128
-			orelse bit_size(KEK) =:= 192
-			orelse bit_size(KEK) =:= 256) ->
-	BlockCount = (byte_size(CipherText) div 8) - 1,
-	IVSize = byte_size(IV),
-	case do_unwrap(CipherText, 5, BlockCount, KEK) of
-		<< IV:IVSize/binary, PlainText/binary >> ->
-			PlainText;
-		_ ->
-			erlang:error({badarg, [CipherText, KEK, IV]})
-	end.
+-spec aes_128_kw_wrap(PlainText, KEK) -> CipherText when
+    PlainText :: jose_aes_kw:plain_text(),
+    KEK :: jose_aes_kw:aes_128_key(),
+    CipherText :: jose_aes_kw:cipher_text().
+aes_128_kw_wrap(PlainText, KEK) when bit_size(PlainText) rem 64 =:= 0 andalso bit_size(KEK) =:= 128 ->
+    wrap(fun jose_aes_ecb:aes_128_ecb_encrypt/2, PlainText, KEK).
+
+-spec aes_192_kw_unwrap(CipherText, KEK) -> PlainText | error when
+    CipherText :: jose_aes_kw:cipher_text(),
+    KEK :: jose_aes_kw:aes_192_key(),
+    PlainText :: jose_aes_kw:plain_text().
+aes_192_kw_unwrap(CipherText, KEK) when bit_size(CipherText) rem 64 =:= 0 andalso bit_size(KEK) =:= 192 ->
+    unwrap(fun jose_aes_ecb:aes_192_ecb_decrypt/2, CipherText, KEK).
+
+-spec aes_192_kw_wrap(PlainText, KEK) -> CipherText when
+    PlainText :: jose_aes_kw:plain_text(),
+    KEK :: jose_aes_kw:aes_192_key(),
+    CipherText :: jose_aes_kw:cipher_text().
+aes_192_kw_wrap(PlainText, KEK) when bit_size(PlainText) rem 64 =:= 0 andalso bit_size(KEK) =:= 192 ->
+    wrap(fun jose_aes_ecb:aes_192_ecb_encrypt/2, PlainText, KEK).
+
+-spec aes_256_kw_unwrap(CipherText, KEK) -> PlainText | error when
+    CipherText :: jose_aes_kw:cipher_text(),
+    KEK :: jose_aes_kw:aes_256_key(),
+    PlainText :: jose_aes_kw:plain_text().
+aes_256_kw_unwrap(CipherText, KEK) when bit_size(CipherText) rem 64 =:= 0 andalso bit_size(KEK) =:= 256 ->
+    unwrap(fun jose_aes_ecb:aes_256_ecb_decrypt/2, CipherText, KEK).
+
+-spec aes_256_kw_wrap(PlainText, KEK) -> CipherText when
+    PlainText :: jose_aes_kw:plain_text(),
+    KEK :: jose_aes_kw:aes_256_key(),
+    CipherText :: jose_aes_kw:cipher_text().
+aes_256_kw_wrap(PlainText, KEK) when bit_size(PlainText) rem 64 =:= 0 andalso bit_size(KEK) =:= 256 ->
+    wrap(fun jose_aes_ecb:aes_256_ecb_encrypt/2, PlainText, KEK).
+
+%%====================================================================
+%% Internal API functions
+%%====================================================================
+
+wrap(EncryptBlock, PlainText, KEK) ->
+    wrap(EncryptBlock, PlainText, KEK, ?DEFAULT_IV).
+
+wrap(EncryptBlock, PlainText, KEK, IV) when
+    is_function(EncryptBlock, 2) andalso
+        (bit_size(PlainText) rem 64) =:= 0 andalso
+        (bit_size(KEK) =:= 128 orelse
+            bit_size(KEK) =:= 192 orelse
+            bit_size(KEK) =:= 256)
+->
+    Buffer = <<IV/binary, PlainText/binary>>,
+    BlockCount = (byte_size(Buffer) div 8) - 1,
+    do_wrap(EncryptBlock, Buffer, 0, BlockCount, KEK).
+
+unwrap(DecryptBlock, CipherText, KEK) ->
+    unwrap(DecryptBlock, CipherText, KEK, ?DEFAULT_IV).
+
+unwrap(DecryptBlock, CipherText, KEK, IV) when
+    is_function(DecryptBlock, 2) andalso
+        (bit_size(CipherText) rem 64) =:= 0 andalso
+        (bit_size(KEK) =:= 128 orelse
+            bit_size(KEK) =:= 192 orelse
+            bit_size(KEK) =:= 256)
+->
+    BlockCount = (byte_size(CipherText) div 8) - 1,
+    IVSize = byte_size(IV),
+    case do_unwrap(DecryptBlock, CipherText, 5, BlockCount, KEK) of
+        <<IV:IVSize/binary, PlainText/binary>> ->
+            PlainText;
+        _ ->
+            error
+    end.
 
 %%%-------------------------------------------------------------------
 %%% Internal functions
 %%%-------------------------------------------------------------------
 
 %% @private
-do_wrap(Buffer, 6, _BlockCount, _KEK) ->
-	Buffer;
-do_wrap(Buffer, J, BlockCount, KEK) ->
-	do_wrap(do_wrap(Buffer, J, 1, BlockCount, KEK), J + 1, BlockCount, KEK).
+do_wrap(_EncryptBlock, Buffer, 6, _BlockCount, _KEK) ->
+    Buffer;
+do_wrap(EncryptBlock, Buffer, J, BlockCount, KEK) ->
+    do_wrap(EncryptBlock, do_wrap(EncryptBlock, Buffer, J, 1, BlockCount, KEK), J + 1, BlockCount, KEK).
 
 %% @private
-do_wrap(Buffer, _J, I, BlockCount, _KEK) when I > BlockCount ->
-	Buffer;
-do_wrap(<< A0:8/binary, Rest/binary >>, J, I, BlockCount, KEK) ->
-	HeadSize = (I - 1) * 8,
-	<< Head:HeadSize/binary, B0:8/binary, Tail/binary >> = Rest,
-	Round = (BlockCount * J) + I,
-	Data = << A0/binary, B0/binary >>,
-	<< A1:?MSB64, B1/binary >> = jose_jwa:block_encrypt({aes_ecb, bit_size(KEK)}, KEK, Data),
-	A2 = A1 bxor Round,
-	do_wrap(<< A2:?MSB64, Head/binary, B1/binary, Tail/binary >>, J, I + 1, BlockCount, KEK).
+do_wrap(_EncryptBlock, Buffer, _J, I, BlockCount, _KEK) when I > BlockCount ->
+    Buffer;
+do_wrap(EncryptBlock, <<A0:8/binary, Rest/binary>>, J, I, BlockCount, KEK) ->
+    HeadSize = (I - 1) * 8,
+    <<Head:HeadSize/binary, B0:8/binary, Tail/binary>> = Rest,
+    Round = (BlockCount * J) + I,
+    Data = <<A0/binary, B0/binary>>,
+    <<A1:?MSB64, B1/binary>> = EncryptBlock(Data, KEK),
+    A2 = A1 bxor Round,
+    do_wrap(EncryptBlock, <<A2:?MSB64, Head/binary, B1/binary, Tail/binary>>, J, I + 1, BlockCount, KEK).
 
 %% @private
-do_unwrap(Buffer, J, _BlockCount, _KEK) when J < 0 ->
-	Buffer;
-do_unwrap(Buffer, J, BlockCount, KEK) ->
-	do_unwrap(do_unwrap(Buffer, J, BlockCount, BlockCount, KEK), J - 1, BlockCount, KEK).
+do_unwrap(_DecryptBlock, Buffer, J, _BlockCount, _KEK) when J < 0 ->
+    Buffer;
+do_unwrap(DecryptBlock, Buffer, J, BlockCount, KEK) ->
+    do_unwrap(DecryptBlock, do_unwrap(DecryptBlock, Buffer, J, BlockCount, BlockCount, KEK), J - 1, BlockCount, KEK).
 
 %% @private
-do_unwrap(Buffer, _J, I, _BlockCount, _KEK) when I < 1 ->
-	Buffer;
-do_unwrap(<< A0:?MSB64, Rest/binary >>, J, I, BlockCount, KEK) ->
-	HeadSize = (I - 1) * 8,
-	<< Head:HeadSize/binary, B0:8/binary, Tail/binary >> = Rest,
-	Round = (BlockCount * J) + I,
-	A1 = A0 bxor Round,
-	Data = << A1:?MSB64, B0/binary >>,
-	<< A2:8/binary, B1/binary >> = jose_jwa:block_decrypt({aes_ecb, bit_size(KEK)}, KEK, Data),
-	do_unwrap(<< A2/binary, Head/binary, B1/binary, Tail/binary >>, J, I - 1, BlockCount, KEK).
+do_unwrap(_DecryptBlock, Buffer, _J, I, _BlockCount, _KEK) when I < 1 ->
+    Buffer;
+do_unwrap(DecryptBlock, <<A0:?MSB64, Rest/binary>>, J, I, BlockCount, KEK) ->
+    HeadSize = (I - 1) * 8,
+    <<Head:HeadSize/binary, B0:8/binary, Tail/binary>> = Rest,
+    Round = (BlockCount * J) + I,
+    A1 = A0 bxor Round,
+    Data = <<A1:?MSB64, B0/binary>>,
+    <<A2:8/binary, B1/binary>> = DecryptBlock(Data, KEK),
+    do_unwrap(DecryptBlock, <<A2/binary, Head/binary, B1/binary, Tail/binary>>, J, I - 1, BlockCount, KEK).
