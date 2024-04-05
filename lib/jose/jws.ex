@@ -8,7 +8,7 @@ defmodule JOSE.JWS do
 
   The [`"none"`](https://tools.ietf.org/html/rfc7515#appendix-A.5) signing
   algorithm is disabled by default to prevent accidental verification of empty
-  signatures (read about the vulnerability [here](https://auth0.com/blog/2015/03/31/critical-vulnerabilities-in-json-web-token-libraries/)).
+  signatures (read about the vulnerability [here](https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/)).
 
   You may also enable the `"none"` algorithm as an application environment
   variable for `:jose` or by using `JOSE.unsecured_signing/1`.
