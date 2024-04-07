@@ -17,7 +17,7 @@ defmodule JOSE.Mixfile do
 
         [
           source_ref: ref,
-          main: "JOSE",
+          main: "readme",
           extras: ["README.md", "CHANGELOG.md", "examples/KEY-GENERATION.md", "ALGORITHMS.md"],
           groups_for_modules: ["Elixir": [~r/JOSE/], Erlang: [~r/jose/]]
         ]
