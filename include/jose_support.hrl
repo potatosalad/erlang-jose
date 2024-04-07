@@ -16,7 +16,9 @@
 -define(b16e(X), jose_base16:encode(X, #{'case' => lower})).
 -define(expect(ExpectationSpec), jose_support:expect(ExpectationSpec)).
 -define(expect(Expected, Module, Function, Arguments), jose_support:expect(Expected, Module, Function, Arguments)).
--define(expect(Expected, Actual, Module, Function, Arguments), jose_support:expect(Expected, Actual, Module, Function, Arguments)).
+-define(expect(Expected, Actual, Module, Function, Arguments),
+    jose_support:expect(Expected, Actual, Module, Function, Arguments)
+).
 -define(expect_report(Module, Function, Arguments, Actual, Expected),
     jose_support:expect_report(Module, Function, Arguments, Actual, Expected)
 ).

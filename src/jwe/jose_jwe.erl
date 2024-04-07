@@ -138,7 +138,8 @@ from_map({#jose_jwe{alg = undefined, enc = undefined}, _Modules, _Map}) ->
 from_map({JWE, _Modules, Fields}) ->
     case {maps:is_key(<<"alg">>, Fields), maps:is_key(<<"enc">>, Fields)} of
         {true, true} ->
-            {error, {invalid_fields, [{<<"alg">>, maps:get(<<"alg">>, Fields)}, {<<"enc">>, maps:get(<<"enc">>, Fields)}]}};
+            {error,
+                {invalid_fields, [{<<"alg">>, maps:get(<<"alg">>, Fields)}, {<<"enc">>, maps:get(<<"enc">>, Fields)}]}};
         {true, false} ->
             {error, {invalid_fields, [{<<"alg">>, maps:get(<<"alg">>, Fields)}]}};
         {false, true} ->

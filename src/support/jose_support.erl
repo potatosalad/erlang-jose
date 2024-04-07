@@ -65,9 +65,11 @@
 ]).
 
 %% Callbacks
--callback check(Module :: module(), FunctionName :: function_name(), Arity :: arity()) -> Result :: support_check_result().
+-callback check(Module :: module(), FunctionName :: function_name(), Arity :: arity()) ->
+    Result :: support_check_result().
 -callback support_info() -> jose_support:info().
--callback support_check(Module :: module(), FunctionName :: function_name(), Arity :: arity()) -> Result :: support_check_result().
+-callback support_check(Module :: module(), FunctionName :: function_name(), Arity :: arity()) ->
+    Result :: support_check_result().
 
 -optional_callbacks([
     check/3,
@@ -319,7 +321,9 @@ graph(Graph, Failures, Providers, Behaviours, SupportModules, ProviderModules) -
                         fun({RequiredBehaviour, RequiredCallbacks}) ->
                             lists:foreach(
                                 fun(RequiredCallback) ->
-                                    digraph:add_edge(Graph, {RequiredBehaviour, RequiredCallback}, {Behaviour, Callback})
+                                    digraph:add_edge(
+                                        Graph, {RequiredBehaviour, RequiredCallback}, {Behaviour, Callback}
+                                    )
                                 end,
                                 RequiredCallbacks
                             )
@@ -352,7 +356,9 @@ graph(Graph, Failures, Providers, Behaviours, SupportModules, ProviderModules) -
                                                 true ->
                                                     true = ets:insert(
                                                         Providers,
-                                                        {{Behaviour, Callback}, {priority_to_integer(Priority), ProviderModule}}
+                                                        {{Behaviour, Callback}, {
+                                                            priority_to_integer(Priority), ProviderModule
+                                                        }}
                                                     ),
                                                     ok;
                                                 false ->

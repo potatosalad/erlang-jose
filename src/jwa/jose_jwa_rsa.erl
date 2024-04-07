@@ -128,7 +128,9 @@ rsaes_oaep_public_encrypt(PlainText, PublicKey = #jose_rsa_public_key{}) when is
     CipherText :: jose_rsa:cipher_text(),
     PrivateKey :: jose_rsa:rsa_private_key(),
     PlainText :: jose_rsa:plain_text().
-rsaes_oaep_sha256_mgf1_sha256_private_decrypt(CipherText, PrivateKey = #jose_rsa_private_key{}) when is_binary(CipherText) ->
+rsaes_oaep_sha256_mgf1_sha256_private_decrypt(CipherText, PrivateKey = #jose_rsa_private_key{}) when
+    is_binary(CipherText)
+->
     case jose_jwa_pkcs1:rsaes_oaep_decrypt(sha256, CipherText, <<>>, PrivateKey) of
         PlainText when is_binary(PlainText) ->
             PlainText;
@@ -153,7 +155,9 @@ rsaes_oaep_sha256_mgf1_sha256_public_encrypt(PlainText, PublicKey = #jose_rsa_pu
     CipherText :: jose_rsa:cipher_text(),
     PrivateKey :: jose_rsa:rsa_private_key(),
     PlainText :: jose_rsa:plain_text().
-rsaes_oaep_sha384_mgf1_sha384_private_decrypt(CipherText, PrivateKey = #jose_rsa_private_key{}) when is_binary(CipherText) ->
+rsaes_oaep_sha384_mgf1_sha384_private_decrypt(CipherText, PrivateKey = #jose_rsa_private_key{}) when
+    is_binary(CipherText)
+->
     case jose_jwa_pkcs1:rsaes_oaep_decrypt(sha384, CipherText, <<>>, PrivateKey) of
         PlainText when is_binary(PlainText) ->
             PlainText;
@@ -178,7 +182,9 @@ rsaes_oaep_sha384_mgf1_sha384_public_encrypt(PlainText, PublicKey = #jose_rsa_pu
     CipherText :: jose_rsa:cipher_text(),
     PrivateKey :: jose_rsa:rsa_private_key(),
     PlainText :: jose_rsa:plain_text().
-rsaes_oaep_sha512_mgf1_sha512_private_decrypt(CipherText, PrivateKey = #jose_rsa_private_key{}) when is_binary(CipherText) ->
+rsaes_oaep_sha512_mgf1_sha512_private_decrypt(CipherText, PrivateKey = #jose_rsa_private_key{}) when
+    is_binary(CipherText)
+->
     case jose_jwa_pkcs1:rsaes_oaep_decrypt(sha512, CipherText, <<>>, PrivateKey) of
         PlainText when is_binary(PlainText) ->
             PlainText;

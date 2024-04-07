@@ -477,7 +477,8 @@ support_check(Module, rsaes_pkcs1_v1_5_public_encrypt, 2) ->
                             rsaes_pkcs1_v1_5_public_encrypt,
                             [PlainText, PK],
                             ActualCipherText,
-                            {badmatch, lists:flatten(io_lib:format("CipherText is invalid and cannot be decrypted", []))}
+                            {badmatch,
+                                lists:flatten(io_lib:format("CipherText is invalid and cannot be decrypted", []))}
                         )}
             end;
         ActualCipherText ->
@@ -518,7 +519,8 @@ support_check(Module, rsaes_oaep_public_encrypt, 2) ->
                             rsaes_oaep_public_encrypt,
                             [PlainText, PK],
                             ActualCipherText,
-                            {badmatch, lists:flatten(io_lib:format("CipherText is invalid and cannot be decrypted", []))}
+                            {badmatch,
+                                lists:flatten(io_lib:format("CipherText is invalid and cannot be decrypted", []))}
                         )}
             end;
         ActualCipherText ->
@@ -559,7 +561,8 @@ support_check(Module, rsaes_oaep_sha256_mgf1_sha256_public_encrypt, 2) ->
                             rsaes_oaep_sha256_mgf1_sha256_public_encrypt,
                             [PlainText, PK],
                             ActualCipherText,
-                            {badmatch, lists:flatten(io_lib:format("CipherText is invalid and cannot be decrypted", []))}
+                            {badmatch,
+                                lists:flatten(io_lib:format("CipherText is invalid and cannot be decrypted", []))}
                         )}
             end;
         ActualCipherText ->
@@ -600,7 +603,8 @@ support_check(Module, rsaes_oaep_sha384_mgf1_sha384_public_encrypt, 2) ->
                             rsaes_oaep_sha384_mgf1_sha384_public_encrypt,
                             [PlainText, PK],
                             ActualCipherText,
-                            {badmatch, lists:flatten(io_lib:format("CipherText is invalid and cannot be decrypted", []))}
+                            {badmatch,
+                                lists:flatten(io_lib:format("CipherText is invalid and cannot be decrypted", []))}
                         )}
             end;
         ActualCipherText ->
@@ -641,7 +645,8 @@ support_check(Module, rsaes_oaep_sha512_mgf1_sha512_public_encrypt, 2) ->
                             rsaes_oaep_sha512_mgf1_sha512_public_encrypt,
                             [PlainText, PK],
                             ActualCipherText,
-                            {badmatch, lists:flatten(io_lib:format("CipherText is invalid and cannot be decrypted", []))}
+                            {badmatch,
+                                lists:flatten(io_lib:format("CipherText is invalid and cannot be decrypted", []))}
                         )}
             end;
         ActualCipherText ->
@@ -729,7 +734,9 @@ support_check(Module, rsassa_pss_sha256_mgf1_sha256_sign, 2) ->
                     ActualSig,
                     {badmatch,
                         lists:flatten(
-                            io_lib:format("Signature should have been ~w-bytes, but was ~w-bytes", [SigSize, byte_size(ActualSig)])
+                            io_lib:format("Signature should have been ~w-bytes, but was ~w-bytes", [
+                                SigSize, byte_size(ActualSig)
+                            ])
                         )}
                 )}
     end;
@@ -768,7 +775,9 @@ support_check(Module, rsassa_pss_sha384_mgf1_sha384_sign, 2) ->
                     ActualSig,
                     {badmatch,
                         lists:flatten(
-                            io_lib:format("Signature should have been ~w-bytes, but was ~w-bytes", [SigSize, byte_size(ActualSig)])
+                            io_lib:format("Signature should have been ~w-bytes, but was ~w-bytes", [
+                                SigSize, byte_size(ActualSig)
+                            ])
                         )}
                 )}
     end;
@@ -807,7 +816,9 @@ support_check(Module, rsassa_pss_sha512_mgf1_sha512_sign, 2) ->
                     ActualSig,
                     {badmatch,
                         lists:flatten(
-                            io_lib:format("Signature should have been ~w-bytes, but was ~w-bytes", [SigSize, byte_size(ActualSig)])
+                            io_lib:format("Signature should have been ~w-bytes, but was ~w-bytes", [
+                                SigSize, byte_size(ActualSig)
+                            ])
                         )}
                 )}
     end;
@@ -887,7 +898,9 @@ rsaes_oaep_public_encrypt(PlainText, PublicKey = #jose_rsa_public_key{}) when is
     CipherText :: jose_rsa:cipher_text(),
     PrivateKey :: jose_rsa:rsa_private_key(),
     PlainText :: jose_rsa:plain_text().
-rsaes_oaep_sha256_mgf1_sha256_private_decrypt(CipherText, PrivateKey = #jose_rsa_private_key{}) when is_binary(CipherText) ->
+rsaes_oaep_sha256_mgf1_sha256_private_decrypt(CipherText, PrivateKey = #jose_rsa_private_key{}) when
+    is_binary(CipherText)
+->
     ?resolve([CipherText, PrivateKey]).
 
 -spec rsaes_oaep_sha256_mgf1_sha256_public_encrypt(PlainText, PublicKey) -> CipherText | {error, Reason} when
@@ -902,7 +915,9 @@ rsaes_oaep_sha256_mgf1_sha256_public_encrypt(PlainText, PublicKey = #jose_rsa_pu
     CipherText :: jose_rsa:cipher_text(),
     PrivateKey :: jose_rsa:rsa_private_key(),
     PlainText :: jose_rsa:plain_text().
-rsaes_oaep_sha384_mgf1_sha384_private_decrypt(CipherText, PrivateKey = #jose_rsa_private_key{}) when is_binary(CipherText) ->
+rsaes_oaep_sha384_mgf1_sha384_private_decrypt(CipherText, PrivateKey = #jose_rsa_private_key{}) when
+    is_binary(CipherText)
+->
     ?resolve([CipherText, PrivateKey]).
 
 -spec rsaes_oaep_sha384_mgf1_sha384_public_encrypt(PlainText, PublicKey) -> CipherText | {error, Reason} when
@@ -917,7 +932,9 @@ rsaes_oaep_sha384_mgf1_sha384_public_encrypt(PlainText, PublicKey = #jose_rsa_pu
     CipherText :: jose_rsa:cipher_text(),
     PrivateKey :: jose_rsa:rsa_private_key(),
     PlainText :: jose_rsa:plain_text().
-rsaes_oaep_sha512_mgf1_sha512_private_decrypt(CipherText, PrivateKey = #jose_rsa_private_key{}) when is_binary(CipherText) ->
+rsaes_oaep_sha512_mgf1_sha512_private_decrypt(CipherText, PrivateKey = #jose_rsa_private_key{}) when
+    is_binary(CipherText)
+->
     ?resolve([CipherText, PrivateKey]).
 
 -spec rsaes_oaep_sha512_mgf1_sha512_public_encrypt(PlainText, PublicKey) -> CipherText | {error, Reason} when

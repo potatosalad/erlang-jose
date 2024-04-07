@@ -77,7 +77,9 @@ walk_body(Acc, [Statement | Ast]) ->
     walk_body([transform_statement(Statement) | Acc], Ast).
 
 %% @private
-transform_statement(Statement = {call, Line, {remote, _Line1, {atom, _Line2, ?MODULE}, {atom, _Line3, Function}}, Arguments}) ->
+transform_statement(
+    Statement = {call, Line, {remote, _Line1, {atom, _Line2, ?MODULE}, {atom, _Line3, Function}}, Arguments}
+) ->
     case transform_call(Function, Line, Arguments) of
         {ok, NewStatement} ->
             NewStatement;
@@ -109,9 +111,12 @@ transform_call(encode_char, _Line, [
 ]) ->
     {ok, Case};
 transform_call(encode_pair, Line, [
-    {'case', _Line1, Var, Clauses0 = [{clause, _Line2, [{integer, _Line3, 0}], [], [{char, _Line4, _}]} | _]}, {atom, _Line5, Type}
+    {'case', _Line1, Var, Clauses0 = [{clause, _Line2, [{integer, _Line3, 0}], [], [{char, _Line4, _}]} | _]},
+    {atom, _Line5, Type}
 ]) ->
-    Table = calculate_pairs([{Index, Value} || {clause, _, [{integer, _, Index}], [], [{char, _, Value}]} <- Clauses0], Type),
+    Table = calculate_pairs(
+        [{Index, Value} || {clause, _, [{integer, _, Index}], [], [{char, _, Value}]} <- Clauses0], Type
+    ),
     Clauses1 = [{clause, Line, [{integer, Line, Index}], [], [{integer, Line, Value}]} || {Index, Value} <- Table],
     Case = {'case', Line, Var, Clauses1},
     {ok, Case};

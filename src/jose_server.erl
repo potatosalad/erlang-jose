@@ -349,7 +349,9 @@ check_ec_key_mode(_Fallback, Entries) ->
     PrivateKey =
         case list_to_integer(erlang:system_info(otp_release)) >= 24 of
             true ->
-                {'ECPrivateKey', _Version, PrivKey0, _Params, _PubKey0, _Attributes} = public_key:pem_entry_decode(PEMEntry),
+                {'ECPrivateKey', _Version, PrivKey0, _Params, _PubKey0, _Attributes} = public_key:pem_entry_decode(
+                    PEMEntry
+                ),
                 PrivKey0;
             false ->
                 {'ECPrivateKey', _Version, PrivKey0, _Params, _PubKey0} = public_key:pem_entry_decode(PEMEntry),
@@ -750,14 +752,16 @@ check_crypto(Fallback, Entries) ->
             {chacha20_poly1305_module, jose_chacha20_poly1305_unsupported} ->
                 CipherEntries0 ++ [{{cipher, {chacha20_poly1305, 256}}, {Fallback, {chacha20_poly1305, 256}}}];
             _ ->
-                CipherEntries0 ++ [{{cipher, {chacha20_poly1305, 256}}, {jose_chacha20_poly1305, {chacha20_poly1305, 256}}}]
+                CipherEntries0 ++
+                    [{{cipher, {chacha20_poly1305, 256}}, {jose_chacha20_poly1305, {chacha20_poly1305, 256}}}]
         end,
     CipherEntries2 =
         case lists:keyfind(xchacha20_poly1305_module, 1, Entries) of
             {xchacha20_poly1305_module, jose_xchacha20_poly1305_unsupported} ->
                 CipherEntries1 ++ [{{cipher, {xchacha20_poly1305, 256}}, {Fallback, {xchacha20_poly1305, 256}}}];
             _ ->
-                CipherEntries1 ++ [{{cipher, {xchacha20_poly1305, 256}}, {jose_xchacha20_poly1305, {xchacha20_poly1305, 256}}}]
+                CipherEntries1 ++
+                    [{{cipher, {xchacha20_poly1305, 256}}, {jose_xchacha20_poly1305, {xchacha20_poly1305, 256}}}]
         end,
     [CipherEntries2 | Entries].
 

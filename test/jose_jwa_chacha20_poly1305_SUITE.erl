@@ -118,7 +118,9 @@ aead_cipher({Key, PlainText, IV, AAD, CipherText, CipherTag}) ->
             ok;
         Other0 ->
             ct:fail({
-                {jose_jwa_chacha20_poly1305, encrypt, [PlainText, AAD, IV, Key]}, {expected, {CipherText, CipherTag}}, {got, Other0}
+                {jose_jwa_chacha20_poly1305, encrypt, [PlainText, AAD, IV, Key]},
+                {expected, {CipherText, CipherTag}},
+                {got, Other0}
             })
     end,
     case jose_jwa_chacha20_poly1305:decrypt(CipherText, CipherTag, AAD, IV, Key) of
@@ -126,7 +128,9 @@ aead_cipher({Key, PlainText, IV, AAD, CipherText, CipherTag}) ->
             ok;
         Other1 ->
             ct:fail({
-                {jose_jwa_chacha20_poly1305, decrypt, [CipherText, CipherTag, AAD, IV, Key]}, {expected, PlainText}, {got, Other1}
+                {jose_jwa_chacha20_poly1305, decrypt, [CipherText, CipherTag, AAD, IV, Key]},
+                {expected, PlainText},
+                {got, Other1}
             })
     end.
 
@@ -145,13 +149,17 @@ chacha20_encrypt({Key, Nonce, Counter, PlainText, CipherText}) ->
         CipherText ->
             ok;
         Other0 ->
-            ct:fail({{jose_jwa_chacha20, encrypt, [Key, Counter, Nonce, PlainText]}, {expected, CipherText}, {got, Other0}})
+            ct:fail({
+                {jose_jwa_chacha20, encrypt, [Key, Counter, Nonce, PlainText]}, {expected, CipherText}, {got, Other0}
+            })
     end,
     case jose_jwa_chacha20:encrypt(Key, Counter, Nonce, CipherText) of
         PlainText ->
             ok;
         Other1 ->
-            ct:fail({{jose_jwa_chacha20, encrypt, [Key, Counter, Nonce, CipherText]}, {expected, PlainText}, {got, Other1}})
+            ct:fail({
+                {jose_jwa_chacha20, encrypt, [Key, Counter, Nonce, CipherText]}, {expected, PlainText}, {got, Other1}
+            })
     end.
 
 %% @private
@@ -160,7 +168,9 @@ poly1305_key({Key, Nonce, OneTimeKey}) ->
         OneTimeKey ->
             ok;
         Other0 ->
-            ct:fail({{jose_jwa_chacha20_poly1305, poly1305_key_gen, [Key, Nonce]}, {expected, OneTimeKey}, {got, Other0}})
+            ct:fail({
+                {jose_jwa_chacha20_poly1305, poly1305_key_gen, [Key, Nonce]}, {expected, OneTimeKey}, {got, Other0}
+            })
     end.
 
 %% @private

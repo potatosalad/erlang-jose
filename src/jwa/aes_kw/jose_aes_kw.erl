@@ -95,9 +95,13 @@
 -define(TV_AES_128_KW_KEK(), ?b16d("00000000000000000000000000000000")).
 -define(TV_AES_128_KW_CipherText128(), ?b16d("bf3b77b5e90caa9f5009fe9626e4efe20ded75ee3b1ac0d5")).
 -define(TV_AES_128_KW_CipherText192(), ?b16d("1a07acab6c906e50883173c29441db1de91d34f45c435b5f99c822867fb3956f")).
--define(TV_AES_128_KW_CipherText256(), ?b16d("74d6ff238877ed2a9bcde9043e4ca62a2a0d340f067d3c9fc2c8d2ebf9a969998585c83951b53cca")).
+-define(TV_AES_128_KW_CipherText256(),
+    ?b16d("74d6ff238877ed2a9bcde9043e4ca62a2a0d340f067d3c9fc2c8d2ebf9a969998585c83951b53cca")
+).
 -define(TV_AES_128_KW_CipherText384(),
-    ?b16d("f5de08259c69159eb7de6b863c4ab88f7abad96fb24185e3980bb66c863639d8d132d51ce194faa4bee31bc99d552ef83f192414b30dc3b4")
+    ?b16d(
+        "f5de08259c69159eb7de6b863c4ab88f7abad96fb24185e3980bb66c863639d8d132d51ce194faa4bee31bc99d552ef83f192414b30dc3b4"
+    )
 ).
 -define(TV_AES_128_KW_CipherText512(),
     ?b16d(
@@ -107,9 +111,13 @@
 -define(TV_AES_192_KW_KEK(), ?b16d("000000000000000000000000000000000000000000000000")).
 -define(TV_AES_192_KW_CipherText128(), ?b16d("a0aeab397c0dc4b3df22df8c52cedce111a2ec9cbde5defc")).
 -define(TV_AES_192_KW_CipherText192(), ?b16d("3530731ac8a475c69a5e41bd93bfa7e07ec48bfa79f043e7e639f8a54e06b8a8")).
--define(TV_AES_192_KW_CipherText256(), ?b16d("6bc803debb9cdad9b6d65942aa3e6d16c34a2719dc5c567353c1028c551f2422cc19518ca3f0d5e6")).
+-define(TV_AES_192_KW_CipherText256(),
+    ?b16d("6bc803debb9cdad9b6d65942aa3e6d16c34a2719dc5c567353c1028c551f2422cc19518ca3f0d5e6")
+).
 -define(TV_AES_192_KW_CipherText384(),
-    ?b16d("d22370501342c04736c0dd6b3c44bf9621c2acf6a70eeb72f7a4b236fb143265e01048cb53fc52700c8b6c83f8a99d16ec6a43d435677734")
+    ?b16d(
+        "d22370501342c04736c0dd6b3c44bf9621c2acf6a70eeb72f7a4b236fb143265e01048cb53fc52700c8b6c83f8a99d16ec6a43d435677734"
+    )
 ).
 -define(TV_AES_192_KW_CipherText512(),
     ?b16d(
@@ -119,9 +127,13 @@
 -define(TV_AES_256_KW_KEK(), ?b16d("0000000000000000000000000000000000000000000000000000000000000000")).
 -define(TV_AES_256_KW_CipherText128(), ?b16d("b595a1c0afbe7a89ce43807cb3b2ba5737ff5d71d0a35cd7")).
 -define(TV_AES_256_KW_CipherText192(), ?b16d("52b6a524f70e2cb89ff71c6da7ea8c89b42dd2272e3fa93b82478c452b09272f")).
--define(TV_AES_256_KW_CipherText256(), ?b16d("97317494343807e690fd1e431413963dc0e3deb4907fb89fa36ce65126d0ea1301381fb3a2941e2f")).
+-define(TV_AES_256_KW_CipherText256(),
+    ?b16d("97317494343807e690fd1e431413963dc0e3deb4907fb89fa36ce65126d0ea1301381fb3a2941e2f")
+).
 -define(TV_AES_256_KW_CipherText384(),
-    ?b16d("5aa7cd66ea9a2f00ef9f00d26da3035a45fcd163e29aa62671aa875bb46de76cf6ae0eb598fd5985138ad0fca4acc9902f44060a49f022dd")
+    ?b16d(
+        "5aa7cd66ea9a2f00ef9f00d26da3035a45fcd163e29aa62671aa875bb46de76cf6ae0eb598fd5985138ad0fca4acc9902f44060a49f022dd"
+    )
 ).
 -define(TV_AES_256_KW_CipherText512(),
     ?b16d(
@@ -147,7 +159,8 @@ support_info() ->
         ]
     }.
 
--spec support_check(Module :: module(), Funname :: jose_support:funname(), Arity :: arity()) -> jose_support:support_check_result().
+-spec support_check(Module :: module(), Funname :: jose_support:funname(), Arity :: arity()) ->
+    jose_support:support_check_result().
 support_check(Module, aes_128_kw_unwrap, 2) ->
     CipherText128 = ?TV_AES_128_KW_CipherText128(),
     CipherText192 = ?TV_AES_128_KW_CipherText192(),

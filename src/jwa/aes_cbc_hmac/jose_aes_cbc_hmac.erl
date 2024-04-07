@@ -113,20 +113,28 @@
 -define(TV_AAD(), <<"0123456789">>).
 -define(TV_AES_CBC_HMAC_IV(), ?b16d("00000000000000000000000000000000")).
 -define(TV_AES_128_CBC_HMAC_SHA256_Key(), ?b16d("0000000000000000000000000000000000000000000000000000000000000000")).
--define(TV_AES_128_CBC_HMAC_SHA256_CipherText(), ?b16d("c3af71addfe4fcac6941286a76ddedc252c6a7c6428a4476790060c872121030")).
+-define(TV_AES_128_CBC_HMAC_SHA256_CipherText(),
+    ?b16d("c3af71addfe4fcac6941286a76ddedc252c6a7c6428a4476790060c872121030")
+).
 -define(TV_AES_128_CBC_HMAC_SHA256_CipherTag(), ?b16d("aa05f92843231a2ebcee37ff31e60295")).
 -define(TV_AES_192_CBC_HMAC_SHA384_Key(),
     ?b16d("000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")
 ).
--define(TV_AES_192_CBC_HMAC_SHA384_CipherText(), ?b16d("ec6374e75e004afc29beafbfb25c057deb52f2742c70d2e9550f04641a59e7dd")).
+-define(TV_AES_192_CBC_HMAC_SHA384_CipherText(),
+    ?b16d("ec6374e75e004afc29beafbfb25c057deb52f2742c70d2e9550f04641a59e7dd")
+).
 -define(TV_AES_192_CBC_HMAC_SHA384_CipherTag(), ?b16d("5472102341e0baded88a431f923178e6a45c8a0e72210141")).
 -define(TV_AES_256_CBC_HMAC_SHA512_Key(),
     ?b16d(
         "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
     )
 ).
--define(TV_AES_256_CBC_HMAC_SHA512_CipherText(), ?b16d("ac9c9eb761551ffb7d78d88b5e2330146ff8be7cfc0f8ac2b757c9f078b7ad40")).
--define(TV_AES_256_CBC_HMAC_SHA512_CipherTag(), ?b16d("076c81fdbf46e4567ff8395e1a215a45f4e1be92d03706c56751a051ca60bbb8")).
+-define(TV_AES_256_CBC_HMAC_SHA512_CipherText(),
+    ?b16d("ac9c9eb761551ffb7d78d88b5e2330146ff8be7cfc0f8ac2b757c9f078b7ad40")
+).
+-define(TV_AES_256_CBC_HMAC_SHA512_CipherTag(),
+    ?b16d("076c81fdbf46e4567ff8395e1a215a45f4e1be92d03706c56751a051ca60bbb8")
+).
 
 %%====================================================================
 %% jose_support callbacks
@@ -137,12 +145,24 @@ support_info() ->
     #{
         stateful => [],
         callbacks => [
-            {{aes_128_cbc_hmac_sha256_decrypt, 5}, [{jose_aes_cbc, [{aes_128_cbc_decrypt, 3}]}, {jose_hmac, [{hmac_sha256, 2}]}]},
-            {{aes_128_cbc_hmac_sha256_encrypt, 4}, [{jose_aes_cbc, [{aes_128_cbc_encrypt, 3}]}, {jose_hmac, [{hmac_sha256, 2}]}]},
-            {{aes_192_cbc_hmac_sha384_decrypt, 5}, [{jose_aes_cbc, [{aes_192_cbc_decrypt, 3}]}, {jose_hmac, [{hmac_sha384, 2}]}]},
-            {{aes_192_cbc_hmac_sha384_encrypt, 4}, [{jose_aes_cbc, [{aes_192_cbc_encrypt, 3}]}, {jose_hmac, [{hmac_sha384, 2}]}]},
-            {{aes_256_cbc_hmac_sha512_decrypt, 5}, [{jose_aes_cbc, [{aes_256_cbc_decrypt, 3}]}, {jose_hmac, [{hmac_sha512, 2}]}]},
-            {{aes_256_cbc_hmac_sha512_encrypt, 4}, [{jose_aes_cbc, [{aes_256_cbc_encrypt, 3}]}, {jose_hmac, [{hmac_sha512, 2}]}]}
+            {{aes_128_cbc_hmac_sha256_decrypt, 5}, [
+                {jose_aes_cbc, [{aes_128_cbc_decrypt, 3}]}, {jose_hmac, [{hmac_sha256, 2}]}
+            ]},
+            {{aes_128_cbc_hmac_sha256_encrypt, 4}, [
+                {jose_aes_cbc, [{aes_128_cbc_encrypt, 3}]}, {jose_hmac, [{hmac_sha256, 2}]}
+            ]},
+            {{aes_192_cbc_hmac_sha384_decrypt, 5}, [
+                {jose_aes_cbc, [{aes_192_cbc_decrypt, 3}]}, {jose_hmac, [{hmac_sha384, 2}]}
+            ]},
+            {{aes_192_cbc_hmac_sha384_encrypt, 4}, [
+                {jose_aes_cbc, [{aes_192_cbc_encrypt, 3}]}, {jose_hmac, [{hmac_sha384, 2}]}
+            ]},
+            {{aes_256_cbc_hmac_sha512_decrypt, 5}, [
+                {jose_aes_cbc, [{aes_256_cbc_decrypt, 3}]}, {jose_hmac, [{hmac_sha512, 2}]}
+            ]},
+            {{aes_256_cbc_hmac_sha512_encrypt, 4}, [
+                {jose_aes_cbc, [{aes_256_cbc_encrypt, 3}]}, {jose_hmac, [{hmac_sha512, 2}]}
+            ]}
         ]
     }.
 

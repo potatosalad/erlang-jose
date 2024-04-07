@@ -57,7 +57,9 @@
 %%====================================================================
 
 from_map(F = #{<<"kty">> := <<"RSA">>, <<"d">> := _}) ->
-    from_map_rsa_private_key(maps:remove(<<"kty">>, F), #'RSAPrivateKey'{version = 'two-prime', otherPrimeInfos = 'asn1_NOVALUE'});
+    from_map_rsa_private_key(maps:remove(<<"kty">>, F), #'RSAPrivateKey'{
+        version = 'two-prime', otherPrimeInfos = 'asn1_NOVALUE'
+    });
 from_map(F = #{<<"kty">> := <<"RSA">>}) ->
     from_map_rsa_public_key(maps:remove(<<"kty">>, F), #'RSAPublicKey'{}).
 
@@ -469,7 +471,9 @@ from_map_rsa_private_key(F = #{<<"oth">> := OTH}, Key) ->
         end
      || #{<<"d">> := OD, <<"r">> := OR, <<"t">> := OT} <- OTH
     ],
-    from_map_rsa_private_key(maps:remove(<<"oth">>, F), Key#'RSAPrivateKey'{version = 'multi', otherPrimeInfos = OtherPrimeInfos});
+    from_map_rsa_private_key(maps:remove(<<"oth">>, F), Key#'RSAPrivateKey'{
+        version = 'multi', otherPrimeInfos = OtherPrimeInfos
+    });
 from_map_rsa_private_key(
     F,
     Key0 = #'RSAPrivateKey'{
@@ -578,7 +582,8 @@ try_generate_key([public_key | Methods], ModulusSize, ExponentSize) ->
                 {module, public_key} ->
                     _ = application:ensure_all_started(public_key),
                     case
-                        erlang:function_exported(crypto, generate_key, 2) andalso erlang:function_exported(crypto, generate_key, 3)
+                        erlang:function_exported(crypto, generate_key, 2) andalso
+                            erlang:function_exported(crypto, generate_key, 3)
                     of
                         true ->
                             try public_key:generate_key({rsa, ModulusSize, ExponentSize}) of

@@ -107,7 +107,9 @@ derive_key(Hash, Reps, Reps, KeyDataLen, ZOtherInfo, DerivedKeyingMaterial) ->
     DerivedKey;
 derive_key(Hash, Counter, Reps, KeyDataLen, ZOtherInfo, DerivedKeyingMaterial) ->
     Concatenation = <<Counter:1/unsigned-big-integer-unit:32, ZOtherInfo/binary>>,
-    derive_key(Hash, Counter + 1, Reps, KeyDataLen, ZOtherInfo, <<DerivedKeyingMaterial/binary, (Hash(Concatenation))/binary>>).
+    derive_key(
+        Hash, Counter + 1, Reps, KeyDataLen, ZOtherInfo, <<DerivedKeyingMaterial/binary, (Hash(Concatenation))/binary>>
+    ).
 
 %% @private
 resolve_hash(HashFun) when is_function(HashFun) ->

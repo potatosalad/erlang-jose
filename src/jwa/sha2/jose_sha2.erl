@@ -63,7 +63,9 @@
 -define(TV_Input(), <<"abc">>).
 -define(TV_SHA224(), ?b16d("23097d223405d8228642a477bda255b32aadbce4bda0b3f7e36c9da7")).
 -define(TV_SHA256(), ?b16d("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")).
--define(TV_SHA384(), ?b16d("cb00753f45a35e8bb5a03d699ac65007272c32ab0eded1631a8b605a43ff5bed8086072ba1e7cc2358baeca134c825a7")).
+-define(TV_SHA384(),
+    ?b16d("cb00753f45a35e8bb5a03d699ac65007272c32ab0eded1631a8b605a43ff5bed8086072ba1e7cc2358baeca134c825a7")
+).
 -define(TV_SHA512(),
     ?b16d(
         "ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f"

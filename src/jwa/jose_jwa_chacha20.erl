@@ -98,7 +98,9 @@ chacha20_stream_init(Count, Nonce, Key) when
     Output :: jose_chacha20:output().
 chacha20_stream_exor(State = #jose_jwa_chacha20{}, Input = <<>>) ->
     {State, Input};
-chacha20_stream_exor(#jose_jwa_chacha20{key = Key, count = Count, nonce = Nonce, block = Block}, Input) when byte_size(Input) > 0 ->
+chacha20_stream_exor(#jose_jwa_chacha20{key = Key, count = Count, nonce = Nonce, block = Block}, Input) when
+    byte_size(Input) > 0
+->
     chacha20_stream_exor(Count, Nonce, Key, Block, Input, <<>>).
 
 -spec chacha20_stream_final(ChaCha20State) -> Output when

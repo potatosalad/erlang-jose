@@ -307,7 +307,8 @@ secret() ->
     crypto:strong_rand_bytes(?secretbytes).
 
 secret_to_curve448(Secret = <<_:?secretbytes/binary>>) ->
-    <<HHead0:6/bitstring, _:2/bitstring, HBody:54/binary, _:1/bitstring, HKnee0:7/bitstring, _HFoot0:8/integer, _/binary>> = ?H(
+    <<HHead0:6/bitstring, _:2/bitstring, HBody:54/binary, _:1/bitstring, HKnee0:7/bitstring, _HFoot0:8/integer,
+        _/binary>> = ?H(
         Secret
     ),
     <<HHead:8/integer>> = <<HHead0:6/bitstring, 0:2/integer>>,
@@ -360,7 +361,8 @@ sign_internal(M, <<Secret:?secretbytes/binary, PK:?publickeybytes/binary>>, PHFl
     % Recalculate PK to prevent misuse as described in https://github.com/MystenLabs/ed25519-unsafe-libs
     PK = secret_to_pk(Secret),
     Dom4 = dom4(PHFlag, C),
-    <<HHead0:6/bitstring, _:2/bitstring, HBody:54/binary, _:1/bitstring, HKnee0:7/bitstring, _HFoot0:8/integer, HTail:57/binary>> = ?H(
+    <<HHead0:6/bitstring, _:2/bitstring, HBody:54/binary, _:1/bitstring, HKnee0:7/bitstring, _HFoot0:8/integer,
+        HTail:57/binary>> = ?H(
         Secret
     ),
     <<HHead:8/integer>> = <<HHead0:6/bitstring, 0:2/integer>>,
@@ -390,7 +392,9 @@ ed448ph_sign(M, SK = <<_:?secretkeybytes/binary>>, C) when is_binary(M) andalso 
 
 % 5.2.7. Verify - https://datatracker.ietf.org/doc/html/rfc8032#section-5.2.7
 
-verify_internal(<<R:?b/bitstring, S:?b/unsigned-little-integer-unit:1>>, M, PK = <<_:?publickeybytes/binary>>, PHFlag, C) when
+verify_internal(
+    <<R:?b/bitstring, S:?b/unsigned-little-integer-unit:1>>, M, PK = <<_:?publickeybytes/binary>>, PHFlag, C
+) when
     is_binary(M) andalso
         (PHFlag =:= 0 orelse PHFlag =:= 1) andalso
         is_binary(C)
@@ -411,11 +415,15 @@ verify_internal(Sig, M, _PK = <<_:?publickeybytes/binary>>, PHFlag, C) when
 ed448_verify(Sig, M, PK = <<_:?publickeybytes/binary>>) when is_binary(Sig) andalso is_binary(M) ->
     verify_internal(Sig, M, PK, 0, <<>>).
 
-ed448_verify(Sig, M, PK = <<_:?publickeybytes/binary>>, C) when is_binary(Sig) andalso is_binary(M) andalso is_binary(C) ->
+ed448_verify(Sig, M, PK = <<_:?publickeybytes/binary>>, C) when
+    is_binary(Sig) andalso is_binary(M) andalso is_binary(C)
+->
     verify_internal(Sig, M, PK, 0, C).
 
 ed448ph_verify(Sig, M, PK = <<_:?publickeybytes/binary>>) when is_binary(Sig) andalso is_binary(M) ->
     verify_internal(Sig, ?PH(<<>>, M), PK, 1, <<>>).
 
-ed448ph_verify(Sig, M, PK = <<_:?publickeybytes/binary>>, C) when is_binary(Sig) andalso is_binary(M) andalso is_binary(C) ->
+ed448ph_verify(Sig, M, PK = <<_:?publickeybytes/binary>>, C) when
+    is_binary(Sig) andalso is_binary(M) andalso is_binary(C)
+->
     verify_internal(Sig, ?PH(C, M), PK, 1, C).

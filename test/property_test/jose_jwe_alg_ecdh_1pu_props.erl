@@ -113,7 +113,8 @@ enc() ->
 
 jwk_jwe_maps() ->
     ?LET(
-        {ALGMap, ENC, {VStaticSecret, VStaticPublic}, {UStaticSecret, UStaticPublic}, {UEphemeralSecret, UEphemeralPublic}},
+        {ALGMap, ENC, {VStaticSecret, VStaticPublic}, {UStaticSecret, UStaticPublic},
+            {UEphemeralSecret, UEphemeralPublic}},
         ?LET(
             CurveId,
             ec_curve(),

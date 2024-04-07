@@ -109,7 +109,8 @@ derive_pbkdf1(Hash, Counter, Reps, DerivedKeyLen, DerivedKeyingMaterial) ->
 %% @private
 derive_pbkdf2(Mac, Reps, Reps, Iterations, DerivedKeyLen, Password, Salt, DerivedKeyingMaterial) ->
     <<DerivedKey:DerivedKeyLen/binary, _/binary>> =
-        <<DerivedKeyingMaterial/binary, (derive_pbkdf2_exor(Mac, Password, Salt, 1, Iterations, Reps, <<>>, <<>>))/binary>>,
+        <<DerivedKeyingMaterial/binary,
+            (derive_pbkdf2_exor(Mac, Password, Salt, 1, Iterations, Reps, <<>>, <<>>))/binary>>,
     DerivedKey;
 derive_pbkdf2(Mac, Counter, Reps, Iterations, DerivedKeyLen, Password, Salt, DerivedKeyingMaterial) ->
     derive_pbkdf2(
@@ -120,7 +121,8 @@ derive_pbkdf2(Mac, Counter, Reps, Iterations, DerivedKeyLen, Password, Salt, Der
         DerivedKeyLen,
         Password,
         Salt,
-        <<DerivedKeyingMaterial/binary, (derive_pbkdf2_exor(Mac, Password, Salt, 1, Iterations, Counter, <<>>, <<>>))/binary>>
+        <<DerivedKeyingMaterial/binary,
+            (derive_pbkdf2_exor(Mac, Password, Salt, 1, Iterations, Counter, <<>>, <<>>))/binary>>
     ).
 
 %% @private

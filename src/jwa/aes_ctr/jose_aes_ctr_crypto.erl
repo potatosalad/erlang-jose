@@ -91,7 +91,9 @@ aes_128_ctr_stream_init(IV, Key) when
     Output :: jose_aes_ctr:output().
 aes_128_ctr_stream_exor(State = #jose_aes_128_ctr_crypto{}, Input = <<>>) ->
     {State, Input};
-aes_128_ctr_stream_exor(State = #jose_aes_128_ctr_crypto{crypto_state = CryptoState}, Input) when byte_size(Input) > 0 ->
+aes_128_ctr_stream_exor(State = #jose_aes_128_ctr_crypto{crypto_state = CryptoState}, Input) when
+    byte_size(Input) > 0
+->
     Output = crypto:crypto_update(CryptoState, Input),
     {State, Output}.
 
@@ -130,7 +132,9 @@ aes_192_ctr_stream_init(IV, Key) when
     Output :: jose_aes_ctr:output().
 aes_192_ctr_stream_exor(State = #jose_aes_192_ctr_crypto{}, Input = <<>>) ->
     {State, Input};
-aes_192_ctr_stream_exor(State = #jose_aes_192_ctr_crypto{crypto_state = CryptoState}, Input) when byte_size(Input) > 0 ->
+aes_192_ctr_stream_exor(State = #jose_aes_192_ctr_crypto{crypto_state = CryptoState}, Input) when
+    byte_size(Input) > 0
+->
     Output = crypto:crypto_update(CryptoState, Input),
     {State, Output}.
 
@@ -169,7 +173,9 @@ aes_256_ctr_stream_init(IV, Key) when
     Output :: jose_aes_ctr:output().
 aes_256_ctr_stream_exor(State = #jose_aes_256_ctr_crypto{}, Input = <<>>) ->
     {State, Input};
-aes_256_ctr_stream_exor(State = #jose_aes_256_ctr_crypto{crypto_state = CryptoState}, Input) when byte_size(Input) > 0 ->
+aes_256_ctr_stream_exor(State = #jose_aes_256_ctr_crypto{crypto_state = CryptoState}, Input) when
+    byte_size(Input) > 0
+->
     Output = crypto:crypto_update(CryptoState, Input),
     {State, Output}.
 

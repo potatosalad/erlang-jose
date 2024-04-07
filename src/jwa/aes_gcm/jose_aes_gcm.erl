@@ -128,22 +128,34 @@ support_info() ->
         stateful => [],
         callbacks => [
             {{aes_128_gcm_decrypt, 5}, [
-                {jose_aes_ctr, [{aes_128_ctr_stream_init, 2}, {aes_128_ctr_stream_exor, 2}, {aes_128_ctr_stream_final, 1}]}
+                {jose_aes_ctr, [
+                    {aes_128_ctr_stream_init, 2}, {aes_128_ctr_stream_exor, 2}, {aes_128_ctr_stream_final, 1}
+                ]}
             ]},
             {{aes_128_gcm_encrypt, 4}, [
-                {jose_aes_ctr, [{aes_128_ctr_stream_init, 2}, {aes_128_ctr_stream_exor, 2}, {aes_128_ctr_stream_final, 1}]}
+                {jose_aes_ctr, [
+                    {aes_128_ctr_stream_init, 2}, {aes_128_ctr_stream_exor, 2}, {aes_128_ctr_stream_final, 1}
+                ]}
             ]},
             {{aes_192_gcm_decrypt, 5}, [
-                {jose_aes_ctr, [{aes_192_ctr_stream_init, 2}, {aes_192_ctr_stream_exor, 2}, {aes_192_ctr_stream_final, 1}]}
+                {jose_aes_ctr, [
+                    {aes_192_ctr_stream_init, 2}, {aes_192_ctr_stream_exor, 2}, {aes_192_ctr_stream_final, 1}
+                ]}
             ]},
             {{aes_192_gcm_encrypt, 4}, [
-                {jose_aes_ctr, [{aes_192_ctr_stream_init, 2}, {aes_192_ctr_stream_exor, 2}, {aes_192_ctr_stream_final, 1}]}
+                {jose_aes_ctr, [
+                    {aes_192_ctr_stream_init, 2}, {aes_192_ctr_stream_exor, 2}, {aes_192_ctr_stream_final, 1}
+                ]}
             ]},
             {{aes_256_gcm_decrypt, 5}, [
-                {jose_aes_ctr, [{aes_256_ctr_stream_init, 2}, {aes_256_ctr_stream_exor, 2}, {aes_256_ctr_stream_final, 1}]}
+                {jose_aes_ctr, [
+                    {aes_256_ctr_stream_init, 2}, {aes_256_ctr_stream_exor, 2}, {aes_256_ctr_stream_final, 1}
+                ]}
             ]},
             {{aes_256_gcm_encrypt, 4}, [
-                {jose_aes_ctr, [{aes_256_ctr_stream_init, 2}, {aes_256_ctr_stream_exor, 2}, {aes_256_ctr_stream_final, 1}]}
+                {jose_aes_ctr, [
+                    {aes_256_ctr_stream_init, 2}, {aes_256_ctr_stream_exor, 2}, {aes_256_ctr_stream_final, 1}
+                ]}
             ]}
         ]
     }.

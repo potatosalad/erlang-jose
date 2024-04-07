@@ -86,7 +86,9 @@ xchacha20_stream_init(Count, Nonce, Key) when
     Output :: jose_xchacha20:output().
 xchacha20_stream_exor(State = #jose_xchacha20_libsodium{}, Input = <<>>) ->
     {State, Input};
-xchacha20_stream_exor(_State = #jose_xchacha20_libsodium{key = Key, nonce = Nonce, count = Count, block = Block}, Input) ->
+xchacha20_stream_exor(
+    _State = #jose_xchacha20_libsodium{key = Key, nonce = Nonce, count = Count, block = Block}, Input
+) ->
     xchacha20_stream_exor(Count, Nonce, Key, Block, Input, <<>>).
 
 -spec xchacha20_stream_final(Xchacha20State) -> Output when
@@ -115,7 +117,9 @@ xchacha20_stream_exor(Count0, Nonce, Key, <<>>, Input, Output) ->
     PadSize = byte_size(Pad),
     PadInput = <<Input/binary, Pad/binary>>,
     PadInputSize = byte_size(PadInput),
-    <<OutputNext:InputSize/binary, Block:PadSize/binary>> = libsodium_crypto_stream_xchacha20:xor_ic(PadInput, Nonce, Count0, Key),
+    <<OutputNext:InputSize/binary, Block:PadSize/binary>> = libsodium_crypto_stream_xchacha20:xor_ic(
+        PadInput, Nonce, Count0, Key
+    ),
     Count1 = Count0 + (PadInputSize div 64),
     xchacha20_stream_exor(Count1, Nonce, Key, Block, <<>>, <<Output/binary, OutputNext/binary>>);
 xchacha20_stream_exor(Count, Nonce, Key, Block, Input, Output) ->

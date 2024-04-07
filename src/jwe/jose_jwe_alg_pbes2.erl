@@ -153,7 +153,9 @@ key_encrypt(
     {CipherText, CipherTag} = jose_jwa:block_encrypt({aes_gcm, Bits}, DerivedKey, IV, {<<>>, DecryptedKey}),
     {CipherText, JWEPBES2#jose_jwe_alg_pbes2{tag = CipherTag}};
 key_encrypt(
-    Password, DecryptedKey, JWEPBES2 = #jose_jwe_alg_pbes2{hmac = HMAC, salt = Salt, iter = Iterations, wrap = aes_kw, bits = Bits}
+    Password,
+    DecryptedKey,
+    JWEPBES2 = #jose_jwe_alg_pbes2{hmac = HMAC, salt = Salt, iter = Iterations, wrap = aes_kw, bits = Bits}
 ) when
     is_binary(Password) andalso
         is_binary(DecryptedKey) andalso
@@ -190,11 +192,17 @@ key_encrypt(
     {ok, DerivedKey} = pbkdf2({hmac, HMAC}, Password, Salt, Iterations, (Bits div 8) + (Bits rem 8)),
     {CipherText, CipherTag} = jose_jwa:block_encrypt({xchacha20_poly1305, Bits}, DerivedKey, IV, {<<>>, DecryptedKey}),
     {CipherText, JWEPBES2#jose_jwe_alg_pbes2{tag = CipherTag}};
-key_encrypt(Password, DecryptedKey, JWEPBES2 = #jose_jwe_alg_pbes2{wrap = aes_gcm_kw, iv = undefined}) when is_binary(Password) ->
+key_encrypt(Password, DecryptedKey, JWEPBES2 = #jose_jwe_alg_pbes2{wrap = aes_gcm_kw, iv = undefined}) when
+    is_binary(Password)
+->
     key_encrypt(Password, DecryptedKey, JWEPBES2#jose_jwe_alg_pbes2{iv = crypto:strong_rand_bytes(12)});
-key_encrypt(Password, DecryptedKey, JWEPBES2 = #jose_jwe_alg_pbes2{wrap = c20p_kw, iv = undefined}) when is_binary(Password) ->
+key_encrypt(Password, DecryptedKey, JWEPBES2 = #jose_jwe_alg_pbes2{wrap = c20p_kw, iv = undefined}) when
+    is_binary(Password)
+->
     key_encrypt(Password, DecryptedKey, JWEPBES2#jose_jwe_alg_pbes2{iv = crypto:strong_rand_bytes(12)});
-key_encrypt(Password, DecryptedKey, JWEPBES2 = #jose_jwe_alg_pbes2{wrap = xc20p_kw, iv = undefined}) when is_binary(Password) ->
+key_encrypt(Password, DecryptedKey, JWEPBES2 = #jose_jwe_alg_pbes2{wrap = xc20p_kw, iv = undefined}) when
+    is_binary(Password)
+->
     key_encrypt(Password, DecryptedKey, JWEPBES2#jose_jwe_alg_pbes2{iv = crypto:strong_rand_bytes(24)});
 key_encrypt(#jose_jwk{kty = {KTYModule, KTY}}, DecryptedKey, JWEPBES2 = #jose_jwe_alg_pbes2{}) ->
     key_encrypt(KTYModule:derive_key(KTY), DecryptedKey, JWEPBES2).
@@ -247,7 +255,8 @@ pbkdf2(Mac, Password, Salt, Iterations, DerivedKeyLen) ->
                     cause => #{
                         4 => lists:flatten(
                             io_lib:format(
-                                "maximum PBES2 iterations is set to ~w, but ~w was attempted (see jose:pbes2_count_maximum/0)", [
+                                "maximum PBES2 iterations is set to ~w, but ~w was attempted (see jose:pbes2_count_maximum/0)",
+                                [
                                     PBES2CountMaximum, Iterations
                                 ]
                             )

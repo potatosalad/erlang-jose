@@ -96,7 +96,9 @@ clamp_scalar(K0) ->
     K3.
 
 decode_scalar(<<K0:8/integer, KBody:(?b - 16)/bitstring, K31:8/integer>>) ->
-    <<K:?b/unsigned-little-integer-unit:1>> = <<(K0 band 248):8/integer, KBody/bitstring, ((K31 band 127) bor 64):8/integer>>,
+    <<K:?b/unsigned-little-integer-unit:1>> = <<
+        (K0 band 248):8/integer, KBody/bitstring, ((K31 band 127) bor 64):8/integer
+    >>,
     K.
 
 montgomery_add({Xn, Zn}, {Xm, Zm}, {Xd, Zd}) ->

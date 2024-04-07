@@ -125,7 +125,9 @@ key_decrypt(
     JWEECDHES = JWEECDHES0#jose_jwe_alg_ecdh_es{epk = UEphemeralPublicKey},
     key_decrypt(VStaticSecretKey, EncryptedKey, JWEECDHES);
 key_decrypt(
-    VStaticSecretKey = #jose_jwk{}, EncryptedKey, JWEECDHES = #jose_jwe_alg_ecdh_es{epk = UEphemeralPublicKey = #jose_jwk{}}
+    VStaticSecretKey = #jose_jwk{},
+    EncryptedKey,
+    JWEECDHES = #jose_jwe_alg_ecdh_es{epk = UEphemeralPublicKey = #jose_jwk{}}
 ) ->
     Z = jose_jwk:shared_secret(UEphemeralPublicKey, VStaticSecretKey),
     key_decrypt(Z, EncryptedKey, JWEECDHES);
@@ -151,7 +153,9 @@ key_decrypt(
     DerivedKey = jose_jwa_concat_kdf:kdf(sha256, Z, {Algorithm, APU, APV, SuppPubInfo}, KeyDataLen),
     jose_jwa:block_decrypt({aes_gcm, KeyDataLen}, DerivedKey, IV, {<<>>, EncryptedKey, TAG});
 key_decrypt(
-    Z, {_ENCModule, _ENC, EncryptedKey}, JWEECDHES = #jose_jwe_alg_ecdh_es{apu = APU, apv = APV, wrap = aes_kw, bits = KeyDataLen}
+    Z,
+    {_ENCModule, _ENC, EncryptedKey},
+    JWEECDHES = #jose_jwe_alg_ecdh_es{apu = APU, apv = APV, wrap = aes_kw, bits = KeyDataLen}
 ) when is_binary(Z) ->
     Algorithm = algorithm(JWEECDHES),
     SuppPubInfo = <<KeyDataLen:1/unsigned-big-integer-unit:32>>,
@@ -210,7 +214,9 @@ key_encrypt(#jose_jwk{kty = {KTYModule, KTY}}, DecryptedKey, JWEECDHES) ->
     DerivedKey = KTYModule:derive_key(KTY),
     key_encrypt(DerivedKey, DecryptedKey, JWEECDHES);
 key_encrypt(
-    Z, DecryptedKey, JWEECDHES = #jose_jwe_alg_ecdh_es{apu = APU, apv = APV, wrap = aes_gcm_kw, bits = KeyDataLen, iv = IV}
+    Z,
+    DecryptedKey,
+    JWEECDHES = #jose_jwe_alg_ecdh_es{apu = APU, apv = APV, wrap = aes_gcm_kw, bits = KeyDataLen, iv = IV}
 ) when
     is_binary(Z) andalso
         is_binary(IV)
@@ -220,7 +226,9 @@ key_encrypt(
     DerivedKey = jose_jwa_concat_kdf:kdf(sha256, Z, {Algorithm, APU, APV, SuppPubInfo}, KeyDataLen),
     {CipherText, CipherTag} = jose_jwa:block_encrypt({aes_gcm, KeyDataLen}, DerivedKey, IV, {<<>>, DecryptedKey}),
     {CipherText, JWEECDHES#jose_jwe_alg_ecdh_es{tag = CipherTag}};
-key_encrypt(Z, DecryptedKey, JWEECDHES = #jose_jwe_alg_ecdh_es{apu = APU, apv = APV, wrap = aes_kw, bits = KeyDataLen}) when
+key_encrypt(
+    Z, DecryptedKey, JWEECDHES = #jose_jwe_alg_ecdh_es{apu = APU, apv = APV, wrap = aes_kw, bits = KeyDataLen}
+) when
     is_binary(Z)
 ->
     Algorithm = algorithm(JWEECDHES),
@@ -236,10 +244,14 @@ key_encrypt(
     Algorithm = algorithm(JWEECDHES),
     SuppPubInfo = <<KeyDataLen:1/unsigned-big-integer-unit:32>>,
     DerivedKey = jose_jwa_concat_kdf:kdf(sha256, Z, {Algorithm, APU, APV, SuppPubInfo}, KeyDataLen),
-    {CipherText, CipherTag} = jose_jwa:block_encrypt({chacha20_poly1305, KeyDataLen}, DerivedKey, IV, {<<>>, DecryptedKey}),
+    {CipherText, CipherTag} = jose_jwa:block_encrypt(
+        {chacha20_poly1305, KeyDataLen}, DerivedKey, IV, {<<>>, DecryptedKey}
+    ),
     {CipherText, JWEECDHES#jose_jwe_alg_ecdh_es{tag = CipherTag}};
 key_encrypt(
-    Z, DecryptedKey, JWEECDHES = #jose_jwe_alg_ecdh_es{apu = APU, apv = APV, wrap = xc20p_kw, bits = KeyDataLen, iv = IV}
+    Z,
+    DecryptedKey,
+    JWEECDHES = #jose_jwe_alg_ecdh_es{apu = APU, apv = APV, wrap = xc20p_kw, bits = KeyDataLen, iv = IV}
 ) when
     is_binary(Z) andalso
         is_binary(IV)
@@ -247,7 +259,9 @@ key_encrypt(
     Algorithm = algorithm(JWEECDHES),
     SuppPubInfo = <<KeyDataLen:1/unsigned-big-integer-unit:32>>,
     DerivedKey = jose_jwa_concat_kdf:kdf(sha256, Z, {Algorithm, APU, APV, SuppPubInfo}, KeyDataLen),
-    {CipherText, CipherTag} = jose_jwa:block_encrypt({xchacha20_poly1305, KeyDataLen}, DerivedKey, IV, {<<>>, DecryptedKey}),
+    {CipherText, CipherTag} = jose_jwa:block_encrypt(
+        {xchacha20_poly1305, KeyDataLen}, DerivedKey, IV, {<<>>, DecryptedKey}
+    ),
     {CipherText, JWEECDHES#jose_jwe_alg_ecdh_es{tag = CipherTag}};
 key_encrypt(Z, DecryptedKey, JWEECDHES = #jose_jwe_alg_ecdh_es{wrap = aes_gcm_kw, iv = undefined}) when is_binary(Z) ->
     key_encrypt(Z, DecryptedKey, JWEECDHES#jose_jwe_alg_ecdh_es{iv = crypto:strong_rand_bytes(12)});
@@ -277,11 +291,15 @@ next_cek(
     JWEECDHES1 = JWEECDHES0#jose_jwe_alg_ecdh_es{epk = UEphemeralPublicKey},
     next_cek({VStaticPublicKey, UEphemeralSecretKey}, {ENCModule, ENC}, JWEECDHES1);
 next_cek(
-    #jose_jwk{kty = {KTYModule, KTY}}, {ENC, ENCModule}, JWEECDHES = #jose_jwe_alg_ecdh_es{wrap = undefined, bits = undefined}
+    #jose_jwk{kty = {KTYModule, KTY}},
+    {ENC, ENCModule},
+    JWEECDHES = #jose_jwe_alg_ecdh_es{wrap = undefined, bits = undefined}
 ) ->
     DerivedKey = KTYModule:derive_key(KTY),
     next_cek(DerivedKey, {ENCModule, ENC}, JWEECDHES);
-next_cek(Z, {ENCModule, ENC}, JWEECDHES = #jose_jwe_alg_ecdh_es{apu = APU, apv = APV, wrap = undefined, bits = undefined}) when
+next_cek(
+    Z, {ENCModule, ENC}, JWEECDHES = #jose_jwe_alg_ecdh_es{apu = APU, apv = APV, wrap = undefined, bits = undefined}
+) when
     is_binary(Z)
 ->
     Algorithm = ENCModule:algorithm(ENC),

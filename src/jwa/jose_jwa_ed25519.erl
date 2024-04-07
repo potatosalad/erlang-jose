@@ -344,7 +344,9 @@ ed25519ph_sign(M, SK = <<_:?secretkeybytes/binary>>, C) when is_binary(M) andals
 
 % 5.1.7. Verify - https://datatracker.ietf.org/doc/html/rfc8032#section-5.1.7
 
-verify_internal(<<R:?b/bitstring, S:?b/unsigned-little-integer-unit:1>>, M, PK = <<_:?publickeybytes/binary>>, PHFlag, C) when
+verify_internal(
+    <<R:?b/bitstring, S:?b/unsigned-little-integer-unit:1>>, M, PK = <<_:?publickeybytes/binary>>, PHFlag, C
+) when
     is_binary(M) andalso
         (PHFlag =:= 0 orelse PHFlag =:= 1) andalso
         is_binary(C)
@@ -364,11 +366,15 @@ verify_internal(Sig, M, _PK = <<_:?publickeybytes/binary>>, PHFlag, C) when
 ed25519_verify(Sig, M, PK = <<_:?publickeybytes/binary>>) when is_binary(Sig) andalso is_binary(M) ->
     verify_internal(Sig, M, PK, 0, <<>>).
 
-ed25519ctx_verify(Sig, M, PK = <<_:?publickeybytes/binary>>, C) when is_binary(Sig) andalso is_binary(M) andalso is_binary(C) ->
+ed25519ctx_verify(Sig, M, PK = <<_:?publickeybytes/binary>>, C) when
+    is_binary(Sig) andalso is_binary(M) andalso is_binary(C)
+->
     verify_internal(Sig, M, PK, 0, C).
 
 ed25519ph_verify(Sig, M, PK = <<_:?publickeybytes/binary>>) when is_binary(Sig) andalso is_binary(M) ->
     verify_internal(Sig, ?PH(M), PK, 1, <<>>).
 
-ed25519ph_verify(Sig, M, PK = <<_:?publickeybytes/binary>>, C) when is_binary(Sig) andalso is_binary(M) andalso is_binary(C) ->
+ed25519ph_verify(Sig, M, PK = <<_:?publickeybytes/binary>>, C) when
+    is_binary(Sig) andalso is_binary(M) andalso is_binary(C)
+->
     verify_internal(Sig, ?PH(M), PK, 1, C).

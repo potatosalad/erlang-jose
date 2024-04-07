@@ -49,13 +49,17 @@
 -callback ed25519_sign(Message :: message(), SecretKey :: eddsa_secret_key()) -> Signature :: signature().
 -callback ed25519_verify(Signature :: maybe_invalid_signature(), Message :: message(), PublicKey :: eddsa_public_key()) ->
     boolean().
--callback ed25519ctx_sign(Message :: message(), SecretKey :: eddsa_secret_key(), Context :: context()) -> Signature :: signature().
+-callback ed25519ctx_sign(Message :: message(), SecretKey :: eddsa_secret_key(), Context :: context()) ->
+    Signature :: signature().
 -callback ed25519ctx_verify(
     Signature :: maybe_invalid_signature(), Message :: message(), PublicKey :: eddsa_public_key(), Context :: context()
 ) -> boolean().
 -callback ed25519ph_sign(Message :: message(), SecretKey :: eddsa_secret_key()) -> Signature :: signature().
--callback ed25519ph_sign(Message :: message(), SecretKey :: eddsa_secret_key(), Context :: context()) -> Signature :: signature().
--callback ed25519ph_verify(Signature :: maybe_invalid_signature(), Message :: message(), PublicKey :: eddsa_public_key()) ->
+-callback ed25519ph_sign(Message :: message(), SecretKey :: eddsa_secret_key(), Context :: context()) ->
+    Signature :: signature().
+-callback ed25519ph_verify(
+    Signature :: maybe_invalid_signature(), Message :: message(), PublicKey :: eddsa_public_key()
+) ->
     boolean().
 -callback ed25519ph_verify(
     Signature :: maybe_invalid_signature(), Message :: message(), PublicKey :: eddsa_public_key(), Context :: context()
@@ -179,7 +183,10 @@ support_check(Module, eddsa_keypair, 0) ->
         {<<PK:256/bits>>, <<_SK:256/bits, PK:256/bits>>} ->
             ok;
         Actual ->
-            {error, ?expect_report(Module, eddsa_keypair, [], Actual, {badmatch, "PK must be 256-bits, SK must be 512-bits"})}
+            {error,
+                ?expect_report(
+                    Module, eddsa_keypair, [], Actual, {badmatch, "PK must be 256-bits, SK must be 512-bits"}
+                )}
     end;
 support_check(Module, eddsa_keypair, 1) ->
     Seed = ?TV_Ed25519Seed(),
@@ -239,7 +246,10 @@ support_check(Module, x25519_keypair, 0) ->
         {<<_PK:256/bits>>, <<_SK:256/bits>>} ->
             ok;
         Actual ->
-            {error, ?expect_report(Module, x25519_keypair, [], Actual, {badmatch, "PK must be 256-bits, SK must be 256-bits"})}
+            {error,
+                ?expect_report(
+                    Module, x25519_keypair, [], Actual, {badmatch, "PK must be 256-bits, SK must be 256-bits"}
+                )}
     end;
 support_check(Module, x25519_keypair, 1) ->
     Seed = ?TV_X25519Seed(),
@@ -321,6 +331,7 @@ x25519_keypair(Seed) ->
 x25519_secret_to_public(SecretKey) ->
     ?resolve([SecretKey]).
 
--spec x25519_shared_secret(MySecretKey :: x25519_secret_key(), YourPublicKey :: x25519_public_key()) -> x25519_shared_secret().
+-spec x25519_shared_secret(MySecretKey :: x25519_secret_key(), YourPublicKey :: x25519_public_key()) ->
+    x25519_shared_secret().
 x25519_shared_secret(MySecretKey, YourPublicKey) ->
     ?resolve([MySecretKey, YourPublicKey]).

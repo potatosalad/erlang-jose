@@ -98,7 +98,9 @@ handle_event(state_timeout, init, init, Data0 = #data{key = Key, modules = Provi
     {Monitors, Mods} = start_checks(maps:new(), maps:new(), Key, ProviderModules),
     Data1 = Data0#data{monitors = Monitors, mods = Mods},
     {next_state, resolving, Data1};
-handle_event(state_timeout, fail, resolving, _Data = #data{reply_to = ReplyTo, reply_tag = ReplyTag, key = Key, mods = Mods}) ->
+handle_event(
+    state_timeout, fail, resolving, _Data = #data{reply_to = ReplyTo, reply_tag = ReplyTag, key = Key, mods = Mods}
+) ->
     ProviderModules = maps:keys(Mods),
     _ = [
         begin

@@ -70,7 +70,10 @@ prop_jwa_block_encrypt_and_ecb_block_decrypt() ->
         ecb_block_encryptor_gen(),
         begin
             Cipher = aes_ecb,
-            CipherText = <<<<(jose_jwa:block_encrypt({Cipher, Bits}, Key, Block))/binary>> || <<Block:16/binary>> <= PlainText>>,
+            CipherText = <<
+                <<(jose_jwa:block_encrypt({Cipher, Bits}, Key, Block))/binary>>
+             || <<Block:16/binary>> <= PlainText
+            >>,
             PlainText =:= jose_jwa_aes:block_decrypt({aes_ecb, Bits}, Key, CipherText)
         end
     ).
@@ -103,7 +106,8 @@ prop_ecb_block_encrypt_and_jwa_block_decrypt() ->
         begin
             CipherText = jose_jwa_aes:block_encrypt({aes_ecb, Bits}, Key, PlainText),
             Cipher = aes_ecb,
-            PlainText =:= <<<<(jose_jwa:block_decrypt({Cipher, Bits}, Key, Block))/binary>> || <<Block:16/binary>> <= CipherText>>
+            PlainText =:=
+                <<<<(jose_jwa:block_decrypt({Cipher, Bits}, Key, Block))/binary>> || <<Block:16/binary>> <= CipherText>>
         end
     ).
 

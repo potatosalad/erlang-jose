@@ -86,7 +86,9 @@ key_decrypt(DerivedKey, {_ENCModule, _ENC, EncryptedKey}, #jose_jwe_alg_aes_kw{b
         bit_size(DerivedKey) =:= Bits
 ->
     jose_jwa_aes_kw:unwrap(EncryptedKey, DerivedKey);
-key_decrypt(DerivedKey, {_ENCModule, _ENC, EncryptedKey}, #jose_jwe_alg_aes_kw{bits = Bits, gcm = true, iv = IV, tag = TAG}) when
+key_decrypt(DerivedKey, {_ENCModule, _ENC, EncryptedKey}, #jose_jwe_alg_aes_kw{
+    bits = Bits, gcm = true, iv = IV, tag = TAG
+}) when
     is_binary(DerivedKey) andalso
         bit_size(DerivedKey) =:= Bits andalso
         is_binary(IV) andalso

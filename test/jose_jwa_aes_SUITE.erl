@@ -115,7 +115,9 @@ aead_cipher({Type, Key, PlainText, IV, AAD, CipherText, CipherTag}) ->
         {CipherText, CipherTag} ->
             ok;
         Other0 ->
-            ct:fail({{jose_jwa_aes, block_encrypt, [Plain, PlainText]}, {expected, {CipherText, CipherTag}}, {got, Other0}})
+            ct:fail({
+                {jose_jwa_aes, block_encrypt, [Plain, PlainText]}, {expected, {CipherText, CipherTag}}, {got, Other0}
+            })
     end,
     case jose_jwa_aes:block_decrypt(Type, Key, IV, {AAD, CipherText, CipherTag}) of
         Plain ->

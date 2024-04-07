@@ -533,7 +533,9 @@ do_expand(BadArg) ->
     erlang:error({badarg, [BadArg]}).
 
 %% @private
-map_signatures([Key | Keys], PlainText, [Header | Headers], [Signer = #jose_jws{alg = {ALGModule, ALG}} | Signers], Acc) ->
+map_signatures(
+    [Key | Keys], PlainText, [Header | Headers], [Signer = #jose_jws{alg = {ALGModule, ALG}} | Signers], Acc
+) ->
     _ = code:ensure_loaded(ALGModule),
     NewALG =
         case erlang:function_exported(ALGModule, presign, 2) of

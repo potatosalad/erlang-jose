@@ -100,10 +100,18 @@ support_info() ->
     #{
         stateful => [],
         callbacks => [
-            {{chacha20_poly1305_decrypt, 5}, [{jose_chacha20, [{chacha20_exor, 4}]}, {jose_poly1305, [{poly1305_mac, 2}]}]},
-            {{chacha20_poly1305_encrypt, 4}, [{jose_chacha20, [{chacha20_exor, 4}]}, {jose_poly1305, [{poly1305_mac, 2}]}]},
-            {{chacha20_poly1305_authenticate, 3}, [{jose_chacha20, [{chacha20_exor, 4}]}, {jose_poly1305, [{poly1305_mac, 2}]}]},
-            {{chacha20_poly1305_verify, 4}, [{jose_chacha20, [{chacha20_exor, 4}]}, {jose_poly1305, [{poly1305_mac, 2}]}]}
+            {{chacha20_poly1305_decrypt, 5}, [
+                {jose_chacha20, [{chacha20_exor, 4}]}, {jose_poly1305, [{poly1305_mac, 2}]}
+            ]},
+            {{chacha20_poly1305_encrypt, 4}, [
+                {jose_chacha20, [{chacha20_exor, 4}]}, {jose_poly1305, [{poly1305_mac, 2}]}
+            ]},
+            {{chacha20_poly1305_authenticate, 3}, [
+                {jose_chacha20, [{chacha20_exor, 4}]}, {jose_poly1305, [{poly1305_mac, 2}]}
+            ]},
+            {{chacha20_poly1305_verify, 4}, [
+                {jose_chacha20, [{chacha20_exor, 4}]}, {jose_poly1305, [{poly1305_mac, 2}]}
+            ]}
         ]
     }.
 

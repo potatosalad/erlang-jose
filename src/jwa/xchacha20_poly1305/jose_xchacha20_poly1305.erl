@@ -107,7 +107,8 @@ support_info() ->
                 {jose_chacha20_poly1305, [{chacha20_poly1305_encrypt, 4}]}, {jose_hchacha20, [{hchacha20_subkey, 2}]}
             ]},
             {{xchacha20_poly1305_authenticate, 3}, [
-                {jose_chacha20_poly1305, [{chacha20_poly1305_authenticate, 3}]}, {jose_hchacha20, [{hchacha20_subkey, 2}]}
+                {jose_chacha20_poly1305, [{chacha20_poly1305_authenticate, 3}]},
+                {jose_hchacha20, [{hchacha20_subkey, 2}]}
             ]},
             {{xchacha20_poly1305_verify, 4}, [
                 {jose_chacha20_poly1305, [{chacha20_poly1305_verify, 4}]}, {jose_hchacha20, [{hchacha20_subkey, 2}]}

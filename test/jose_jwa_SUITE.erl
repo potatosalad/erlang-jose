@@ -237,7 +237,9 @@ aes_kw_128_256(_Config) ->
 aes_kw_192_192(_Config) ->
     KEK = <<16#000102030405060708090A0B0C0D0E0F1011121314151617:1/unsigned-big-integer-unit:192>>,
     KeyData = <<16#00112233445566778899AABBCCDDEEFF0001020304050607:1/unsigned-big-integer-unit:192>>,
-    CipherText = <<16#031D33264E15D33268F24EC260743EDCE1C6C7DDEE725A936BA814915C6762D2:1/unsigned-big-integer-unit:256>>,
+    CipherText = <<
+        16#031D33264E15D33268F24EC260743EDCE1C6C7DDEE725A936BA814915C6762D2:1/unsigned-big-integer-unit:256
+    >>,
     CipherText = jose_jwa_aes_kw:wrap(KeyData, KEK),
     KeyData = jose_jwa_aes_kw:unwrap(CipherText, KEK),
     true.
@@ -246,7 +248,9 @@ aes_kw_192_192(_Config) ->
 aes_kw_192_256(_Config) ->
     KEK = <<16#000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F:1/unsigned-big-integer-unit:256>>,
     KeyData = <<16#00112233445566778899AABBCCDDEEFF0001020304050607:1/unsigned-big-integer-unit:192>>,
-    CipherText = <<16#A8F9BC1612C68B3FF6E6F4FBE30E71E4769C8B80A32CB8958CD5D17D6B254DA1:1/unsigned-big-integer-unit:256>>,
+    CipherText = <<
+        16#A8F9BC1612C68B3FF6E6F4FBE30E71E4769C8B80A32CB8958CD5D17D6B254DA1:1/unsigned-big-integer-unit:256
+    >>,
     CipherText = jose_jwa_aes_kw:wrap(KeyData, KEK),
     KeyData = jose_jwa_aes_kw:unwrap(CipherText, KEK),
     true.

@@ -109,7 +109,8 @@ support_info() ->
         ]
     }.
 
--spec support_check(Module :: module(), Funname :: jose_support:funname(), Arity :: arity()) -> jose_support:support_check_result().
+-spec support_check(Module :: module(), Funname :: jose_support:funname(), Arity :: arity()) ->
+    jose_support:support_check_result().
 support_check(Module, aes_128_ecb_decrypt, 2) ->
     CipherText = ?TV_AES_128_ECB_CipherText(),
     CEK = ?TV_AES_128_ECB_Key(),

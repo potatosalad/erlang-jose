@@ -361,7 +361,9 @@ support_check(Module, ec_secp256k1_keypair, 0) ->
             ok;
         Actual ->
             {error,
-                ?expect_report(Module, ec_secp256k1_keypair, [], Actual, {badmatch, "PK must be 512-bits, SK must be 256-bits"})}
+                ?expect_report(
+                    Module, ec_secp256k1_keypair, [], Actual, {badmatch, "PK must be 512-bits, SK must be 256-bits"}
+                )}
     end;
 support_check(Module, ec_secp256k1_keypair, 1) ->
     Seed = ?TV_ec_secp256k1_Seed0(),
@@ -391,7 +393,10 @@ support_check(Module, ecdsa_secp256k1_sha256_sign, 2) ->
         <<_Sig:SigSize/bits>> ->
             ok;
         Actual ->
-            {error, ?expect_report(Module, ecdsa_secp256k1_sha256_sign, [Message, SK], Actual, {badmatch, "Sig must be 512-bits"})}
+            {error,
+                ?expect_report(
+                    Module, ecdsa_secp256k1_sha256_sign, [Message, SK], Actual, {badmatch, "Sig must be 512-bits"}
+                )}
     end;
 support_check(Module, ecdsa_secp256k1_sha256_verify, 3) ->
     Sig = ?TV_ecdsa_secp256k1_sha256_Sig(),
@@ -404,7 +409,9 @@ support_check(Module, ec_secp256r1_keypair, 0) ->
             ok;
         Actual ->
             {error,
-                ?expect_report(Module, ec_secp256r1_keypair, [], Actual, {badmatch, "PK must be 512-bits, SK must be 256-bits"})}
+                ?expect_report(
+                    Module, ec_secp256r1_keypair, [], Actual, {badmatch, "PK must be 512-bits, SK must be 256-bits"}
+                )}
     end;
 support_check(Module, ec_secp256r1_keypair, 1) ->
     Seed = ?TV_ec_secp256r1_Seed0(),
@@ -424,7 +431,10 @@ support_check(Module, ecdsa_secp256r1_sha256_sign, 2) ->
         <<_Sig:SigSize/bits>> ->
             ok;
         Actual ->
-            {error, ?expect_report(Module, ecdsa_secp256r1_sha256_sign, [Message, SK], Actual, {badmatch, "Sig must be 512-bits"})}
+            {error,
+                ?expect_report(
+                    Module, ecdsa_secp256r1_sha256_sign, [Message, SK], Actual, {badmatch, "Sig must be 512-bits"}
+                )}
     end;
 support_check(Module, ecdh_secp256r1_shared_secret, 2) ->
     USK = ?TV_ec_secp256r1_SecretKey0(),
@@ -447,7 +457,9 @@ support_check(Module, ec_secp384r1_keypair, 0) ->
             ok;
         Actual ->
             {error,
-                ?expect_report(Module, ec_secp384r1_keypair, [], Actual, {badmatch, "PK must be 768-bits, SK must be 384-bits"})}
+                ?expect_report(
+                    Module, ec_secp384r1_keypair, [], Actual, {badmatch, "PK must be 768-bits, SK must be 384-bits"}
+                )}
     end;
 support_check(Module, ec_secp384r1_keypair, 1) ->
     Seed = ?TV_ec_secp384r1_Seed0(),
@@ -477,7 +489,10 @@ support_check(Module, ecdsa_secp384r1_sha384_sign, 2) ->
         <<_Sig:SigSize/bits>> ->
             ok;
         Actual ->
-            {error, ?expect_report(Module, ecdsa_secp384r1_sha384_sign, [Message, SK], Actual, {badmatch, "Sig must be 768-bits"})}
+            {error,
+                ?expect_report(
+                    Module, ecdsa_secp384r1_sha384_sign, [Message, SK], Actual, {badmatch, "Sig must be 768-bits"}
+                )}
     end;
 support_check(Module, ecdsa_secp384r1_sha384_verify, 3) ->
     Sig = ?TV_ecdsa_secp384r1_sha384_Sig(),
@@ -490,7 +505,9 @@ support_check(Module, ec_secp521r1_keypair, 0) ->
             ok;
         Actual ->
             {error,
-                ?expect_report(Module, ec_secp521r1_keypair, [], Actual, {badmatch, "PK must be 768-bits, SK must be 384-bits"})}
+                ?expect_report(
+                    Module, ec_secp521r1_keypair, [], Actual, {badmatch, "PK must be 768-bits, SK must be 384-bits"}
+                )}
     end;
 support_check(Module, ec_secp521r1_keypair, 1) ->
     Seed = ?TV_ec_secp521r1_Seed0(),
@@ -520,7 +537,10 @@ support_check(Module, ecdsa_secp521r1_sha512_sign, 2) ->
         <<_Sig:SigSize/bits>> ->
             ok;
         Actual ->
-            {error, ?expect_report(Module, ecdsa_secp521r1_sha512_sign, [Message, SK], Actual, {badmatch, "Sig must be 1056-bits"})}
+            {error,
+                ?expect_report(
+                    Module, ecdsa_secp521r1_sha512_sign, [Message, SK], Actual, {badmatch, "Sig must be 1056-bits"}
+                )}
     end;
 support_check(Module, ecdsa_secp521r1_sha512_verify, 3) ->
     Sig = ?TV_ecdsa_secp521r1_sha512_Sig(),

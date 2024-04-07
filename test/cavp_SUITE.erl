@@ -918,23 +918,27 @@ init_per_group(G = 'nist-800-56A', Config) ->
     Vectors = [
         %% See [https://tools.ietf.org/html/rfc7518#appendix-C]
         {sha256,
-            <<158, 86, 217, 29, 129, 113, 53, 211, 114, 131, 66, 131, 191, 132, 38, 156, 251, 49, 110, 163, 218, 128, 106, 72, 246,
-                218, 167, 121, 140, 254, 144, 196>>,
+            <<158, 86, 217, 29, 129, 113, 53, 211, 114, 131, 66, 131, 191, 132, 38, 156, 251, 49, 110, 163, 218, 128,
+                106, 72, 246, 218, 167, 121, 140, 254, 144, 196>>,
             {<<"A128GCM">>, <<"Alice">>, <<"Bob">>, <<0, 0, 0, 128>>, <<>>}, 128,
             <<86, 170, 141, 234, 248, 35, 109, 32, 92, 34, 40, 205, 113, 167, 16, 26>>},
         %% See [https://bitbucket.org/b_c/jose4j/src/cb968fdb10bdef6ecedf279b030f9b3af59f5e8e/src/test/java/org/jose4j/jwe/kdf/ConcatKeyDerivationFunctionTest.java]
         {sha256, jose_jwa_base64url:decode(<<"Sq8rGLm4rEtzScmnSsY5r1n-AqBl_iBU8FxN80Uc0S0">>),
             {<<"A256CBC-HS512">>, <<>>, <<>>, <<0, 0, 2, 0>>, <<>>}, 512,
-            jose_jwa_base64url:decode(<<"pgs50IOZ6BxfqvTSie4t9OjWxGr4whiHo1v9Dti93CRiJE2PP60FojLatVVrcjg3BxpuFjnlQxL97GOwAfcwLA">>)},
-        {sha256, jose_jwa_base64url:decode(<<"LfkHot2nGTVlmfxbgxQfMg">>), {<<"A128CBC-HS256">>, <<>>, <<>>, <<0, 0, 1, 0>>, <<>>},
-            256, jose_jwa_base64url:decode(<<"vphyobtvExGXF7TaOvAkx6CCjHQNYamP2ET8xkhTu-0">>)},
+            jose_jwa_base64url:decode(
+                <<"pgs50IOZ6BxfqvTSie4t9OjWxGr4whiHo1v9Dti93CRiJE2PP60FojLatVVrcjg3BxpuFjnlQxL97GOwAfcwLA">>
+            )},
+        {sha256, jose_jwa_base64url:decode(<<"LfkHot2nGTVlmfxbgxQfMg">>),
+            {<<"A128CBC-HS256">>, <<>>, <<>>, <<0, 0, 1, 0>>, <<>>}, 256,
+            jose_jwa_base64url:decode(<<"vphyobtvExGXF7TaOvAkx6CCjHQNYamP2ET8xkhTu-0">>)},
         {sha256, jose_jwa_base64url:decode(<<"KSDnQpf2iurUsAbcuI4YH-FKfk2gecN6cWHTYlBzrd8">>),
             {<<"meh">>, <<"Alice">>, <<"Bob">>, <<0, 0, 4, 0>>, <<>>}, 1024,
             jose_jwa_base64url:decode(
                 <<"yRbmmZJpxv3H1aq3FgzESa453frljIaeMz6pt5rQZ4Q5Hs-4RYoFRXFh_qBsbTjlsj8JxIYTWj-cp5LKtgi1fBRsf_5yTEcLDv4pKH2fNxjbEOKuVVDWA1_Qv2IkEC0_QSi3lSSELcJaNX-hDG8occ7oQv-w8lg6lLJjg58kOes">>
             )},
-        {sha256, jose_jwa_base64url:decode(<<"zp9Hot2noTVlmfxbkXqfn1">>), {<<"A192CBC-HS384">>, <<>>, <<>>, <<0, 0, 1, 128>>, <<>>},
-            384, jose_jwa_base64url:decode(<<"SNOvl6h5iSYWJ_EhlnvK8o6om9iyR8HkKMQtQYGkYKkVY0HFMleoUm-H6-kLz8sW">>)}
+        {sha256, jose_jwa_base64url:decode(<<"zp9Hot2noTVlmfxbkXqfn1">>),
+            {<<"A192CBC-HS384">>, <<>>, <<>>, <<0, 0, 1, 128>>, <<>>}, 384,
+            jose_jwa_base64url:decode(<<"SNOvl6h5iSYWJ_EhlnvK8o6om9iyR8HkKMQtQYGkYKkVY0HFMleoUm-H6-kLz8sW">>)}
     ],
     [{vectors, Vectors} | jose_ct:start(G, Config)];
 init_per_group(G = 'pkcs-1v2-1-vec', Config) ->
@@ -1008,7 +1012,8 @@ init_per_group(G = 'pkcs-7', Config) ->
             {<<"00000000000000000000000000">>, <<"00000000000000000000000000030303">>},
             {<<"0000000000000000000000000000">>, <<"00000000000000000000000000000202">>},
             {<<"000000000000000000000000000000">>, <<"00000000000000000000000000000001">>},
-            {<<"00000000000000000000000000000000">>, <<"0000000000000000000000000000000010101010101010101010101010101010">>}
+            {<<"00000000000000000000000000000000">>,
+                <<"0000000000000000000000000000000010101010101010101010101010101010">>}
         ]
     ],
     [{vectors, Vectors} | jose_ct:start(G, Config)].
@@ -1249,7 +1254,8 @@ data_setup(F = "KAT_AES.zip", Config) ->
     ok = data_setup(Zip, Dir, "CBCGFSbox128.rsp", Filter),
     Config;
 data_setup(F = "keccaktestvectors", Config) ->
-    BaseURL = "https://raw.githubusercontent.com/gvanas/KeccakCodePackage/1893f17c8029d0e6423f1fa4de4d15f76b188a27/TestVectors/",
+    BaseURL =
+        "https://raw.githubusercontent.com/gvanas/KeccakCodePackage/1893f17c8029d0e6423f1fa4de4d15f76b188a27/TestVectors/",
     Files = [
         "ShortMsgKAT_SHA3-224.txt",
         "ShortMsgKAT_SHA3-256.txt",
@@ -1584,7 +1590,9 @@ fips_aes_encrypt_and_decrypt(
         CipherText ->
             fips_aes_encrypt_and_decrypt(Vectors, Cipher, Config);
         EncryptError ->
-            ct:fail({{jose_jwa_aes, block_encrypt, [Cipher, Key, PlainText]}, {expected, CipherText}, {got, EncryptError}})
+            ct:fail({
+                {jose_jwa_aes, block_encrypt, [Cipher, Key, PlainText]}, {expected, CipherText}, {got, EncryptError}
+            })
     end;
 fips_aes_encrypt_and_decrypt(
     [
@@ -1602,7 +1610,9 @@ fips_aes_encrypt_and_decrypt(
         PlainText ->
             fips_aes_encrypt_and_decrypt(Vectors, Cipher, Config);
         DecryptError ->
-            ct:fail({{jose_jwa_aes, block_decrypt, [Cipher, Key, CipherText]}, {expected, PlainText}, {got, DecryptError}})
+            ct:fail({
+                {jose_jwa_aes, block_decrypt, [Cipher, Key, CipherText]}, {expected, PlainText}, {got, DecryptError}
+            })
     end;
 fips_aes_encrypt_and_decrypt(
     [
@@ -1621,7 +1631,9 @@ fips_aes_encrypt_and_decrypt(
         CipherText ->
             fips_aes_encrypt_and_decrypt(Vectors, Cipher, Config);
         EncryptError ->
-            ct:fail({{jose_jwa_aes, block_encrypt, [Cipher, Key, IV, PlainText]}, {expected, CipherText}, {got, EncryptError}})
+            ct:fail({
+                {jose_jwa_aes, block_encrypt, [Cipher, Key, IV, PlainText]}, {expected, CipherText}, {got, EncryptError}
+            })
     end;
 fips_aes_encrypt_and_decrypt(
     [
@@ -1640,7 +1652,9 @@ fips_aes_encrypt_and_decrypt(
         PlainText ->
             fips_aes_encrypt_and_decrypt(Vectors, Cipher, Config);
         DecryptError ->
-            ct:fail({{jose_jwa_aes, block_decrypt, [Cipher, Key, IV, CipherText]}, {expected, PlainText}, {got, DecryptError}})
+            ct:fail({
+                {jose_jwa_aes, block_decrypt, [Cipher, Key, IV, CipherText]}, {expected, PlainText}, {got, DecryptError}
+            })
     end;
 fips_aes_encrypt_and_decrypt(
     [
@@ -1702,13 +1716,16 @@ fips_aes_gcm_encrypt_and_decrypt(
                     fips_aes_gcm_encrypt_and_decrypt(
                         Vectors,
                         {Cipher, decrypt,
-                            {Keylen, IVlen, PTlen, AADlen, Taglen, <<Counts/binary, (integer_to_binary(Count))/binary, "...">>}},
+                            {Keylen, IVlen, PTlen, AADlen, Taglen,
+                                <<Counts/binary, (integer_to_binary(Count))/binary, "...">>}},
                         Config
                     );
                 OtherDecrypt ->
                     io:format("\t\tCounts = ~s", [<<Counts/binary, (integer_to_binary(Count))/binary, "...">>]),
                     ct:fail({
-                        {jose_jwa_aes, block_decrypt, [Cipher, Key, IV, {AAD, CT, Tag}]}, {expected, error}, {got, OtherDecrypt}
+                        {jose_jwa_aes, block_decrypt, [Cipher, Key, IV, {AAD, CT, Tag}]},
+                        {expected, error},
+                        {got, OtherDecrypt}
                     })
             end;
         _ ->
@@ -1747,13 +1764,18 @@ fips_aes_gcm_encrypt_and_decrypt(
                     fips_aes_gcm_encrypt_and_decrypt(
                         Vectors,
                         {Cipher, decrypt,
-                            {Keylen, IVlen, PTlen, AADlen, Taglen, <<Counts/binary, (integer_to_binary(Count))/binary, "...">>}},
+                            {Keylen, IVlen, PTlen, AADlen, Taglen,
+                                <<Counts/binary, (integer_to_binary(Count))/binary, "...">>}},
                         Config
                     );
                 OtherDecrypt ->
                     io:format("\t\tCounts = ~s", [<<Counts/binary, (integer_to_binary(Count))/binary, "...">>]),
                     io:format("{Cipher, Key, IV, CT, AAD, Tag, PT} = ~w~n", [{Cipher, Key, IV, CT, AAD, Tag, PT}]),
-                    ct:fail({{jose_jwa_aes, block_decrypt, [Cipher, Key, IV, {AAD, CT, Tag}]}, {expected, PT}, {got, OtherDecrypt}})
+                    ct:fail({
+                        {jose_jwa_aes, block_decrypt, [Cipher, Key, IV, {AAD, CT, Tag}]},
+                        {expected, PT},
+                        {got, OtherDecrypt}
+                    })
             end;
         _ ->
             fips_aes_gcm_encrypt_and_decrypt(
@@ -1791,13 +1813,16 @@ fips_aes_gcm_encrypt_and_decrypt(
                     fips_aes_gcm_encrypt_and_decrypt(
                         Vectors,
                         {Cipher, encrypt,
-                            {Keylen, IVlen, PTlen, AADlen, Taglen, <<Counts/binary, (integer_to_binary(Count))/binary, "...">>}},
+                            {Keylen, IVlen, PTlen, AADlen, Taglen,
+                                <<Counts/binary, (integer_to_binary(Count))/binary, "...">>}},
                         Config
                     );
                 OtherEncrypt ->
                     io:format("\t\tCounts = ~s", [<<Counts/binary, (integer_to_binary(Count))/binary, "...">>]),
                     ct:fail({
-                        {jose_jwa_aes, block_encrypt, [Cipher, Key, IV, {AAD, PT}]}, {expected, {CT, Tag}}, {got, OtherEncrypt}
+                        {jose_jwa_aes, block_encrypt, [Cipher, Key, IV, {AAD, PT}]},
+                        {expected, {CT, Tag}},
+                        {got, OtherEncrypt}
                     })
             end;
         _ ->
@@ -1986,7 +2011,11 @@ fips_rsa_pss_sign(
         {ok, S} ->
             ok;
         Other ->
-            ct:fail({{jose_jwa_pkcs1, rsassa_pss_sign, [HashFun, Msg, SaltVal, RSAPrivateKey]}, {expected, {ok, S}}, {got, Other}})
+            ct:fail({
+                {jose_jwa_pkcs1, rsassa_pss_sign, [HashFun, Msg, SaltVal, RSAPrivateKey]},
+                {expected, {ok, S}},
+                {got, Other}
+            })
     end,
     RSAPublicKey = rsa_private_to_public(RSAPrivateKey),
     SaltLen = byte_size(SaltVal),
@@ -1994,7 +2023,11 @@ fips_rsa_pss_sign(
         true ->
             fips_rsa_pss_sign(Vectors, ModulusSize, RSAPrivateKey, Config);
         false ->
-            ct:fail({{jose_jwa_pkcs1, rsassa_pss_verify, [HashFun, Msg, S, SaltLen, RSAPublicKey]}, {expected, true}, {got, false}})
+            ct:fail({
+                {jose_jwa_pkcs1, rsassa_pss_verify, [HashFun, Msg, S, SaltLen, RSAPublicKey]},
+                {expected, true},
+                {got, false}
+            })
     end;
 fips_rsa_pss_sign(Vectors, _ModulusSize, _RSAPrivateKey, Config) ->
     fips_rsa_pss_sign(Vectors, Config).
@@ -2082,7 +2115,9 @@ fips_rsa_pss_verify(
             fips_rsa_pss_verify(Vectors, ModulusSize, RSAPrivateKey0, Config);
         Other ->
             ct:fail({
-                {jose_jwa_pkcs1, rsassa_pss_verify, [HashFun, Msg, S, SaltLen, RSAPublicKey]}, {expected, Expected}, {got, Other}
+                {jose_jwa_pkcs1, rsassa_pss_verify, [HashFun, Msg, S, SaltLen, RSAPublicKey]},
+                {expected, Expected},
+                {got, Other}
             })
     end;
 fips_rsa_pss_verify(
@@ -2125,7 +2160,9 @@ fips_rsa_pss_verify(
             fips_rsa_pss_verify(Vectors, ModulusSize, RSAPrivateKey0, Config);
         Other ->
             ct:fail({
-                {jose_jwa_pkcs1, rsassa_pss_verify, [HashFun, Msg, S, SaltLen, RSAPublicKey]}, {expected, Expected}, {got, Other}
+                {jose_jwa_pkcs1, rsassa_pss_verify, [HashFun, Msg, S, SaltLen, RSAPublicKey]},
+                {expected, Expected},
+                {got, Other}
             })
     end;
 fips_rsa_pss_verify(Vectors, ModulusSize, _RSAPrivateKey, Config) ->

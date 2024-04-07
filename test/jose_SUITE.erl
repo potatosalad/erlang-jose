@@ -505,7 +505,9 @@ jwk_c(Config) ->
     % C.4
     C_4_TXT = ?config("c.4.txt", C),
     C_4_SALT = ?config("c.4.salt", C),
-    C_4_SALT = <<(maps:get(<<"alg">>, C_2_JSON))/binary, 0, (jose_jwa_base64url:decode(maps:get(<<"p2s">>, C_2_JSON)))/binary>>,
+    C_4_SALT = <<
+        (maps:get(<<"alg">>, C_2_JSON))/binary, 0, (jose_jwa_base64url:decode(maps:get(<<"p2s">>, C_2_JSON)))/binary
+    >>,
     C_4_DKEY = ?config("c.4.derivedkey", C),
     {ok, C_4_DKEY} = jose_jwa_pkcs5:pbkdf2({hmac, sha256}, C_4_TXT, C_4_SALT, maps:get(<<"p2c">>, C_2_JSON), 16),
     % C.5
@@ -591,7 +593,9 @@ jws_a_1(Config) ->
     {true, A_1_1_PAYLOAD_DATA, A_1_1_JWS} = jose_jws:verify(A_1_1_JWK, A_1_1_MAP),
     {true, A_1_1_PAYLOAD_DATA, A_1_1_JWS} = jose_jws:verify(A_1_1_JWK, A_1_1_COMPACT_DATA),
     %% Sign and Verify
-    {true, A_1_1_PAYLOAD_DATA, A_1_1_JWS} = jose_jwk:verify(jose_jwk:sign(A_1_1_PAYLOAD_DATA, A_1_1_JWS, A_1_1_JWK), A_1_1_JWK),
+    {true, A_1_1_PAYLOAD_DATA, A_1_1_JWS} = jose_jwk:verify(
+        jose_jwk:sign(A_1_1_PAYLOAD_DATA, A_1_1_JWS, A_1_1_JWK), A_1_1_JWK
+    ),
     ok.
 
 % JSON Web Signature (JWS)
@@ -624,7 +628,9 @@ jws_a_2(Config) ->
     {true, A_2_1_PAYLOAD_DATA, A_2_1_JWS} = jose_jws:verify(A_2_1_JWK, A_2_1_MAP),
     {true, A_2_1_PAYLOAD_DATA, A_2_1_JWS} = jose_jws:verify(A_2_1_JWK, A_2_1_COMPACT_DATA),
     %% Sign and Verify
-    {true, A_2_1_PAYLOAD_DATA, A_2_1_JWS} = jose_jwk:verify(jose_jwk:sign(A_2_1_PAYLOAD_DATA, A_2_1_JWS, A_2_1_JWK), A_2_1_JWK),
+    {true, A_2_1_PAYLOAD_DATA, A_2_1_JWS} = jose_jwk:verify(
+        jose_jwk:sign(A_2_1_PAYLOAD_DATA, A_2_1_JWS, A_2_1_JWK), A_2_1_JWK
+    ),
     ok.
 
 % JSON Web Signature (JWS)
@@ -659,7 +665,9 @@ jws_a_3(Config) ->
     {true, A_3_1_PAYLOAD_DATA, A_3_1_JWS} = jose_jws:verify(A_3_1_JWK, A_3_1_MAP),
     {true, A_3_1_PAYLOAD_DATA, A_3_1_JWS} = jose_jws:verify(A_3_1_JWK, A_3_1_COMPACT_DATA),
     %% Sign and Verify
-    {true, A_3_1_PAYLOAD_DATA, A_3_1_JWS} = jose_jwk:verify(jose_jwk:sign(A_3_1_PAYLOAD_DATA, A_3_1_JWS, A_3_1_JWK), A_3_1_JWK),
+    {true, A_3_1_PAYLOAD_DATA, A_3_1_JWS} = jose_jwk:verify(
+        jose_jwk:sign(A_3_1_PAYLOAD_DATA, A_3_1_JWS, A_3_1_JWK), A_3_1_JWK
+    ),
     ok.
 
 % JSON Web Signature (JWS)
@@ -694,7 +702,9 @@ jws_a_4(Config) ->
     {true, A_4_1_PAYLOAD_DATA, A_4_1_JWS} = jose_jws:verify(A_4_1_JWK, A_4_1_MAP),
     {true, A_4_1_PAYLOAD_DATA, A_4_1_JWS} = jose_jws:verify(A_4_1_JWK, A_4_1_COMPACT_DATA),
     %% Sign and Verify
-    {true, A_4_1_PAYLOAD_DATA, A_4_1_JWS} = jose_jwk:verify(jose_jwk:sign(A_4_1_PAYLOAD_DATA, A_4_1_JWS, A_4_1_JWK), A_4_1_JWK),
+    {true, A_4_1_PAYLOAD_DATA, A_4_1_JWS} = jose_jwk:verify(
+        jose_jwk:sign(A_4_1_PAYLOAD_DATA, A_4_1_JWS, A_4_1_JWK), A_4_1_JWK
+    ),
     ok.
 
 % JSON Web Signature (JWS)
@@ -748,7 +758,9 @@ rfc7520_5_9(Config) ->
         element(1, jose_jwe_alg_aes_kw:key_encrypt(V_5_9_1_JWK, jose_jwa_base64url:decode(V_5_9_2_CEK), ALG))
     ),
     V_5_9_2_CEK = jose_jwa_base64url:encode(
-        jose_jwe_alg_aes_kw:key_decrypt(V_5_9_1_JWK, {undefined, undefined, jose_jwa_base64url:decode(V_5_9_3_ENCRYPTED_KEY)}, ALG)
+        jose_jwe_alg_aes_kw:key_decrypt(
+            V_5_9_1_JWK, {undefined, undefined, jose_jwa_base64url:decode(V_5_9_3_ENCRYPTED_KEY)}, ALG
+        )
     ),
     % 5.9.4
     V_5_9_4_JWE = jose_jwe:from_binary(?config("figure.166", C)),
@@ -781,7 +793,9 @@ rfc7520_5_9(Config) ->
 %%%-------------------------------------------------------------------
 
 %% @private
-force_block_encrypt(Key, PlainText, CEK, IV, OverrideProtected, JWE = #jose_jwe{alg = {ALGModule, ALG}, enc = {ENCModule, ENC}}) ->
+force_block_encrypt(
+    Key, PlainText, CEK, IV, OverrideProtected, JWE = #jose_jwe{alg = {ALGModule, ALG}, enc = {ENCModule, ENC}}
+) ->
     {EncryptedKey, _} = ALGModule:key_encrypt(Key, CEK, ALG),
     Protected = jose_jwa_base64url:encode(OverrideProtected),
     {CipherText, CipherTag} = ENCModule:block_encrypt({Protected, maybe_compress(PlainText, JWE)}, CEK, IV, ENC),

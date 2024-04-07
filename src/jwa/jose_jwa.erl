@@ -231,7 +231,8 @@ crypto_supports() ->
     Hashs = RecommendedHashs -- ((RecommendedHashs -- proplists:get_value(hashs, Supports)) -- ExternalHashs),
     RecommendedPublicKeys = [ec_gf2m, ecdh, ecdsa, ed25519, ed25519ph, ed448, ed448ph, rsa, x25519, x448],
     PublicKeys =
-        RecommendedPublicKeys -- ((RecommendedPublicKeys -- proplists:get_value(public_keys, Supports)) -- ExternalPublicKeys),
+        RecommendedPublicKeys --
+            ((RecommendedPublicKeys -- proplists:get_value(public_keys, Supports)) -- ExternalPublicKeys),
     [
         {ciphers, Ciphers},
         {hashs, Hashs},

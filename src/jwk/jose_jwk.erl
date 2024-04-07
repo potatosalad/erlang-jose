@@ -633,7 +633,9 @@ to_oct_file(File, JWK = #jose_jwk{}) when is_binary(File) orelse is_list(File) -
 to_oct_file(File, Other) when is_binary(File) orelse is_list(File) ->
     to_oct_file(File, from(Other)).
 
-to_oct_file(Key, File, JWK = #jose_jwk{kty = {Module, KTY}, fields = Fields}) when is_binary(File) orelse is_list(File) ->
+to_oct_file(Key, File, JWK = #jose_jwk{kty = {Module, KTY}, fields = Fields}) when
+    is_binary(File) orelse is_list(File)
+->
     to_oct_file(Key, File, Module:key_encryptor(KTY, Fields, Key), JWK);
 to_oct_file(Key, File, Other) when is_binary(File) orelse is_list(File) ->
     to_oct_file(Key, File, from(Other)).
@@ -792,7 +794,9 @@ box_encrypt_ecdh_1pu(PlainText, VStaticPublicKey = #jose_jwk{}, UStaticSecretKey
 box_encrypt_ecdh_1pu(PlainText, VStaticPublicKey, UStaticSecretKey) ->
     box_encrypt_ecdh_1pu(PlainText, from(VStaticPublicKey), from(UStaticSecretKey)).
 
-box_encrypt_ecdh_1pu(PlainText, VStaticPublicKey = #jose_jwk{}, UStaticSecretKey = #jose_jwk{}, UEphemeralSecretKey = #jose_jwk{}) ->
+box_encrypt_ecdh_1pu(
+    PlainText, VStaticPublicKey = #jose_jwk{}, UStaticSecretKey = #jose_jwk{}, UEphemeralSecretKey = #jose_jwk{}
+) ->
     UEphemeralPublicKey0 = #jose_jwk{fields = Fields0} = to_public(UEphemeralSecretKey),
     Fields1 = maps:put(<<"epk">>, element(2, to_map(UEphemeralPublicKey0)), Fields0),
     Fields2 =
@@ -809,7 +813,11 @@ box_encrypt_ecdh_1pu(PlainText, VStaticPublicKey, UStaticSecretKey, UEphemeralSe
     box_encrypt_ecdh_1pu(PlainText, from(VStaticPublicKey), from(UStaticSecretKey), from(UEphemeralSecretKey)).
 
 box_encrypt_ecdh_1pu(
-    PlainText, JWE = #jose_jwe{}, VStaticPublicKey = #jose_jwk{}, UStaticSecretKey = #jose_jwk{}, UEphemeralSecretKey = #jose_jwk{}
+    PlainText,
+    JWE = #jose_jwe{},
+    VStaticPublicKey = #jose_jwk{},
+    UStaticSecretKey = #jose_jwk{},
+    UEphemeralSecretKey = #jose_jwk{}
 ) ->
     jose_jwe:block_encrypt({VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey}, PlainText, JWE);
 box_encrypt_ecdh_1pu(
@@ -819,7 +827,9 @@ box_encrypt_ecdh_1pu(
     UStaticSecretKey = #jose_jwk{},
     UEphemeralSecretKey = #jose_jwk{}
 ) ->
-    box_encrypt_ecdh_1pu(PlainText, jose_jwe:from({JWEModules, JWEMap}), VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey);
+    box_encrypt_ecdh_1pu(
+        PlainText, jose_jwe:from({JWEModules, JWEMap}), VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey
+    );
 box_encrypt_ecdh_1pu(
     PlainText,
     {JWEModules, JWEMap0},
@@ -865,7 +875,9 @@ box_encrypt_ecdh_es(
     UEphemeralSecretKey = #jose_jwk{}
 ) ->
     box_encrypt_ecdh_es(PlainText, jose_jwe:from({JWEModules, JWEMap}), VStaticPublicKey, UEphemeralSecretKey);
-box_encrypt_ecdh_es(PlainText, {JWEModules, JWEMap0}, VStaticPublicKey = #jose_jwk{}, UEphemeralSecretKey = #jose_jwk{}) ->
+box_encrypt_ecdh_es(
+    PlainText, {JWEModules, JWEMap0}, VStaticPublicKey = #jose_jwk{}, UEphemeralSecretKey = #jose_jwk{}
+) ->
     Keys = [<<"apu">>, <<"apv">>, <<"epk">>] -- maps:keys(JWEMap0),
     JWEMap1 = normalize_ecdh_es(Keys, JWEMap0, VStaticPublicKey, UEphemeralSecretKey),
     box_encrypt_ecdh_es(PlainText, {JWEModules, JWEMap1}, VStaticPublicKey, UEphemeralSecretKey);
@@ -1092,7 +1104,9 @@ normalize_ecdh_1pu([<<"apv">> | Keys], Map, VStaticPublicKey, UStaticSecretKey, 
     normalize_ecdh_1pu(Keys, Map#{<<"apv">> => APV}, VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey);
 normalize_ecdh_1pu([<<"epk">> | Keys], Map, VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey) ->
     {_, UEphemeralPublicKeyMap} = to_public_map(UEphemeralSecretKey),
-    normalize_ecdh_1pu(Keys, Map#{<<"epk">> => UEphemeralPublicKeyMap}, VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey);
+    normalize_ecdh_1pu(
+        Keys, Map#{<<"epk">> => UEphemeralPublicKeyMap}, VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey
+    );
 normalize_ecdh_1pu([<<"skid">> | Keys], Map, VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey) ->
     SenderKeyId =
         case UStaticSecretKey of
@@ -1106,11 +1120,15 @@ normalize_ecdh_1pu([], Map, _, _, _) ->
     Map.
 
 %% @private
-normalize_ecdh_es([<<"apu">> | Keys], Map, VStaticPublicKey, UEphemeralSecretKey = #jose_jwk{fields = #{<<"kid">> := KID}}) ->
+normalize_ecdh_es(
+    [<<"apu">> | Keys], Map, VStaticPublicKey, UEphemeralSecretKey = #jose_jwk{fields = #{<<"kid">> := KID}}
+) ->
     normalize_ecdh_es(Keys, Map#{<<"apu">> => KID}, VStaticPublicKey, UEphemeralSecretKey);
 normalize_ecdh_es([<<"apu">> | Keys], Map, VStaticPublicKey, UEphemeralSecretKey) ->
     normalize_ecdh_es(Keys, Map#{<<"apu">> => thumbprint(UEphemeralSecretKey)}, VStaticPublicKey, UEphemeralSecretKey);
-normalize_ecdh_es([<<"apv">> | Keys], Map, VStaticPublicKey = #jose_jwk{fields = #{<<"kid">> := KID}}, UEphemeralSecretKey) ->
+normalize_ecdh_es(
+    [<<"apv">> | Keys], Map, VStaticPublicKey = #jose_jwk{fields = #{<<"kid">> := KID}}, UEphemeralSecretKey
+) ->
     normalize_ecdh_es(Keys, Map#{<<"apv">> => KID}, VStaticPublicKey, UEphemeralSecretKey);
 normalize_ecdh_es([<<"apv">> | Keys], Map, VStaticPublicKey, UEphemeralSecretKey) ->
     normalize_ecdh_es(Keys, Map#{<<"apv">> => thumbprint(VStaticPublicKey)}, VStaticPublicKey, UEphemeralSecretKey);
@@ -1123,9 +1141,14 @@ normalize_ecdh_es([], Map, _, _) ->
 %% @private
 normalize_ecdh_ss([<<"apu">> | Keys], Map, VStaticPublicKey, UStaticSecretKey) ->
     normalize_ecdh_ss(
-        Keys, Map#{<<"apu">> => jose_jwa_base64url:encode(crypto:strong_rand_bytes(64))}, VStaticPublicKey, UStaticSecretKey
+        Keys,
+        Map#{<<"apu">> => jose_jwa_base64url:encode(crypto:strong_rand_bytes(64))},
+        VStaticPublicKey,
+        UStaticSecretKey
     );
-normalize_ecdh_ss([<<"apv">> | Keys], Map, VStaticPublicKey = #jose_jwk{fields = #{<<"kid">> := KID}}, UStaticSecretKey) ->
+normalize_ecdh_ss(
+    [<<"apv">> | Keys], Map, VStaticPublicKey = #jose_jwk{fields = #{<<"kid">> := KID}}, UStaticSecretKey
+) ->
     normalize_ecdh_ss(Keys, Map#{<<"apv">> => KID}, VStaticPublicKey, UStaticSecretKey);
 normalize_ecdh_ss([<<"apv">> | Keys], Map, VStaticPublicKey, UStaticSecretKey) ->
     normalize_ecdh_ss(Keys, Map#{<<"apv">> => thumbprint(VStaticPublicKey)}, VStaticPublicKey, UStaticSecretKey);

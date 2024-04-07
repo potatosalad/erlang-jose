@@ -100,7 +100,10 @@ support_check(Module, random_bits, 1) ->
         <<ActualBitOutput:BitSize/bits>> when ActualBitOutput =/= BitOutput ->
             ok;
         BitOutput ->
-            {error, ?expect_report(Module, random_bits, [BitSize], BitOutput, {badmatch, "BitOutput must not be all zeroes"})};
+            {error,
+                ?expect_report(
+                    Module, random_bits, [BitSize], BitOutput, {badmatch, "BitOutput must not be all zeroes"}
+                )};
         ActualBitOutput ->
             {error,
                 ?expect_report(
@@ -109,7 +112,9 @@ support_check(Module, random_bits, 1) ->
                     [BitSize],
                     ActualBitOutput,
                     {badmatch,
-                        ?format("BitOutput should have been ~w-bits, but was ~w-bits instead", [BitSize, bit_size(ActualBitOutput)])}
+                        ?format("BitOutput should have been ~w-bits, but was ~w-bits instead", [
+                            BitSize, bit_size(ActualBitOutput)
+                        ])}
                 )}
     end;
 support_check(Module, random_bytes, 1) ->
@@ -120,7 +125,10 @@ support_check(Module, random_bytes, 1) ->
         <<ActualByteOutput:ByteSize/binary>> when ActualByteOutput =/= ByteOutput ->
             ok;
         ByteOutput ->
-            {error, ?expect_report(Module, random_bytes, [ByteSize], ByteOutput, {badmatch, "ByteOutput must not be all zeroes"})};
+            {error,
+                ?expect_report(
+                    Module, random_bytes, [ByteSize], ByteOutput, {badmatch, "ByteOutput must not be all zeroes"}
+                )};
         ActualByteOutput ->
             {error,
                 ?expect_report(

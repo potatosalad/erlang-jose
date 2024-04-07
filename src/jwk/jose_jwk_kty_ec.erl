@@ -382,7 +382,9 @@ to_pem(Password, ECPublicKey = {#'ECPoint'{}, _ECParameters}) ->
 
 %% @private
 from_map_ec_private_key(binary, F = #{<<"d">> := D}, Key) ->
-    from_map_ec_private_key(binary, maps:remove(<<"d">>, F), Key#'ECPrivateKey'{privateKey = jose_jwa_base64url:decode(D)});
+    from_map_ec_private_key(binary, maps:remove(<<"d">>, F), Key#'ECPrivateKey'{
+        privateKey = jose_jwa_base64url:decode(D)
+    });
 from_map_ec_private_key(list, F = #{<<"d">> := D}, Key) ->
     from_map_ec_private_key(list, maps:remove(<<"d">>, F), Key#'ECPrivateKey'{
         privateKey = binary_to_list(jose_jwa_base64url:decode(D))
@@ -416,16 +418,27 @@ from_map_ec_private_key(_ECMode, F, Key) ->
 
 %% @private
 from_map_ec_public_key(F = #{<<"crv">> := <<"secp256k1">>}, {Point, _Params}) ->
-    from_map_ec_public_key(maps:remove(<<"crv">>, F), {Point, {namedCurve, pubkey_cert_records:namedCurves(secp256k1)}});
+    from_map_ec_public_key(
+        maps:remove(<<"crv">>, F), {Point, {namedCurve, pubkey_cert_records:namedCurves(secp256k1)}}
+    );
 from_map_ec_public_key(F = #{<<"crv">> := <<"P-256">>}, {Point, _Params}) ->
-    from_map_ec_public_key(maps:remove(<<"crv">>, F), {Point, {namedCurve, pubkey_cert_records:namedCurves(secp256r1)}});
+    from_map_ec_public_key(
+        maps:remove(<<"crv">>, F), {Point, {namedCurve, pubkey_cert_records:namedCurves(secp256r1)}}
+    );
 from_map_ec_public_key(F = #{<<"crv">> := <<"P-384">>}, {Point, _Params}) ->
-    from_map_ec_public_key(maps:remove(<<"crv">>, F), {Point, {namedCurve, pubkey_cert_records:namedCurves(secp384r1)}});
+    from_map_ec_public_key(
+        maps:remove(<<"crv">>, F), {Point, {namedCurve, pubkey_cert_records:namedCurves(secp384r1)}}
+    );
 from_map_ec_public_key(F = #{<<"crv">> := <<"P-521">>}, {Point, _Params}) ->
-    from_map_ec_public_key(maps:remove(<<"crv">>, F), {Point, {namedCurve, pubkey_cert_records:namedCurves(secp521r1)}});
+    from_map_ec_public_key(
+        maps:remove(<<"crv">>, F), {Point, {namedCurve, pubkey_cert_records:namedCurves(secp521r1)}}
+    );
 from_map_ec_public_key(F = #{<<"x">> := X, <<"y">> := Y}, {Point, Params}) ->
     from_map_ec_public_key(maps:without([<<"x">>, <<"y">>], F), {
-        Point#'ECPoint'{point = <<16#04, (jose_jwa_base64url:decode(X))/binary, (jose_jwa_base64url:decode(Y))/binary>>}, Params
+        Point#'ECPoint'{
+            point = <<16#04, (jose_jwa_base64url:decode(X))/binary, (jose_jwa_base64url:decode(Y))/binary>>
+        },
+        Params
     });
 from_map_ec_public_key(F, Key) ->
     {Key, F}.

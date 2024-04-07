@@ -47,13 +47,16 @@
 -callback eddsa_keypair(Seed :: eddsa_seed()) -> {PublicKey :: eddsa_public_key(), SecretKey :: eddsa_secret_key()}.
 -callback eddsa_secret_to_public(SecretKey :: eddsa_secret_key()) -> PublicKey :: eddsa_public_key().
 -callback ed448_sign(Message :: message(), SecretKey :: eddsa_secret_key()) -> Signature :: signature().
--callback ed448_sign(Message :: message(), SecretKey :: eddsa_secret_key(), Context :: context()) -> Signature :: signature().
--callback ed448_verify(Signature :: maybe_invalid_signature(), Message :: message(), PublicKey :: eddsa_public_key()) -> boolean().
+-callback ed448_sign(Message :: message(), SecretKey :: eddsa_secret_key(), Context :: context()) ->
+    Signature :: signature().
+-callback ed448_verify(Signature :: maybe_invalid_signature(), Message :: message(), PublicKey :: eddsa_public_key()) ->
+    boolean().
 -callback ed448_verify(
     Signature :: maybe_invalid_signature(), Message :: message(), PublicKey :: eddsa_public_key(), Context :: context()
 ) -> boolean().
 -callback ed448ph_sign(Message :: message(), SecretKey :: eddsa_secret_key()) -> Signature :: signature().
--callback ed448ph_sign(Message :: message(), SecretKey :: eddsa_secret_key(), Context :: context()) -> Signature :: signature().
+-callback ed448ph_sign(Message :: message(), SecretKey :: eddsa_secret_key(), Context :: context()) ->
+    Signature :: signature().
 -callback ed448ph_verify(Signature :: maybe_invalid_signature(), Message :: message(), PublicKey :: eddsa_public_key()) ->
     boolean().
 -callback ed448ph_verify(
@@ -109,7 +112,9 @@
 
 %% Macros
 -define(TV_Ed448Seed(),
-    ?b16d("000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")
+    ?b16d(
+        "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+    )
 ).
 -define(TV_Ed448SecretKey(),
     ?b16d(
@@ -117,7 +122,9 @@
     )
 ).
 -define(TV_Ed448PublicKey(),
-    ?b16d("5b3afe03878a49b28232d4f1a442aebde109f807acef7dfd9a7f65b962fe52d6547312cacecff04337508f9d2529a8f1669169b21c32c48000")
+    ?b16d(
+        "5b3afe03878a49b28232d4f1a442aebde109f807acef7dfd9a7f65b962fe52d6547312cacecff04337508f9d2529a8f1669169b21c32c48000"
+    )
 ).
 -define(TV_Message(), <<"abc">>).
 -define(TV_Context(), <<"def">>).
@@ -142,22 +149,34 @@
     )
 ).
 -define(TV_X448Seed(),
-    ?b16d("0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080")
+    ?b16d(
+        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080"
+    )
 ).
 -define(TV_X448SecretKey(),
-    ?b16d("0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080")
+    ?b16d(
+        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080"
+    )
 ).
 -define(TV_X448PublicKey(),
-    ?b16d("e9b820a44dba3bc569bee7214b62b09ee239b50978a7a1c69a9ade46858cc37c48eb03fd88c289badd708fc635c7d863cc40e4dfdd6d5d40")
+    ?b16d(
+        "e9b820a44dba3bc569bee7214b62b09ee239b50978a7a1c69a9ade46858cc37c48eb03fd88c289badd708fc635c7d863cc40e4dfdd6d5d40"
+    )
 ).
 -define(TV_X448USecretKey(),
-    ?b16d("0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080")
+    ?b16d(
+        "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080"
+    )
 ).
 -define(TV_X448VPublicKey(),
-    ?b16d("172837c1ef0bf5d890af8dcee6bda1ad1970c167e893dd46054795693a11397580fe732f2b50bd9fc1d7596c62fd5c4d5df403e94ad8c507")
+    ?b16d(
+        "172837c1ef0bf5d890af8dcee6bda1ad1970c167e893dd46054795693a11397580fe732f2b50bd9fc1d7596c62fd5c4d5df403e94ad8c507"
+    )
 ).
 -define(TV_X448SharedSecret(),
-    ?b16d("6c5e8fb7a6e989da0ee5ebbdc6414a77a7e53595f09842c3516af04247c42b0c08b5e79bbc1788d86088b8528b62e1ef0650d9c928155075")
+    ?b16d(
+        "6c5e8fb7a6e989da0ee5ebbdc6414a77a7e53595f09842c3516af04247c42b0c08b5e79bbc1788d86088b8528b62e1ef0650d9c928155075"
+    )
 ).
 
 %%====================================================================
@@ -194,7 +213,10 @@ support_check(Module, eddsa_keypair, 0) ->
         {<<PK:456/bits>>, <<_SK:456/bits, PK:456/bits>>} ->
             ok;
         Actual ->
-            {error, ?expect_report(Module, eddsa_keypair, [], Actual, {badmatch, "PK must be 456-bits, SK must be 912-bits"})}
+            {error,
+                ?expect_report(
+                    Module, eddsa_keypair, [], Actual, {badmatch, "PK must be 456-bits, SK must be 912-bits"}
+                )}
     end;
 support_check(Module, eddsa_keypair, 1) ->
     Seed = ?TV_Ed448Seed(),
@@ -254,7 +276,10 @@ support_check(Module, x448_keypair, 0) ->
         {<<_PK:448/bits>>, <<_SK:448/bits>>} ->
             ok;
         Actual ->
-            {error, ?expect_report(Module, x448_keypair, [], Actual, {badmatch, "PK must be 448-bits, SK must be 448-bits"})}
+            {error,
+                ?expect_report(
+                    Module, x448_keypair, [], Actual, {badmatch, "PK must be 448-bits, SK must be 448-bits"}
+                )}
     end;
 support_check(Module, x448_keypair, 1) ->
     Seed = ?TV_X448Seed(),

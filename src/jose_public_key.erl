@@ -772,7 +772,9 @@ pseudo_output_length(?'id-hmacWithSHA512') ->
 
 %% @private
 iv(#'PBES2-params_encryptionScheme'{algorithm = ?'rc2CBC', parameters = ASN1IV}) ->
-    {ok, #'RC2-CBC-Parameter'{iv = IV}} = 'PKCS-FRAME':decode('RC2-CBC-Parameter', decode_handle_open_type_wrapper(ASN1IV)),
+    {ok, #'RC2-CBC-Parameter'{iv = IV}} = 'PKCS-FRAME':decode(
+        'RC2-CBC-Parameter', decode_handle_open_type_wrapper(ASN1IV)
+    ),
     erlang:iolist_to_binary(IV);
 iv(#'PBES2-params_encryptionScheme'{algorithm = _Algo, parameters = ASN1IV}) ->
     <<4, Len:8/unsigned-big-integer, IV:Len/binary>> = decode_handle_open_type_wrapper(ASN1IV),

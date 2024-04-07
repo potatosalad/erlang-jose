@@ -35,7 +35,9 @@ stop(Config) ->
     {Progress, Old} = ?config(jose_ct, Config),
     ok = progress_stop(Progress),
     Diff = timer:now_diff(Now, Old),
-    io:format(user, "~s[OK] ~s :: ~s elapsed~s~n", [?GREEN, format_utc_timestamp(Now), format_elapsed_time(Diff), ?RESET]),
+    io:format(user, "~s[OK] ~s :: ~s elapsed~s~n", [
+        ?GREEN, format_utc_timestamp(Now), format_elapsed_time(Diff), ?RESET
+    ]),
     ok.
 
 progress_start() ->

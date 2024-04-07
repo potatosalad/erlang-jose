@@ -35,7 +35,9 @@
     graph = undefined :: undefined | #{any() => any()},
     plan = [] :: [{serial | parallel, jose_support:key()}],
     resolved = maps:new() :: #{jose_support:key() => [{integer(), module()}]},
-    resolving = {maps:new(), maps:new()} :: {#{reference() => {pid(), jose_support:key()}}, #{jose_support:key() => reference()}},
+    resolving = {maps:new(), maps:new()} :: {#{reference() => {pid(), jose_support:key()}}, #{
+        jose_support:key() => reference()
+    }},
     resolving_tag = undefined :: undefined | reference()
 }).
 
@@ -180,7 +182,9 @@ handle_event(info, EventContent, State, Data0 = #data{resolved = Resolved0, reso
     end.
 % keep_state_and_data.
 
-start_resolve(Key, Data0 = #data{graph = #{providers := Providers}, resolving = {M2K0, K2M0}, resolving_tag = ResolvingTag}) ->
+start_resolve(
+    Key, Data0 = #data{graph = #{providers := Providers}, resolving = {M2K0, K2M0}, resolving_tag = ResolvingTag}
+) ->
     ProviderModules = maps:get(Key, Providers),
     {ok, Pid} = jose_support_resolve_sup:start_child(self(), ResolvingTag, Key, ProviderModules),
     Mon = erlang:monitor(process, Pid),

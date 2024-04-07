@@ -67,7 +67,9 @@ generate_key(_Fields, {ENCModule, ENC}, ?RSA_OAEP) ->
 generate_key(_Fields, {ENCModule, ENC}, ?RSA_OAEP_256) ->
     jose_jwe_alg:generate_key({rsa, 2048}, <<"RSA-OAEP-256">>, ENCModule:algorithm(ENC)).
 
-key_decrypt(#jose_jwk{kty = {KTYModule, KTY}}, {_ENCModule, _ENC, EncryptedKey}, #jose_jwe_alg_rsa{algorithm = Algorithm}) ->
+key_decrypt(#jose_jwk{kty = {KTYModule, KTY}}, {_ENCModule, _ENC, EncryptedKey}, #jose_jwe_alg_rsa{
+    algorithm = Algorithm
+}) ->
     KTYModule:decrypt_private(EncryptedKey, Algorithm, KTY).
 
 key_encrypt(#jose_jwk{kty = {KTYModule, KTY}}, DecryptedKey, JWERSA = #jose_jwe_alg_rsa{algorithm = Algorithm}) ->

@@ -112,7 +112,9 @@ support_info() ->
                 {jose_xchacha20, [{xchacha20_stream_init, 3}, {xchacha20_stream_exor, 2}, {xchacha20_stream_final, 1}]}
             ]},
             {{xchacha20_stream_init, 3}, [{jose_hchacha20, [{hchacha20_subkey, 2}]}]},
-            {{xchacha20_stream_exor, 2}, [{jose_hchacha20, [{hchacha20_subkey, 2}]}, {jose_xchacha20, [{xchacha20_stream_init, 3}]}]},
+            {{xchacha20_stream_exor, 2}, [
+                {jose_hchacha20, [{hchacha20_subkey, 2}]}, {jose_xchacha20, [{xchacha20_stream_init, 3}]}
+            ]},
             {{xchacha20_stream_final, 1}, [
                 {jose_hchacha20, [{hchacha20_subkey, 2}]},
                 {jose_xchacha20, [{xchacha20_stream_init, 3}, {xchacha20_stream_exor, 2}]}

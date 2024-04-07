@@ -212,7 +212,9 @@ jwk_encryptor_gen() ->
                         begin
                             Password = jose_jwa_base64url:encode(Key),
                             {Password, JWE,
-                                jose_jwk:from_map(#{<<"kty">> => <<"oct">>, <<"k">> => jose_jwa_base64url:encode(Password)})}
+                                jose_jwk:from_map(#{
+                                    <<"kty">> => <<"oct">>, <<"k">> => jose_jwa_base64url:encode(Password)
+                                })}
                         end
                     )
             end
@@ -291,10 +293,13 @@ prop_encrypt_and_decrypt() ->
                         PlainText, JWEMap, VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey
                     ),
                     CompactEncrypted = jose_jwe:compact(Encrypted),
-                    Decrypted = {_, NewJWE} = jose_jwk:box_decrypt_ecdh_1pu(Encrypted, UStaticPublicKey, VStaticSecretKey),
+                    Decrypted =
+                        {_, NewJWE} = jose_jwk:box_decrypt_ecdh_1pu(Encrypted, UStaticPublicKey, VStaticSecretKey),
                     {PlainText, NewJWE} =:= Decrypted andalso
                         {PlainText, NewJWE} =:=
-                            jose_jwe:block_decrypt({UStaticPublicKey, VStaticSecretKey, UEphemeralPublicKey}, CompactEncrypted);
+                            jose_jwe:block_decrypt(
+                                {UStaticPublicKey, VStaticSecretKey, UEphemeralPublicKey}, CompactEncrypted
+                            );
                 {{ecdh_es, _, _}, {{AlicePrivateJWK, _AlicePublicJWK}, {BobPrivateJWK, BobPublicJWK}}} ->
                     JWEMap = jose_jwe:to_map(JWE),
                     Encrypted = jose_jwk:box_encrypt_ecdh_es(PlainText, JWEMap, BobPublicJWK, AlicePrivateJWK),
