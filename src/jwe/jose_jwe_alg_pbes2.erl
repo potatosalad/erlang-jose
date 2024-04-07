@@ -176,7 +176,7 @@ next_cek(_Key, {ENCModule, ENC}, ALG=#jose_jwe_alg_pbes2{}) ->
 %% API functions
 %%====================================================================
 
--spec format_error(dynamic(), dynamic()) -> dynamic().
+-spec format_error(term(), term()) -> term().
 format_error(_Reason, [{_M, _F, _As, Info} | _]) ->
     ErrorInfo = proplists:get_value(error_info, Info, #{}),
     ErrorDescription1 = maps:get(cause, ErrorInfo),

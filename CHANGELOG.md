@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.11.8 (2024-04-07)
+
+* Fixes
+  * Removes use of `dynamic()` type spec so OTP 24 and OTP 25 are still supported for now.
+
 ## 1.11.7 (2024-04-07)
 
 * Security Patches
