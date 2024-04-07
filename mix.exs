@@ -52,10 +52,7 @@ defmodule JOSE.Mixfile do
       {:thoas, "~> 1.0", only: [:dev, :test]},
       {:ex_doc, "~> 0.30", only: :dev},
       {:earmark, "~> 1.4", only: :dev},
-      # TODO: Switch to released version once the following PRs are released:
-      # - https://github.com/jeremyjh/dialyxir/pull/526
-      # - https://github.com/jeremyjh/dialyxir/pull/527
-      {:dialyxir, github: "maennchen/dialyxir", branch: "master"}
+      {:dialyxir, "~> 1.4.3"}
     ]
   end
 
