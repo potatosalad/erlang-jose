@@ -1,5 +1,6 @@
-%% -*- mode: erlang; tab-width: 4; indent-tabs-mode: 1; st-rulers: [70] -*-
-%% vim: ts=4 sw=4 ft=erlang noet
+%% -*- mode: erlang; tab-width: 4; indent-tabs-mode: nil; st-rulers: [132] -*-
+%% vim: ts=4 sw=4 ft=erlang et
+%%% % @format
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
@@ -31,36 +32,36 @@
 %% jose_jws callbacks
 %%====================================================================
 
-from_map(F = #{ <<"alg">> := <<"none">> }) ->
-	{none, maps:remove(<<"alg">>, F)}.
+from_map(F = #{<<"alg">> := <<"none">>}) ->
+    {none, maps:remove(<<"alg">>, F)}.
 
 to_map(none, F) ->
-	F#{ <<"alg">> => <<"none">> }.
+    F#{<<"alg">> => <<"none">>}.
 
 %%====================================================================
 %% jose_jws_alg callbacks
 %%====================================================================
 
 generate_key(none, _Fields) ->
-	erlang:error(not_supported).
+    erlang:error(not_supported).
 
 sign(_Key, _Message, none) ->
-	case jose_jwa:unsecured_signing() of
-		true ->
-			<<>>;
-		_ ->
-			erlang:error(not_supported)
-	end.
+    case jose_jwa:unsecured_signing() of
+        true ->
+            <<>>;
+        _ ->
+            erlang:error(not_supported)
+    end.
 
 verify(_Key, _Message, <<>>, none) ->
-	case jose_jwa:unsecured_signing() of
-		true ->
-			true;
-		_ ->
-			false
-	end;
+    case jose_jwa:unsecured_signing() of
+        true ->
+            true;
+        _ ->
+            false
+    end;
 verify(_Key, _Message, _Signature, none) ->
-	false.
+    false.
 
 %%====================================================================
 %% API functions

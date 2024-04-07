@@ -41,6 +41,7 @@ defmodule JOSE.Mixfile do
     [
       # {:cutkey, github: "potatosalad/cutkey", only: [:dev, :test]},
       {:jason, "~> 1.4", only: [:dev, :test]},
+      {:jiffy, "~> 1.1.1", only: [:dev, :test]},
       {:jsone, "~> 1.8", only: [:dev, :test]},
       {:jsx, "~> 3.1", only: [:dev, :test]},
       # {:keccakf1600, "~> 2.0.0", only: [:dev, :test]},

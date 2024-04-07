@@ -1,5 +1,6 @@
-%% -*- mode: erlang; tab-width: 4; indent-tabs-mode: 1; st-rulers: [70] -*-
-%% vim: ts=4 sw=4 ft=erlang noet
+%% -*- mode: erlang; tab-width: 4; indent-tabs-mode: nil; st-rulers: [132] -*-
+%% vim: ts=4 sw=4 ft=erlang et
+%%% % @format
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
@@ -27,32 +28,32 @@
 %%====================================================================
 
 block_decrypt(Cipher, _Key, _CipherText) ->
-	erlang:error({cipher_unsupported, [Cipher]}).
+    erlang:error({cipher_unsupported, [Cipher]}).
 
 block_decrypt(Cipher, _Key, _IV, _CipherText) ->
-	erlang:error({cipher_unsupported, [Cipher]}).
+    erlang:error({cipher_unsupported, [Cipher]}).
 
 block_encrypt(Cipher, _Key, _PlainText) ->
-	erlang:error({cipher_unsupported, [Cipher]}).
+    erlang:error({cipher_unsupported, [Cipher]}).
 
 block_encrypt(Cipher, _Key, _IV, _PlainText) ->
-	erlang:error({cipher_unsupported, [Cipher]}).
+    erlang:error({cipher_unsupported, [Cipher]}).
 
 %%====================================================================
 %% Public Key API functions
 %%====================================================================
 
 decrypt_private(_CipherText, _PrivateKey, Options) ->
-	erlang:error({crypt_unsupported, [Options]}).
+    erlang:error({crypt_unsupported, [Options]}).
 
 encrypt_public(_PlainText, _PublicKey, Options) ->
-	erlang:error({crypt_unsupported, [Options]}).
+    erlang:error({crypt_unsupported, [Options]}).
 
 sign(_Message, _DigestType, _PrivateKey, Options) ->
-	erlang:error({sign_unsupported, [Options]}).
+    erlang:error({sign_unsupported, [Options]}).
 
 verify(_Message, _DigestType, _Signature, _PublicKey, Options) ->
-	erlang:error({sign_unsupported, [Options]}).
+    erlang:error({sign_unsupported, [Options]}).
 
 %%%-------------------------------------------------------------------
 %%% Internal functions

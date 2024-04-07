@@ -1,5 +1,6 @@
-%% -*- mode: erlang; tab-width: 4; indent-tabs-mode: 1; st-rulers: [70] -*-
-%% vim: ts=4 sw=4 ft=erlang noet
+%% -*- mode: erlang; tab-width: 4; indent-tabs-mode: nil; st-rulers: [132] -*-
+%% vim: ts=4 sw=4 ft=erlang et
+%%% % @format
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
@@ -11,16 +12,14 @@
 -module(jose_jwe_zip).
 -behaviour(jose_jwe).
 
--callback compress(Uncompressed, ZIP) -> Compressed
-	when
-		Uncompressed :: iodata(),
-		ZIP          :: any(),
-		Compressed   :: iodata().
--callback uncompress(Compressed, ZIP) -> Uncompressed
-	when
-		Compressed   :: iodata(),
-		ZIP          :: any(),
-		Uncompressed :: iodata().
+-callback compress(Uncompressed, ZIP) -> Compressed when
+    Uncompressed :: iodata(),
+    ZIP :: any(),
+    Compressed :: iodata().
+-callback uncompress(Compressed, ZIP) -> Uncompressed when
+    Compressed :: iodata(),
+    ZIP :: any(),
+    Uncompressed :: iodata().
 
 %% jose_jwe callbacks
 -export([from_map/1]).
@@ -42,38 +41,38 @@
 %% jose_jwe callbacks
 %%====================================================================
 
-from_map(Fields = #{ <<"zip">> := <<"DEF">> }) ->
-	{?DEF, maps:remove(<<"zip">>, Fields)}.
+from_map(Fields = #{<<"zip">> := <<"DEF">>}) ->
+    {?DEF, maps:remove(<<"zip">>, Fields)}.
 
 to_map(?DEF, Fields) ->
-	Fields#{ <<"zip">> => <<"DEF">> }.
+    Fields#{<<"zip">> => <<"DEF">>}.
 
 %%====================================================================
 %% jose_jwe_zip callbacks
 %%====================================================================
 
 compress(Uncompressed, zlib) ->
-	Z = zlib:open(),
-	ok = zlib:deflateInit(Z, default, deflated, -15, 8, default),
-	Compressed = zlib:deflate(Z, Uncompressed, finish),
-	ok = zlib:deflateEnd(Z),
-	ok = zlib:close(Z),
-	iolist_to_binary(Compressed).
+    Z = zlib:open(),
+    ok = zlib:deflateInit(Z, default, deflated, -15, 8, default),
+    Compressed = zlib:deflate(Z, Uncompressed, finish),
+    ok = zlib:deflateEnd(Z),
+    ok = zlib:close(Z),
+    iolist_to_binary(Compressed).
 
 uncompress(Compressed, zlib) ->
-	Z = zlib:open(),
-	ok = zlib:inflateInit(Z, -15),
-	Uncompressed = zlib:inflate(Z, Compressed),
-	ok = zlib:inflateEnd(Z),
-	ok = zlib:close(Z),
-	iolist_to_binary(Uncompressed).
+    Z = zlib:open(),
+    ok = zlib:inflateInit(Z, -15),
+    Uncompressed = zlib:inflate(Z, Compressed),
+    ok = zlib:inflateEnd(Z),
+    ok = zlib:close(Z),
+    iolist_to_binary(Uncompressed).
 
 %%====================================================================
 %% API functions
 %%====================================================================
 
 zip_supported() ->
-	[zlib].
+    [zlib].
 
 %%%-------------------------------------------------------------------
 %%% Internal functions

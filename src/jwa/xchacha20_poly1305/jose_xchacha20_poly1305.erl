@@ -1,5 +1,6 @@
-%% -*- mode: erlang; tab-width: 4; indent-tabs-mode: 1; st-rulers: [70] -*-
-%% vim: ts=4 sw=4 ft=erlang noet
+%% -*- mode: erlang; tab-width: 4; indent-tabs-mode: nil; st-rulers: [132] -*-
+%% vim: ts=4 sw=4 ft=erlang et
+%%% % @format
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
@@ -10,90 +11,197 @@
 %%%-------------------------------------------------------------------
 -module(jose_xchacha20_poly1305).
 
--behaviour(jose_block_encryptor).
+-include("jose_support.hrl").
+
+-behaviour(jose_support).
 
 %% Types
 -type additional_authenticated_data() :: binary().
 -type cipher_text() :: binary().
 -type message() :: binary().
 -type plain_text() :: binary().
--type poly1305_mac() :: <<_:128>>.
--type xchacha20_key() :: <<_:256>>.
--type xchacha20_nonce() :: <<_:192>>.
+-type xchacha20_poly1305_mac() :: <<_:128>>.
+-type xchacha20_poly1305_nonce() :: <<_:192>>.
+-type xchacha20_poly1305_key() :: <<_:256>>.
 
 -export_type([
-	additional_authenticated_data/0,
-	cipher_text/0,
-	message/0,
-	plain_text/0,
-	poly1305_mac/0,
-	xchacha20_key/0,
-	xchacha20_nonce/0
+    additional_authenticated_data/0,
+    cipher_text/0,
+    message/0,
+    plain_text/0,
+    xchacha20_poly1305_mac/0,
+    xchacha20_poly1305_nonce/0,
+    xchacha20_poly1305_key/0
 ]).
 
--callback decrypt(CipherText, CipherTag, AAD, IV, Key) -> PlainText | error
-	when
-		CipherText :: cipher_text(),
-		CipherTag  :: poly1305_mac(),
-		AAD        :: additional_authenticated_data(),
-		IV         :: xchacha20_nonce(),
-		Key        :: xchacha20_key(),
-		PlainText  :: binary().
--callback encrypt(PlainText, AAD, IV, Key) -> {CipherText, CipherTag}
-	when
-		PlainText  :: plain_text(),
-		AAD        :: additional_authenticated_data(),
-		IV         :: xchacha20_nonce(),
-		Key        :: xchacha20_key(),
-		CipherText :: cipher_text(),
-		CipherTag  :: poly1305_mac().
--callback authenticate(Message, Key, Nonce) -> MAC
-	when
-		Message :: message(),
-		Key     :: xchacha20_key(),
-		Nonce   :: xchacha20_nonce(),
-		MAC     :: poly1305_mac().
--callback verify(MAC, Message, Key, Nonce) -> boolean()
-	when
-		MAC     :: poly1305_mac(),
-		Message :: message(),
-		Key     :: xchacha20_key(),
-		Nonce   :: xchacha20_nonce().
+%% Callbacks
+-callback xchacha20_poly1305_decrypt(CipherText, CipherTag, AAD, Nonce, Key) -> PlainText | error when
+    CipherText :: jose_xchacha20_poly1305:cipher_text(),
+    CipherTag :: jose_xchacha20_poly1305:xchacha20_poly1305_mac(),
+    AAD :: jose_xchacha20_poly1305:additional_authenticated_data(),
+    Nonce :: jose_xchacha20_poly1305:xchacha20_poly1305_nonce(),
+    Key :: jose_xchacha20_poly1305:xchacha20_poly1305_key(),
+    PlainText :: jose_xchacha20_poly1305:plain_text().
+-callback xchacha20_poly1305_encrypt(PlainText, AAD, Nonce, Key) -> {CipherText, CipherTag} when
+    PlainText :: jose_xchacha20_poly1305:plain_text(),
+    AAD :: jose_xchacha20_poly1305:additional_authenticated_data(),
+    Nonce :: jose_xchacha20_poly1305:xchacha20_poly1305_nonce(),
+    Key :: jose_xchacha20_poly1305:xchacha20_poly1305_key(),
+    CipherText :: jose_xchacha20_poly1305:cipher_text(),
+    CipherTag :: jose_xchacha20_poly1305:xchacha20_poly1305_mac().
+-callback xchacha20_poly1305_authenticate(Message, Nonce, Key) -> MAC when
+    Message :: jose_xchacha20_poly1305:message(),
+    Nonce :: jose_xchacha20_poly1305:xchacha20_poly1305_nonce(),
+    Key :: jose_xchacha20_poly1305:xchacha20_poly1305_key(),
+    MAC :: jose_xchacha20_poly1305:xchacha20_poly1305_mac().
+-callback xchacha20_poly1305_verify(MAC, Message, Nonce, Key) -> boolean() when
+    MAC :: jose_xchacha20_poly1305:xchacha20_poly1305_mac(),
+    Message :: jose_xchacha20_poly1305:message(),
+    Nonce :: jose_xchacha20_poly1305:xchacha20_poly1305_nonce(),
+    Key :: jose_xchacha20_poly1305:xchacha20_poly1305_key().
 
-%% jose_block_encryptor callbacks
--export([block_decrypt/4]).
--export([block_encrypt/4]).
+-optional_callbacks([
+    xchacha20_poly1305_decrypt/5,
+    xchacha20_poly1305_encrypt/4,
+    xchacha20_poly1305_authenticate/3,
+    xchacha20_poly1305_verify/4
+]).
+
+%% jose_support callbacks
+-export([
+    support_info/0,
+    support_check/3
+]).
 %% jose_xchacha20_poly1305 callbacks
--export([decrypt/5]).
--export([encrypt/4]).
--export([authenticate/3]).
--export([verify/4]).
+-export([
+    xchacha20_poly1305_decrypt/5,
+    xchacha20_poly1305_encrypt/4,
+    xchacha20_poly1305_authenticate/3,
+    xchacha20_poly1305_verify/4
+]).
 
 %% Macros
--define(JOSE_XCHACHA20_POLY1305, (jose:xchacha20_poly1305_module())).
+-define(TV_PlainText(), <<"abcdefghijklmnopqrstuvwxyz">>).
+-define(TV_AAD(), <<"0123456789">>).
+-define(TV_XChaCha20_Poly1305_Nonce(), ?b16d("000000000000000000000000000000000000000000000000")).
+-define(TV_XChaCha20_Poly1305_Key(), ?b16d("0000000000000000000000000000000000000000000000000000000000000000")).
+-define(TV_XChaCha20_Poly1305_CipherText(), ?b16d("19fcf5ed8046ea17b08b98a9d85a70389e6ad24a34ffefd5a3a7")).
+-define(TV_XChaCha20_Poly1305_CipherTag(), ?b16d("b91ed45dc350f05f7fafa5a07169504b")).
+% 2 x 128-bit AES blocks
+-define(TV_Message(), <<"abcdefghijklmnopqrstuvwxyz012345">>).
+-define(TV_XChaCha20_Poly1305_MAC(), ?b16d("42391ecd1b705e19048692c1cc757a8f")).
 
 %%====================================================================
-%% jose_block_encryptor callbacks
+%% jose_support callbacks
 %%====================================================================
 
-block_decrypt({xchacha20_poly1305, 256}, Key, IV, {AAD, CipherText, CipherTag}) ->
-	decrypt(CipherText, CipherTag, AAD, IV, Key).
+-spec support_info() -> jose_support:info().
+support_info() ->
+    #{
+        stateful => [],
+        callbacks => [
+            {{xchacha20_poly1305_decrypt, 5}, [
+                {jose_chacha20_poly1305, [{chacha20_poly1305_decrypt, 5}]}, {jose_hchacha20, [{hchacha20_subkey, 2}]}
+            ]},
+            {{xchacha20_poly1305_encrypt, 4}, [
+                {jose_chacha20_poly1305, [{chacha20_poly1305_encrypt, 4}]}, {jose_hchacha20, [{hchacha20_subkey, 2}]}
+            ]},
+            {{xchacha20_poly1305_authenticate, 3}, [
+                {jose_chacha20_poly1305, [{chacha20_poly1305_authenticate, 3}]}, {jose_hchacha20, [{hchacha20_subkey, 2}]}
+            ]},
+            {{xchacha20_poly1305_verify, 4}, [
+                {jose_chacha20_poly1305, [{chacha20_poly1305_verify, 4}]}, {jose_hchacha20, [{hchacha20_subkey, 2}]}
+            ]}
+        ]
+    }.
 
-block_encrypt({xchacha20_poly1305, 256}, Key, IV, {AAD, PlainText}) ->
-	encrypt(PlainText, AAD, IV, Key).
+-spec support_check(Module :: module(), FunctionName :: jose_support:function_name(), Arity :: arity()) ->
+    jose_support:support_check_result().
+support_check(Module, xchacha20_poly1305_decrypt, 5) ->
+    CipherText = ?TV_XChaCha20_Poly1305_CipherText(),
+    CipherTag = ?TV_XChaCha20_Poly1305_CipherTag(),
+    AAD = ?TV_AAD(),
+    Nonce = ?TV_XChaCha20_Poly1305_Nonce(),
+    Key = ?TV_XChaCha20_Poly1305_Key(),
+    PlainText = ?TV_PlainText(),
+    ?expect(PlainText, Module, xchacha20_poly1305_decrypt, [CipherText, CipherTag, AAD, Nonce, Key]);
+support_check(Module, xchacha20_poly1305_encrypt, 4) ->
+    PlainText = ?TV_PlainText(),
+    AAD = ?TV_AAD(),
+    Nonce = ?TV_XChaCha20_Poly1305_Nonce(),
+    Key = ?TV_XChaCha20_Poly1305_Key(),
+    CipherText = ?TV_XChaCha20_Poly1305_CipherText(),
+    CipherTag = ?TV_XChaCha20_Poly1305_CipherTag(),
+    ?expect({CipherText, CipherTag}, Module, xchacha20_poly1305_encrypt, [PlainText, AAD, Nonce, Key]);
+support_check(Module, xchacha20_poly1305_authenticate, 3) ->
+    Message = ?TV_Message(),
+    Nonce = ?TV_XChaCha20_Poly1305_Nonce(),
+    Key = ?TV_XChaCha20_Poly1305_Key(),
+    MAC = ?TV_XChaCha20_Poly1305_MAC(),
+    ?expect(MAC, Module, xchacha20_poly1305_authenticate, [Message, Nonce, Key]);
+support_check(Module, xchacha20_poly1305_verify, 4) ->
+    MAC = ?TV_XChaCha20_Poly1305_MAC(),
+    Message = ?TV_Message(),
+    Nonce = ?TV_XChaCha20_Poly1305_Nonce(),
+    Key = ?TV_XChaCha20_Poly1305_Key(),
+    ?expect(true, Module, xchacha20_poly1305_verify, [MAC, Message, Nonce, Key]).
 
 %%====================================================================
 %% jose_xchacha20_poly1305 callbacks
 %%====================================================================
 
-decrypt(CipherText, CipherTag, AAD, IV, CEK) ->
-	?JOSE_XCHACHA20_POLY1305:decrypt(CipherText, CipherTag, AAD, IV, CEK).
+-spec xchacha20_poly1305_decrypt(CipherText, CipherTag, AAD, Nonce, Key) -> PlainText | error when
+    CipherText :: jose_xchacha20_poly1305:cipher_text(),
+    CipherTag :: jose_xchacha20_poly1305:xchacha20_poly1305_mac(),
+    AAD :: jose_xchacha20_poly1305:additional_authenticated_data(),
+    Nonce :: jose_xchacha20_poly1305:xchacha20_poly1305_nonce(),
+    Key :: jose_xchacha20_poly1305:xchacha20_poly1305_key(),
+    PlainText :: jose_xchacha20_poly1305:plain_text().
+xchacha20_poly1305_decrypt(CipherText, CipherTag, AAD, Nonce, Key) when
+    is_binary(CipherText) andalso
+        bit_size(CipherTag) =:= 128 andalso
+        is_binary(AAD) andalso
+        bit_size(Nonce) =:= 192 andalso
+        bit_size(Key) =:= 256
+->
+    ?resolve([CipherText, CipherTag, AAD, Nonce, Key]).
 
-encrypt(PlainText, AAD, IV, CEK) ->
-	?JOSE_XCHACHA20_POLY1305:encrypt(PlainText, AAD, IV, CEK).
+-spec xchacha20_poly1305_encrypt(PlainText, AAD, Nonce, Key) -> {CipherText, CipherTag} when
+    PlainText :: jose_xchacha20_poly1305:plain_text(),
+    AAD :: jose_xchacha20_poly1305:additional_authenticated_data(),
+    Nonce :: jose_xchacha20_poly1305:xchacha20_poly1305_nonce(),
+    Key :: jose_xchacha20_poly1305:xchacha20_poly1305_key(),
+    CipherText :: jose_xchacha20_poly1305:cipher_text(),
+    CipherTag :: jose_xchacha20_poly1305:xchacha20_poly1305_mac().
+xchacha20_poly1305_encrypt(PlainText, AAD, Nonce, Key) when
+    is_binary(PlainText) andalso
+        is_binary(AAD) andalso
+        bit_size(Nonce) =:= 192 andalso
+        bit_size(Key) =:= 256
+->
+    ?resolve([PlainText, AAD, Nonce, Key]).
 
-authenticate(Message, Key, Nonce) ->
-	?JOSE_XCHACHA20_POLY1305:authenticate(Message, Key, Nonce).
+-spec xchacha20_poly1305_authenticate(Message, Nonce, Key) -> MAC when
+    Message :: jose_xchacha20_poly1305:message(),
+    Nonce :: jose_xchacha20_poly1305:xchacha20_poly1305_nonce(),
+    Key :: jose_xchacha20_poly1305:xchacha20_poly1305_key(),
+    MAC :: jose_xchacha20_poly1305:xchacha20_poly1305_mac().
+xchacha20_poly1305_authenticate(Message, Nonce, Key) when
+    is_binary(Message) andalso
+        bit_size(Nonce) =:= 192 andalso
+        bit_size(Key) =:= 256
+->
+    ?resolve([Message, Nonce, Key]).
 
-verify(MAC, Message, Key, Nonce) ->
-	?JOSE_XCHACHA20_POLY1305:verify(MAC, Message, Key, Nonce).
+-spec xchacha20_poly1305_verify(MAC, Message, Nonce, Key) -> boolean() when
+    MAC :: jose_xchacha20_poly1305:xchacha20_poly1305_mac(),
+    Message :: jose_xchacha20_poly1305:message(),
+    Nonce :: jose_xchacha20_poly1305:xchacha20_poly1305_nonce(),
+    Key :: jose_xchacha20_poly1305:xchacha20_poly1305_key().
+xchacha20_poly1305_verify(MAC, Message, Nonce, Key) when
+    is_binary(MAC) andalso
+        is_binary(Message) andalso
+        bit_size(Nonce) =:= 192 andalso
+        bit_size(Key) =:= 256
+->
+    ?resolve([MAC, Message, Nonce, Key]).
