@@ -80,17 +80,17 @@ docker-test-build::
 		"${DOCKER_OTP_VERSION}" \
 		sh -c 'cd jose && make test-build'
 
-.PHONY: erlfmt erlfmt-check distclean-erlfmt
+.PHONY: erlfmt erlfmt-check distclean-erlfmt format
 
 # Configuration.
-ERLFMT_VERSION ?= 1.1.0
+ERLFMT_VERSION ?= 1.3.0
 
 ERLFMT ?= $(CURDIR)/erlfmt
 export ERLFMT
 
 ERLFMT_URL ?= https://github.com/WhatsApp/erlfmt/archive/refs/tags/v$(ERLFMT_VERSION).tar.gz
 ERLFMT_OPTS ?=
-ERLFMT_BUILD_DIR ?= $(CURDIR)/_build
+ERLFMT_BUILD_DIR ?= $(CURDIR)/_erlfmt_build
 ERLFMT_CODE_ARCHIVE = $(ERLFMT_VERSION).tar.gz
 
 ERLFMT_REBAR3_URL ?= https://s3.amazonaws.com/rebar3/rebar3
@@ -128,14 +128,80 @@ endif
 	$(verbose) chmod +x $(ERLFMT)
 	$(verbose) rm -rf $(ERLFMT_BUILD_DIR)/erlfmt-$(ERLFMT_VERSION)
 	$(verbose) rm $(ERLFMT_BUILD_DIR)/$(ERLFMT_CODE_ARCHIVE)
-	$(verbose) rm --force $(ERLFMT_BUILD_DIR)/rebar3
-	$(verbose) rmdir --ignore-fail-on-non-empty $(ERLFMT_BUILD_DIR)
+	$(verbose) rm -f $(ERLFMT_BUILD_DIR)/rebar3
+	$(verbose) rm -rf $(ERLFMT_BUILD_DIR)
 
 erlfmt: $(ERLFMT)
-	$(verbose) $(ERLFMT) --write --require-pragma --print-width=132 '{src,include,test}/**/*.{hrl,erl,app.src}' rebar.config
+	$(verbose) $(ERLFMT) --verbose --write --require-pragma --print-width=120 \
+		'{src,include,test}/**/*.{hrl,erl,app.src}' \
+		'{rebar.config,rebar.config.script}'
 
 erlfmt-check: $(ERLFMT)
-	$(verbose) $(ERLFMT) --check --require-pragma --print-width=132 '{src,include,test}/**/*.{hrl,erl,app.src}' rebar.config
+	$(verbose) $(ERLFMT) --check --require-pragma --print-width=120 \
+		'{src,include,test}/**/*.{hrl,erl,app.src}' \
+		'{rebar.config,rebar.config.script}'
 
 distclean-erlfmt:
 	$(gen_verbose) rm -rf $(ERLFMT)
+
+format: $(ERLFMT)
+	$(verbose) $(MAKE) erlfmt
+
+.PHONY: eqwalizer distclean-eqwalizer
+
+# Configuration.
+EQWALIZER_VERSION ?= 0.25.3
+
+ELP ?= $(CURDIR)/elp
+export ELP
+
+ifeq ($(PLATFORM),darwin)
+	EQWALIZER_URL ?= https://github.com/WhatsApp/eqwalizer/releases/download/v$(EQWALIZER_VERSION)/elp-macos.tar.gz
+else
+	EQWALIZER_URL ?= https://github.com/WhatsApp/eqwalizer/releases/download/v$(EQWALIZER_VERSION)/elp-linux.tar.gz
+endif
+
+EQWALIZER_OPTS ?=
+EQWALIZER_BUILD_DIR ?= $(CURDIR)/_eqwalizer_build
+EQWALIZER_ARCHIVE = $(EQWALIZER_VERSION).tar.gz
+
+# Core targets.
+
+help::
+	$(verbose) printf "%s\n" "" \
+		"eqwalizer targets:" \
+		"  eqwalizer    Run 'elp eqwalize-all' on the current project"
+
+distclean:: distclean-eqwalizer
+
+# Plugin-specific targets.
+
+$(ELP):
+	$(verbose) mkdir -p $(EQWALIZER_BUILD_DIR)
+	$(verbose) echo "Downloading eqwalizer from: "$(EQWALIZER_URL)
+	$(verbose) $(call core_http_get,$(EQWALIZER_BUILD_DIR)/$(EQWALIZER_ARCHIVE),$(EQWALIZER_URL))
+	$(verbose) cd $(EQWALIZER_BUILD_DIR) && \
+		tar -xzf $(EQWALIZER_ARCHIVE)
+	$(gen_verbose) cp $(EQWALIZER_BUILD_DIR)/elp $(ELP)
+	$(verbose) chmod +x $(ELP)
+	$(verbose) rm -rf $(EQWALIZER_BUILD_DIR)
+
+eqwalizer: $(ELP)
+	$(verbose) $(ELP) eqwalize-all
+
+distclean-eqwalizer:
+	$(gen_verbose) rm -rf $(ELP)
+
+.PHONY: lint lint-dialyzer lint-eqwalizer lint-format lint-xref
+
+lint:: lint-format lint-eqwalizer lint-xref lint-dialyzer
+
+lint-dialyzer:
+	$(verbose) rebar3 dialyzer
+
+lint-eqwalizer: eqwalizer
+
+lint-format: erlfmt-check
+
+lint-xref:
+	$(verbose) rebar3 xref

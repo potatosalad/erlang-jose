@@ -52,6 +52,8 @@ _build
 .vscode/
 *.iml
 rebar3.crashdump
+/elp
+/erlfmt
 /rebar3
 
 # Other test artifacts.
