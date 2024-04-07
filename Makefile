@@ -1,6 +1,6 @@
 PROJECT = jose
 PROJECT_DESCRIPTION = JSON Object Signing and Encryption (JOSE) for Erlang and Elixir.
-PROJECT_VERSION = 1.11.6
+PROJECT_VERSION = 1.11.7
 
 TEST_DEPS = jiffy jsone jsx libdecaf libsodium ojson proper thoas
 

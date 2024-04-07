@@ -23,6 +23,8 @@
 -export([encode/1]).
 -export([json_module/0]).
 -export([json_module/1]).
+-export([pbes2_count_maximum/0]).
+-export([pbes2_count_maximum/1]).
 -export([sha3_module/0]).
 -export([sha3_module/1]).
 -export([unsecured_signing/0]).
@@ -84,17 +86,27 @@ json_module() ->
 json_module(JSONModule) when is_atom(JSONModule) ->
 	?MAYBE_START_JOSE(jose_server:json_module(JSONModule)).
 
+-spec pbes2_count_maximum() -> non_neg_integer().
+pbes2_count_maximum() ->
+	?MAYBE_START_JOSE(ets:lookup_element(?TAB, pbes2_count_maximum, 2)).
+
+-spec pbes2_count_maximum(PBES2CountMaximum) -> ok when PBES2CountMaximum :: non_neg_integer().
+pbes2_count_maximum(PBES2CountMaximum) when is_integer(PBES2CountMaximum) andalso PBES2CountMaximum >= 0 ->
+	?MAYBE_START_JOSE(jose_server:pbes2_count_maximum(PBES2CountMaximum)).
+
 sha3_module() ->
 	?MAYBE_START_JOSE(ets:lookup_element(?TAB, sha3_module, 2)).
 
 sha3_module(SHA3Module) when is_atom(SHA3Module) ->
 	?MAYBE_START_JOSE(jose_server:sha3_module(SHA3Module)).
 
+-spec unsecured_signing() -> boolean().
 unsecured_signing() ->
-	jose_jwa:unsecured_signing().
+	?MAYBE_START_JOSE(ets:lookup_element(?TAB, unsecured_signing, 2)).
 
-unsecured_signing(Boolean) when is_boolean(Boolean) ->
-	jose_jwa:unsecured_signing(Boolean).
+-spec unsecured_signing(UnsecuredSigning) -> ok when UnsecuredSigning :: boolean().
+unsecured_signing(UnsecuredSigning) when is_boolean(UnsecuredSigning) ->
+	?MAYBE_START_JOSE(jose_server:unsecured_signing(UnsecuredSigning)).
 
 xchacha20_poly1305_module() ->
 	?MAYBE_START_JOSE(ets:lookup_element(?TAB, xchacha20_poly1305_module, 2)).

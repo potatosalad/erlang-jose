@@ -22,7 +22,9 @@
 -export([curve25519_module/1]).
 -export([curve448_module/1]).
 -export([json_module/1]).
+-export([pbes2_count_maximum/1]).
 -export([sha3_module/1]).
+-export([unsecured_signing/1]).
 -export([xchacha20_poly1305_module/1]).
 
 %% gen_server callbacks
@@ -72,8 +74,16 @@ curve448_module(Curve448Module) when is_atom(Curve448Module) ->
 json_module(JSONModule) when is_atom(JSONModule) ->
 	gen_server:call(?SERVER, {json_module, JSONModule}).
 
+-spec pbes2_count_maximum(PBES2CountMaximum) -> ok when PBES2CountMaximum :: non_neg_integer().
+pbes2_count_maximum(PBES2CountMaximum) when is_integer(PBES2CountMaximum) andalso PBES2CountMaximum >= 0 ->
+	gen_server:call(?SERVER, {pbes2_count_maximum, PBES2CountMaximum}).
+
 sha3_module(SHA3Module) when is_atom(SHA3Module) ->
 	gen_server:call(?SERVER, {sha3_module, SHA3Module}).
+
+-spec unsecured_signing(UnsecuredSigning) -> ok when UnsecuredSigning :: boolean().
+unsecured_signing(UnsecuredSigning) when is_boolean(UnsecuredSigning) ->
+	gen_server:call(?SERVER, {unsecured_signing, UnsecuredSigning}).
 
 xchacha20_poly1305_module(XChaCha20Poly1305Module) when is_atom(XChaCha20Poly1305Module) ->
 	gen_server:call(?SERVER, {xchacha20_poly1305_module, XChaCha20Poly1305Module}).
@@ -114,9 +124,19 @@ handle_call({json_module, M}, _From, State) ->
 	JSONModule = check_json_module(M),
 	true = ets:insert(?TAB, {json_module, JSONModule}),
 	{reply, ok, State};
+handle_call({pbes2_count_maximum, PBES2CountMaximum}, _From, State) when is_integer(PBES2CountMaximum) andalso PBES2CountMaximum >= 0 ->
+	true = ets:insert(?TAB, {pbes2_count_maximum, PBES2CountMaximum}),
+	{reply, ok, State};
 handle_call({sha3_module, M}, _From, State) ->
 	SHA3Module = check_sha3_module(M),
 	true = ets:insert(?TAB, {sha3_module, SHA3Module}),
+	{reply, ok, State};
+handle_call({unsecured_signing, UnsecuredSigning}, _From, State) when is_boolean(UnsecuredSigning) ->
+	true = ets:insert(?TAB, {unsecured_signing, UnsecuredSigning}),
+	_ = spawn(fun() ->
+		_ = catch jose_jwa:unsecured_signing(UnsecuredSigning),
+		exit(normal)
+	end),
 	{reply, ok, State};
 handle_call({xchacha20_poly1305_module, M}, _From, State) ->
 	XChaCha20Poly1305Module = check_xchacha20_poly1305_module(M),
@@ -149,8 +169,18 @@ code_change(_OldVsn, State, _Extra) ->
 
 %% @private
 support_check() ->
+	PBES2CountMaximum =
+		case application:get_env(jose, pbes2_count_maximum, 10000) of
+			V1 when is_integer(V1) andalso V1 >= 0 ->
+				V1
+		end,
+	UnsecuredSigning =
+		case application:get_env(jose, unsecured_signing, false) of
+			V2 when is_boolean(V2) ->
+				V2
+		end,
 	Fallback = ?CRYPTO_FALLBACK,
-	Entries = lists:flatten(lists:foldl(fun(Check, Acc) ->
+	Entries1 = lists:flatten(lists:foldl(fun(Check, Acc) ->
 		Check(Fallback, Acc)
 	end, [], [
 		fun check_sha3/2,
@@ -163,8 +193,13 @@ support_check() ->
 		fun check_crypto/2,
 		fun check_public_key/2
 	])),
+	Entries2 = [
+		{pbes2_count_maximum, PBES2CountMaximum},
+		{unsecured_signing, UnsecuredSigning}
+		| Entries1
+	],
 	true = ets:delete_all_objects(?TAB),
-	true = ets:insert(?TAB, Entries),
+	true = ets:insert(?TAB, Entries2),
 	ok.
 
 %%%-------------------------------------------------------------------

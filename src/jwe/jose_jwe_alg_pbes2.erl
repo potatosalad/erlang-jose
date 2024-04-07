@@ -23,6 +23,7 @@
 -export([key_encrypt/3]).
 -export([next_cek/3]).
 %% API
+-export([format_error/2]).
 -export([hmac_supported/0]).
 -export([wrap_supported/0]).
 
@@ -99,22 +100,22 @@ key_decrypt(Password, {_ENCModule, _ENC, EncryptedKey}, #jose_jwe_alg_pbes2{hmac
 		when is_binary(Password)
 		andalso is_binary(IV)
 		andalso is_binary(TAG) ->
-	{ok, DerivedKey} = jose_jwa_pkcs5:pbkdf2({hmac, HMAC}, Password, Salt, Iterations, (Bits div 8) + (Bits rem 8)),
+	{ok, DerivedKey} = pbkdf2({hmac, HMAC}, Password, Salt, Iterations, (Bits div 8) + (Bits rem 8)),
 	jose_jwa:block_decrypt({aes_gcm, Bits}, DerivedKey, IV, {<<>>, EncryptedKey, TAG});
 key_decrypt(Password, {_ENCModule, _ENC, EncryptedKey}, #jose_jwe_alg_pbes2{hmac=HMAC, salt=Salt, iter=Iterations, wrap=aes_kw, bits=Bits}) when is_binary(Password) ->
-	{ok, DerivedKey} = jose_jwa_pkcs5:pbkdf2({hmac, HMAC}, Password, Salt, Iterations, (Bits div 8) + (Bits rem 8)),
+	{ok, DerivedKey} = pbkdf2({hmac, HMAC}, Password, Salt, Iterations, (Bits div 8) + (Bits rem 8)),
 	jose_jwa_aes_kw:unwrap(EncryptedKey, DerivedKey);
 key_decrypt(Password, {_ENCModule, _ENC, EncryptedKey}, #jose_jwe_alg_pbes2{hmac=HMAC, salt=Salt, iter=Iterations, wrap=c20p_kw, bits=Bits, iv=IV, tag=TAG})
 		when is_binary(Password)
 		andalso is_binary(IV)
 		andalso is_binary(TAG) ->
-	{ok, DerivedKey} = jose_jwa_pkcs5:pbkdf2({hmac, HMAC}, Password, Salt, Iterations, (Bits div 8) + (Bits rem 8)),
+	{ok, DerivedKey} = pbkdf2({hmac, HMAC}, Password, Salt, Iterations, (Bits div 8) + (Bits rem 8)),
 	jose_jwa:block_decrypt({chacha20_poly1305, Bits}, DerivedKey, IV, {<<>>, EncryptedKey, TAG});
 key_decrypt(Password, {_ENCModule, _ENC, EncryptedKey}, #jose_jwe_alg_pbes2{hmac=HMAC, salt=Salt, iter=Iterations, wrap=xc20p_kw, bits=Bits, iv=IV, tag=TAG})
 		when is_binary(Password)
 		andalso is_binary(IV)
 		andalso is_binary(TAG) ->
-	{ok, DerivedKey} = jose_jwa_pkcs5:pbkdf2({hmac, HMAC}, Password, Salt, Iterations, (Bits div 8) + (Bits rem 8)),
+	{ok, DerivedKey} = pbkdf2({hmac, HMAC}, Password, Salt, Iterations, (Bits div 8) + (Bits rem 8)),
 	jose_jwa:block_decrypt({xchacha20_poly1305, Bits}, DerivedKey, IV, {<<>>, EncryptedKey, TAG});
 key_decrypt(#jose_jwk{kty={KTYModule, KTY}}, EncryptedKey, JWEPBES2=#jose_jwe_alg_pbes2{}) ->
 	key_decrypt(KTYModule:derive_key(KTY), EncryptedKey, JWEPBES2).
@@ -131,7 +132,7 @@ key_encrypt(Password, DecryptedKey, JWEPBES2=#jose_jwe_alg_pbes2{hmac=HMAC, salt
 		andalso is_binary(Salt)
 		andalso is_integer(Iterations)
 		andalso is_binary(IV) ->
-	{ok, DerivedKey} = jose_jwa_pkcs5:pbkdf2({hmac, HMAC}, Password, Salt, Iterations, (Bits div 8) + (Bits rem 8)),
+	{ok, DerivedKey} = pbkdf2({hmac, HMAC}, Password, Salt, Iterations, (Bits div 8) + (Bits rem 8)),
 	{CipherText, CipherTag} = jose_jwa:block_encrypt({aes_gcm, Bits}, DerivedKey, IV, {<<>>, DecryptedKey}),
 	{CipherText, JWEPBES2#jose_jwe_alg_pbes2{ tag = CipherTag }};
 key_encrypt(Password, DecryptedKey, JWEPBES2=#jose_jwe_alg_pbes2{hmac=HMAC, salt=Salt, iter=Iterations, wrap=aes_kw, bits=Bits})
@@ -139,7 +140,7 @@ key_encrypt(Password, DecryptedKey, JWEPBES2=#jose_jwe_alg_pbes2{hmac=HMAC, salt
 		andalso is_binary(DecryptedKey)
 		andalso is_binary(Salt)
 		andalso is_integer(Iterations) ->
-	{ok, DerivedKey} = jose_jwa_pkcs5:pbkdf2({hmac, HMAC}, Password, Salt, Iterations, (Bits div 8) + (Bits rem 8)),
+	{ok, DerivedKey} = pbkdf2({hmac, HMAC}, Password, Salt, Iterations, (Bits div 8) + (Bits rem 8)),
 	{jose_jwa_aes_kw:wrap(DecryptedKey, DerivedKey), JWEPBES2};
 key_encrypt(Password, DecryptedKey, JWEPBES2=#jose_jwe_alg_pbes2{hmac=HMAC, salt=Salt, iter=Iterations, wrap=c20p_kw, bits=Bits, iv=IV})
 		when is_binary(Password)
@@ -147,7 +148,7 @@ key_encrypt(Password, DecryptedKey, JWEPBES2=#jose_jwe_alg_pbes2{hmac=HMAC, salt
 		andalso is_binary(Salt)
 		andalso is_integer(Iterations)
 		andalso is_binary(IV) ->
-	{ok, DerivedKey} = jose_jwa_pkcs5:pbkdf2({hmac, HMAC}, Password, Salt, Iterations, (Bits div 8) + (Bits rem 8)),
+	{ok, DerivedKey} = pbkdf2({hmac, HMAC}, Password, Salt, Iterations, (Bits div 8) + (Bits rem 8)),
 	{CipherText, CipherTag} = jose_jwa:block_encrypt({chacha20_poly1305, Bits}, DerivedKey, IV, {<<>>, DecryptedKey}),
 	{CipherText, JWEPBES2#jose_jwe_alg_pbes2{ tag = CipherTag }};
 key_encrypt(Password, DecryptedKey, JWEPBES2=#jose_jwe_alg_pbes2{hmac=HMAC, salt=Salt, iter=Iterations, wrap=xc20p_kw, bits=Bits, iv=IV})
@@ -156,7 +157,7 @@ key_encrypt(Password, DecryptedKey, JWEPBES2=#jose_jwe_alg_pbes2{hmac=HMAC, salt
 		andalso is_binary(Salt)
 		andalso is_integer(Iterations)
 		andalso is_binary(IV) ->
-	{ok, DerivedKey} = jose_jwa_pkcs5:pbkdf2({hmac, HMAC}, Password, Salt, Iterations, (Bits div 8) + (Bits rem 8)),
+	{ok, DerivedKey} = pbkdf2({hmac, HMAC}, Password, Salt, Iterations, (Bits div 8) + (Bits rem 8)),
 	{CipherText, CipherTag} = jose_jwa:block_encrypt({xchacha20_poly1305, Bits}, DerivedKey, IV, {<<>>, DecryptedKey}),
 	{CipherText, JWEPBES2#jose_jwe_alg_pbes2{ tag = CipherTag }};
 key_encrypt(Password, DecryptedKey, JWEPBES2=#jose_jwe_alg_pbes2{wrap=aes_gcm_kw, iv=undefined}) when is_binary(Password) ->
@@ -174,6 +175,12 @@ next_cek(_Key, {ENCModule, ENC}, ALG=#jose_jwe_alg_pbes2{}) ->
 %%====================================================================
 %% API functions
 %%====================================================================
+
+-spec format_error(dynamic(), dynamic()) -> dynamic().
+format_error(_Reason, [{_M, _F, _As, Info} | _]) ->
+    ErrorInfo = proplists:get_value(error_info, Info, #{}),
+    ErrorDescription1 = maps:get(cause, ErrorInfo),
+    ErrorDescription1.
 
 hmac_supported() ->
 	[sha256, sha384, sha512].
@@ -196,6 +203,21 @@ from_map_pbes2(F=#{ <<"tag">> := TAG }, H) ->
 	from_map_pbes2(maps:remove(<<"tag">>, F), H#jose_jwe_alg_pbes2{ tag = jose_jwa_base64url:decode(TAG) });
 from_map_pbes2(F, H) ->
 	{H, F}.
+
+%% @private
+pbkdf2(Mac, Password, Salt, Iterations, DerivedKeyLen) ->
+	PBES2CountMaximum = jose:pbes2_count_maximum(),
+	case PBES2CountMaximum < Iterations of
+		false ->
+			jose_jwa_pkcs5:pbkdf2(Mac, Password, Salt, Iterations, DerivedKeyLen);
+		true ->
+			erlang:error(badarg, [Mac, <<"REDACTED">>, Salt, Iterations, DerivedKeyLen], [
+				{error_info, #{
+					module => ?MODULE,
+					cause => #{4 => lists:flatten(io_lib:format("maximum PBES2 iterations is set to ~w, but ~w was attempted (see jose:pbes2_count_maximum/0)", [PBES2CountMaximum, Iterations]))}
+				}}
+			])
+	end.
 
 %% @private
 to_map_pbes2(F, H=#jose_jwe_alg_pbes2{ iter = P2C }) when is_integer(P2C) ->

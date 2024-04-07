@@ -76,7 +76,9 @@ groups() ->
 init_per_suite(Config) ->
 	application:set_env(jose, crypto_fallback, true),
 	application:set_env(jose, unsecured_signing, true),
-	_ = application:ensure_all_started(jose),
+	{ok, _} = application:ensure_all_started(jose),
+	ok = jose:crypto_fallback(true),
+	ok = jose:unsecured_signing(true),
 	ct_property_test:init_per_suite(Config).
 
 end_per_suite(_Config) ->

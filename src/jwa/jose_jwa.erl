@@ -380,7 +380,7 @@ supports() ->
 	].
 
 unsecured_signing() ->
-	application:get_env(jose, unsecured_signing, false).
+	jose:unsecured_signing().
 
 unsecured_signing(Boolean) when is_boolean(Boolean) ->
 	application:set_env(jose, unsecured_signing, Boolean),

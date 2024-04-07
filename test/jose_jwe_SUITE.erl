@@ -27,6 +27,7 @@
 -export([alg_ecdh_1pu_key_encrypt_and_key_decrypt/1]).
 -export([alg_ecdh_es_from_map_and_to_map/1]).
 -export([alg_ecdh_es_key_encrypt_and_key_decrypt/1]).
+-export([alg_pbes2_cve_2023_50966/1]).
 -export([alg_pbes2_from_map_and_to_map/1]).
 -export([alg_pbes2_key_encrypt_and_key_decrypt/1]).
 -export([alg_rsa_from_map_and_to_map/1]).
@@ -53,6 +54,7 @@ all() ->
 		{group, jose_jwe_alg_pbes2},
 		{group, jose_jwe_alg_rsa},
 		{group, jose_jwe_alg_xc20p_kw},
+		{group, jose_jwe_cve},
 		{group, jose_jwe_enc_aes},
 		{group, jose_jwe_enc_c20p},
 		{group, jose_jwe_enc_xc20p},
@@ -68,6 +70,9 @@ groups() ->
 		{jose_jwe_alg_c20p_kw, [parallel], [
 			alg_c20p_kw_from_map_and_to_map,
 			alg_c20p_kw_key_encrypt_and_key_decrypt
+		]},
+		{jose_jwe_cve, [shuffle], [
+			alg_pbes2_cve_2023_50966
 		]},
 		{jose_jwe_alg_dir, [parallel], [
 			alg_dir_from_map_and_to_map,
@@ -193,6 +198,11 @@ alg_ecdh_es_from_map_and_to_map(Config) ->
 alg_ecdh_es_key_encrypt_and_key_decrypt(Config) ->
 	ct_property_test:quickcheck(
 		jose_jwe_alg_ecdh_es_props:prop_key_encrypt_and_key_decrypt(),
+		Config).
+
+alg_pbes2_cve_2023_50966(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwe_alg_pbes2_props:prop_cve_2023_50966(),
 		Config).
 
 alg_pbes2_from_map_and_to_map(Config) ->

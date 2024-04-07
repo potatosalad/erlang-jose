@@ -2,7 +2,7 @@
 %% vim: ts=4 sw=4 ft=erlang noet
 {application, jose, [
 	{description, "JSON Object Signing and Encryption (JOSE) for Erlang and Elixir."},
-	{vsn, "1.11.6"},
+	{vsn, "1.11.7"},
 	{id, "git"},
 	{mod, {'jose_app', []}},
 	{registered, []},
@@ -17,6 +17,9 @@
 	{maintainers, ["Andrew Bennett"]},
 	{licenses, ["MIT"]},
 	{links, [{"Github", "https://github.com/potatosalad/erlang-jose"}]},
-	{env, [{crypto_fallback, true}]}
+	{env, [
+		{crypto_fallback, true},
+		{pbes2_count_maximum, 10000}
+	]}
 ]}.
 

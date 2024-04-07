@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.11.7 (2024-04-07)
+
+* Security Patches
+  * [CVE-2023-50966](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-50966): Add `jose:pbes2_count_maximum/0`.  By default, the maximum iterations are set to 10,000 and it will raise an error if `p2c` is larger than this value.
+* Changes
+  * Declare Poison as an optional dependency, thanks to [@lnikkila][https://github.com/lnikkila]; see [#144](https://github.com/potatosalad/erlang-jose/pull/144).
+  * Ensure `jiffy:encode/1` returns a binary, thanks to [@ssepml](https://github.com/ssepml); see [#145](https://github.com/potatosalad/erlang-jose/pull/145).
+  * Various type spec additions and dialyzer/dialyxir integrations, thanks to [@whatyouhide](https://github.com/whatyouhide) and [@maennchen](https://github.com/maennchen).
+  * Doc updates and fixes, thanks to [@aymanosman](https://github.com/aymanosman) and [@adamu](https://github.com/adamu); see [#158](https://github.com/potatosalad/erlang-jose/pull/158) and [#159](https://github.com/potatosalad/erlang-jose/pull/159).
+
 ## 1.11.6 (2023-07-18)
 
 * Fixes
