@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  21 Jul 2015 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_jwe).
 
 -include("jose_jwe.hrl").
@@ -60,9 +65,9 @@
 -define(ENC_XC20P_MODULE, jose_jwe_enc_xc20p).
 -define(ZIP_MODULE, jose_jwe_zip).
 
-%%====================================================================
+%%%=============================================================================
 %% Decode API functions
-%%====================================================================
+%%%=============================================================================
 
 from({Modules, Map}) when is_map(Modules) andalso is_map(Map) ->
     from_map({Modules, Map});
@@ -146,9 +151,9 @@ from_map({JWE, _Modules, Fields}) ->
             JWE#jose_jwe{fields = Fields}
     end.
 
-%%====================================================================
+%%%=============================================================================
 %% Encode API functions
-%%====================================================================
+%%%=============================================================================
 
 to_binary(JWE = #jose_jwe{}) ->
     {Modules, Map} = to_map(JWE),
@@ -172,9 +177,9 @@ to_map(JWE = #jose_jwe{fields = Fields}) ->
 to_map(Other) ->
     to_map(from(Other)).
 
-%%====================================================================
+%%%=============================================================================
 %% API functions
-%%====================================================================
+%%%=============================================================================
 
 block_decrypt(Key, EncryptedMap) when is_map(EncryptedMap) ->
     block_decrypt(Key, {#{}, EncryptedMap});
@@ -378,9 +383,9 @@ uncompress(CipherText, #jose_jwe{}) ->
 uncompress(CipherText, Other) ->
     uncompress(CipherText, from(Other)).
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 record_to_map(JWE = #jose_jwe{alg = {Module, ALG}}, Modules, Fields0) ->

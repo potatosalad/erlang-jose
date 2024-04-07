@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  24 Jul 2015 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_jwk_kty).
 
 -include("jose_public_key.hrl").
@@ -41,9 +46,9 @@
 -define(KTY_OKP_Ed448ph_MODULE, jose_jwk_kty_okp_ed448ph).
 -define(KTY_OKP_X448_MODULE, jose_jwk_kty_okp_x448).
 
-%%====================================================================
+%%%=============================================================================
 %% API functions
-%%====================================================================
+%%%=============================================================================
 
 from_key(ECPrivateKey = #'ECPrivateKey'{}) ->
     {?KTY_EC_MODULE, ?KTY_EC_MODULE:from_key(ECPrivateKey)};
@@ -160,6 +165,6 @@ key_encryptor(_KTY, _Fields, Key) when is_binary(Key) ->
         <<"p2s">> => jose_jwa_base64url:encode(crypto:strong_rand_bytes(16))
     }.
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------

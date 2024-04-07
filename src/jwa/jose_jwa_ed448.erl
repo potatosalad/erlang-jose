@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc Edwards-curve Digital Signature Algorithm (EdDSA) - Ed448, Ed448ph
 %%% See https://datatracker.ietf.org/doc/html/rfc8032
 %%% @end
 %%% Created :  20 Jan 2016 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_jwa_ed448).
 
 %% API
@@ -188,9 +193,9 @@
 % ?secretbytes + ?publickeybytes
 -define(secretkeybytes, 114).
 
-%%====================================================================
+%%%=============================================================================
 %% API
-%%====================================================================
+%%%=============================================================================
 
 % 5.2.1. Modular arithmetic - https://datatracker.ietf.org/doc/html/rfc8032#section-5.2.1
 

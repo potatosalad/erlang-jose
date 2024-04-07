@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  15 Jan 2016 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_jwk_kty_okp_ed25519ph).
 -behaviour(jose_jwk).
 -behaviour(jose_jwk_kty).
@@ -46,9 +51,9 @@
 
 -export_type([key/0]).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_jwk callbacks
-%%====================================================================
+%%%=============================================================================
 
 from_map(F = #{<<"kty">> := <<"OKP">>, <<"crv">> := ?crv, <<"d">> := D, <<"x">> := X}) ->
     <<Secret:?secretbytes/binary>> = jose_jwa_base64url:decode(D),
@@ -86,9 +91,9 @@ to_public_map(<<_:?secretbytes/binary, PK:?publickeybytes/binary>>, F) ->
 to_thumbprint_map(K, F) ->
     maps:with([<<"crv">>, <<"kty">>, <<"x">>], to_public_map(K, F)).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_jwk_kty callbacks
-%%====================================================================
+%%%=============================================================================
 
 generate_key(Seed = <<_:?secretbytes/binary>>) ->
     {_PK, SK} = jose_curve25519:eddsa_keypair(Seed),
@@ -110,9 +115,9 @@ generate_key(KTY, Fields) when
 key_encryptor(KTY, Fields, Key) ->
     jose_jwk_kty:key_encryptor(KTY, Fields, Key).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_jwk_use_sig callbacks
-%%====================================================================
+%%%=============================================================================
 
 sign(Message, ALG, SK = <<_:?secretkeybytes/binary>>) when
     ALG =:= 'Ed25519ph' orelse ALG =:= 'EdDSA'
@@ -144,9 +149,9 @@ verify(Message, ALG, Signature, PK = <<_:?publickeybytes/binary>>) when
 ->
     jose_curve25519:ed25519ph_verify(Signature, Message, PK).
 
-%%====================================================================
+%%%=============================================================================
 %% API functions
-%%====================================================================
+%%%=============================================================================
 
 from_okp({'Ed25519ph', SK = <<Secret:?secretbytes/binary, PK:?publickeybytes/binary>>}) ->
     case jose_curve25519:eddsa_secret_to_public(Secret) of
@@ -176,6 +181,6 @@ to_openssh_key(SK = <<_:?secretbytes/binary, PK:?publickeybytes/binary>>, F) ->
     Comment = maps:get(<<"kid">>, F, <<>>),
     jose_jwk_openssh_key:to_binary([[{{<<"ssh-ed25519ph">>, PK}, {<<"ssh-ed25519ph">>, PK, SK, Comment}}]]).
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------

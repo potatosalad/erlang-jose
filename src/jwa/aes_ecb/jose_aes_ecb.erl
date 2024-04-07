@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  02 Sep 2022 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_aes_ecb).
 
 -include("jose_support.hrl").
@@ -89,9 +94,9 @@
 -define(TV_AES_256_ECB_Key(), ?b16d("0000000000000000000000000000000000000000000000000000000000000000")).
 -define(TV_AES_256_ECB_CipherText(), ?b16d("ac9c9eb761551ffb7d78d88b5e2330149954e153190e5ef962356ac0e183b343")).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_support callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec support_info() -> jose_support:info().
 support_info() ->
@@ -140,9 +145,9 @@ support_check(Module, aes_256_ecb_encrypt, 2) ->
     CipherText = ?TV_AES_256_ECB_CipherText(),
     ?expect(CipherText, Module, aes_256_ecb_encrypt, [PlainText, CEK]).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_aes_ecb callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec aes_128_ecb_decrypt(CipherText, CEK) -> PlainText when
     CipherText :: jose_aes_ecb:cipher_text(),

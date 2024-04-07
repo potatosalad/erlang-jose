@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  23 Jul 2015 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_jwk_kty_rsa).
 -behaviour(jose_jwk).
 -behaviour(jose_jwk_kty).
@@ -50,9 +55,9 @@
 
 -export_type([key/0]).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_jwk callbacks
-%%====================================================================
+%%%=============================================================================
 
 from_map(F = #{<<"kty">> := <<"RSA">>, <<"d">> := _}) ->
     from_map_rsa_private_key(maps:remove(<<"kty">>, F), #'RSAPrivateKey'{
@@ -157,9 +162,9 @@ to_public_map(K = #'RSAPublicKey'{}, F) ->
 to_thumbprint_map(K, F) ->
     maps:with([<<"e">>, <<"kty">>, <<"n">>], to_public_map(K, F)).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_jwk_kty callbacks
-%%====================================================================
+%%%=============================================================================
 
 generate_key(#'RSAPrivateKey'{modulus = N, publicExponent = E}) ->
     generate_key({rsa, int_to_bit_size(N), E});
@@ -187,9 +192,9 @@ generate_key(KTY, Fields) ->
 key_encryptor(KTY, Fields, Key) ->
     jose_jwk_kty:key_encryptor(KTY, Fields, Key).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_jwk_use_enc callbacks
-%%====================================================================
+%%%=============================================================================
 
 block_encryptor(_KTY, #{<<"alg">> := ALG, <<"enc">> := ENC, <<"use">> := <<"enc">>}) ->
     #{
@@ -219,9 +224,9 @@ encrypt_public(PlainText, Options, #'RSAPrivateKey'{modulus = Modulus, publicExp
     RSAPublicKey = #'RSAPublicKey'{modulus = Modulus, publicExponent = PublicExponent},
     encrypt_public(PlainText, Options, RSAPublicKey).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_jwk_use_sig callbacks
-%%====================================================================
+%%%=============================================================================
 
 sign(Message, JWSALG, RSAPrivateKey = #'RSAPrivateKey'{}) ->
     {Padding, DigestType} = jws_alg_to_digest_type(JWSALG),
@@ -265,9 +270,9 @@ verify(Message, JWSALG, Signature, #'RSAPrivateKey'{modulus = Modulus, publicExp
     RSAPublicKey = #'RSAPublicKey'{modulus = Modulus, publicExponent = PublicExponent},
     verify(Message, JWSALG, Signature, RSAPublicKey).
 
-%%====================================================================
+%%%=============================================================================
 %% API functions
-%%====================================================================
+%%%=============================================================================
 
 from_der(DERBinary) when is_binary(DERBinary) ->
     case jose_jwk_der:from_binary(DERBinary) of
@@ -326,9 +331,9 @@ to_pem(Password, RSAPrivateKey = #'RSAPrivateKey'{}) ->
 to_pem(Password, RSAPublicKey = #'RSAPublicKey'{}) ->
     jose_jwk_pem:to_binary(Password, 'RSAPublicKey', RSAPublicKey).
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 convert_sfm_to_crt(

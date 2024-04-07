@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc XChaCha: eXtended-nonce ChaCha and AEAD_XChaCha20_Poly1305
 %%% See https://tools.ietf.org/html/draft-irtf-cfrg-xchacha
 %%% @end
 %%% Created :  14 Sep 2019 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_jwa_xchacha20).
 
 -behaviour(jose_provider).
@@ -35,9 +40,9 @@
     block = <<>> :: binary()
 }).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_provider callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec provider_info() -> jose_provider:info().
 provider_info() ->
@@ -50,9 +55,9 @@ provider_info() ->
         ]
     }.
 
-%%====================================================================
+%%%=============================================================================
 %% jose_xchacha20 callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec xchacha20_exor(Input, Count, Nonce, Key) -> Output when
     Input :: jose_xchacha20:input(),
@@ -99,9 +104,9 @@ xchacha20_stream_exor(_State = #jose_jwa_xchacha20{key = Key, nonce = Nonce, cou
 xchacha20_stream_final(_State = #jose_jwa_xchacha20{}) ->
     <<>>.
 
-%%====================================================================
+%%%=============================================================================
 %% Internal API functions
-%%====================================================================
+%%%=============================================================================
 
 encrypt(Key, Counter, Nonce0, Plaintext) ->
     {Subkey, Nonce} = subkey_and_nonce(Key, Nonce0),
@@ -112,9 +117,9 @@ subkey_and_nonce(Key, <<Nonce0:128/bitstring, Nonce1:64/bitstring>>) ->
     Nonce = <<0:32, Nonce1:64/bitstring>>,
     {Subkey, Nonce}.
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 pad64(X) when (byte_size(X) rem 64) == 0 ->

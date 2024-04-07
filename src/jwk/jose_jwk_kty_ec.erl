@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  23 Jul 2015 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_jwk_kty_ec).
 -behaviour(jose_jwk).
 -behaviour(jose_jwk_kty).
@@ -49,9 +54,9 @@
 
 -export_type([key/0]).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_jwk callbacks
-%%====================================================================
+%%%=============================================================================
 
 from_map(F = #{<<"kty">> := <<"EC">>, <<"d">> := _}) ->
     from_map_ec_private_key(jose_jwa:ec_key_mode(), maps:remove(<<"kty">>, F), #'ECPrivateKey'{version = 1});
@@ -119,9 +124,9 @@ to_public_map(K = {#'ECPoint'{}, _}, F) ->
 to_thumbprint_map(K, F) ->
     maps:with([<<"crv">>, <<"kty">>, <<"x">>, <<"y">>], to_public_map(K, F)).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_jwk_kty callbacks
-%%====================================================================
+%%%=============================================================================
 
 generate_key(P = #'ECParameters'{}) ->
     {public_key:generate_key(P), #{}};
@@ -163,9 +168,9 @@ generate_key(KTY, Fields) ->
 key_encryptor(KTY, Fields, Key) ->
     jose_jwk_kty:key_encryptor(KTY, Fields, Key).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_jwk_use_enc callbacks
-%%====================================================================
+%%%=============================================================================
 
 block_encryptor(_KTY, Fields = #{<<"alg">> := ALG, <<"enc">> := ENC, <<"use">> := <<"enc">>}) ->
     Folder = fun
@@ -232,9 +237,9 @@ derive_key(#'ECPrivateKey'{parameters = ECParameters, publicKey = Octets}, ECPri
     ECPublicKey = {ECPoint, ECParameters},
     derive_key(ECPublicKey, ECPrivateKey).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_jwk_use_sig callbacks
-%%====================================================================
+%%%=============================================================================
 
 sign(Message, JWSALG, ECPrivateKey = #'ECPrivateKey'{}) ->
     DigestType = jws_alg_to_digest_type(ECPrivateKey, JWSALG),
@@ -313,9 +318,9 @@ verify(Message, JWSALG, Signature, #'ECPrivateKey'{parameters = ECParameters, pu
     ECPublicKey = {ECPoint, ECParameters},
     verify(Message, JWSALG, Signature, ECPublicKey).
 
-%%====================================================================
+%%%=============================================================================
 %% API functions
-%%====================================================================
+%%%=============================================================================
 
 from_der(DERBinary) when is_binary(DERBinary) ->
     case jose_jwk_der:from_binary(DERBinary) of
@@ -374,9 +379,9 @@ to_pem(Password, ECPrivateKey = #'ECPrivateKey'{}) ->
 to_pem(Password, ECPublicKey = {#'ECPoint'{}, _ECParameters}) ->
     erlang:error({badarg, [Password, ECPublicKey]}).
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 from_map_ec_private_key(binary, F = #{<<"d">> := D}, Key) ->

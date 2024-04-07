@@ -1,13 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  08 Sep 2022 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
-
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -ifndef(JOSE_RSA_HRL).
 
 -define(is_rsa_key_integer(X), (is_binary(X) andalso byte_size(X) >= 1)).

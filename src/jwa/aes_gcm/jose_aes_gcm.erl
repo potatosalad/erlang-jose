@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  03 Sep 2022 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_aes_gcm).
 
 -include("jose_support.hrl").
@@ -116,9 +121,9 @@
 -define(TV_AES_256_GCM_CipherText(), ?b16d("afc5235928060c066e24aebfd79df268031270be42d05d0ca8d8")).
 -define(TV_AES_256_GCM_CipherTag(), ?b16d("d55b76f3438f51441eedd65413dafada")).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_support callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec support_info() -> jose_support:info().
 support_info() ->
@@ -209,9 +214,9 @@ support_check(Module, aes_256_gcm_encrypt, 4) ->
     CipherTag = ?TV_AES_256_GCM_CipherTag(),
     ?expect({CipherText, CipherTag}, Module, aes_256_gcm_encrypt, [PlainText, AAD, IV, CEK]).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_aes_gcm callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec aes_128_gcm_decrypt(CipherText, CipherTag, AAD, IV, CEK) -> PlainText | error when
     CipherText :: jose_aes_gcm:cipher_text(),

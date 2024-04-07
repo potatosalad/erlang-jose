@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  07 Sep 2022 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_xchacha20_crypto).
 
 -behaviour(jose_provider).
@@ -27,9 +32,9 @@
     crypto_state = undefined :: undefined | crypto:crypto_state()
 }).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_provider callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec provider_info() -> jose_provider:info().
 provider_info() ->
@@ -42,9 +47,9 @@ provider_info() ->
         ]
     }.
 
-%%====================================================================
+%%%=============================================================================
 %% jose_xchacha20 callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec xchacha20_exor(Input, Count, Nonce, Key) -> Output when
     Input :: jose_xchacha20:input(),
@@ -91,9 +96,9 @@ xchacha20_stream_exor(State = #jose_xchacha20_crypto{crypto_state = CryptoState}
 xchacha20_stream_final(_State = #jose_xchacha20_crypto{crypto_state = CryptoState}) ->
     crypto:crypto_final(CryptoState).
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal Xchacha20 functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 -spec make_iv(Count, Nonce) -> IV when

@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  23 Jul 2015 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_jwe_alg_ecdh_es).
 -behaviour(jose_jwe).
 -behaviour(jose_jwe_alg).
@@ -53,9 +58,9 @@
 -define(ECDH_ES_C20PKW, #jose_jwe_alg_ecdh_es{wrap = c20p_kw, bits = 256}).
 -define(ECDH_ES_XC20PKW, #jose_jwe_alg_ecdh_es{wrap = xc20p_kw, bits = 256}).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_jwe callbacks
-%%====================================================================
+%%%=============================================================================
 
 from_map(F = #{<<"alg">> := <<"ECDH-ES">>}) ->
     from_map_ecdh_es(maps:remove(<<"alg">>, F), ?ECDH_ES);
@@ -95,9 +100,9 @@ to_map(A = ?ECDH_ES_XC20PKW, F) ->
 to_map(A = ?ECDH_ES, F) ->
     to_map_ecdh_es(F#{<<"alg">> => <<"ECDH-ES">>}, A).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_jwe_alg callbacks
-%%====================================================================
+%%%=============================================================================
 
 generate_key(_Fields, {ENCModule, ENC}, ALG = #jose_jwe_alg_ecdh_es{epk = EphemeralPublicJWK = #jose_jwk{}}) ->
     jose_jwe_alg:generate_key(EphemeralPublicJWK, maps:get(<<"alg">>, to_map(ALG, #{})), ENCModule:algorithm(ENC));
@@ -308,9 +313,9 @@ next_cek(
 next_cek(_Key, {ENCModule, ENC}, JWEECDHES = #jose_jwe_alg_ecdh_es{}) ->
     {ENCModule:generate_content_encryption_key(ENC), JWEECDHES}.
 
-%%====================================================================
+%%%=============================================================================
 %% API functions
-%%====================================================================
+%%%=============================================================================
 
 algorithm(?ECDH_ES_A128GCMKW) -> <<"ECDH-ES+A128GCMKW">>;
 algorithm(?ECDH_ES_A192GCMKW) -> <<"ECDH-ES+A192GCMKW">>;
@@ -322,9 +327,9 @@ algorithm(?ECDH_ES_C20PKW) -> <<"ECDH-ES+C20PKW">>;
 algorithm(?ECDH_ES_XC20PKW) -> <<"ECDH-ES+XC20PKW">>;
 algorithm(?ECDH_ES) -> <<"ECDH-ES">>.
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 from_map_ecdh_es(F = #{<<"epk">> := EPK}, H) ->

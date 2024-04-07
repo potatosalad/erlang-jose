@@ -1,5 +1,9 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc Use of Static-Static ECDH in JSON Object Signing and Encryption (JOSE)
@@ -7,7 +11,8 @@
 %%%
 %%% @end
 %%% Created :  01 Sep 2022 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_jwe_alg_ecdh_ss).
 -behaviour(jose_jwe).
 -behaviour(jose_jwe_alg).
@@ -54,9 +59,9 @@
 -define(ECDH_SS_C20PKW, #jose_jwe_alg_ecdh_ss{wrap = c20p_kw, bits = 256}).
 -define(ECDH_SS_XC20PKW, #jose_jwe_alg_ecdh_ss{wrap = xc20p_kw, bits = 256}).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_jwe callbacks
-%%====================================================================
+%%%=============================================================================
 
 from_map(F = #{<<"alg">> := <<"ECDH-SS">>}) ->
     from_map_ecdh_ss(maps:remove(<<"alg">>, F), ?ECDH_SS);
@@ -96,9 +101,9 @@ to_map(A = ?ECDH_SS_XC20PKW, F) ->
 to_map(A = ?ECDH_SS, F) ->
     to_map_ecdh_ss(F#{<<"alg">> => <<"ECDH-SS">>}, A).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_jwe_alg callbacks
-%%====================================================================
+%%%=============================================================================
 
 generate_key(_Fields, {ENCModule, ENC}, ALG = #jose_jwe_alg_ecdh_ss{spk = USenderPublicKey = #jose_jwk{}}) ->
     jose_jwe_alg:generate_key(USenderPublicKey, maps:get(<<"alg">>, to_map(ALG, #{})), ENCModule:algorithm(ENC));
@@ -310,9 +315,9 @@ next_cek(
 next_cek(_Key, {ENCModule, ENC}, JWEECDHSS = #jose_jwe_alg_ecdh_ss{}) ->
     {ENCModule:generate_content_encryption_key(ENC), JWEECDHSS}.
 
-%%====================================================================
+%%%=============================================================================
 %% API functions
-%%====================================================================
+%%%=============================================================================
 
 algorithm(?ECDH_SS_A128GCMKW) -> <<"ECDH-SS+A128GCMKW">>;
 algorithm(?ECDH_SS_A192GCMKW) -> <<"ECDH-SS+A192GCMKW">>;
@@ -324,9 +329,9 @@ algorithm(?ECDH_SS_C20PKW) -> <<"ECDH-SS+C20PKW">>;
 algorithm(?ECDH_SS_XC20PKW) -> <<"ECDH-SS+XC20PKW">>;
 algorithm(?ECDH_SS) -> <<"ECDH-SS">>.
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 from_map_ecdh_ss(F = #{<<"spk">> := SPK}, H) ->

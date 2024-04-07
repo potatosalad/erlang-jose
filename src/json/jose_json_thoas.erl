@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Michael Klishin <michael@clojurewerkz.org>
 %%% @copyright 2022, Michael Klishin
 %%% @doc
 %%%
 %%% @end
 %%% Created :  30 Jul 2022 by Michael Klishin <michael@clojurewerkz.org>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_json_thoas).
 -behaviour(jose_provider).
 -behaviour(jose_json).
@@ -19,9 +24,9 @@
     encode/1
 ]).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_provider callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec provider_info() -> jose_provider:info().
 provider_info() ->
@@ -34,9 +39,9 @@ provider_info() ->
         ]
     }.
 
-%%====================================================================
+%%%=============================================================================
 %% jose_json callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec decode(JSON) -> Term when JSON :: jose_json:json(), Term :: term().
 decode(JSON) when is_binary(JSON) ->

@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  07 Sep 2022 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_hmac).
 
 -include("jose_support.hrl").
@@ -90,9 +95,9 @@
     )
 ).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_support callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec support_info() -> jose_support:info().
 support_info() ->
@@ -135,9 +140,9 @@ support_check(Module, hmac_sha512, 2) ->
     Output = ?TV_HMAC_SHA512_Output(),
     ?expect(Output, Module, hmac_sha512, [Key, Input]).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_hmac callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec hmac_sha1(Key, Input) -> Output when
     Key :: jose_hmac:hmac_key(), Input :: jose_hmac:input(), Output :: jose_hmac:hmac_sha1_output().

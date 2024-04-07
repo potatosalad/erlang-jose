@@ -133,12 +133,12 @@ endif
 
 erlfmt: $(ERLFMT)
 	$(verbose) $(ERLFMT) --verbose --write --require-pragma --print-width=120 \
-		'{src,include,test}/**/*.{hrl,erl,app.src}' \
+		'{src,codegen,include,test}/**/*.{hrl,erl,app.src}' \
 		'{rebar.config,rebar.config.script}'
 
 erlfmt-check: $(ERLFMT)
 	$(verbose) $(ERLFMT) --check --require-pragma --print-width=120 \
-		'{src,include,test}/**/*.{hrl,erl,app.src}' \
+		'{src,codegen,include,test}/**/*.{hrl,erl,app.src}' \
 		'{rebar.config,rebar.config.script}'
 
 distclean-erlfmt:

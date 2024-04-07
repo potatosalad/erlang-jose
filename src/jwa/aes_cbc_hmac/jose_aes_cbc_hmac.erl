@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  03 Sep 2022 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_aes_cbc_hmac).
 
 -include("jose_support.hrl").
@@ -134,9 +139,9 @@
     ?b16d("076c81fdbf46e4567ff8395e1a215a45f4e1be92d03706c56751a051ca60bbb8")
 ).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_support callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec support_info() -> jose_support:info().
 support_info() ->
@@ -215,9 +220,9 @@ support_check(Module, aes_256_cbc_hmac_sha512_encrypt, 4) ->
     CipherTag = ?TV_AES_256_CBC_HMAC_SHA512_CipherTag(),
     ?expect({CipherText, CipherTag}, Module, aes_256_cbc_hmac_sha512_encrypt, [PlainText, AAD, IV, CEK]).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_aes_cbc_hmac callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec aes_128_cbc_hmac_sha256_decrypt(CipherText, CipherTag, AAD, IV, CEK) -> PlainText | error when
     CipherText :: jose_aes_cbc_hmac:cipher_text(),

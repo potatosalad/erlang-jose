@@ -1,14 +1,17 @@
-%% -*- mode: erlang; tab-width: 4; indent-tabs-mode: 0; st-rulers: [70] -*-
-%% vim: ts=4 sw=4 ft=erlang et
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc Cryptographically secure pseudorandom number generator (CSPRNG)
 %%% See [https://en.wikipedia.org/wiki/Cryptographically_secure_pseudorandom_number_generator]
 %%% @end
 %%% Created :  08 Sep 2022 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_csprng).
 
 -include("jose_support.hrl").
@@ -64,9 +67,9 @@
 -define(TV_RandomBytes(), <<0:192>>).
 -define(TV_Seed(), ?b16d("00000000000000000000000000000000")).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_support callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec support_info() -> jose_support:info().
 support_info() ->
@@ -152,9 +155,9 @@ support_check(Module, uniform, 2) ->
     N = 0,
     ?expect(N, Module, uniform, [Lo, Hi]).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_sha1 callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec init() -> ok.
 init() ->

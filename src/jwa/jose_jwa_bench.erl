@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  06 Jan 2016 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_jwa_bench).
 
 %% API
@@ -47,9 +52,9 @@
 
 -export_type([stats/0]).
 
-%%====================================================================
+%%%=============================================================================
 %% API
-%%====================================================================
+%%%=============================================================================
 
 -spec bench(function(), arguments()) -> stats().
 bench(Function, Arguments) ->
@@ -81,9 +86,9 @@ compare(Groups, Arguments, N) when
      || {Label, Function} <- Groups, is_atom(Label) andalso is_function(Function)
     ].
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 bench_loop(0, _Self, Time, Reds, _Function, _Arguments) ->

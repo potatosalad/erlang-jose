@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  07 Sep 2022 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_sha1).
 
 -include("jose_support.hrl").
@@ -43,9 +48,9 @@
 -define(TV_Input(), <<"abc">>).
 -define(TV_SHA1(), ?b16d("a9993e364706816aba3e25717850c26c9cd0d89d")).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_support callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec support_info() -> jose_support:info().
 support_info() ->
@@ -63,9 +68,9 @@ support_check(Module, sha1, 1) ->
     Output = ?TV_SHA1(),
     ?expect(Output, Module, sha1, [Input]).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_sha1 callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec sha1(Input) -> Output when
     Input :: jose_sha1:input(), Output :: jose_sha1:sha1_output().

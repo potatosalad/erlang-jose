@@ -1,5 +1,9 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc Advanced Encryption Standard (AES)
@@ -10,7 +14,8 @@
 %%% See NIST.800-38D: http://csrc.nist.gov/publications/nistpubs/800-38D/SP-800-38D.pdf
 %%% @end
 %%% Created :  28 Jul 2015 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_jwa_aes).
 -behaviour(jose_block_encryptor).
 
@@ -20,9 +25,9 @@
 -export([block_encrypt/3]).
 -export([block_encrypt/4]).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_block_encryptor callbacks
-%%====================================================================
+%%%=============================================================================
 
 block_decrypt({aes_ecb, Bits}, Key, CipherText) when
     (Bits =:= 128 orelse
@@ -89,9 +94,9 @@ block_encrypt({aes_gcm, Bits}, Key, IV, {AAD, PlainText}) when
     MasterKey = block_encrypt({aes_ecb, Bits}, Key, <<0:128>>),
     gcm_block_encrypt(MasterKey, Key, IV, AAD, PlainText).
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal AES functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 aes_add_round_key(B0, RoundKey, {Nb, _, _}, Round) ->
@@ -185,9 +190,9 @@ aes_key_expansion(I, Rs, St = {Nb, Nk, _}, RoundKey) ->
     RK3 = bset(RK2, I * Nb + 3, A3),
     aes_key_expansion(I + 1, Rs, St, RK3).
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal AES decrypt functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 aes_inverse_cipher(St = {_, _, Nr}, RoundKey, B0) ->
@@ -265,9 +270,9 @@ aes_inverse_sub_bytes(I, J, B0) ->
     B1 = bset(B0, J * 4 + I, isBox(T0)),
     aes_inverse_sub_bytes(I, J + 1, B1).
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal AES encrypt functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 aes_cipher(St = {_, _, Nr}, RoundKey, B0) ->
@@ -345,9 +350,9 @@ aes_sub_bytes(I, J, B0) ->
     B1 = bset(B0, J * 4 + I, sBox(T0)),
     aes_sub_bytes(I, J + 1, B1).
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal CBC decrypt functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 cbc_block_decrypt(_St, _RoundKey, _IV, <<>>, PlainText) ->
@@ -356,9 +361,9 @@ cbc_block_decrypt(St, RoundKey, IV, <<Block:128/bitstring, CipherText/bitstring>
     Decrypted = crypto:exor(aes_inverse_cipher(St, RoundKey, Block), IV),
     cbc_block_decrypt(St, RoundKey, Block, CipherText, <<PlainText/binary, Decrypted/binary>>).
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal CBC encrypt functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 cbc_block_encrypt(_St, _RoundKey, _IV, <<>>, CipherText) ->
@@ -367,9 +372,9 @@ cbc_block_encrypt(St, RoundKey, IV, <<Block:128/bitstring, PlainText/bitstring>>
     Encrypted = aes_cipher(St, RoundKey, crypto:exor(Block, IV)),
     cbc_block_encrypt(St, RoundKey, Encrypted, PlainText, <<CipherText/binary, Encrypted/binary>>).
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal GCM functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 ctr_from_gcm_key_len(128) ->
@@ -504,9 +509,9 @@ gf_2_128_mul(I, X0, Y, R0) ->
     X1 = (X0 bsr 1) bxor ((X0 band 1) * 16#E1000000000000000000000000000000),
     gf_2_128_mul(I - 1, X1, Y, R1).
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal ECB decrypt functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 ecb_block_decrypt(_St, _RoundKey, <<>>, PlainText) ->
@@ -515,9 +520,9 @@ ecb_block_decrypt(St, RoundKey, <<Block:128/bitstring, CipherText/bitstring>>, P
     Decrypted = aes_inverse_cipher(St, RoundKey, Block),
     ecb_block_decrypt(St, RoundKey, CipherText, <<PlainText/binary, Decrypted/binary>>).
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal ECB encrypt functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 ecb_block_encrypt(_St, _RoundKey, <<>>, CipherText) ->
@@ -526,9 +531,9 @@ ecb_block_encrypt(St, RoundKey, <<Block:128/bitstring, PlainText/bitstring>>, Ci
     Encrypted = aes_cipher(St, RoundKey, Block),
     ecb_block_encrypt(St, RoundKey, PlainText, <<CipherText/binary, Encrypted/binary>>).
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 bget(B, Pos) when Pos >= 0 ->
@@ -547,9 +552,9 @@ bset(B, Pos, Val) when Pos >= 0 ->
 bset(B, Pos, Val) ->
     bset(B, byte_size(B) + Pos, Val).
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% AES constant functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 g2x(16#00) -> 16#00;

@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  07 Sep 2022 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_jwa_pbkdf2_hmac).
 
 -behaviour(jose_provider).
@@ -21,9 +26,9 @@
     pbkdf2_hmac_sha512/4
 ]).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_provider callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec provider_info() -> jose_provider:info().
 provider_info() ->
@@ -38,9 +43,9 @@ provider_info() ->
         ]
     }.
 
-%%====================================================================
+%%%=============================================================================
 %% jose_pbkdf2_hmac callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec pbkdf2_hmac_sha256(Password, Salt, Iterations, KeyLen) -> Key when
     Password :: jose_pbkdf2_hmac:password(),

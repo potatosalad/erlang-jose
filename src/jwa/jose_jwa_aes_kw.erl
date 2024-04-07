@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc Advanced Encryption Standard (AES) Key Wrap Algorithm
 %%% See RFC 3394 [https://tools.ietf.org/html/rfc3394]
 %%% @end
 %%% Created :  22 Jul 2015 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_jwa_aes_kw).
 
 -behaviour(jose_provider).
@@ -35,9 +40,9 @@
 -define(MSB64, 1 / unsigned - big - integer - unit:64).
 -define(DEFAULT_IV, <<16#A6A6A6A6A6A6A6A6:?MSB64>>).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_provider callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec provider_info() -> jose_provider:info().
 provider_info() ->
@@ -52,9 +57,9 @@ provider_info() ->
         ]
     }.
 
-%%====================================================================
+%%%=============================================================================
 %% jose_aes_kw callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec aes_128_kw_unwrap(CipherText, KEK) -> PlainText | error when
     CipherText :: jose_aes_kw:cipher_text(),
@@ -98,9 +103,9 @@ aes_256_kw_unwrap(CipherText, KEK) when bit_size(CipherText) rem 64 =:= 0 andals
 aes_256_kw_wrap(PlainText, KEK) when bit_size(PlainText) rem 64 =:= 0 andalso bit_size(KEK) =:= 256 ->
     wrap(fun jose_aes_ecb:aes_256_ecb_encrypt/2, PlainText, KEK).
 
-%%====================================================================
+%%%=============================================================================
 %% Internal API functions
-%%====================================================================
+%%%=============================================================================
 
 wrap(EncryptBlock, PlainText, KEK) ->
     wrap(EncryptBlock, PlainText, KEK, ?DEFAULT_IV).
@@ -135,9 +140,9 @@ unwrap(DecryptBlock, CipherText, KEK, IV) when
             error
     end.
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 do_wrap(_EncryptBlock, Buffer, 6, _BlockCount, _KEK) ->

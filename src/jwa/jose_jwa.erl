@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  21 Jul 2015 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_jwa).
 
 -include_lib("public_key/include/public_key.hrl").
@@ -50,9 +55,9 @@
     end
 ).
 
-%%====================================================================
+%%%=============================================================================
 %% Crypto API functions
-%%====================================================================
+%%%=============================================================================
 
 block_decrypt(Cipher, Key, CipherText) when
     is_binary(CipherText)
@@ -115,9 +120,9 @@ block_encrypt(Cipher, Key, IV, {AAD, PlainText}) when
             Module:block_encrypt(BlockCipher, Key, IV, {AAD, PlainText})
     end.
 
-%%====================================================================
+%%%=============================================================================
 %% Public Key API functions
-%%====================================================================
+%%%=============================================================================
 
 decrypt_private(CipherText, RSAPrivateKey = #'RSAPrivateKey'{}, Algorithm) when
     is_atom(Algorithm)
@@ -159,9 +164,9 @@ verify(Message, DigestType, Signature, RSAPublicKey = #'RSAPublicKey'{}, Padding
 verify(Message, DigestType, Signature, PublicKey, _Options) ->
     public_key:verify(Message, DigestType, Signature, PublicKey).
 
-%%====================================================================
+%%%=============================================================================
 %% API functions
-%%====================================================================
+%%%=============================================================================
 
 block_cipher(Cipher) ->
     ?MAYBE_START_JOSE(ets:lookup_element(?TAB, {cipher, Cipher}, 2)).
@@ -435,9 +440,9 @@ unsecured_signing(Boolean) when is_boolean(Boolean) ->
     application:set_env(jose, unsecured_signing, Boolean),
     ?MAYBE_START_JOSE(jose_server:config_change()).
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 constant_time_compare(<<AH, AT/binary>>, <<BH, BT/binary>>, R) ->

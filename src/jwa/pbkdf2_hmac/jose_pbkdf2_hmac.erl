@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  07 Sep 2022 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_pbkdf2_hmac).
 
 -include("jose_support.hrl").
@@ -74,9 +79,9 @@
 -define(TV_PBKDF2_HMAC_SHA384_Key(), ?b16d("e03f8ca570b98475a9bcd7f73442f3990c3ec87f8815478954ceb62ac2f3d709")).
 -define(TV_PBKDF2_HMAC_SHA512_Key(), ?b16d("ded5fd36ace28019108070acb5acc9db892eb04230f71ecda77c0dbf97e38a8d")).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_support callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec support_info() -> jose_support:info().
 support_info() ->
@@ -113,9 +118,9 @@ support_check(Module, pbkdf2_hmac_sha512, 4) ->
     KeyLen = byte_size(Key),
     ?expect(Key, Module, pbkdf2_hmac_sha512, [Password, Salt, Iterations, KeyLen]).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_hchacha20 callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec pbkdf2_hmac_sha256(Password, Salt, Iterations, KeyLen) -> Key when
     Password :: jose_pbkdf2_hmac:password(),

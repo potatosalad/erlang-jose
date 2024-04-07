@@ -1,3 +1,8 @@
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% % @format
 -module(jose_jwk_SUITE).
 
@@ -145,9 +150,9 @@ end_per_group(_Group, Config) ->
     jose_ct:stop(Config),
     ok.
 
-%%====================================================================
+%%%=============================================================================
 %% Tests
-%%====================================================================
+%%%=============================================================================
 
 encrypt_and_decrypt(Config) ->
     ct_property_test:quickcheck(

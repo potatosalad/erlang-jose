@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  21 Jul 2015 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_jwt).
 
 -include("jose_jwe.hrl").
@@ -36,9 +41,9 @@
 -export([verify/2]).
 -export([verify_strict/3]).
 
-%%====================================================================
+%%%=============================================================================
 %% Decode API functions
-%%====================================================================
+%%%=============================================================================
 
 from(List) when is_list(List) ->
     [from(Element) || Element <- List];
@@ -77,9 +82,9 @@ from_map({Modules, Map}) when is_map(Modules) andalso is_map(Map) ->
 from_map({JWT, _Modules, Fields}) ->
     JWT#jose_jwt{fields = Fields}.
 
-%%====================================================================
+%%%=============================================================================
 %% Encode API functions
-%%====================================================================
+%%%=============================================================================
 
 to_binary(List) when is_list(List) ->
     [to_binary(Element) || Element <- List];
@@ -107,9 +112,9 @@ to_map(JWT = #jose_jwt{fields = Fields}) ->
 to_map(Other) ->
     to_map(from(Other)).
 
-%%====================================================================
+%%%=============================================================================
 %% API functions
-%%====================================================================
+%%%=============================================================================
 
 decrypt(Key, {Modules, Encrypted}) when is_map(Modules) andalso is_map(Encrypted) ->
     {JWTBinary, JWE = #jose_jwe{}} = jose_jwe:block_decrypt(Key, {Modules, Encrypted}),
@@ -212,9 +217,9 @@ verify_strict([], Allow, Signed) ->
 verify_strict(Other, Allow, Signed) ->
     verify_strict(jose_jwk:from(Other), Allow, Signed).
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 normalize_block_encryptor([<<"typ">> | Keys], Map) ->

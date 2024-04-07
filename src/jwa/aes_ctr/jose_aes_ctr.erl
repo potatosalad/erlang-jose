@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  03 Sep 2022 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_aes_ctr).
 
 -include("jose_support.hrl").
@@ -147,9 +152,9 @@
 -define(TV_AES_256_CTR_CipherText1(), ?b16d("afc5235928060c06")).
 -define(TV_AES_256_CTR_CipherText2(), ?b16d("662ca6b7df95fa701b0a68a65ac84504")).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_support callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec support_info() -> jose_support:info().
 support_info() ->
@@ -352,9 +357,9 @@ support_check(Module, aes_256_ctr_stream_final, 1) ->
     {State3, _ActualCipherText2} = Module:aes_256_ctr_stream_exor(State2, PlainText2),
     ?expect(<<>>, Module, aes_256_ctr_stream_final, [State3]).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_aes_ctr callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec aes_128_ctr_exor(Input, IV, Key) -> Output when
     Input :: jose_aes_ctr:input(),

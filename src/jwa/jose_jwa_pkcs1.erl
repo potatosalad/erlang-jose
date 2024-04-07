@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc PKCS #1: RSA Cryptography Specifications Version 2.1
 %%% See RFC 3447: [https://tools.ietf.org/html/rfc3447]
 %%% @end
 %%% Created :  28 Jul 2015 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_jwa_pkcs1).
 
 -include("jose_rsa.hrl").
@@ -55,9 +60,9 @@
 
 -define(PSS_TRAILER_FIELD, 16#BC).
 
-%%====================================================================
+%%%=============================================================================
 %% Public Key API functions
-%%====================================================================
+%%%=============================================================================
 
 decrypt_private(CipherText, RSAPrivateKey = #jose_rsa_private_key{}, Options) when
     is_list(Options)
@@ -135,9 +140,9 @@ verify(Message, DigestType, Signature, RSAPublicKey = #jose_rsa_public_key{}, Op
 verify(Message, DigestType, Signature, PublicKey, Options) ->
     erlang:error(badarg, [Message, DigestType, Signature, PublicKey, Options]).
 
-%%====================================================================
+%%%=============================================================================
 %% API functions
-%%====================================================================
+%%%=============================================================================
 
 %% See [https://tools.ietf.org/html/rfc3447#section-7.1.2]
 -spec eme_oaep_decode(Hash, EM, Label, K) -> M | error when
@@ -976,9 +981,9 @@ rsassa_pss_verify(Hash, Message, Signature, SaltLen, RSAPublicKey = #jose_rsa_pu
     HashFun = resolve_hash(Hash),
     rsassa_pss_verify(HashFun, Message, Signature, SaltLen, RSAPublicKey).
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 ceiling(X) when X < 0 ->

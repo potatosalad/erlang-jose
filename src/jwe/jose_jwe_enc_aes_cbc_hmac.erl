@@ -1,14 +1,17 @@
-%% -*- mode: erlang; tab-width: 4; indent-tabs-mode: 0; st-rulers: [70] -*-
-%% vim: ts=4 sw=4 ft=erlang et
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  22 Jul 2015 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_jwe_enc_aes_cbc_hmac).
 
 -behaviour(jose_jwe).
@@ -41,9 +44,9 @@
     ((X) =:= aes_128_cbc_hmac_sha256 orelse (X) =:= aes_192_cbc_hmac_sha384 orelse (X) =:= aes_256_cbc_hmac_sha512)
 ).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_jwe callbacks
-%%====================================================================
+%%%=============================================================================
 
 from_map(F = #{<<"enc">> := <<"A128CBC-HS256">>}) ->
     {aes_128_cbc_hmac_sha256, maps:remove(<<"enc">>, F)};
@@ -59,9 +62,9 @@ to_map(aes_192_cbc_hmac_sha384, F) ->
 to_map(aes_256_cbc_hmac_sha512, F) ->
     F#{<<"enc">> => <<"A256CBC-HS512">>}.
 
-%%====================================================================
+%%%=============================================================================
 %% jose_jwe_enc callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec algorithm(ENC) -> Algorithm when
     ENC :: jose_jwe_enc:internal_state(state()),
@@ -153,6 +156,6 @@ generate_content_encryption_key(ENC) when ?is_state(ENC) ->
 generate_nonce(ENC) when ?is_state(ENC) ->
     jose_csprng:random_bits(128).
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------

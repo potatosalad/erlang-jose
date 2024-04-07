@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc ChaCha20 and Poly1305 for IETF Protocols
 %%% See https://tools.ietf.org/html/rfc7539
 %%% @end
 %%% Created :  31 May 2016 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_jwa_chacha20).
 
 -behaviour(jose_provider).
@@ -41,9 +46,9 @@
     block = <<>> :: binary()
 }).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_provider callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec provider_info() -> jose_provider:info().
 provider_info() ->
@@ -56,9 +61,9 @@ provider_info() ->
         ]
     }.
 
-%%====================================================================
+%%%=============================================================================
 %% jose_chacha20 callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec chacha20_exor(Input, Count, Nonce, Key) -> Output when
     Input :: jose_chacha20:input(),
@@ -107,9 +112,9 @@ chacha20_stream_exor(#jose_jwa_chacha20{key = Key, count = Count, nonce = Nonce,
 chacha20_stream_final(_State = #jose_jwa_chacha20{}) ->
     <<>>.
 
-%%====================================================================
+%%%=============================================================================
 %% API functions
-%%====================================================================
+%%%=============================================================================
 
 quarter_round({A0, B0, C0, D0}) ->
     A1 = ?math:mod(A0 + B0, ?p),
@@ -168,9 +173,9 @@ encrypt(Key, Counter, Nonce, Block, J, EncryptedMessage) ->
     <<KeyStream:BlockBytes/binary, _/binary>> = block(Key, Counter + J, Nonce),
     <<EncryptedMessage/binary, (crypto:exor(Block, KeyStream))/binary>>.
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 inner_block(State0) when

@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  06 Sep 2022 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_aes_ctr_crypto).
 
 -behaviour(jose_provider).
@@ -41,9 +46,9 @@
     crypto_state = undefined :: undefined | crypto:crypto_state()
 }).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_provider callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec provider_info() -> jose_provider:info().
 provider_info() ->
@@ -56,9 +61,9 @@ provider_info() ->
         ]
     }.
 
-%%====================================================================
+%%%=============================================================================
 %% jose_aes_ctr callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec aes_128_ctr_exor(Input, IV, Key) -> Output when
     Input :: jose_aes_ctr:input(),
@@ -183,6 +188,6 @@ aes_256_ctr_stream_exor(State = #jose_aes_256_ctr_crypto{crypto_state = CryptoSt
 aes_256_ctr_stream_final(_State = #jose_aes_256_ctr_crypto{crypto_state = CryptoState}) ->
     crypto:crypto_final(CryptoState).
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal AES-CTR functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------

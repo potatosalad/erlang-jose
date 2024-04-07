@@ -1,11 +1,16 @@
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% @author Andrew Bennett <andrew@pixid.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%% @end
 %%% Created :  08 Aug 2016 by Andrew Bennett <andrew@pixid.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 -module(jose_jwa_chacha20_poly1305_SUITE).
 
 -include_lib("common_test/include/ct.hrl").
@@ -71,9 +76,9 @@ end_per_group(_Group, Config) ->
     jose_ct:stop(Config),
     ok.
 
-%%====================================================================
+%%%=============================================================================
 %% Tests
-%%====================================================================
+%%%=============================================================================
 
 aead() ->
     [{doc, "Test ChaCha20/Poly1305 AEAD function"}].
@@ -105,9 +110,9 @@ mac(Config) when is_list(Config) ->
     MACs = lazy_eval(proplists:get_value(mac, Config)),
     lists:foreach(fun poly1305_mac/1, MACs).
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 aead_cipher({Key, PlainText, IV, AAD, CipherText, CipherTag}) ->

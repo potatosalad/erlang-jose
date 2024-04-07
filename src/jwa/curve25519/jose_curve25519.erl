@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  02 Jan 2016 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_curve25519).
 
 -include("jose_support.hrl").
@@ -147,9 +152,9 @@
 -define(TV_X25519VPublicKey(), ?b16d("847c0d2c375234f365e660955187a3735a0f7613d1609d3a6a4d8c53aeaa5a22")).
 -define(TV_X25519SharedSecret(), ?b16d("f12f59031bae093b8575957f3e10cc799c437778e5d6cf4ea04542135c3dcd11")).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_support callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec support_info() -> jose_support:info().
 support_info() ->
@@ -264,9 +269,9 @@ support_check(Module, x25519_shared_secret, 2) ->
     Z = ?TV_X25519SharedSecret(),
     ?expect(Z, Module, x25519_shared_secret, [USK, VPK]).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_curve25519 callbacks
-%%====================================================================
+%%%=============================================================================
 
 % EdDSA
 -spec eddsa_keypair() -> {eddsa_public_key(), eddsa_secret_key()}.

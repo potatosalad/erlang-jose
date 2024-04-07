@@ -1,14 +1,20 @@
-%%% % @format
-%%% %%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  05 Sep 2022 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_support_resolve).
--behaviour(gen_statem).
+-compile(warn_missing_spec_all).
+-author("potatosaladx@gmail.com").
 
 %% OTP API
 -export([
@@ -24,17 +30,28 @@
 
 %% Records
 -record(data, {
-    reply_to = undefined :: undefined | pid(),
-    reply_tag = undefined :: undefined | reference(),
-    key = undefined :: undefined | jose_support:key(),
-    modules = [] :: [{integer(), module()}],
-    monitors = #{} :: #{reference() => {pid(), {integer(), module()}}},
-    mods = #{} :: #{module() => reference()}
+    reply_to :: pid(),
+    reply_tag :: reference(),
+    key :: jose_support:key(),
+    modules = [] :: [jose_support_check:provider_key()],
+    monitors = #{} :: monitors(),
+    mods = #{} :: mods()
 }).
 
-%%%===================================================================
+%% Types
+-type data() :: #data{}.
+-type mods() :: #{jose_support_check:provider_key() => reference()}.
+-type monitors() :: #{reference() => {pid(), jose_support_check:provider_key()}}.
+-type state() :: init | resolving | resolved.
+
+-export_type([
+    state/0,
+    data/0
+]).
+
+%%%=============================================================================
 %%% OTP API functions
-%%%===================================================================
+%%%=============================================================================
 
 -spec child_spec() -> supervisor:child_spec().
 child_spec() ->
@@ -46,12 +63,11 @@ child_spec() ->
         type => worker
     }.
 
--spec start_link(ReplyTo, ReplyTag, Key, ProviderModules) -> {ok, pid()} | {error, Reason} when
+-spec start_link(ReplyTo, ReplyTag, Key, ProviderModules) -> gen_statem:start_ret() when
     ReplyTo :: pid(),
     ReplyTag :: reference(),
     Key :: jose_support:key(),
-    ProviderModules :: [{integer(), module()}],
-    Reason :: term().
+    ProviderModules :: [{integer(), module()}].
 start_link(ReplyTo, ReplyTag, Key = {Behaviour, {FunctionName, Arity}}, ProviderModules) when
     is_pid(ReplyTo) andalso
         is_reference(ReplyTag) andalso
@@ -62,14 +78,16 @@ start_link(ReplyTo, ReplyTag, Key = {Behaviour, {FunctionName, Arity}}, Provider
 ->
     gen_statem:start_link(?MODULE, [ReplyTo, ReplyTag, Key, ProviderModules], []).
 
-%%====================================================================
-%% gen_statem callbacks
-%%====================================================================
+%%%=============================================================================
+%%% gen_statem callbacks
+%%%=============================================================================
 
--spec callback_mode() -> gen_statem:callback_mode() | [gen_statem:callback_mode() | gen_statem:state_enter()].
+%% @private
+-spec callback_mode() -> gen_statem:callback_mode_result().
 callback_mode() ->
     [handle_event_function, state_enter].
 
+%% @private
 -spec init([]) -> {ok, State :: init, Data :: #data{}}.
 init([ReplyTo, ReplyTag, Key, ProviderModules]) ->
     State = init,
@@ -81,6 +99,16 @@ init([ReplyTo, ReplyTag, Key, ProviderModules]) ->
     },
     {ok, State, Data}.
 
+%% @private
+-spec handle_event
+    ('enter', OldState, CurrentState, Data) -> gen_statem:state_enter_result(CurrentState, Data) when
+        OldState :: state(), CurrentState :: state(), Data :: data();
+    (EventType, EventContent, CurrentState, Data) -> gen_statem:event_handler_result(NextState, Data) when
+        EventType :: gen_statem:event_type(),
+        EventContent :: term(),
+        CurrentState :: state(),
+        Data :: data(),
+        NextState :: state().
 %% State Enter Events
 handle_event(enter, init, init, _Data) ->
     Actions = [{state_timeout, 0, init}],
@@ -165,7 +193,16 @@ handle_event(
             keep_state_and_data
     end.
 
+%%%-----------------------------------------------------------------------------
+%%% Internal functions
+%%%-----------------------------------------------------------------------------
+
 %% @private
+-spec start_checks(Monitors, Mods, Key, ProviderModules) -> {Monitors, Mods} when
+    Monitors :: monitors(),
+    Mods :: mods(),
+    Key :: jose_support:key(),
+    ProviderModules :: [jose_support_check:provider_key()].
 start_checks(Monitors0, Mods0, Key, [ProviderKey = {_Priority, _ProviderModule} | ProviderModules]) ->
     {ok, Pid} = jose_support_check_sup:start_child(self(), Key, ProviderKey),
     Mon = erlang:monitor(process, Pid),

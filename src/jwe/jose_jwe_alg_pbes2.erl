@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  22 Jul 2015 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_jwe_alg_pbes2).
 -behaviour(jose_jwe).
 -behaviour(jose_jwe_alg).
@@ -50,9 +55,9 @@
 -define(PBES2_HS512_C20PKW, #jose_jwe_alg_pbes2{hmac = sha512, wrap = c20p_kw, bits = 256}).
 -define(PBES2_HS512_XC20PKW, #jose_jwe_alg_pbes2{hmac = sha512, wrap = xc20p_kw, bits = 256}).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_jwe callbacks
-%%====================================================================
+%%%=============================================================================
 
 from_map(F = #{<<"alg">> := <<"PBES2-HS256+A128GCMKW">>}) ->
     from_map_pbes2(maps:remove(<<"alg">>, F), ?PBES2_HS256_A128GCMKW);
@@ -88,9 +93,9 @@ to_map(A = ?PBES2_HS512_C20PKW, F) ->
 to_map(A = ?PBES2_HS512_XC20PKW, F) ->
     to_map_pbes2(F#{<<"alg">> => <<"PBES2-HS512+XC20PKW">>}, A).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_jwe_alg callbacks
-%%====================================================================
+%%%=============================================================================
 
 generate_key(_Fields, {ENCModule, ENC}, ALG = #jose_jwe_alg_pbes2{}) ->
     jose_jwe_alg:generate_key({oct, 16}, maps:get(<<"alg">>, to_map(ALG, #{})), ENCModule:algorithm(ENC)).
@@ -208,9 +213,9 @@ key_encrypt(#jose_jwk{kty = {KTYModule, KTY}}, DecryptedKey, JWEPBES2 = #jose_jw
 next_cek(_Key, {ENCModule, ENC}, ALG = #jose_jwe_alg_pbes2{}) ->
     {ENCModule:generate_content_encryption_key(ENC), ALG}.
 
-%%====================================================================
+%%%=============================================================================
 %% API functions
-%%====================================================================
+%%%=============================================================================
 
 -spec format_error(term(), term()) -> term().
 format_error(_Reason, [{_M, _F, _As, Info} | _]) ->
@@ -224,9 +229,9 @@ hmac_supported() ->
 wrap_supported() ->
     [128, 192, 256].
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 from_map_pbes2(F = #{<<"p2c">> := P2C}, H) ->

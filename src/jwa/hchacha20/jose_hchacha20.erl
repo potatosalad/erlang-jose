@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  07 Sep 2022 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_hchacha20).
 
 -include("jose_support.hrl").
@@ -49,9 +54,9 @@
 -define(TV_HCHACHA20_Key(), ?b16d("0000000000000000000000000000000000000000000000000000000000000000")).
 -define(TV_HCHACHA20_Subkey(), ?b16d("1140704c328d1d5d0e30086cdf209dbd6a43b8f41518a11cc387b669b2ee6586")).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_support callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec support_info() -> jose_support:info().
 support_info() ->
@@ -70,9 +75,9 @@ support_check(Module, hchacha20_subkey, 2) ->
     Subkey = ?TV_HCHACHA20_Subkey(),
     ?expect(Subkey, Module, hchacha20_subkey, [Nonce, Key]).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_hchacha20 callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec hchacha20_subkey(Nonce, Key) -> Subkey when
     Nonce :: jose_hchacha20:hchacha20_nonce(),

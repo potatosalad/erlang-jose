@@ -1,5 +1,10 @@
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% @author Andrew Bennett <andrew@pixid.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc Advanced Encryption Standard (AES)
@@ -12,7 +17,7 @@
 %%% See https://github.com/erlang/otp/blob/OTP-18.0/lib/crypto/test/crypto_SUITE.erl
 %%% @end
 %%% Created :  10 Aug 2015 by Andrew Bennett <andrew@pixid.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 -module(jose_jwa_aes_SUITE).
 
 -include_lib("common_test/include/ct.hrl").
@@ -86,9 +91,9 @@ end_per_group(_Group, Config) ->
     jose_ct:stop(Config),
     ok.
 
-%%====================================================================
+%%%=============================================================================
 %% Tests
-%%====================================================================
+%%%=============================================================================
 
 aead() ->
     [{doc, "Test AEAD ciphers"}].
@@ -102,9 +107,9 @@ block(Config) when is_list(Config) ->
     Blocks = proplists:get_value(block, Config),
     lists:foreach(fun block_cipher/1, Blocks).
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 aead_cipher({Type, Key, PlainText, IV, AAD, CipherText, CipherTag}) ->

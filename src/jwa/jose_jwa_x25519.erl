@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc Elliptic Curves for Security - X25519
 %%% See https://tools.ietf.org/html/rfc7748
 %%% @end
 %%% Created :  06 Jan 2016 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_jwa_x25519).
 
 %% API
@@ -51,9 +56,9 @@
 % ?scalarbytes
 -define(secretkeybytes, 32).
 
-%%====================================================================
+%%%=============================================================================
 %% API
-%%====================================================================
+%%%=============================================================================
 
 coordinate_to_edwards25519(<<U:?b/unsigned-little-integer-unit:1>>) ->
     Y = ?math:mod((U - 1) * ?inv(U + 1), ?p),

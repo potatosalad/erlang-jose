@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc XChaCha: eXtended-nonce ChaCha and AEAD_XChaCha20_Poly1305
 %%% See https://tools.ietf.org/html/draft-irtf-cfrg-xchacha
 %%% @end
 %%% Created :  14 Sep 2019 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_jwa_xchacha20_poly1305).
 
 -behaviour(jose_provider).
@@ -22,9 +27,9 @@
     xchacha20_poly1305_verify/4
 ]).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_provider callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec provider_info() -> jose_provider:info().
 provider_info() ->
@@ -37,9 +42,9 @@ provider_info() ->
         ]
     }.
 
-%%====================================================================
+%%%=============================================================================
 %% jose_xchacha20_poly1305 callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec xchacha20_poly1305_decrypt(CipherText, CipherTag, AAD, Nonce, Key) -> PlainText | error when
     CipherText :: jose_xchacha20_poly1305:cipher_text(),
@@ -101,6 +106,6 @@ xchacha20_poly1305_verify(MAC, Message, Nonce, Key) when
     {ChaCha20Subkey, ChaCha20Nonce} = jose_jwa_xchacha20:subkey_and_nonce(Key, Nonce),
     jose_chacha20_poly1305:chacha20_poly1305_verify(MAC, Message, ChaCha20Nonce, ChaCha20Subkey).
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------

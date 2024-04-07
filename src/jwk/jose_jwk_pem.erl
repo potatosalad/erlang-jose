@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  24 Jul 2015 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_jwk_pem).
 
 -include("jose_public_key.hrl").
@@ -18,9 +23,9 @@
 -export([from_public_key_info/1]).
 -export([to_binary/3]).
 
-%%====================================================================
+%%%=============================================================================
 %% API functions
-%%====================================================================
+%%%=============================================================================
 
 from_binary(PEMBinary) when is_binary(PEMBinary) ->
     case jose_public_key:pem_decode(PEMBinary) of
@@ -94,6 +99,6 @@ to_binary(Password, KeyType, Key) ->
     PEMEntry = jose_public_key:pem_entry_encode(KeyType, Key, {CipherInfo, PasswordString}),
     jose_public_key:pem_encode([PEMEntry]).
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------

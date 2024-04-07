@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  31 May 2016 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_chacha20_poly1305).
 
 -include("jose_support.hrl").
@@ -89,9 +94,9 @@
 -define(TV_Message(), <<"abcdefghijklmnopqrstuvwxyz012345">>).
 -define(TV_ChaCha20_Poly1305_MAC(), ?b16d("79b048dec10fbbdb0a46ac011cc6827b")).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_support callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec support_info() -> jose_support:info().
 support_info() ->
@@ -144,9 +149,9 @@ support_check(Module, chacha20_poly1305_verify, 4) ->
     Key = ?TV_ChaCha20_Poly1305_Key(),
     ?expect(true, Module, chacha20_poly1305_verify, [MAC, Message, Nonce, Key]).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_chacha20_poly1305 callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec chacha20_poly1305_decrypt(CipherText, CipherTag, AAD, Nonce, Key) -> PlainText | error when
     CipherText :: jose_chacha20_poly1305:cipher_text(),

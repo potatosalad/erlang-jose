@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  07 Sep 2022 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_poly1305).
 
 -include("jose_support.hrl").
@@ -50,9 +55,9 @@
 -define(TV_POLY1305_OneTimeKey(), ?b16d("0101010101010101010101010101010101010101010101010101010101010101")).
 -define(TV_POLY1305_Tag(), ?b16d("dd2d06b9037d9e7ab9ec5cc55bec11c5")).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_support callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec support_info() -> jose_support:info().
 support_info() ->
@@ -71,9 +76,9 @@ support_check(Module, poly1305_mac, 2) ->
     Tag = ?TV_POLY1305_Tag(),
     ?expect(Tag, Module, poly1305_mac, [Message, OneTimeKey]).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_poly1305 callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec poly1305_mac(Message, OneTimeKey) -> Tag when
     Message :: jose_poly1305:message(),

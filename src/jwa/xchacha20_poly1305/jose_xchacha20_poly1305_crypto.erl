@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  14 Sep 2019 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_xchacha20_poly1305_crypto).
 
 -behaviour(jose_provider).
@@ -35,9 +40,9 @@
 -type poly1305_otk() :: <<_:256>>.
 -type xchacha20_nonce() :: <<_:192>>.
 
-%%====================================================================
+%%%=============================================================================
 %% jose_provider callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec provider_info() -> jose_provider:info().
 provider_info() ->
@@ -50,9 +55,9 @@ provider_info() ->
         ]
     }.
 
-%%====================================================================
+%%%=============================================================================
 %% jose_xchacha20_poly1305 callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec xchacha20_poly1305_decrypt(CipherText, CipherTag, AAD, Nonce, Key) -> PlainText | error when
     CipherText :: jose_xchacha20_poly1305:cipher_text(),
@@ -115,9 +120,9 @@ xchacha20_poly1305_verify(MAC, Message, Nonce, Key) when
     Challenge = xchacha20_poly1305_authenticate(Message, Nonce, Key),
     jose_jwa:constant_time_compare(MAC, Challenge).
 
-%%====================================================================
+%%%=============================================================================
 %% Internal API Functions
-%%====================================================================
+%%%=============================================================================
 
 %% @private
 -spec poly1305_key_gen(Nonce, Key) -> OneTimeKey when
@@ -138,6 +143,6 @@ xchacha20_subkey_and_nonce(<<Key:256/bits>>, <<Nonce0:128/bits, Nonce1:64/bits>>
     C20PKey = jose_hchacha20:hchacha20_subkey(Nonce0, Key),
     {C20PKey, C20PNonce}.
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------

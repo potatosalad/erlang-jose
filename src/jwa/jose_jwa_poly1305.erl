@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc ChaCha20 and Poly1305 for IETF Protocols
 %%% See https://tools.ietf.org/html/rfc7539
 %%% @end
 %%% Created :  31 May 2016 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_jwa_poly1305).
 
 -behaviour(jose_provider).
@@ -29,9 +34,9 @@
 -define(clamp(R), R band 16#0ffffffc0ffffffc0ffffffc0fffffff).
 -define(p, 16#3fffffffffffffffffffffffffffffffb).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_provider callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec provider_info() -> jose_provider:info().
 provider_info() ->
@@ -44,9 +49,9 @@ provider_info() ->
         ]
     }.
 
-%%====================================================================
+%%%=============================================================================
 %% jose_poly1305 callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec poly1305_mac(Message, OneTimeKey) -> Tag when
     Message :: jose_poly1305:message(),
@@ -55,9 +60,9 @@ provider_info() ->
 poly1305_mac(Message, OneTimeKey) when bit_size(OneTimeKey) =:= 256 ->
     mac(Message, OneTimeKey).
 
-%%====================================================================
+%%%=============================================================================
 %% API functions
-%%====================================================================
+%%%=============================================================================
 
 mac(M, K) when
     is_binary(M) andalso

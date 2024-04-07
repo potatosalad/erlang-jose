@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  03 Sep 2022 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_aes_cbc).
 
 -include("jose_support.hrl").
@@ -100,9 +105,9 @@
 -define(TV_AES_256_CBC_Key(), ?b16d("0000000000000000000000000000000000000000000000000000000000000000")).
 -define(TV_AES_256_CBC_CipherText(), ?b16d("ac9c9eb761551ffb7d78d88b5e233014a7d624ae4222993a989f8c62a4986ec2")).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_support callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec support_info() -> jose_support:info().
 support_info() ->
@@ -157,9 +162,9 @@ support_check(Module, aes_256_cbc_encrypt, 3) ->
     CipherText = ?TV_AES_256_CBC_CipherText(),
     ?expect(CipherText, Module, aes_256_cbc_encrypt, [PlainText, IV, CEK]).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_sha2 callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec aes_128_cbc_decrypt(CipherText, IV, CEK) -> PlainText when
     CipherText :: jose_aes_cbc:cipher_text(),

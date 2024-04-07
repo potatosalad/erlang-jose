@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  06 Sep 2022 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_chacha20).
 
 -include("jose_support.hrl").
@@ -90,9 +95,9 @@
 -define(TV_CHACHA20_CipherText1(), ?b16d("fe6584da30375f12")).
 -define(TV_CHACHA20_CipherText2(), ?b16d("f9d8f418164b6f65a26542cc258d0a19")).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_support callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec support_info() -> jose_support:info().
 support_info() ->
@@ -169,9 +174,9 @@ support_check(Module, chacha20_stream_final, 1) ->
     {State3, _ActualCipherText2} = Module:chacha20_stream_exor(State2, PlainText2),
     ?expect(<<>>, Module, chacha20_stream_final, [State3]).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_chacha20 callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec chacha20_exor(Input, Count, Nonce, Key) -> Output when
     Input :: jose_chacha20:input(),

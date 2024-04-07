@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc PKCS #5: Password-Based Cryptography Specification Version 2.0
 %%% See RFC 2898: https://tools.ietf.org/html/rfc2898
 %%% @end
 %%% Created :  27 Jul 2015 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_jwa_pkcs5).
 
 %% API
@@ -17,9 +22,9 @@
 -export([pbkdf2/4]).
 -export([pbkdf2/5]).
 
-%%====================================================================
+%%%=============================================================================
 %% API functions
-%%====================================================================
+%%%=============================================================================
 
 pbkdf1(Hash, Password, Salt) ->
     pbkdf1(Hash, Password, Salt, 1).
@@ -81,9 +86,9 @@ pbkdf2(Mac, Password, Salt, Iterations, DerivedKeyLen) when
 ->
     pbkdf2(resolve_mac(Mac), Password, Salt, Iterations, DerivedKeyLen).
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 ceiling(X) when X < 0 ->

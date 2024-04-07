@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  21 Jul 2015 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_jwk).
 
 -include("jose_jwe.hrl").
@@ -147,9 +152,9 @@
 -define(KTY_OKP_Ed448ph_MODULE, jose_jwk_kty_okp_ed448ph).
 -define(KTY_OKP_X448_MODULE, jose_jwk_kty_okp_x448).
 
-%%====================================================================
+%%%=============================================================================
 %% Decode API functions
-%%====================================================================
+%%%=============================================================================
 
 from(List) when is_list(List) ->
     [from(Element) || Element <- List];
@@ -489,9 +494,9 @@ from_pem_file(Key, {Modules, File}) when is_map(Modules) andalso (is_binary(File
 from_pem_file(Key, File) when is_binary(File) orelse is_list(File) ->
     from_pem_file(Key, {#{}, File}).
 
-%%====================================================================
+%%%=============================================================================
 %% Encode API functions
-%%====================================================================
+%%%=============================================================================
 
 to_binary(List) when is_list(List) ->
     [to_binary(Element) || Element <- List];
@@ -741,9 +746,9 @@ to_thumbprint_map(#jose_jwk{kty = {Module, KTY}, fields = Fields}) ->
 to_thumbprint_map(Other) ->
     to_thumbprint_map(from(Other)).
 
-%%====================================================================
+%%%=============================================================================
 %% API functions
-%%====================================================================
+%%%=============================================================================
 
 block_decrypt(Encrypted, JWK = #jose_jwk{}) ->
     jose_jwe:block_decrypt(JWK, Encrypted);
@@ -1081,9 +1086,9 @@ verify_strict(Signed, Allow, JWK = #jose_jwk{}) ->
 verify_strict(Signed, Allow, Other) ->
     verify_strict(Signed, Allow, from(Other)).
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 do_thumbprint_concat([]) ->

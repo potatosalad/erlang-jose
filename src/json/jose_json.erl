@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  14 Aug 2015 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_json).
 
 -include("jose_support.hrl").
@@ -46,9 +51,9 @@
     }
 }).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_support callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec support_info() -> jose_support:info().
 support_info() ->
@@ -76,9 +81,9 @@ support_check(Module, encode, 1) ->
     JSON = ?TV_JSON(),
     ?expect(JSON, Module, encode, [Term]).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_json callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec decode(JSON) -> Term when JSON :: jose_json:json(), Term :: term().
 decode(JSON) when is_binary(JSON) ->

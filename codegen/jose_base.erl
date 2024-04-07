@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  24 Feb 2018 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_base).
 
 %% API
@@ -16,9 +21,9 @@
 %% parse_transform callbacks
 -export([parse_transform/2]).
 
-%%%===================================================================
+%%%=============================================================================
 %%% API functions
-%%%===================================================================
+%%%=============================================================================
 
 calculate_shift(Table) when is_list(Table) ->
     erlang:round(math:log2(length(Table))).
@@ -43,24 +48,43 @@ do_calculate_pairs_permutation(V0, C0, [{V1, C1} | Rest], Acc0) ->
 do_calculate_pairs_permutation(_, _, [], Acc) ->
     Acc.
 
-%%%===================================================================
+%%%=============================================================================
 %%% parse_transform callbacks
-%%%===================================================================
+%%%=============================================================================
 
 parse_transform(Ast0, _Options) ->
     Ast1 = walk_ast([], Ast0),
     [Module] = [Module || {attribute, _Line, module, Module} <- Ast1],
     % io:format("Module = ~p~n", [Module]),
     Forms = epp:restore_typed_record_fields(
-        revert([Form || Form = {function, _Line, Name, _Arity, _Clauses} <- Ast1, Name =:= encode_char orelse Name =:= encode_pair])
+        revert([
+            Form
+         || Form = {function, _Line, Name, _Arity, _Clauses} <- Ast1, Name =:= encode_char orelse Name =:= encode_pair
+        ])
     ),
-    ok = lists:foreach(fun(Form = {function, _Line, Name, _Arity, _Clauses}) ->
-        Filename = unicode:characters_to_list(io_lib:format("~s.~s.erl", [Module, Name])),
-        Body = erlang:iolist_to_binary(binary:split(unicode:characters_to_binary(erl_pp:form(Form)), <<"\n">>, [global, trim_all])),
-        ok = file:write_file(Filename, <<"%%% % @format\n", Body/binary>>),
-        io:format("Wrote to ~s~n", [Filename]),
-        ok
-    end, Forms),
+    ok = lists:foreach(
+        fun(Form = {function, _Line, Name, _Arity, _Clauses}) ->
+            Filename = unicode:characters_to_list(io_lib:format("~s.~s.erl", [Module, Name])),
+            Body = erlang:iolist_to_binary(
+                binary:split(unicode:characters_to_binary(erl_pp:form(Form)), <<"\n">>, [global, trim_all])
+            ),
+            ok = file:write_file(
+                Filename,
+                <<
+                    "%%% Copyright (c) Andrew Bennett\n"
+                    "%%%\n"
+                    "%%% This source code is licensed under the MIT license found in the\n"
+                    "%%% LICENSE.md file in the root directory of this source tree.\n"
+                    "%%%\n"
+                    "%%% % @format\n",
+                    Body/binary
+                >>
+            ),
+            io:format("Wrote to ~s~n", [Filename]),
+            ok
+        end,
+        Forms
+    ),
     % Str = [
     %     io_lib:fwrite(
     %         "~s~n",
@@ -78,9 +102,9 @@ parse_transform(Ast0, _Options) ->
 revert(Tree) ->
     [erl_syntax:revert(T) || T <- lists:flatten(Tree)].
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 walk_ast(Acc, []) ->
@@ -103,7 +127,9 @@ walk_body(Acc, [Statement | Ast]) ->
     walk_body([transform_statement(Statement) | Acc], Ast).
 
 %% @private
-transform_statement(Statement = {call, Line, {remote, _Line1, {atom, _Line2, ?MODULE}, {atom, _Line3, Function}}, Arguments}) ->
+transform_statement(
+    Statement = {call, Line, {remote, _Line1, {atom, _Line2, ?MODULE}, {atom, _Line3, Function}}, Arguments}
+) ->
     case transform_call(Function, Line, Arguments) of
         {ok, NewStatement} ->
             NewStatement;
@@ -135,9 +161,12 @@ transform_call(encode_char_as_case, _Line, [
 ]) ->
     {ok, Case};
 transform_call(encode_pair_as_case, Line, [
-    {'case', _Line1, Var, Clauses0 = [{clause, _Line2, [{integer, _Line3, 0}], [], [{char, _Line4, _}]} | _]}, {atom, _Line5, Type}
+    {'case', _Line1, Var, Clauses0 = [{clause, _Line2, [{integer, _Line3, 0}], [], [{char, _Line4, _}]} | _]},
+    {atom, _Line5, Type}
 ]) ->
-    Table = calculate_pairs([{Index, Value} || {clause, _, [{integer, _, Index}], [], [{char, _, Value}]} <- Clauses0], Type),
+    Table = calculate_pairs(
+        [{Index, Value} || {clause, _, [{integer, _, Index}], [], [{char, _, Value}]} <- Clauses0], Type
+    ),
     Clauses1 = [{clause, Line, [{integer, Line, Index}], [], [{integer, Line, Value}]} || {Index, Value} <- Table],
     Case = {'case', Line, Var, Clauses1},
     {ok, Case};
@@ -147,9 +176,12 @@ transform_call(encode_char_as_tuple_element_call, Line, [
     Pairs = [{Index, Value} || {clause, _, [{integer, _, Index}], [], [{char, _, Value}]} <- Clauses0],
     encode_as_tuple_element_call(Line, Var, Pairs);
 transform_call(encode_pair_as_tuple_element_call, Line, [
-    {'case', _Line1, Var, Clauses0 = [{clause, _Line2, [{integer, _Line3, 0}], [], [{char, _Line4, _}]} | _]}, {atom, _Line5, Type}
+    {'case', _Line1, Var, Clauses0 = [{clause, _Line2, [{integer, _Line3, 0}], [], [{char, _Line4, _}]} | _]},
+    {atom, _Line5, Type}
 ]) ->
-    Pairs = calculate_pairs([{Index, Value} || {clause, _, [{integer, _, Index}], [], [{char, _, Value}]} <- Clauses0], Type),
+    Pairs = calculate_pairs(
+        [{Index, Value} || {clause, _, [{integer, _, Index}], [], [{char, _, Value}]} <- Clauses0], Type
+    ),
     encode_as_tuple_element_call(Line, Var, Pairs);
 transform_call(_Function, _Line, _Arguments) ->
     error.

@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  11 Jan 2016 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_sha3).
 
 -include("jose_support.hrl").
@@ -93,9 +98,9 @@
     )
 ).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_support callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec support_info() -> jose_support:info().
 support_info() ->
@@ -140,9 +145,9 @@ support_check(Module, shake256, 2) ->
     OutputSize = byte_size(Output),
     ?expect(Output, Module, shake256, [Input, OutputSize]).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_sha3 callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec sha3_224(Input) -> Output when
     Input :: jose_sha3:input(), Output :: jose_sha3:sha3_224_output().

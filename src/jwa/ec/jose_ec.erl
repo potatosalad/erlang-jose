@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  08 Sep 2022 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_ec).
 
 -include("jose_support.hrl").
@@ -315,9 +320,9 @@
     )
 ).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_support callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec support_info() -> jose_support:info().
 support_info() ->
@@ -546,9 +551,9 @@ support_check(Module, ecdsa_secp521r1_sha512_verify, 3) ->
     PK = ?TV_ec_secp521r1_PublicKey0(),
     ?expect(true, Module, ecdsa_secp521r1_sha512_verify, [Sig, Message, PK]).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_ec callbacks
-%%====================================================================
+%%%=============================================================================
 
 -spec ec_secp256k1_keypair() -> {PublicKey, SecretKey} when
     PublicKey :: jose_ec:ec_secp256k1_public_key(),

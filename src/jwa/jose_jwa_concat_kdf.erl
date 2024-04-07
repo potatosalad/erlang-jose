@@ -1,21 +1,26 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc Concat KDF, as defined in Section 5.8.1 of NIST.800-56A
 %%% See NIST.800-56A: https://dx.doi.org/10.6028/NIST.SP.800-56Ar2
 %%% @end
 %%% Created :  24 Jul 2015 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_jwa_concat_kdf).
 
 %% API
 -export([kdf/3]).
 -export([kdf/4]).
 
-%%====================================================================
+%%%=============================================================================
 %% API functions
-%%====================================================================
+%%%=============================================================================
 
 kdf(Hash, Z, OtherInfo) ->
     HashFun = resolve_hash(Hash),
@@ -82,9 +87,9 @@ kdf(Hash, Z, {AlgorithmID, PartyUInfo, PartyVInfo, undefined, SuppPrivInfo}, Key
 kdf(Hash, Z, {AlgorithmID, PartyUInfo, PartyVInfo, SuppPubInfo, undefined}, KeyDataLen) ->
     kdf(Hash, Z, {AlgorithmID, PartyUInfo, PartyVInfo, SuppPubInfo, <<>>}, KeyDataLen).
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 ceiling(X) when X < 0 ->

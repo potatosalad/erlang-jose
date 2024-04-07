@@ -1,5 +1,9 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc Key Agreement with Elliptic Curve Diffie-Hellman One-Pass Unified Model (ECDH-1PU)
@@ -7,7 +11,8 @@
 %%%
 %%% @end
 %%% Created :  29 Dec 2019 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_jwe_alg_ecdh_1pu).
 -behaviour(jose_jwe).
 -behaviour(jose_jwe_alg).
@@ -54,9 +59,9 @@
 -define(ECDH_1PU_C20PKW, #jose_jwe_alg_ecdh_1pu{wrap = c20p_kw, bits = 256}).
 -define(ECDH_1PU_XC20PKW, #jose_jwe_alg_ecdh_1pu{wrap = xc20p_kw, bits = 256}).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_jwe callbacks
-%%====================================================================
+%%%=============================================================================
 
 from_map(F = #{<<"alg">> := <<"ECDH-1PU">>}) ->
     from_map_ecdh_1pu(maps:remove(<<"alg">>, F), ?ECDH_1PU);
@@ -96,9 +101,9 @@ to_map(A = ?ECDH_1PU_XC20PKW, F) ->
 to_map(A = ?ECDH_1PU, F) ->
     to_map_ecdh_1pu(F#{<<"alg">> => <<"ECDH-1PU">>}, A).
 
-%%====================================================================
+%%%=============================================================================
 %% jose_jwe_alg callbacks
-%%====================================================================
+%%%=============================================================================
 
 generate_key(_Fields, {ENCModule, ENC}, ALG = #jose_jwe_alg_ecdh_1pu{epk = EphemeralPublicJWK = #jose_jwk{}}) ->
     jose_jwe_alg:generate_key(EphemeralPublicJWK, maps:get(<<"alg">>, to_map(ALG, #{})), ENCModule:algorithm(ENC));
@@ -319,9 +324,9 @@ next_cek(
 next_cek(_Key, {ENCModule, ENC}, JWEECDH1PU = #jose_jwe_alg_ecdh_1pu{}) ->
     {ENCModule:generate_content_encryption_key(ENC), JWEECDH1PU}.
 
-%%====================================================================
+%%%=============================================================================
 %% API functions
-%%====================================================================
+%%%=============================================================================
 
 algorithm(?ECDH_1PU_A128GCMKW) -> <<"ECDH-1PU+A128GCMKW">>;
 algorithm(?ECDH_1PU_A192GCMKW) -> <<"ECDH-1PU+A192GCMKW">>;
@@ -333,9 +338,9 @@ algorithm(?ECDH_1PU_C20PKW) -> <<"ECDH-1PU+C20PKW">>;
 algorithm(?ECDH_1PU_XC20PKW) -> <<"ECDH-1PU+XC20PKW">>;
 algorithm(?ECDH_1PU) -> <<"ECDH-1PU">>.
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 from_map_ecdh_1pu(F = #{<<"epk">> := EPK}, H) ->

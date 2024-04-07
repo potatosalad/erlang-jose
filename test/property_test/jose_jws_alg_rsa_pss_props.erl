@@ -1,3 +1,8 @@
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% % @format
 -module(jose_jws_alg_rsa_pss_props).
 

@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  04 Sep 2022 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_support_statem).
 -behaviour(gen_statem).
 
@@ -19,7 +24,9 @@
 -export([
     code_change/0,
     ensure_all_resolved/0,
-    resolve/1
+    provider_module_add/1,
+    resolve/1,
+    support_module_add/1
 ]).
 %% gen_statem callbacks
 -export([
@@ -49,11 +56,13 @@
     end
 ).
 -define(SERVER, ?MODULE).
+-define(SUPPORT_MODULES_TABLE, jose_support_modules).
+-define(PROVIDER_MODULES_TABLE, jose_provider_modules).
 -define(RESOLVED_TABLE, jose_jwa_resolved).
 
-%%====================================================================
-%% OTP API functions
-%%====================================================================
+%%%=============================================================================
+%%% OTP API functions
+%%%=============================================================================
 
 -spec child_spec() -> supervisor:child_spec().
 child_spec() ->
@@ -69,9 +78,9 @@ child_spec() ->
 start_link() ->
     gen_statem:start_link({local, ?SERVER}, ?MODULE, [], []).
 
-%%====================================================================
-%% API functions
-%%====================================================================
+%%%=============================================================================
+%%% API functions
+%%%=============================================================================
 
 -spec code_change() -> ok.
 code_change() ->
@@ -80,6 +89,11 @@ code_change() ->
 -spec ensure_all_resolved() -> ok.
 ensure_all_resolved() ->
     ?ENSURE_JOSE_STARTED(gen_statem:call(?SERVER, ensure_all_resolved)).
+
+-spec provider_module_add({ProviderModule, SupportModule}) -> ok when
+    ProviderModule :: module(), SupportModule :: module().
+provider_module_add({ProviderModule, SupportModule}) when is_atom(ProviderModule) andalso is_atom(SupportModule) ->
+    ?ENSURE_JOSE_STARTED(gen_statem:call(?SERVER, {provider_module_add, {ProviderModule, SupportModule}})).
 
 -spec resolve(Key) -> {ok, ResolvedModule} | {error, Reason} when
     Key :: jose_support:key(), ResolvedModule :: module(), Reason :: term().
@@ -90,9 +104,13 @@ resolve(Key = {Behaviour, {FunctionName, Arity}}) when
 ->
     ?ENSURE_JOSE_STARTED(gen_statem:call(?SERVER, {resolve, Key})).
 
-%%====================================================================
-%% gen_statem callbacks
-%%====================================================================
+-spec support_module_add({SupportModule}) -> ok when SupportModule :: module().
+support_module_add({SupportModule}) when is_atom(SupportModule) ->
+    ?ENSURE_JOSE_STARTED(gen_statem:call(?SERVER, {support_module_add, {SupportModule}})).
+
+%%%=============================================================================
+%%% gen_statem callbacks
+%%%=============================================================================
 
 -spec callback_mode() -> gen_statem:callback_mode() | [gen_statem:callback_mode() | gen_statem:state_enter()].
 callback_mode() ->
@@ -100,6 +118,26 @@ callback_mode() ->
 
 -spec init([]) -> {ok, State :: init, Data :: #data{}}.
 init([]) ->
+    ?SUPPORT_MODULES_TABLE = ets:new(?SUPPORT_MODULES_TABLE, [
+        named_table,
+        protected,
+        set,
+        {read_concurrency, true}
+    ]),
+    ?PROVIDER_MODULES_TABLE = ets:new(?PROVIDER_MODULES_TABLE, [
+        named_table,
+        protected,
+        set,
+        {read_concurrency, true}
+    ]),
+    true = ets:insert(?SUPPORT_MODULES_TABLE, [
+        jose_support:support_module_key(SupportModule)
+     || SupportModule <- jose_support:support_module_list_static()
+    ]),
+    true = ets:insert(?PROVIDER_MODULES_TABLE, [
+        jose_support:provider_module_key(ProviderModule)
+     || ProviderModule <- jose_support:provider_module_list_static()
+    ]),
     ?RESOLVED_TABLE = ets:new(?RESOLVED_TABLE, [
         named_table,
         protected,
@@ -150,6 +188,25 @@ handle_event(state_timeout, resolve_next, resolving, Data0 = #data{plan = Plan0}
 % 	Actions = [postpone],
 % 	{next_state, init, }
 handle_event({call, From}, ensure_all_resolved, resolved, _Data) ->
+    Actions = [{reply, From, ok}],
+    {keep_state_and_data, Actions};
+handle_event({call, From}, {provider_module_add, {ProviderModule, SupportModule}}, _State, _Data) when
+    is_atom(ProviderModule) andalso is_atom(SupportModule)
+->
+    true = ets:insert(?PROVIDER_MODULES_TABLE, {ProviderModule, SupportModule}),
+    Actions = [{reply, From, ok}],
+    {keep_state_and_data, Actions};
+handle_event({call, From}, {resolve, Key}, _State, _Data) ->
+    case ets:lookup(?RESOLVED_TABLE, Key) of
+        [{_, {_, ResolvedModule}}] ->
+            Actions = [{reply, From, {ok, ResolvedModule}}],
+            {keep_state_and_data, Actions};
+        [] ->
+            Actions = [{reply, From, error}],
+            {keep_state_and_data, Actions}
+    end;
+handle_event({call, From}, {support_module_add, {SupportModule}}, _State, _Data) when is_atom(SupportModule) ->
+    true = ets:insert(?SUPPORT_MODULES_TABLE, {SupportModule}),
     Actions = [{reply, From, ok}],
     {keep_state_and_data, Actions};
 handle_event(info, EventContent, State, Data0 = #data{resolved = Resolved0, resolving_tag = ResolvingTag}) ->

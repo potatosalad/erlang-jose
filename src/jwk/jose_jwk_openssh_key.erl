@@ -1,12 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc Private key format for OpenSSH
 %%% See https://github.com/openssh/openssh-portable/blob/master/PROTOCOL.key
 %%% @end
 %%% Created :  16 Jan 2016 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -module(jose_jwk_openssh_key).
 
 %% API
@@ -18,9 +23,9 @@
 -define(OPENSSH_HEAD, "-----BEGIN OPENSSH PRIVATE KEY-----").
 -define(OPENSSH_TAIL, "-----END OPENSSH PRIVATE KEY-----").
 
-%%====================================================================
+%%%=============================================================================
 %% API
-%%====================================================================
+%%%=============================================================================
 
 from_binary(Binary) when is_binary(Binary) ->
     parse_keys(Binary, []).
@@ -28,9 +33,9 @@ from_binary(Binary) when is_binary(Binary) ->
 to_binary(List) when is_list(List) ->
     to_binary(List, []).
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal encode functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 to_binary([KeyList | List], Acc) when is_list(KeyList) ->
     to_binary(List, [write_keylist(lists:unzip(KeyList)) | Acc]);
@@ -115,9 +120,9 @@ add_padding(U, P) when (byte_size(U) + P) rem 8 =/= 0 ->
 add_padding(U, P) ->
     <<U/binary, (binary:list_to_bin(lists:seq(1, P)))/binary>>.
 
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 %%% Internal decode functions
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
 
 %% @private
 parse_keys(<<?OPENSSH_HEAD, SoFar/binary>>, Acc) ->

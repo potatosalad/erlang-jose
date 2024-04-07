@@ -1,13 +1,17 @@
-%%% % @format
-%%%-------------------------------------------------------------------
+%%%-----------------------------------------------------------------------------
+%%% Copyright (c) Andrew Bennett
+%%%
+%%% This source code is licensed under the MIT license found in the
+%%% LICENSE.md file in the root directory of this source tree.
+%%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  02 Sep 2022 by Andrew Bennett <potatosaladx@gmail.com>
-%%%-------------------------------------------------------------------
-
+%%%-----------------------------------------------------------------------------
+%%% % @format
 -ifndef(JOSE_SUPPORT_HRL).
 
 -define(b16d(X), jose_base16:'decode!'(X)).
@@ -24,15 +28,10 @@
 -define(resolve(Arguments),
     case ets:whereis(jose_jwa_resolved) of
         undefined ->
-            case application:ensure_all_started(jose) of
-                {ok, _} ->
-                    case ets:whereis(jose_jwa_resolved) of
-                        undefined ->
-                            erlang:error(operation_not_supported);
-                        _ ->
-                            erlang:apply(?MODULE, ?FUNCTION_NAME, Arguments)
-                    end;
-                _ ->
+            case jose_support_statem:resolve({?MODULE, {?FUNCTION_NAME, ?FUNCTION_ARITY}}) of
+                {ok, ResolvedModule} ->
+                    erlang:apply(ResolvedModule, ?FUNCTION_NAME, Arguments);
+                error ->
                     erlang:error(operation_not_supported)
             end;
         ResolvedTableId when is_reference(ResolvedTableId) ->
