@@ -52,7 +52,7 @@ defmodule JOSE.Mixfile do
       {:thoas, "~> 1.0", only: [:dev, :test]},
       {:ex_doc, "~> 0.30", only: :dev},
       {:earmark, "~> 1.4", only: :dev},
-      {:dialyxir, "~> 1.4.3"}
+      {:dialyxir, "~> 1.4.3", only: :dev, runtime: false}
     ]
   end
 
