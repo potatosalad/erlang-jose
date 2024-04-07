@@ -203,7 +203,7 @@ JOSE.JWA.supports()
 
 #### Unsecured Signing Vulnerability
 
-The [`"none"`](https://tools.ietf.org/html/rfc7515#appendix-A.5) signing algorithm is disabled by default to prevent accidental verification of empty signatures (read about the vulnerability [here](https://auth0.com/blog/2015/03/31/critical-vulnerabilities-in-json-web-token-libraries/)).
+The [`"none"`](https://tools.ietf.org/html/rfc7515#appendix-A.5) signing algorithm is disabled by default to prevent accidental verification of empty signatures (read about the vulnerability [here](https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/)).
 
 If you want to further restrict the signature algorithms allowed for a token, use `JOSE.JWT.verify_strict/3`:
 

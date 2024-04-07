@@ -168,7 +168,7 @@ defmodule JOSE do
 
   Enables/disables the `"none"` algorithm used for signing and verifying.
 
-  See [Critical vulnerabilities in JSON Web Token libraries](https://auth0.com/blog/2015/03/31/critical-vulnerabilities-in-json-web-token-libraries/) for more information.
+  See [Critical vulnerabilities in JSON Web Token libraries](https://auth0.com/blog/critical-vulnerabilities-in-json-web-token-libraries/) for more information.
   """
   @spec unsecured_signing(boolean()) :: :ok
   defdelegate unsecured_signing(boolean), to: :jose
