@@ -6,7 +6,7 @@
 %%% % @format
 %%%-----------------------------------------------------------------------------
 %%% @author Andrew Bennett <andrew@pixid.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%% @end
 %%% Created :  08 Aug 2016 by Andrew Bennett <andrew@pixid.com>
@@ -77,7 +77,7 @@ end_per_group(_Group, Config) ->
     ok.
 
 %%%=============================================================================
-%% Tests
+%%% Tests
 %%%=============================================================================
 
 aead() ->

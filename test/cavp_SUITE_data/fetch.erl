@@ -6,7 +6,7 @@
 %%% % @format
 %%%-----------------------------------------------------------------------------
 %%% @author Andrew Bennett <andrew@pixid.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc Based on core_http_get.erl
 %%% See [https://github.com/ninenines/erlang.mk/blob/0eb54a71605a955df14c5df793ebe676c86259f9/core/core.mk]
 %%% @end
@@ -18,7 +18,7 @@
 -export([fetch/2]).
 
 %%%=============================================================================
-%% API functions
+%%% API functions
 %%%=============================================================================
 
 fetch(URL = "ftp" ++ _, OutputFile) ->

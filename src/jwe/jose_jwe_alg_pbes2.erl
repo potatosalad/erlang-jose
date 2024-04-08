@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -56,7 +56,7 @@
 -define(PBES2_HS512_XC20PKW, #jose_jwe_alg_pbes2{hmac = sha512, wrap = xc20p_kw, bits = 256}).
 
 %%%=============================================================================
-%% jose_jwe callbacks
+%%% jose_jwe callbacks
 %%%=============================================================================
 
 from_map(F = #{<<"alg">> := <<"PBES2-HS256+A128GCMKW">>}) ->
@@ -94,7 +94,7 @@ to_map(A = ?PBES2_HS512_XC20PKW, F) ->
     to_map_pbes2(F#{<<"alg">> => <<"PBES2-HS512+XC20PKW">>}, A).
 
 %%%=============================================================================
-%% jose_jwe_alg callbacks
+%%% jose_jwe_alg callbacks
 %%%=============================================================================
 
 generate_key(_Fields, {ENCModule, ENC}, ALG = #jose_jwe_alg_pbes2{}) ->
@@ -214,7 +214,7 @@ next_cek(_Key, {ENCModule, ENC}, ALG = #jose_jwe_alg_pbes2{}) ->
     {ENCModule:generate_content_encryption_key(ENC), ALG}.
 
 %%%=============================================================================
-%% API functions
+%%% API functions
 %%%=============================================================================
 
 -spec format_error(term(), term()) -> term().

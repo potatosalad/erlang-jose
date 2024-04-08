@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -13,6 +13,8 @@
 %%%-----------------------------------------------------------------------------
 %%% % @format
 -module(jose_aes_cbc_crypto).
+-compile(warn_missing_spec_all).
+-author("potatosaladx@gmail.com").
 
 -behaviour(jose_provider).
 -behaviour(jose_aes_cbc).
@@ -30,7 +32,7 @@
 ]).
 
 %%%=============================================================================
-%% jose_support_impl callbacks
+%%% jose_support_impl callbacks
 %%%=============================================================================
 
 -spec provider_info() -> jose_provider:info().
@@ -45,7 +47,7 @@ provider_info() ->
     }.
 
 %%%=============================================================================
-%% jose_aes_cbc callbacks
+%%% jose_aes_cbc callbacks
 %%%=============================================================================
 
 -spec aes_128_cbc_decrypt(CipherText, IV, CEK) -> PlainText when

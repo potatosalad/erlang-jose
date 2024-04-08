@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -14,7 +14,7 @@
 %%% % @format
 -module(jose_sha3).
 
--include("jose_support.hrl").
+-include_lib("jose/include/jose_support.hrl").
 
 -behaviour(jose_support).
 
@@ -99,7 +99,7 @@
 ).
 
 %%%=============================================================================
-%% jose_support callbacks
+%%% jose_support callbacks
 %%%=============================================================================
 
 -spec support_info() -> jose_support:info().
@@ -146,7 +146,7 @@ support_check(Module, shake256, 2) ->
     ?expect(Output, Module, shake256, [Input, OutputSize]).
 
 %%%=============================================================================
-%% jose_sha3 callbacks
+%%% jose_sha3 callbacks
 %%%=============================================================================
 
 -spec sha3_224(Input) -> Output when

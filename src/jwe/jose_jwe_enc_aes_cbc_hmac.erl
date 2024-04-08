@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -45,7 +45,7 @@
 ).
 
 %%%=============================================================================
-%% jose_jwe callbacks
+%%% jose_jwe callbacks
 %%%=============================================================================
 
 from_map(F = #{<<"enc">> := <<"A128CBC-HS256">>}) ->
@@ -63,7 +63,7 @@ to_map(aes_256_cbc_hmac_sha512, F) ->
     F#{<<"enc">> => <<"A256CBC-HS512">>}.
 
 %%%=============================================================================
-%% jose_jwe_enc callbacks
+%%% jose_jwe_enc callbacks
 %%%=============================================================================
 
 -spec algorithm(ENC) -> Algorithm when

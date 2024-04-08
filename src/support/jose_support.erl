@@ -16,13 +16,26 @@
 
 %% API
 -export([
-    builtin_support_modules/0,
-    builtin_provider_modules/0,
     deps/0,
+    deps_static/0,
     expect/1,
     expect/4,
     expect/5,
-    expect_report/5
+    expect_report/5,
+    provider_module_add/1,
+    provider_module_key/1,
+    provider_module_list/0,
+    provider_module_list/1,
+    provider_module_list_static/0,
+    support_module_add/1,
+    % support_module_del/1,
+    support_module_key/1,
+    support_module_list/0,
+    support_module_list_static/0
+]).
+%% Errors API
+-export([
+    format_error/2
 ]).
 
 -type behaviour() :: module().
@@ -80,34 +93,146 @@
     support_check/3
 ]).
 
-builtin_support_modules() ->
-    [
-        jose_aes_cbc,
-        jose_aes_cbc_hmac,
-        jose_aes_ctr,
-        jose_aes_ecb,
-        jose_aes_gcm,
-        jose_aes_kw,
-        jose_chacha20,
-        jose_chacha20_poly1305,
-        jose_csprng,
-        jose_curve25519,
-        jose_curve448,
-        jose_ec,
-        jose_hchacha20,
-        jose_hmac,
-        jose_json,
-        jose_pbkdf2_hmac,
-        jose_poly1305,
-        jose_rsa,
-        jose_sha1,
-        jose_sha2,
-        jose_sha3,
-        jose_xchacha20,
-        jose_xchacha20_poly1305
-    ].
+%% @private
+-define(is_priority(X), ((X) =:= 'low' orelse (X) =:= 'normal' orelse (X) =:= 'high' orelse (X) =:= 'max')).
 
-builtin_provider_modules() ->
+%%%=============================================================================
+%%% API functions
+%%%=============================================================================
+
+deps() ->
+    graph(support_module_list(), provider_module_list()).
+
+deps_static() ->
+    graph(support_module_list_static(), provider_module_list_static()).
+
+expect([{Expected, Module, Function, Arguments} | Rest]) when
+    is_atom(Module) andalso
+        is_atom(Function) andalso
+        is_list(Arguments)
+->
+    case expect(Expected, Module, Function, Arguments) of
+        ok ->
+            expect(Rest);
+        Error = {error, _Reason} ->
+            Error
+    end;
+expect([{Expected, Actual, Module, Function, Arguments} | Rest]) when
+    is_atom(Module) andalso
+        is_atom(Function) andalso
+        is_list(Arguments)
+->
+    case expect(Expected, Actual, Module, Function, Arguments) of
+        ok ->
+            expect(Rest);
+        Error = {error, _Reason} ->
+            Error
+    end;
+expect([]) ->
+    ok.
+
+expect(Expected, Module, Function, Arguments) when
+    is_atom(Module) andalso
+        is_atom(Function) andalso
+        is_list(Arguments)
+->
+    Actual = erlang:apply(Module, Function, Arguments),
+    expect(Expected, Actual, Module, Function, Arguments).
+
+expect(Expected, Actual, Module, Function, Arguments) when
+    is_atom(Module) andalso
+        is_atom(Function) andalso
+        is_list(Arguments)
+->
+    case Actual =:= Expected of
+        true ->
+            ok;
+        false ->
+            {error, expect_report(Module, Function, Arguments, Actual, Expected)}
+    end.
+
+expect_report(Module, Function, Arguments, Actual, Expected) ->
+    MFA = {Module, Function, Arguments},
+    {EncodedActual, EncodedExpected} =
+        case {Actual, Expected} of
+            {<<_/binary>>, <<_/binary>>} ->
+                {jose_base16:encode(Actual, #{'case' => lower}), jose_base16:encode(Expected, #{'case' => lower})};
+            {{A = <<_/binary>>, B = <<_/binary>>}, {C = <<_/binary>>, D = <<_/binary>>}} ->
+                Enc = fun(X) -> jose_base16:encode(X, #{'case' => lower}) end,
+                {{Enc(A), Enc(B)}, {Enc(C), Enc(D)}};
+            {{A, B = <<_/binary>>}, {C, D = <<_/binary>>}} ->
+                Enc = fun(X) -> jose_base16:encode(X, #{'case' => lower}) end,
+                {{A, Enc(B)}, {C, Enc(D)}};
+            _ ->
+                {Actual, Expected}
+        end,
+    #{mfa => MFA, actual => EncodedActual, expected => EncodedExpected}.
+
+-spec provider_module_add(ProviderModule) -> ok when ProviderModule :: module().
+provider_module_add(ProviderModule) when is_atom(ProviderModule) ->
+    {ProviderModule, SupportModule} = provider_module_key(ProviderModule),
+    ok = support_module_add(SupportModule),
+    jose_support_statem:provider_module_add({ProviderModule, SupportModule}).
+
+-spec provider_module_key(ProviderModule) -> {ProviderModule, SupportModule} when
+    ProviderModule :: module(), SupportModule :: module().
+provider_module_key(ProviderModule) when is_atom(ProviderModule) ->
+    case code:ensure_loaded(ProviderModule) of
+        {module, ProviderModule} ->
+            case erlang:function_exported(ProviderModule, provider_info, 0) of
+                true ->
+                    case ProviderModule:provider_info() of
+                        #{behaviour := SupportModule, priority := Priority, requirements := _Requirements} ->
+                            {SupportModule} = support_module_key(SupportModule),
+                            ok =
+                                case ?is_priority(Priority) of
+                                    true ->
+                                        ok;
+                                    false ->
+                                        error_with_info(badarg, [ProviderModule], #{
+                                            1 =>
+                                                {provider_module_invalid_priority, #{
+                                                    module => ProviderModule, priority => Priority
+                                                }}
+                                        })
+                                end,
+                            {ProviderModule, SupportModule};
+                        InvalidProviderInfo ->
+                            error_with_info(badarg, [ProviderModule], #{
+                                1 =>
+                                    {provider_module_invalid_provider_info, #{
+                                        module => ProviderModule, provider_info => InvalidProviderInfo
+                                    }}
+                            })
+                    end;
+                false ->
+                    error_with_info(badarg, [ProviderModule], #{
+                        1 =>
+                            {provider_module_function_not_exported, #{
+                                module => ProviderModule, function => {provider_info, 0}
+                            }}
+                    })
+            end;
+        {error, ProviderModuleLoadError} ->
+            error_with_info(badarg, [ProviderModule], #{
+                1 => {provider_module_load_error, #{module => ProviderModule, error => ProviderModuleLoadError}}
+            })
+    end.
+
+-spec provider_module_list() -> ProviderModuleList when
+    ProviderModuleList :: [ProviderModule], ProviderModule :: module().
+provider_module_list() ->
+    ets:select(jose_provider_modules, [{{'$1', '_'}, [], ['$1']}]).
+
+-spec provider_module_list(SupportModule) -> ProviderModuleList when
+    SupportModule :: module(), ProviderModuleList :: [ProviderModule], ProviderModule :: module().
+provider_module_list(SupportModule) when is_atom(SupportModule) ->
+    ets:select(jose_provider_modules, [{{'$1', SupportModule}, [], ['$1']}]).
+
+-compile({inline, [provider_module_list_static/0]}).
+-spec provider_module_list_static() -> ProviderModuleList when
+    ProviderModuleList :: [ProviderModule], ProviderModule :: module().
+provider_module_list_static() ->
     [
         %% AES-CBC
         jose_jwa_aes_cbc,
@@ -197,70 +322,121 @@ builtin_provider_modules() ->
         jose_xchacha20_poly1305_libsodium
     ].
 
-deps() ->
-    graph(builtin_support_modules(), builtin_provider_modules()).
+-spec support_module_add(SupportModule) -> ok when SupportModule :: module().
+support_module_add(SupportModule) when is_atom(SupportModule) ->
+    {SupportModule} = support_module_key(SupportModule),
+    jose_support_statem:support_module_add({SupportModule}).
 
-expect([{Expected, Module, Function, Arguments} | Rest]) when
-    is_atom(Module) andalso
-        is_atom(Function) andalso
-        is_list(Arguments)
-->
-    case expect(Expected, Module, Function, Arguments) of
-        ok ->
-            expect(Rest);
-        Error = {error, _Reason} ->
-            Error
-    end;
-expect([{Expected, Actual, Module, Function, Arguments} | Rest]) when
-    is_atom(Module) andalso
-        is_atom(Function) andalso
-        is_list(Arguments)
-->
-    case expect(Expected, Actual, Module, Function, Arguments) of
-        ok ->
-            expect(Rest);
-        Error = {error, _Reason} ->
-            Error
-    end;
-expect([]) ->
-    ok.
-
-expect(Expected, Module, Function, Arguments) when
-    is_atom(Module) andalso
-        is_atom(Function) andalso
-        is_list(Arguments)
-->
-    Actual = erlang:apply(Module, Function, Arguments),
-    expect(Expected, Actual, Module, Function, Arguments).
-
-expect(Expected, Actual, Module, Function, Arguments) when
-    is_atom(Module) andalso
-        is_atom(Function) andalso
-        is_list(Arguments)
-->
-    case Actual =:= Expected of
-        true ->
-            ok;
-        false ->
-            {error, expect_report(Module, Function, Arguments, Actual, Expected)}
+-spec support_module_key(SupportModule) -> {SupportModule} when SupportModule :: module().
+support_module_key(SupportModule) when is_atom(SupportModule) ->
+    case code:ensure_loaded(SupportModule) of
+        {module, SupportModule} ->
+            case erlang:function_exported(SupportModule, support_info, 0) of
+                true ->
+                    case SupportModule:support_info() of
+                        #{stateful := _Stateful, callbacks := _Callbacks} ->
+                            {SupportModule};
+                        InvalidSupportInfo ->
+                            error_with_info(badarg, [SupportModule], #{
+                                1 =>
+                                    {support_module_invalid_support_info, #{
+                                        module => SupportModule, support_info => InvalidSupportInfo
+                                    }}
+                            })
+                    end;
+                false ->
+                    error_with_info(badarg, [SupportModule], #{
+                        1 =>
+                            {support_module_function_not_exported, #{
+                                module => SupportModule, function => {support_info, 0}
+                            }}
+                    })
+            end;
+        {error, SupportModuleLoadError} ->
+            error_with_info(badarg, [SupportModule], #{
+                1 => {support_module_load_error, #{module => SupportModule, error => SupportModuleLoadError}}
+            })
     end.
 
-expect_report(Module, Function, Arguments, Actual, Expected) ->
-    MFA = {Module, Function, Arguments},
-    {EncodedActual, EncodedExpected} =
-        case {Actual, Expected} of
-            {<<_/binary>>, <<_/binary>>} ->
-                {jose_base16:encode(Actual, #{'case' => lower}), jose_base16:encode(Expected, #{'case' => lower})};
-            {{A = <<_/binary>>, B = <<_/binary>>}, {C = <<_/binary>>, D = <<_/binary>>}} ->
-                Enc = fun(X) -> jose_base16:encode(X, #{'case' => lower}) end,
-                {{Enc(A), Enc(B)}, {Enc(C), Enc(D)}};
-            {{A, B = <<_/binary>>}, {C, D = <<_/binary>>}} ->
-                Enc = fun(X) -> jose_base16:encode(X, #{'case' => lower}) end,
-                {{A, Enc(B)}, {C, Enc(D)}};
-            _ ->
-                {Actual, Expected}
-        end,
-    #{mfa => MFA, actual => EncodedActual, expected => EncodedExpected}.
+-spec support_module_list() -> SupportModuleList when SupportModuleList :: [SupportModule], SupportModule :: module().
+support_module_list() ->
+    ets:select(jose_support_modules, [{{'$1'}, [], ['$1']}]).
+
+-compile({inline, [support_module_list_static/0]}).
+-spec support_module_list_static() -> SupportModuleList when
+    SupportModuleList :: [SupportModule], SupportModule :: module().
+support_module_list_static() ->
+    [
+        jose_aes_cbc,
+        jose_aes_cbc_hmac,
+        jose_aes_ctr,
+        jose_aes_ecb,
+        jose_aes_gcm,
+        jose_aes_kw,
+        jose_chacha20,
+        jose_chacha20_poly1305,
+        jose_csprng,
+        jose_curve25519,
+        jose_curve448,
+        jose_ec,
+        jose_hchacha20,
+        jose_hmac,
+        jose_json,
+        jose_pbkdf2_hmac,
+        jose_poly1305,
+        jose_rsa,
+        jose_sha1,
+        jose_sha2,
+        jose_sha3,
+        jose_xchacha20,
+        jose_xchacha20_poly1305
+    ].
+
+%%%=============================================================================
+%%% Errors API functions
+%%%=============================================================================
+
+%% @private
+-compile({inline, [error_with_info/3]}).
+-spec error_with_info(dynamic(), dynamic(), dynamic()) -> no_return().
+error_with_info(Reason, Args, Cause) ->
+    erlang:error(Reason, Args, [{error_info, #{module => ?MODULE, cause => Cause}}]).
+
+-spec format_error(dynamic(), dynamic()) -> dynamic().
+format_error(_Reason, [{_M, _F, _As, Info} | _]) ->
+    ErrorInfo = proplists:get_value(error_info, Info, #{}),
+    ErrorDescription1 = maps:get(cause, ErrorInfo),
+    ErrorDescription2 = maps:map(fun format_error_description/2, ErrorDescription1),
+    ErrorDescription2.
+
+%% @private
+-spec format_error_description(dynamic(), dynamic()) -> dynamic().
+format_error_description(
+    _Key, {provider_module_function_not_exported, #{module := ProviderModule, function := {FunctionName, Arity}}}
+) ->
+    io_lib:format("function not exported ~0tp:~0tp/~w which is required by behaviour 'jose_provider'", [
+        ProviderModule, FunctionName, Arity
+    ]);
+format_error_description(
+    _Key, {provider_module_load_error, #{module := ProviderModule, error := ProviderModuleLoadError}}
+) ->
+    io_lib:format("failed to load provider module ~0tp with reason: ~0tp", [ProviderModule, ProviderModuleLoadError]);
+format_error_description(
+    _Key, {support_module_function_not_exported, #{module := SupportModule, function := {FunctionName, Arity}}}
+) ->
+    io_lib:format("function not exported ~0tp:~0tp/~w which is required by behaviour 'jose_support'", [
+        SupportModule, FunctionName, Arity
+    ]);
+format_error_description(
+    _Key, {support_module_load_error, #{module := SupportModule, error := SupportModuleLoadError}}
+) ->
+    io_lib:format("failed to load support module ~0tp with reason: ~0tp", [SupportModule, SupportModuleLoadError]);
+format_error_description(_Key, Value) ->
+    Value.
+
+%%%-----------------------------------------------------------------------------
+%%% Internal functions
+%%%-----------------------------------------------------------------------------
 
 %% @private
 priority_to_integer(low) ->

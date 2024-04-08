@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc Private key format for OpenSSH
 %%% See https://github.com/openssh/openssh-portable/blob/master/PROTOCOL.key
 %%% @end
@@ -24,7 +24,7 @@
 -define(OPENSSH_TAIL, "-----END OPENSSH PRIVATE KEY-----").
 
 %%%=============================================================================
-%% API
+%%% API
 %%%=============================================================================
 
 from_binary(Binary) when is_binary(Binary) ->

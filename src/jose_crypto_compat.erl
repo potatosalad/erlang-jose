@@ -6,7 +6,7 @@
 %%% % @format
 %%%-----------------------------------------------------------------------------
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -25,7 +25,7 @@
 -export([mac/5]).
 
 %%%=============================================================================
-%% API functions
+%%% API functions
 %%%=============================================================================
 
 %% "New API" for OTP 23 and higher

@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -13,6 +13,8 @@
 %%%-----------------------------------------------------------------------------
 %%% % @format
 -module(jose_chacha20_libsodium).
+-compile(warn_missing_spec_all).
+-author("potatosaladx@gmail.com").
 
 -behaviour(jose_provider).
 -behaviour(jose_chacha20).
@@ -36,7 +38,7 @@
 }).
 
 %%%=============================================================================
-%% jose_provider callbacks
+%%% jose_provider callbacks
 %%%=============================================================================
 
 -spec provider_info() -> jose_provider:info().
@@ -51,7 +53,7 @@ provider_info() ->
     }.
 
 %%%=============================================================================
-%% jose_chacha20 callbacks
+%%% jose_chacha20 callbacks
 %%%=============================================================================
 
 -spec chacha20_exor(Input, Count, Nonce, Key) -> Output when
@@ -103,12 +105,23 @@ chacha20_stream_final(_State = #jose_chacha20_libsodium{}) ->
 %%%-----------------------------------------------------------------------------
 
 %% @private
+-spec pad64
+    (<<>>) -> <<>>;
+    (binary()) -> <<_:64, _:_*64>>.
 pad64(X) when (byte_size(X) rem 64) == 0 ->
     <<>>;
 pad64(X) ->
     binary:copy(<<0>>, 64 - (byte_size(X) rem 64)).
 
 %% @private
+-spec chacha20_stream_exor(Count, Nonce, Key, Block, Input, Output) -> {ChaCha20State, Output} when
+    Count :: jose_chacha20:chacha20_count(),
+    Nonce :: jose_chacha20:chacha20_nonce(),
+    Key :: jose_chacha20:chacha20_key(),
+    Block :: binary(),
+    Input :: jose_chacha20:input(),
+    Output :: jose_chacha20:output(),
+    ChaCha20State :: jose_chacha20:chacha20_state().
 chacha20_stream_exor(Count, Nonce, Key, Block, <<>>, Output) ->
     State = #jose_chacha20_libsodium{key = Key, count = Count, nonce = Nonce, block = Block},
     {State, Output};

@@ -1,11 +1,12 @@
 %%%-----------------------------------------------------------------------------
 %%% Copyright (c) Andrew Bennett
+%%% Copyright (c) Brett Beatty
 %%%
 %%% This source code is licensed under the MIT license found in the
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Brett Beatty <brettbeatty@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett, 2021, Brett Beatty
+%%% @copyright (c) Andrew Bennett, Brett Beatty
 %%% @doc
 %%%
 %%% @end
@@ -33,7 +34,7 @@
 ]).
 
 %%%=============================================================================
-%% jose_provider callbacks
+%%% jose_provider callbacks
 %%%=============================================================================
 
 -spec provider_info() -> jose_provider:info().
@@ -48,7 +49,7 @@ provider_info() ->
     }.
 
 %%%=============================================================================
-%% jose_curve25519 callbacks
+%%% jose_curve25519 callbacks
 %%%=============================================================================
 
 % EdDSA

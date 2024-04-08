@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -13,6 +13,8 @@
 %%%-----------------------------------------------------------------------------
 %%% % @format
 -module(jose_jwa_aes_ctr).
+-compile(warn_missing_spec_all).
+-author("potatosaladx@gmail.com").
 
 -behaviour(jose_provider).
 -behaviour(jose_aes_ctr).
@@ -52,8 +54,14 @@
     block = <<>> :: binary()
 }).
 
+%% Types
+-type block_fun(IV, Key) :: fun((IV, Key) -> binary()).
+-type key() :: jose_aes_ctr:aes_128_key() | jose_aes_ctr:aes_192_key() | jose_aes_ctr:aes_256_key().
+-type state() :: jose_aes_ctr:aes_128_ctr_state() | jose_aes_ctr:aes_192_ctr_state() | jose_aes_ctr:aes_256_ctr_state().
+-type state_fun(Key, IV, Block) :: fun((Key, IV, Block) -> state()).
+
 %%%=============================================================================
-%% jose_provider callbacks
+%%% jose_provider callbacks
 %%%=============================================================================
 
 -spec provider_info() -> jose_provider:info().
@@ -68,7 +76,7 @@ provider_info() ->
     }.
 
 %%%=============================================================================
-%% jose_aes_ctr callbacks
+%%% jose_aes_ctr callbacks
 %%%=============================================================================
 
 -spec aes_128_ctr_exor(Input, IV, Key) -> Output when
@@ -199,6 +207,15 @@ aes_256_ctr_stream_final(_State = #jose_jwa_aes_256_ctr{}) ->
 %%%-----------------------------------------------------------------------------
 
 %% @private
+-spec aes_ctr_stream_exor(BlockFun, StateFun, IV, Key, Block, Input, Output) -> {State, Output} when
+    BlockFun :: block_fun(IV, Key),
+    StateFun :: state_fun(Key, IV, Block),
+    IV :: jose_aes_ctr:aes_ctr_iv(),
+    Key :: key(),
+    Block :: binary(),
+    Input :: jose_aes_ctr:input(),
+    Output :: jose_aes_ctr:output(),
+    State :: state().
 aes_ctr_stream_exor(_BlockFun, StateFun, IV, Key, Block, <<>>, Output) ->
     State = StateFun(Key, IV, Block),
     {State, Output};
@@ -220,13 +237,28 @@ aes_ctr_stream_exor(BlockFun, StateFun, IV, Key, Block, Input, Output) ->
     end.
 
 %% @private
+-spec make_aes_128_ctr(Key, IV, Block) -> Aes128CtrState when
+    Key :: jose_aes_ctr:aes_128_key(),
+    IV :: jose_aes_ctr:aes_ctr_iv(),
+    Block :: binary(),
+    Aes128CtrState :: jose_aes_ctr:aes_128_ctr_state().
 make_aes_128_ctr(Key, IV, Block) ->
     #jose_jwa_aes_128_ctr{key = Key, iv = IV, block = Block}.
 
 %% @private
+-spec make_aes_192_ctr(Key, IV, Block) -> Aes192CtrState when
+    Key :: jose_aes_ctr:aes_192_key(),
+    IV :: jose_aes_ctr:aes_ctr_iv(),
+    Block :: binary(),
+    Aes192CtrState :: jose_aes_ctr:aes_192_ctr_state().
 make_aes_192_ctr(Key, IV, Block) ->
     #jose_jwa_aes_192_ctr{key = Key, iv = IV, block = Block}.
 
 %% @private
+-spec make_aes_256_ctr(Key, IV, Block) -> Aes256CtrState when
+    Key :: jose_aes_ctr:aes_256_key(),
+    IV :: jose_aes_ctr:aes_ctr_iv(),
+    Block :: binary(),
+    Aes256CtrState :: jose_aes_ctr:aes_256_ctr_state().
 make_aes_256_ctr(Key, IV, Block) ->
     #jose_jwa_aes_256_ctr{key = Key, iv = IV, block = Block}.

@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc JSON Web Signature (JWS)
 %%% See RFC 7515: https://tools.ietf.org/html/rfc7515
 %%% See RFC 7797: https://tools.ietf.org/html/rfc7797
@@ -60,7 +60,7 @@
 -define(ALG_RSA_PSS_MODULE, jose_jws_alg_rsa_pss).
 
 %%%=============================================================================
-%% Decode API functions
+%%% Decode API functions
 %%%=============================================================================
 
 from(List) when is_list(List) ->
@@ -126,7 +126,7 @@ from_map({JWS, _Modules, Fields}) ->
     JWS#jose_jws{fields = Fields}.
 
 %%%=============================================================================
-%% Encode API functions
+%%% Encode API functions
 %%%=============================================================================
 
 to_binary(List) when is_list(List) ->
@@ -156,7 +156,7 @@ to_map(Other) ->
     to_map(from(Other)).
 
 %%%=============================================================================
-%% API functions
+%%% API functions
 %%%=============================================================================
 
 compact(

@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -13,8 +13,10 @@
 %%%-----------------------------------------------------------------------------
 %%% % @format
 -module(jose_aes_gcm).
+-compile(warn_missing_spec_all).
+-author("potatosaladx@gmail.com").
 
--include("jose_support.hrl").
+-include_lib("jose/include/jose_support.hrl").
 
 -behaviour(jose_support).
 
@@ -122,7 +124,7 @@
 -define(TV_AES_256_GCM_CipherTag(), ?b16d("d55b76f3438f51441eedd65413dafada")).
 
 %%%=============================================================================
-%% jose_support callbacks
+%%% jose_support callbacks
 %%%=============================================================================
 
 -spec support_info() -> jose_support:info().
@@ -215,7 +217,7 @@ support_check(Module, aes_256_gcm_encrypt, 4) ->
     ?expect({CipherText, CipherTag}, Module, aes_256_gcm_encrypt, [PlainText, AAD, IV, CEK]).
 
 %%%=============================================================================
-%% jose_aes_gcm callbacks
+%%% jose_aes_gcm callbacks
 %%%=============================================================================
 
 -spec aes_128_gcm_decrypt(CipherText, CipherTag, AAD, IV, CEK) -> PlainText | error when

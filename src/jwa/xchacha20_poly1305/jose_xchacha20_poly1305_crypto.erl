@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -32,16 +32,16 @@
     xchacha20_subkey_and_nonce/2
 ]).
 
-%% Types
--type chacha20_key() :: <<_:256>>.
--type chacha20_nonce() :: <<_:96>>.
--type hchacha20_nonce() :: <<_:128>>.
--type hchacha20_block() :: <<_:256>>.
--type poly1305_otk() :: <<_:256>>.
--type xchacha20_nonce() :: <<_:192>>.
+% %% Types
+% -type chacha20_key() :: <<_:256>>.
+% -type chacha20_nonce() :: <<_:96>>.
+% -type hchacha20_nonce() :: <<_:128>>.
+% -type hchacha20_block() :: <<_:256>>.
+% -type poly1305_otk() :: <<_:256>>.
+% -type xchacha20_nonce() :: <<_:192>>.
 
 %%%=============================================================================
-%% jose_provider callbacks
+%%% jose_provider callbacks
 %%%=============================================================================
 
 -spec provider_info() -> jose_provider:info().
@@ -56,7 +56,7 @@ provider_info() ->
     }.
 
 %%%=============================================================================
-%% jose_xchacha20_poly1305 callbacks
+%%% jose_xchacha20_poly1305 callbacks
 %%%=============================================================================
 
 -spec xchacha20_poly1305_decrypt(CipherText, CipherTag, AAD, Nonce, Key) -> PlainText | error when
@@ -121,7 +121,7 @@ xchacha20_poly1305_verify(MAC, Message, Nonce, Key) when
     jose_jwa:constant_time_compare(MAC, Challenge).
 
 %%%=============================================================================
-%% Internal API Functions
+%%% Internal API Functions
 %%%=============================================================================
 
 %% @private

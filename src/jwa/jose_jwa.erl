@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -56,7 +56,7 @@
 ).
 
 %%%=============================================================================
-%% Crypto API functions
+%%% Crypto API functions
 %%%=============================================================================
 
 block_decrypt(Cipher, Key, CipherText) when
@@ -121,7 +121,7 @@ block_encrypt(Cipher, Key, IV, {AAD, PlainText}) when
     end.
 
 %%%=============================================================================
-%% Public Key API functions
+%%% Public Key API functions
 %%%=============================================================================
 
 decrypt_private(CipherText, RSAPrivateKey = #'RSAPrivateKey'{}, Algorithm) when
@@ -165,7 +165,7 @@ verify(Message, DigestType, Signature, PublicKey, _Options) ->
     public_key:verify(Message, DigestType, Signature, PublicKey).
 
 %%%=============================================================================
-%% API functions
+%%% API functions
 %%%=============================================================================
 
 block_cipher(Cipher) ->

@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -47,7 +47,7 @@
 -export_type([key/0]).
 
 %%%=============================================================================
-%% jose_jwk callbacks
+%%% jose_jwk callbacks
 %%%=============================================================================
 
 from_map(F = #{<<"kty">> := <<"oct">>, <<"k">> := K}) ->
@@ -66,7 +66,7 @@ to_thumbprint_map(K, F) ->
     maps:with([<<"k">>, <<"kty">>], to_map(K, F)).
 
 %%%=============================================================================
-%% jose_jwk_kty callbacks
+%%% jose_jwk_kty callbacks
 %%%=============================================================================
 
 generate_key(Size) when is_integer(Size) ->
@@ -82,7 +82,7 @@ key_encryptor(KTY, Fields, Key) ->
     jose_jwk_kty:key_encryptor(KTY, Fields, Key).
 
 %%%=============================================================================
-%% jose_jwk_use_enc callbacks
+%%% jose_jwk_use_enc callbacks
 %%%=============================================================================
 
 block_encryptor(_KTY, #{<<"alg">> := ALG, <<"enc">> := ENC, <<"use">> := <<"enc">>}) ->
@@ -120,7 +120,7 @@ derive_key(Key) ->
     Key.
 
 %%%=============================================================================
-%% jose_jwk_use_sig callbacks
+%%% jose_jwk_use_sig callbacks
 %%%=============================================================================
 
 sign(Message, JWSALG, Key) when is_atom(JWSALG) ->
@@ -174,7 +174,7 @@ verify(Message, {'Poly1305', Nonce}, Signature, Key) ->
     jose_chacha20_poly1305:verify(Signature, Message, Key, Nonce).
 
 %%%=============================================================================
-%% jose_jwk_oct callbacks
+%%% jose_jwk_oct callbacks
 %%%=============================================================================
 
 from_oct(OCTBinary) when is_binary(OCTBinary) ->

@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -43,7 +43,7 @@
 -define(XC20PKW, #jose_jwe_alg_xc20p_kw{}).
 
 %%%=============================================================================
-%% jose_jwe callbacks
+%%% jose_jwe callbacks
 %%%=============================================================================
 
 from_map(F = #{<<"alg">> := <<"XC20PKW">>}) ->
@@ -53,7 +53,7 @@ to_map(A = ?XC20PKW, F) ->
     to_map_xc20p(A, F#{<<"alg">> => <<"XC20PKW">>}).
 
 %%%=============================================================================
-%% jose_jwe_alg callbacks
+%%% jose_jwe_alg callbacks
 %%%=============================================================================
 
 generate_key(_Fields, {ENCModule, ENC}, ALG = #jose_jwe_alg_xc20p_kw{}) ->
@@ -85,7 +85,7 @@ next_cek(_Key, {ENCModule, ENC}, ALG = #jose_jwe_alg_xc20p_kw{}) ->
     {ENCModule:generate_content_encryption_key(ENC), ALG}.
 
 %%%=============================================================================
-%% API functions
+%%% API functions
 %%%=============================================================================
 
 %%%-----------------------------------------------------------------------------

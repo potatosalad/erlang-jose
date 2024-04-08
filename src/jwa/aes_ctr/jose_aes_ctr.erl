@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -13,8 +13,10 @@
 %%%-----------------------------------------------------------------------------
 %%% % @format
 -module(jose_aes_ctr).
+-compile(warn_missing_spec_all).
+-author("potatosaladx@gmail.com").
 
--include("jose_support.hrl").
+-include_lib("jose/include/jose_support.hrl").
 
 -behaviour(jose_support).
 
@@ -153,7 +155,7 @@
 -define(TV_AES_256_CTR_CipherText2(), ?b16d("662ca6b7df95fa701b0a68a65ac84504")).
 
 %%%=============================================================================
-%% jose_support callbacks
+%%% jose_support callbacks
 %%%=============================================================================
 
 -spec support_info() -> jose_support:info().
@@ -358,7 +360,7 @@ support_check(Module, aes_256_ctr_stream_final, 1) ->
     ?expect(<<>>, Module, aes_256_ctr_stream_final, [State3]).
 
 %%%=============================================================================
-%% jose_aes_ctr callbacks
+%%% jose_aes_ctr callbacks
 %%%=============================================================================
 
 -spec aes_128_ctr_exor(Input, IV, Key) -> Output when

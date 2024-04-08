@@ -6,7 +6,7 @@
 %%% % @format
 %%%-----------------------------------------------------------------------------
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -33,7 +33,7 @@
 -export([pem_entry_encode/3]).
 
 %%%=============================================================================
-%% API functions
+%%% API functions
 %%%=============================================================================
 
 cipher(DecryptedDER, CipherInfo, Password) ->

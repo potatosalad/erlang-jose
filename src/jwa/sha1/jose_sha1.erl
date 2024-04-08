@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -14,7 +14,7 @@
 %%% % @format
 -module(jose_sha1).
 
--include("jose_support.hrl").
+-include_lib("jose/include/jose_support.hrl").
 
 -behaviour(jose_support).
 
@@ -49,7 +49,7 @@
 -define(TV_SHA1(), ?b16d("a9993e364706816aba3e25717850c26c9cd0d89d")).
 
 %%%=============================================================================
-%% jose_support callbacks
+%%% jose_support callbacks
 %%%=============================================================================
 
 -spec support_info() -> jose_support:info().
@@ -69,7 +69,7 @@ support_check(Module, sha1, 1) ->
     ?expect(Output, Module, sha1, [Input]).
 
 %%%=============================================================================
-%% jose_sha1 callbacks
+%%% jose_sha1 callbacks
 %%%=============================================================================
 
 -spec sha1(Input) -> Output when

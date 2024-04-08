@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc ChaCha20 and Poly1305 for IETF Protocols
 %%% See https://tools.ietf.org/html/rfc7539
 %%% @end
@@ -35,7 +35,7 @@
 -define(p, 16#3fffffffffffffffffffffffffffffffb).
 
 %%%=============================================================================
-%% jose_provider callbacks
+%%% jose_provider callbacks
 %%%=============================================================================
 
 -spec provider_info() -> jose_provider:info().
@@ -50,7 +50,7 @@ provider_info() ->
     }.
 
 %%%=============================================================================
-%% jose_poly1305 callbacks
+%%% jose_poly1305 callbacks
 %%%=============================================================================
 
 -spec poly1305_mac(Message, OneTimeKey) -> Tag when
@@ -61,7 +61,7 @@ poly1305_mac(Message, OneTimeKey) when bit_size(OneTimeKey) =:= 256 ->
     mac(Message, OneTimeKey).
 
 %%%=============================================================================
-%% API functions
+%%% API functions
 %%%=============================================================================
 
 mac(M, K) when

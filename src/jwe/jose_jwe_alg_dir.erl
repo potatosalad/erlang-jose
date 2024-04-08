@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -34,7 +34,7 @@
 -export_type([alg/0]).
 
 %%%=============================================================================
-%% jose_jwe callbacks
+%%% jose_jwe callbacks
 %%%=============================================================================
 
 from_map(F = #{<<"alg">> := <<"dir">>}) ->
@@ -44,7 +44,7 @@ to_map(dir, F) ->
     F#{<<"alg">> => <<"dir">>}.
 
 %%%=============================================================================
-%% jose_jwe_alg callbacks
+%%% jose_jwe_alg callbacks
 %%%=============================================================================
 
 generate_key(_Fields, {ENCModule, ENC}, dir) ->
@@ -64,7 +64,7 @@ next_cek(#jose_jwk{kty = {KTYModule, KTY}}, {ENCModule, ENC}, dir) ->
     next_cek(KTYModule:derive_key(KTY), {ENCModule, ENC}, dir).
 
 %%%=============================================================================
-%% API functions
+%%% API functions
 %%%=============================================================================
 
 %%%-----------------------------------------------------------------------------

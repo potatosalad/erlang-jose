@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -27,7 +27,7 @@
 ]).
 
 %%%=============================================================================
-%% jose_provider callbacks
+%%% jose_provider callbacks
 %%%=============================================================================
 
 -spec provider_info() -> jose_provider:info().
@@ -42,7 +42,7 @@ provider_info() ->
     }.
 
 %%%=============================================================================
-%% jose_pbkdf2_hmac callbacks
+%%% jose_pbkdf2_hmac callbacks
 %%%=============================================================================
 
 -spec pbkdf2_hmac_sha256(Password, Salt, Iterations, KeyLen) -> Key when

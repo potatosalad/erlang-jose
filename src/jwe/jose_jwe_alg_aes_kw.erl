@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -48,7 +48,7 @@
 -define(A256GCMKW, #jose_jwe_alg_aes_kw{bits = 256, gcm = true}).
 
 %%%=============================================================================
-%% jose_jwe callbacks
+%%% jose_jwe callbacks
 %%%=============================================================================
 
 from_map(F = #{<<"alg">> := <<"A128KW">>}) ->
@@ -78,7 +78,7 @@ to_map(A = ?A256GCMKW, F) ->
     to_map_aes_gcm(A, F#{<<"alg">> => <<"A256GCMKW">>}).
 
 %%%=============================================================================
-%% jose_jwe_alg callbacks
+%%% jose_jwe_alg callbacks
 %%%=============================================================================
 
 generate_key(_Fields, {ENCModule, ENC}, ALG = #jose_jwe_alg_aes_kw{bits = Bits}) ->
@@ -122,7 +122,7 @@ next_cek(_Key, {ENCModule, ENC}, ALG = #jose_jwe_alg_aes_kw{}) ->
     {ENCModule:generate_content_encryption_key(ENC), ALG}.
 
 %%%=============================================================================
-%% API functions
+%%% API functions
 %%%=============================================================================
 
 %%%-----------------------------------------------------------------------------

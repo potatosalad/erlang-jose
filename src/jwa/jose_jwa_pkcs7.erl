@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc PKCS-7
 %%% See RFC 2315: https://tools.ietf.org/html/rfc2315
 %%% @end
@@ -19,7 +19,7 @@
 -export([unpad/1]).
 
 %%%=============================================================================
-%% API functions
+%%% API functions
 %%%=============================================================================
 
 -spec pad(binary()) -> binary().

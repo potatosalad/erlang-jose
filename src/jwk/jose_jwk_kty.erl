@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -47,7 +47,7 @@
 -define(KTY_OKP_X448_MODULE, jose_jwk_kty_okp_x448).
 
 %%%=============================================================================
-%% API functions
+%%% API functions
 %%%=============================================================================
 
 from_key(ECPrivateKey = #'ECPrivateKey'{}) ->

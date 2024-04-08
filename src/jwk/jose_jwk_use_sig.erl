@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -34,7 +34,7 @@
     KTY :: any().
 
 %%%=============================================================================
-%% API functions
+%%% API functions
 %%%=============================================================================
 
 %%%-----------------------------------------------------------------------------

@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -13,6 +13,8 @@
 %%%-----------------------------------------------------------------------------
 %%% % @format
 -module(jose_jwa_aes_gcm).
+-compile(warn_missing_spec_all).
+-author("potatosaladx@gmail.com").
 
 -behaviour(jose_provider).
 -behaviour(jose_aes_gcm).
@@ -30,7 +32,7 @@
 ]).
 
 %%%=============================================================================
-%% jose_provider callbacks
+%%% jose_provider callbacks
 %%%=============================================================================
 
 -spec provider_info() -> jose_provider:info().
@@ -47,7 +49,7 @@ provider_info() ->
     }.
 
 %%%=============================================================================
-%% jose_aes_gcm callbacks
+%%% jose_aes_gcm callbacks
 %%%=============================================================================
 
 -spec aes_128_gcm_decrypt(CipherText, CipherTag, AAD, IV, CEK) -> PlainText | error when

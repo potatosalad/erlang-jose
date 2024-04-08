@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -32,7 +32,7 @@
 -export_type([alg/0]).
 
 %%%=============================================================================
-%% jose_jws callbacks
+%%% jose_jws callbacks
 %%%=============================================================================
 
 from_map(F = #{<<"alg">> := <<"none">>}) ->
@@ -42,7 +42,7 @@ to_map(none, F) ->
     F#{<<"alg">> => <<"none">>}.
 
 %%%=============================================================================
-%% jose_jws_alg callbacks
+%%% jose_jws_alg callbacks
 %%%=============================================================================
 
 generate_key(none, _Fields) ->
@@ -67,7 +67,7 @@ verify(_Key, _Message, _Signature, none) ->
     false.
 
 %%%=============================================================================
-%% API functions
+%%% API functions
 %%%=============================================================================
 
 %%%-----------------------------------------------------------------------------

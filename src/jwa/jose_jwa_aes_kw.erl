@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc Advanced Encryption Standard (AES) Key Wrap Algorithm
 %%% See RFC 3394 [https://tools.ietf.org/html/rfc3394]
 %%% @end
@@ -13,6 +13,8 @@
 %%%-----------------------------------------------------------------------------
 %%% % @format
 -module(jose_jwa_aes_kw).
+-compile(warn_missing_spec_all).
+-author("potatosaladx@gmail.com").
 
 -behaviour(jose_provider).
 -behaviour(jose_aes_kw).
@@ -36,12 +38,18 @@
     unwrap/4
 ]).
 
+%% Types
+-type decrypt_block(KEK) :: fun((jose_aes_kw:cipher_text(), KEK) -> jose_aes_kw:plain_text()).
+-type encrypt_block(KEK) :: fun((jose_aes_kw:plain_text(), KEK) -> jose_aes_kw:cipher_text()).
+-type iv() :: jose_aes_kw:plain_text().
+-type kek() :: jose_aes_kw:aes_128_key() | jose_aes_kw:aes_192_key() | jose_aes_kw:aes_256_key().
+
 %% Macros
 -define(MSB64, 1 / unsigned - big - integer - unit:64).
 -define(DEFAULT_IV, <<16#A6A6A6A6A6A6A6A6:?MSB64>>).
 
 %%%=============================================================================
-%% jose_provider callbacks
+%%% jose_provider callbacks
 %%%=============================================================================
 
 -spec provider_info() -> jose_provider:info().
@@ -58,7 +66,7 @@ provider_info() ->
     }.
 
 %%%=============================================================================
-%% jose_aes_kw callbacks
+%%% jose_aes_kw callbacks
 %%%=============================================================================
 
 -spec aes_128_kw_unwrap(CipherText, KEK) -> PlainText | error when
@@ -104,12 +112,23 @@ aes_256_kw_wrap(PlainText, KEK) when bit_size(PlainText) rem 64 =:= 0 andalso bi
     wrap(fun jose_aes_ecb:aes_256_ecb_encrypt/2, PlainText, KEK).
 
 %%%=============================================================================
-%% Internal API functions
+%%% Internal API functions
 %%%=============================================================================
 
+-spec wrap(EncryptBlock, PlainText, KEK) -> CipherText when
+    EncryptBlock :: encrypt_block(KEK),
+    PlainText :: jose_aes_kw:plain_text(),
+    KEK :: kek(),
+    CipherText :: jose_aes_kw:cipher_text().
 wrap(EncryptBlock, PlainText, KEK) ->
     wrap(EncryptBlock, PlainText, KEK, ?DEFAULT_IV).
 
+-spec wrap(EncryptBlock, PlainText, KEK, IV) -> CipherText when
+    EncryptBlock :: encrypt_block(KEK),
+    PlainText :: jose_aes_kw:plain_text(),
+    KEK :: kek(),
+    IV :: iv(),
+    CipherText :: jose_aes_kw:cipher_text().
 wrap(EncryptBlock, PlainText, KEK, IV) when
     is_function(EncryptBlock, 2) andalso
         (bit_size(PlainText) rem 64) =:= 0 andalso
@@ -121,9 +140,20 @@ wrap(EncryptBlock, PlainText, KEK, IV) when
     BlockCount = (byte_size(Buffer) div 8) - 1,
     do_wrap(EncryptBlock, Buffer, 0, BlockCount, KEK).
 
+-spec unwrap(DecryptBlock, CipherText, KEK) -> PlainText when
+    DecryptBlock :: decrypt_block(KEK),
+    CipherText :: jose_aes_kw:cipher_text(),
+    KEK :: kek(),
+    PlainText :: jose_aes_kw:plain_text().
 unwrap(DecryptBlock, CipherText, KEK) ->
     unwrap(DecryptBlock, CipherText, KEK, ?DEFAULT_IV).
 
+-spec unwrap(DecryptBlock, CipherText, KEK, IV) -> PlainText when
+    DecryptBlock :: decrypt_block(KEK),
+    CipherText :: jose_aes_kw:cipher_text(),
+    KEK :: kek(),
+    IV :: iv(),
+    PlainText :: jose_aes_kw:plain_text().
 unwrap(DecryptBlock, CipherText, KEK, IV) when
     is_function(DecryptBlock, 2) andalso
         (bit_size(CipherText) rem 64) =:= 0 andalso
@@ -145,12 +175,27 @@ unwrap(DecryptBlock, CipherText, KEK, IV) when
 %%%-----------------------------------------------------------------------------
 
 %% @private
+-spec do_wrap(EncryptBlock, Buffer, Round, BlockCount, KEK) -> CipherText when
+    EncryptBlock :: encrypt_block(KEK),
+    Buffer :: jose_aes_kw:plain_text() | jose_aes_kw:cipher_text(),
+    Round :: non_neg_integer(),
+    BlockCount :: non_neg_integer(),
+    KEK :: kek(),
+    CipherText :: jose_aes_kw:cipher_text().
 do_wrap(_EncryptBlock, Buffer, 6, _BlockCount, _KEK) ->
     Buffer;
 do_wrap(EncryptBlock, Buffer, J, BlockCount, KEK) ->
     do_wrap(EncryptBlock, do_wrap(EncryptBlock, Buffer, J, 1, BlockCount, KEK), J + 1, BlockCount, KEK).
 
 %% @private
+-spec do_wrap(EncryptBlock, Buffer, Round, BlockIndex, BlockCount, KEK) -> CipherText when
+    EncryptBlock :: encrypt_block(KEK),
+    Buffer :: jose_aes_kw:plain_text() | jose_aes_kw:cipher_text(),
+    Round :: non_neg_integer(),
+    BlockIndex :: non_neg_integer(),
+    BlockCount :: non_neg_integer(),
+    KEK :: kek(),
+    CipherText :: jose_aes_kw:cipher_text().
 do_wrap(_EncryptBlock, Buffer, _J, I, BlockCount, _KEK) when I > BlockCount ->
     Buffer;
 do_wrap(EncryptBlock, <<A0:8/binary, Rest/binary>>, J, I, BlockCount, KEK) ->
@@ -163,12 +208,27 @@ do_wrap(EncryptBlock, <<A0:8/binary, Rest/binary>>, J, I, BlockCount, KEK) ->
     do_wrap(EncryptBlock, <<A2:?MSB64, Head/binary, B1/binary, Tail/binary>>, J, I + 1, BlockCount, KEK).
 
 %% @private
+-spec do_unwrap(DecryptBlock, Buffer, Round, BlockCount, KEK) -> PlainText when
+    DecryptBlock :: decrypt_block(KEK),
+    Buffer :: jose_aes_kw:plain_text() | jose_aes_kw:cipher_text(),
+    Round :: non_neg_integer(),
+    BlockCount :: non_neg_integer(),
+    KEK :: kek(),
+    PlainText :: jose_aes_kw:plain_text().
 do_unwrap(_DecryptBlock, Buffer, J, _BlockCount, _KEK) when J < 0 ->
     Buffer;
 do_unwrap(DecryptBlock, Buffer, J, BlockCount, KEK) ->
     do_unwrap(DecryptBlock, do_unwrap(DecryptBlock, Buffer, J, BlockCount, BlockCount, KEK), J - 1, BlockCount, KEK).
 
 %% @private
+-spec do_unwrap(DecryptBlock, Buffer, Round, BlockIndex, BlockCount, KEK) -> PlainText when
+    DecryptBlock :: decrypt_block(KEK),
+    Buffer :: jose_aes_kw:plain_text() | jose_aes_kw:cipher_text(),
+    Round :: non_neg_integer(),
+    BlockIndex :: non_neg_integer(),
+    BlockCount :: non_neg_integer(),
+    KEK :: kek(),
+    PlainText :: jose_aes_kw:plain_text().
 do_unwrap(_DecryptBlock, Buffer, _J, I, _BlockCount, _KEK) when I < 1 ->
     Buffer;
 do_unwrap(DecryptBlock, <<A0:?MSB64, Rest/binary>>, J, I, BlockCount, KEK) ->

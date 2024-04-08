@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -30,7 +30,7 @@
 -export([poly1305_key_gen/2]).
 
 %%%=============================================================================
-%% jose_provider callbacks
+%%% jose_provider callbacks
 %%%=============================================================================
 
 -spec provider_info() -> jose_provider:info().
@@ -47,7 +47,7 @@ provider_info() ->
     }.
 
 %%%=============================================================================
-%% jose_xchacha20_poly1305 callbacks
+%%% jose_xchacha20_poly1305 callbacks
 %%%=============================================================================
 
 -spec xchacha20_poly1305_decrypt(CipherText, CipherTag, AAD, Nonce, Key) -> PlainText | error when
@@ -119,7 +119,7 @@ xchacha20_poly1305_verify(MAC, Message, Nonce, Key) when
     end.
 
 %%%=============================================================================
-%% Internal API Functions
+%%% Internal API Functions
 %%%=============================================================================
 
 -spec poly1305_key_gen(Nonce, Key) -> OneTimeKey when

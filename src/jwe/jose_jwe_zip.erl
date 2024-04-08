@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -41,7 +41,7 @@
 -define(DEF, zlib).
 
 %%%=============================================================================
-%% jose_jwe callbacks
+%%% jose_jwe callbacks
 %%%=============================================================================
 
 from_map(Fields = #{<<"zip">> := <<"DEF">>}) ->
@@ -51,7 +51,7 @@ to_map(?DEF, Fields) ->
     Fields#{<<"zip">> => <<"DEF">>}.
 
 %%%=============================================================================
-%% jose_jwe_zip callbacks
+%%% jose_jwe_zip callbacks
 %%%=============================================================================
 
 compress(Uncompressed, zlib) ->
@@ -71,7 +71,7 @@ uncompress(Compressed, zlib) ->
     iolist_to_binary(Uncompressed).
 
 %%%=============================================================================
-%% API functions
+%%% API functions
 %%%=============================================================================
 
 zip_supported() ->

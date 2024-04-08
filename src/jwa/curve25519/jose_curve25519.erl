@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -14,7 +14,7 @@
 %%% % @format
 -module(jose_curve25519).
 
--include("jose_support.hrl").
+-include_lib("jose/include/jose_support.hrl").
 
 -behaviour(jose_support).
 
@@ -153,7 +153,7 @@
 -define(TV_X25519SharedSecret(), ?b16d("f12f59031bae093b8575957f3e10cc799c437778e5d6cf4ea04542135c3dcd11")).
 
 %%%=============================================================================
-%% jose_support callbacks
+%%% jose_support callbacks
 %%%=============================================================================
 
 -spec support_info() -> jose_support:info().
@@ -270,7 +270,7 @@ support_check(Module, x25519_shared_secret, 2) ->
     ?expect(Z, Module, x25519_shared_secret, [USK, VPK]).
 
 %%%=============================================================================
-%% jose_curve25519 callbacks
+%%% jose_curve25519 callbacks
 %%%=============================================================================
 
 % EdDSA

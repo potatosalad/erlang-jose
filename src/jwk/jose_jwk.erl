@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -153,7 +153,7 @@
 -define(KTY_OKP_X448_MODULE, jose_jwk_kty_okp_x448).
 
 %%%=============================================================================
-%% Decode API functions
+%%% Decode API functions
 %%%=============================================================================
 
 from(List) when is_list(List) ->
@@ -495,7 +495,7 @@ from_pem_file(Key, File) when is_binary(File) orelse is_list(File) ->
     from_pem_file(Key, {#{}, File}).
 
 %%%=============================================================================
-%% Encode API functions
+%%% Encode API functions
 %%%=============================================================================
 
 to_binary(List) when is_list(List) ->
@@ -747,7 +747,7 @@ to_thumbprint_map(Other) ->
     to_thumbprint_map(from(Other)).
 
 %%%=============================================================================
-%% API functions
+%%% API functions
 %%%=============================================================================
 
 block_decrypt(Encrypted, JWK = #jose_jwk{}) ->

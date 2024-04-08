@@ -6,7 +6,7 @@
 %%% % @format
 %%%-----------------------------------------------------------------------------
 %%% @author Andrew Bennett <andrew@pixid.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc Advanced Encryption Standard (AES)
 %%% Cipher Block Chaining (CBC), as defined in NIST.800-38A
 %%% Electronic Codebook (ECB), as defined in NIST.800-38A
@@ -92,7 +92,7 @@ end_per_group(_Group, Config) ->
     ok.
 
 %%%=============================================================================
-%% Tests
+%%% Tests
 %%%=============================================================================
 
 aead() ->

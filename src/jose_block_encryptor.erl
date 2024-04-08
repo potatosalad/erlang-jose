@@ -6,13 +6,15 @@
 %%% % @format
 %%%-----------------------------------------------------------------------------
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
 %%% Created :  10 Aug 2015 by Andrew Bennett <potatosaladx@gmail.com>
 %%%-----------------------------------------------------------------------------
 -module(jose_block_encryptor).
+-compile(warn_missing_spec_all).
+-author("potatosaladx@gmail.com").
 
 -callback block_decrypt(Cipher, Key, CipherText) -> PlainText | error when
     Cipher :: {atom(), pos_integer()},
@@ -25,8 +27,10 @@
     PlainText :: binary(),
     CipherText :: binary().
 
--optional_callbacks([block_decrypt/3]).
--optional_callbacks([block_encrypt/3]).
+-optional_callbacks([
+    block_decrypt/3,
+    block_encrypt/3
+]).
 
 -callback block_decrypt(Cipher, Key, IV, CipherText) -> PlainText | error when
     Cipher :: {atom(), pos_integer()},

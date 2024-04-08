@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -14,7 +14,7 @@
 %%% % @format
 -module(jose_hchacha20).
 
--include("jose_support.hrl").
+-include_lib("jose/include/jose_support.hrl").
 
 -behaviour(jose_support).
 
@@ -55,7 +55,7 @@
 -define(TV_HCHACHA20_Subkey(), ?b16d("1140704c328d1d5d0e30086cdf209dbd6a43b8f41518a11cc387b669b2ee6586")).
 
 %%%=============================================================================
-%% jose_support callbacks
+%%% jose_support callbacks
 %%%=============================================================================
 
 -spec support_info() -> jose_support:info().
@@ -76,7 +76,7 @@ support_check(Module, hchacha20_subkey, 2) ->
     ?expect(Subkey, Module, hchacha20_subkey, [Nonce, Key]).
 
 %%%=============================================================================
-%% jose_hchacha20 callbacks
+%%% jose_hchacha20 callbacks
 %%%=============================================================================
 
 -spec hchacha20_subkey(Nonce, Key) -> Subkey when

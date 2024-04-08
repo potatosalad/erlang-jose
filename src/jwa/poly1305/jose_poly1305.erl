@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -14,7 +14,7 @@
 %%% % @format
 -module(jose_poly1305).
 
--include("jose_support.hrl").
+-include_lib("jose/include/jose_support.hrl").
 
 -behaviour(jose_support).
 
@@ -56,7 +56,7 @@
 -define(TV_POLY1305_Tag(), ?b16d("dd2d06b9037d9e7ab9ec5cc55bec11c5")).
 
 %%%=============================================================================
-%% jose_support callbacks
+%%% jose_support callbacks
 %%%=============================================================================
 
 -spec support_info() -> jose_support:info().
@@ -77,7 +77,7 @@ support_check(Module, poly1305_mac, 2) ->
     ?expect(Tag, Module, poly1305_mac, [Message, OneTimeKey]).
 
 %%%=============================================================================
-%% jose_poly1305 callbacks
+%%% jose_poly1305 callbacks
 %%%=============================================================================
 
 -spec poly1305_mac(Message, OneTimeKey) -> Tag when

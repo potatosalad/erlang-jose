@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -63,7 +63,7 @@
 -export_type([key/0]).
 
 %%%=============================================================================
-%% jose_jwk callbacks
+%%% jose_jwk callbacks
 %%%=============================================================================
 
 from_map(F = #{<<"kty">> := <<"OKP">>, <<"crv">> := ?crv, <<"d">> := D, <<"x">> := X}) ->
@@ -106,7 +106,7 @@ to_thumbprint_map(K, F) ->
     maps:with([<<"crv">>, <<"kty">>, <<"x">>], to_public_map(K, F)).
 
 %%%=============================================================================
-%% jose_jwk_kty callbacks
+%%% jose_jwk_kty callbacks
 %%%=============================================================================
 
 generate_key(Seed = <<_:?secretbytes/binary>>) ->
@@ -130,7 +130,7 @@ key_encryptor(KTY, Fields, Key) ->
     jose_jwk_kty:key_encryptor(KTY, Fields, Key).
 
 %%%=============================================================================
-%% jose_jwk_use_sig callbacks
+%%% jose_jwk_use_sig callbacks
 %%%=============================================================================
 
 sign(Message, ALG, SK = <<_:?secretkeybytes/binary>>) when
@@ -164,7 +164,7 @@ verify(Message, ALG, Signature, PK = <<_:?publickeybytes/binary>>) when
     jose_curve448:ed448_verify(Signature, Message, PK).
 
 %%%=============================================================================
-%% API functions
+%%% API functions
 %%%=============================================================================
 
 from_der(DERBinary) when is_binary(DERBinary) ->

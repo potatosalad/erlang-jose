@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc XChaCha: eXtended-nonce ChaCha and AEAD_XChaCha20_Poly1305
 %%% See https://tools.ietf.org/html/draft-irtf-cfrg-xchacha
 %%% @end
@@ -41,7 +41,7 @@
 }).
 
 %%%=============================================================================
-%% jose_provider callbacks
+%%% jose_provider callbacks
 %%%=============================================================================
 
 -spec provider_info() -> jose_provider:info().
@@ -56,7 +56,7 @@ provider_info() ->
     }.
 
 %%%=============================================================================
-%% jose_xchacha20 callbacks
+%%% jose_xchacha20 callbacks
 %%%=============================================================================
 
 -spec xchacha20_exor(Input, Count, Nonce, Key) -> Output when
@@ -105,7 +105,7 @@ xchacha20_stream_final(_State = #jose_jwa_xchacha20{}) ->
     <<>>.
 
 %%%=============================================================================
-%% Internal API functions
+%%% Internal API functions
 %%%=============================================================================
 
 encrypt(Key, Counter, Nonce0, Plaintext) ->

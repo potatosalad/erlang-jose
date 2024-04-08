@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -27,7 +27,7 @@
 -export([verify/5]).
 
 %%%=============================================================================
-%% jose_block_encryptor callbacks
+%%% jose_block_encryptor callbacks
 %%%=============================================================================
 
 block_decrypt(Cipher, _Key, _CipherText) ->
@@ -43,7 +43,7 @@ block_encrypt(Cipher, _Key, _IV, _PlainText) ->
     erlang:error({cipher_unsupported, [Cipher]}).
 
 %%%=============================================================================
-%% Public Key API functions
+%%% Public Key API functions
 %%%=============================================================================
 
 decrypt_private(_CipherText, _PrivateKey, Options) ->

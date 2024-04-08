@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -14,7 +14,7 @@
 %%% % @format
 -module(jose_hmac).
 
--include("jose_support.hrl").
+-include_lib("jose/include/jose_support.hrl").
 
 -behaviour(jose_support).
 
@@ -96,7 +96,7 @@
 ).
 
 %%%=============================================================================
-%% jose_support callbacks
+%%% jose_support callbacks
 %%%=============================================================================
 
 -spec support_info() -> jose_support:info().
@@ -141,7 +141,7 @@ support_check(Module, hmac_sha512, 2) ->
     ?expect(Output, Module, hmac_sha512, [Key, Input]).
 
 %%%=============================================================================
-%% jose_hmac callbacks
+%%% jose_hmac callbacks
 %%%=============================================================================
 
 -spec hmac_sha1(Key, Input) -> Output when

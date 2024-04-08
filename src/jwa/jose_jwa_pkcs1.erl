@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc PKCS #1: RSA Cryptography Specifications Version 2.1
 %%% See RFC 3447: [https://tools.ietf.org/html/rfc3447]
 %%% @end
@@ -61,7 +61,7 @@
 -define(PSS_TRAILER_FIELD, 16#BC).
 
 %%%=============================================================================
-%% Public Key API functions
+%%% Public Key API functions
 %%%=============================================================================
 
 decrypt_private(CipherText, RSAPrivateKey = #jose_rsa_private_key{}, Options) when
@@ -141,7 +141,7 @@ verify(Message, DigestType, Signature, PublicKey, Options) ->
     erlang:error(badarg, [Message, DigestType, Signature, PublicKey, Options]).
 
 %%%=============================================================================
-%% API functions
+%%% API functions
 %%%=============================================================================
 
 %% See [https://tools.ietf.org/html/rfc3447#section-7.1.2]

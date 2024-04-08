@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -43,7 +43,7 @@
 -define(is_state(X), ((X) =:= aes_128_gcm orelse (X) =:= aes_192_gcm orelse (X) =:= aes_256_gcm)).
 
 %%%=============================================================================
-%% jose_jwe callbacks
+%%% jose_jwe callbacks
 %%%=============================================================================
 
 from_map(F = #{<<"enc">> := <<"A128GCM">>}) ->
@@ -61,7 +61,7 @@ to_map(aes_256_gcm, F) ->
     F#{<<"enc">> => <<"A256GCM">>}.
 
 %%%=============================================================================
-%% jose_jwe_enc callbacks
+%%% jose_jwe_enc callbacks
 %%%=============================================================================
 
 -spec algorithm(ENC) -> Algorithm when

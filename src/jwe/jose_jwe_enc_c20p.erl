@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -43,7 +43,7 @@
 -define(is_state(X), ((X) =:= chacha20_poly1305)).
 
 %%%=============================================================================
-%% jose_jwe callbacks
+%%% jose_jwe callbacks
 %%%=============================================================================
 
 from_map(F = #{<<"enc">> := <<"C20P">>}) ->
@@ -53,7 +53,7 @@ to_map(chacha20_poly1305, F) ->
     F#{<<"enc">> => <<"C20P">>}.
 
 %%%=============================================================================
-%% jose_jwe_enc callbacks
+%%% jose_jwe_enc callbacks
 %%%=============================================================================
 
 -spec algorithm(ENC) -> Algorithm when

@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -13,8 +13,10 @@
 %%%-----------------------------------------------------------------------------
 %%% % @format
 -module(jose_aes_kw).
+-compile(warn_missing_spec_all).
+-author("potatosaladx@gmail.com").
 
--include("jose_support.hrl").
+-include_lib("jose/include/jose_support.hrl").
 
 -behaviour(jose_support).
 
@@ -145,7 +147,7 @@
 ).
 
 %%%=============================================================================
-%% jose_support callbacks
+%%% jose_support callbacks
 %%%=============================================================================
 
 -spec support_info() -> jose_support:info().
@@ -310,7 +312,7 @@ support_check(Module, aes_256_kw_wrap, 2) ->
     ]).
 
 %%%=============================================================================
-%% jose_aes_kw callbacks
+%%% jose_aes_kw callbacks
 %%%=============================================================================
 
 -spec aes_128_kw_unwrap(CipherText, KEK) -> PlainText | error when

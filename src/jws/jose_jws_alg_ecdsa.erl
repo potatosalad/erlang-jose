@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -34,7 +34,7 @@
 -export_type([alg/0]).
 
 %%%=============================================================================
-%% jose_jws callbacks
+%%% jose_jws callbacks
 %%%=============================================================================
 
 from_map(F = #{<<"alg">> := <<"ES256K">>}) ->
@@ -56,7 +56,7 @@ to_map('ES512', F) ->
     F#{<<"alg">> => <<"ES512">>}.
 
 %%%=============================================================================
-%% jose_jws_alg callbacks
+%%% jose_jws_alg callbacks
 %%%=============================================================================
 
 generate_key('ES256K', _Fields) ->
@@ -75,7 +75,7 @@ verify(#jose_jwk{kty = {KTYModule, KTY}}, Message, Signature, ALG) ->
     KTYModule:verify(Message, ALG, Signature, KTY).
 
 %%%=============================================================================
-%% API functions
+%%% API functions
 %%%=============================================================================
 
 %%%-----------------------------------------------------------------------------

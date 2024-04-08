@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc Use of Static-Static ECDH in JSON Object Signing and Encryption (JOSE)
 %%% See https://datatracker.ietf.org/doc/html/draft-amringer-jose-ecdh-ss-00
 %%%
@@ -60,7 +60,7 @@
 -define(ECDH_SS_XC20PKW, #jose_jwe_alg_ecdh_ss{wrap = xc20p_kw, bits = 256}).
 
 %%%=============================================================================
-%% jose_jwe callbacks
+%%% jose_jwe callbacks
 %%%=============================================================================
 
 from_map(F = #{<<"alg">> := <<"ECDH-SS">>}) ->
@@ -102,7 +102,7 @@ to_map(A = ?ECDH_SS, F) ->
     to_map_ecdh_ss(F#{<<"alg">> => <<"ECDH-SS">>}, A).
 
 %%%=============================================================================
-%% jose_jwe_alg callbacks
+%%% jose_jwe_alg callbacks
 %%%=============================================================================
 
 generate_key(_Fields, {ENCModule, ENC}, ALG = #jose_jwe_alg_ecdh_ss{spk = USenderPublicKey = #jose_jwk{}}) ->
@@ -316,7 +316,7 @@ next_cek(_Key, {ENCModule, ENC}, JWEECDHSS = #jose_jwe_alg_ecdh_ss{}) ->
     {ENCModule:generate_content_encryption_key(ENC), JWEECDHSS}.
 
 %%%=============================================================================
-%% API functions
+%%% API functions
 %%%=============================================================================
 
 algorithm(?ECDH_SS_A128GCMKW) -> <<"ECDH-SS+A128GCMKW">>;

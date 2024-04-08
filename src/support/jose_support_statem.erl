@@ -13,6 +13,11 @@
 %%%-----------------------------------------------------------------------------
 %%% % @format
 -module(jose_support_statem).
+-compile(warn_missing_spec_all).
+-author("potatosaladx@gmail.com").
+
+-include_lib("kernel/include/logger.hrl").
+
 -behaviour(gen_statem).
 
 %% OTP API
@@ -46,6 +51,10 @@
     resolving_tag = undefined :: undefined | reference()
 }).
 
+%% Types
+-type data() :: #data{}.
+-type state() :: init | resolving | resolved.
+
 %% Macros
 -define(ENSURE_JOSE_STARTED(F),
     case application:ensure_all_started(jose) of
@@ -74,9 +83,9 @@ child_spec() ->
         type => worker
     }.
 
--spec start_link() -> {ok, pid()} | ignore | {error, term()}.
+-spec start_link() -> gen_statem:start_ret().
 start_link() ->
-    gen_statem:start_link({local, ?SERVER}, ?MODULE, [], []).
+    gen_statem:start_link({local, ?SERVER}, ?MODULE, [], [{debug, [trace]}]).
 
 %%%=============================================================================
 %%% API functions
@@ -148,6 +157,7 @@ init([]) ->
     Data = #data{},
     {ok, State, Data}.
 
+-spec handle_event(dynamic(), dynamic(), dynamic(), dynamic()) -> dynamic().
 %% State Enter Events
 handle_event(enter, init, init, _Data) ->
     Actions = [{state_timeout, 0, init}],
@@ -160,6 +170,7 @@ handle_event(enter, _OldState, resolved, _Data) ->
 %% State Timeout Events
 handle_event(state_timeout, init, init, Data0 = #data{}) ->
     {ok, Graph = #{plan := Plan}} = jose_support:deps(),
+    ?LOG_NOTICE("Plan = ~tp", [Plan]),
     Data1 = Data0#data{graph = Graph, plan = Plan, resolving_tag = erlang:make_ref()},
     {next_state, resolving, Data1};
 handle_event(state_timeout, resolve_next, resolving, Data0 = #data{plan = Plan0}) ->
@@ -237,6 +248,12 @@ handle_event(info, EventContent, State, Data0 = #data{resolved = Resolved0, reso
     end.
 % keep_state_and_data.
 
+%%%-----------------------------------------------------------------------------
+%%% Internal functions
+%%%-----------------------------------------------------------------------------
+
+%% @private
+-spec start_resolve(Key, Data) -> Data when Key :: jose_support:key(), Data :: data().
 start_resolve(
     Key, Data0 = #data{graph = #{providers := Providers}, resolving = {M2K0, K2M0}, resolving_tag = ResolvingTag}
 ) ->
@@ -248,12 +265,17 @@ start_resolve(
     Data1 = Data0#data{resolving = {M2K1, K2M1}},
     Data1.
 
+%% @private
+-spec start_parallel(KeyList, Data) -> Data when KeyList :: [Key], Key :: jose_support:key(), Data :: data().
 start_parallel([Key | Keys], Data0) ->
     Data1 = start_resolve(Key, Data0),
     start_parallel(Keys, Data1);
 start_parallel([], Data) ->
     Data.
 
+%% @private
+-spec maybe_reap(Mon, Pid, State, Data) -> gen_statem:event_handler_result(State, Data) when
+    Mon :: reference(), Pid :: pid(), State :: state(), Data :: data().
 maybe_reap(Mon, Pid, resolving, Data0 = #data{resolving = {M2K0, K2M0}}) ->
     case maps:take(Mon, M2K0) of
         {{Pid, Key}, M2K1} ->

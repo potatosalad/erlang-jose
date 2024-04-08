@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -14,7 +14,7 @@
 %%% % @format
 -module(jose_xchacha20_poly1305).
 
--include("jose_support.hrl").
+-include_lib("jose/include/jose_support.hrl").
 
 -behaviour(jose_support).
 
@@ -95,7 +95,7 @@
 -define(TV_XChaCha20_Poly1305_MAC(), ?b16d("42391ecd1b705e19048692c1cc757a8f")).
 
 %%%=============================================================================
-%% jose_support callbacks
+%%% jose_support callbacks
 %%%=============================================================================
 
 -spec support_info() -> jose_support:info().
@@ -151,7 +151,7 @@ support_check(Module, xchacha20_poly1305_verify, 4) ->
     ?expect(true, Module, xchacha20_poly1305_verify, [MAC, Message, Nonce, Key]).
 
 %%%=============================================================================
-%% jose_xchacha20_poly1305 callbacks
+%%% jose_xchacha20_poly1305 callbacks
 %%%=============================================================================
 
 -spec xchacha20_poly1305_decrypt(CipherText, CipherTag, AAD, Nonce, Key) -> PlainText | error when

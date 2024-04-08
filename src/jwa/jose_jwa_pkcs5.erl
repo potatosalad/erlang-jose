@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc PKCS #5: Password-Based Cryptography Specification Version 2.0
 %%% See RFC 2898: https://tools.ietf.org/html/rfc2898
 %%% @end
@@ -23,7 +23,7 @@
 -export([pbkdf2/5]).
 
 %%%=============================================================================
-%% API functions
+%%% API functions
 %%%=============================================================================
 
 pbkdf1(Hash, Password, Salt) ->

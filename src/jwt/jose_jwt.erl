@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -42,7 +42,7 @@
 -export([verify_strict/3]).
 
 %%%=============================================================================
-%% Decode API functions
+%%% Decode API functions
 %%%=============================================================================
 
 from(List) when is_list(List) ->
@@ -83,7 +83,7 @@ from_map({JWT, _Modules, Fields}) ->
     JWT#jose_jwt{fields = Fields}.
 
 %%%=============================================================================
-%% Encode API functions
+%%% Encode API functions
 %%%=============================================================================
 
 to_binary(List) when is_list(List) ->
@@ -113,7 +113,7 @@ to_map(Other) ->
     to_map(from(Other)).
 
 %%%=============================================================================
-%% API functions
+%%% API functions
 %%%=============================================================================
 
 decrypt(Key, {Modules, Encrypted}) when is_map(Modules) andalso is_map(Encrypted) ->

@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc ChaCha20 and Poly1305 for IETF Protocols
 %%% See https://tools.ietf.org/html/rfc7539
 %%% @end
@@ -47,7 +47,7 @@
 }).
 
 %%%=============================================================================
-%% jose_provider callbacks
+%%% jose_provider callbacks
 %%%=============================================================================
 
 -spec provider_info() -> jose_provider:info().
@@ -62,7 +62,7 @@ provider_info() ->
     }.
 
 %%%=============================================================================
-%% jose_chacha20 callbacks
+%%% jose_chacha20 callbacks
 %%%=============================================================================
 
 -spec chacha20_exor(Input, Count, Nonce, Key) -> Output when
@@ -113,7 +113,7 @@ chacha20_stream_final(_State = #jose_jwa_chacha20{}) ->
     <<>>.
 
 %%%=============================================================================
-%% API functions
+%%% API functions
 %%%=============================================================================
 
 quarter_round({A0, B0, C0, D0}) ->

@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc Advanced Encryption Standard (AES)
 %%% Cipher Block Chaining (CBC), as defined in NIST.800-38A
 %%% Electronic Codebook (ECB), as defined in NIST.800-38A
@@ -26,7 +26,7 @@
 -export([block_encrypt/4]).
 
 %%%=============================================================================
-%% jose_block_encryptor callbacks
+%%% jose_block_encryptor callbacks
 %%%=============================================================================
 
 block_decrypt({aes_ecb, Bits}, Key, CipherText) when

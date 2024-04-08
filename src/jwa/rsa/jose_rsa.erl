@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -15,7 +15,7 @@
 -module(jose_rsa).
 
 -include("jose_rsa.hrl").
--include("jose_support.hrl").
+-include_lib("jose/include/jose_support.hrl").
 
 -behaviour(jose_support).
 
@@ -367,7 +367,7 @@
 ).
 
 %%%=============================================================================
-%% jose_support callbacks
+%%% jose_support callbacks
 %%%=============================================================================
 
 -spec support_info() -> jose_support:info().
@@ -832,7 +832,7 @@ support_check(Module, rsassa_pss_sha512_mgf1_sha512_verify, 3) ->
     ?expect(true, Module, rsassa_pss_sha512_mgf1_sha512_verify, [Sig, Message, PK]).
 
 %%%=============================================================================
-%% jose_rsa callbacks
+%%% jose_rsa callbacks
 %%%=============================================================================
 
 -spec rsa_keypair() -> {PublicKey, PrivateKey} when

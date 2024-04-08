@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -13,8 +13,10 @@
 %%%-----------------------------------------------------------------------------
 %%% % @format
 -module(jose_aes_cbc).
+-compile(warn_missing_spec_all).
+-author("potatosaladx@gmail.com").
 
--include("jose_support.hrl").
+-include_lib("jose/include/jose_support.hrl").
 
 -behaviour(jose_support).
 
@@ -106,7 +108,7 @@
 -define(TV_AES_256_CBC_CipherText(), ?b16d("ac9c9eb761551ffb7d78d88b5e233014a7d624ae4222993a989f8c62a4986ec2")).
 
 %%%=============================================================================
-%% jose_support callbacks
+%%% jose_support callbacks
 %%%=============================================================================
 
 -spec support_info() -> jose_support:info().
@@ -163,7 +165,7 @@ support_check(Module, aes_256_cbc_encrypt, 3) ->
     ?expect(CipherText, Module, aes_256_cbc_encrypt, [PlainText, IV, CEK]).
 
 %%%=============================================================================
-%% jose_sha2 callbacks
+%%% jose_sha2 callbacks
 %%%=============================================================================
 
 -spec aes_128_cbc_decrypt(CipherText, IV, CEK) -> PlainText when

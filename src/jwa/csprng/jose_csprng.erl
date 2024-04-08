@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc Cryptographically secure pseudorandom number generator (CSPRNG)
 %%% See [https://en.wikipedia.org/wiki/Cryptographically_secure_pseudorandom_number_generator]
 %%% @end
@@ -13,8 +13,10 @@
 %%%-----------------------------------------------------------------------------
 %%% % @format
 -module(jose_csprng).
+-compile(warn_missing_spec_all).
+-author("potatosaladx@gmail.com").
 
--include("jose_support.hrl").
+-include_lib("jose/include/jose_support.hrl").
 
 -behaviour(jose_support).
 
@@ -68,7 +70,7 @@
 -define(TV_Seed(), ?b16d("00000000000000000000000000000000")).
 
 %%%=============================================================================
-%% jose_support callbacks
+%%% jose_support callbacks
 %%%=============================================================================
 
 -spec support_info() -> jose_support:info().
@@ -156,7 +158,7 @@ support_check(Module, uniform, 2) ->
     ?expect(N, Module, uniform, [Lo, Hi]).
 
 %%%=============================================================================
-%% jose_sha1 callbacks
+%%% jose_sha1 callbacks
 %%%=============================================================================
 
 -spec init() -> ok.

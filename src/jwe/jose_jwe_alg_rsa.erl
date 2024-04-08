@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -42,7 +42,7 @@
 -define(RSA_OAEP_256, #jose_jwe_alg_rsa{algorithm = rsa_oaep_256}).
 
 %%%=============================================================================
-%% jose_jwe callbacks
+%%% jose_jwe callbacks
 %%%=============================================================================
 
 from_map(F = #{<<"alg">> := <<"RSA1_5">>}) ->
@@ -60,7 +60,7 @@ to_map(?RSA_OAEP_256, F) ->
     F#{<<"alg">> => <<"RSA-OAEP-256">>}.
 
 %%%=============================================================================
-%% jose_jwe_alg callbacks
+%%% jose_jwe_alg callbacks
 %%%=============================================================================
 
 generate_key(_Fields, {ENCModule, ENC}, ?RSA1_5) ->
@@ -82,7 +82,7 @@ next_cek(_Key, {ENCModule, ENC}, ALG = #jose_jwe_alg_rsa{}) ->
     {ENCModule:generate_content_encryption_key(ENC), ALG}.
 
 %%%=============================================================================
-%% API functions
+%%% API functions
 %%%=============================================================================
 
 %%%-----------------------------------------------------------------------------

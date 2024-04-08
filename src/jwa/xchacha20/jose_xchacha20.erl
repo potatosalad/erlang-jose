@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -14,7 +14,7 @@
 %%% % @format
 -module(jose_xchacha20).
 
--include("jose_support.hrl").
+-include_lib("jose/include/jose_support.hrl").
 
 -behaviour(jose_support).
 
@@ -96,7 +96,7 @@
 -define(TV_XCHACHA20_CipherText2(), ?b16d("b88390a1d05278208672ca522ce7f7dd")).
 
 %%%=============================================================================
-%% jose_support callbacks
+%%% jose_support callbacks
 %%%=============================================================================
 
 -spec support_info() -> jose_support:info().
@@ -181,7 +181,7 @@ support_check(Module, xchacha20_stream_final, 1) ->
     ?expect(<<>>, Module, xchacha20_stream_final, [State3]).
 
 %%%=============================================================================
-%% jose_xchacha20 callbacks
+%%% jose_xchacha20 callbacks
 %%%=============================================================================
 
 -spec xchacha20_exor(Input, Count, Nonce, Key) -> Output when

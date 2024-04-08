@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -66,7 +66,7 @@
 -define(ZIP_MODULE, jose_jwe_zip).
 
 %%%=============================================================================
-%% Decode API functions
+%%% Decode API functions
 %%%=============================================================================
 
 from({Modules, Map}) when is_map(Modules) andalso is_map(Map) ->
@@ -152,7 +152,7 @@ from_map({JWE, _Modules, Fields}) ->
     end.
 
 %%%=============================================================================
-%% Encode API functions
+%%% Encode API functions
 %%%=============================================================================
 
 to_binary(JWE = #jose_jwe{}) ->
@@ -178,7 +178,7 @@ to_map(Other) ->
     to_map(from(Other)).
 
 %%%=============================================================================
-%% API functions
+%%% API functions
 %%%=============================================================================
 
 block_decrypt(Key, EncryptedMap) when is_map(EncryptedMap) ->

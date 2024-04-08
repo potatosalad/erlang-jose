@@ -6,7 +6,7 @@
 %%% % @format
 %%%-----------------------------------------------------------------------------
 %%% @author Andrew Bennett <andrew@pixid.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -1026,7 +1026,7 @@ end_per_group(_Group, Config) ->
     ok.
 
 %%%=============================================================================
-%% Tests
+%%% Tests
 %%%=============================================================================
 
 concatenation_kdf(Config) ->

@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc Edwards-curve Digital Signature Algorithm (EdDSA) - Ed448, Ed448ph
 %%% See https://datatracker.ietf.org/doc/html/rfc8032
 %%% @end
@@ -194,7 +194,7 @@
 -define(secretkeybytes, 114).
 
 %%%=============================================================================
-%% API
+%%% API
 %%%=============================================================================
 
 % 5.2.1. Modular arithmetic - https://datatracker.ietf.org/doc/html/rfc8032#section-5.2.1

@@ -6,7 +6,7 @@
 %%% % @format
 %%%-----------------------------------------------------------------------------
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -51,7 +51,7 @@
 ).
 
 %%%=============================================================================
-%% API functions
+%%% API functions
 %%%=============================================================================
 
 chacha20_poly1305_module() ->
@@ -121,7 +121,7 @@ xchacha20_poly1305_module(XChaCha20Poly1305Module) when is_atom(XChaCha20Poly130
     ?MAYBE_START_JOSE(jose_server:xchacha20_poly1305_module(XChaCha20Poly1305Module)).
 
 %%%=============================================================================
-%% Private API functions
+%%% Private API functions
 %%%=============================================================================
 
 start() ->

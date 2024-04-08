@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc Key Agreement with Elliptic Curve Diffie-Hellman One-Pass Unified Model (ECDH-1PU)
 %%% See https://datatracker.ietf.org/doc/html/draft-madden-jose-ecdh-1pu-04
 %%%
@@ -60,7 +60,7 @@
 -define(ECDH_1PU_XC20PKW, #jose_jwe_alg_ecdh_1pu{wrap = xc20p_kw, bits = 256}).
 
 %%%=============================================================================
-%% jose_jwe callbacks
+%%% jose_jwe callbacks
 %%%=============================================================================
 
 from_map(F = #{<<"alg">> := <<"ECDH-1PU">>}) ->
@@ -102,7 +102,7 @@ to_map(A = ?ECDH_1PU, F) ->
     to_map_ecdh_1pu(F#{<<"alg">> => <<"ECDH-1PU">>}, A).
 
 %%%=============================================================================
-%% jose_jwe_alg callbacks
+%%% jose_jwe_alg callbacks
 %%%=============================================================================
 
 generate_key(_Fields, {ENCModule, ENC}, ALG = #jose_jwe_alg_ecdh_1pu{epk = EphemeralPublicJWK = #jose_jwk{}}) ->
@@ -325,7 +325,7 @@ next_cek(_Key, {ENCModule, ENC}, JWEECDH1PU = #jose_jwe_alg_ecdh_1pu{}) ->
     {ENCModule:generate_content_encryption_key(ENC), JWEECDH1PU}.
 
 %%%=============================================================================
-%% API functions
+%%% API functions
 %%%=============================================================================
 
 algorithm(?ECDH_1PU_A128GCMKW) -> <<"ECDH-1PU+A128GCMKW">>;

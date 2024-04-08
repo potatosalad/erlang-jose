@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -14,7 +14,7 @@
 %%% % @format
 -module(jose_pbkdf2_hmac).
 
--include("jose_support.hrl").
+-include_lib("jose/include/jose_support.hrl").
 
 -behaviour(jose_support).
 
@@ -80,7 +80,7 @@
 -define(TV_PBKDF2_HMAC_SHA512_Key(), ?b16d("ded5fd36ace28019108070acb5acc9db892eb04230f71ecda77c0dbf97e38a8d")).
 
 %%%=============================================================================
-%% jose_support callbacks
+%%% jose_support callbacks
 %%%=============================================================================
 
 -spec support_info() -> jose_support:info().
@@ -119,7 +119,7 @@ support_check(Module, pbkdf2_hmac_sha512, 4) ->
     ?expect(Key, Module, pbkdf2_hmac_sha512, [Password, Salt, Iterations, KeyLen]).
 
 %%%=============================================================================
-%% jose_hchacha20 callbacks
+%%% jose_hchacha20 callbacks
 %%%=============================================================================
 
 -spec pbkdf2_hmac_sha256(Password, Salt, Iterations, KeyLen) -> Key when

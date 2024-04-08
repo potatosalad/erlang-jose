@@ -5,7 +5,7 @@
 %%% LICENSE.md file in the root directory of this source tree.
 %%%
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
-%%% @copyright 2014-2022, Andrew Bennett
+%%% @copyright (c) Andrew Bennett
 %%% @doc
 %%%
 %%% @end
@@ -38,7 +38,7 @@
 -export_type([alg/0]).
 
 %%%=============================================================================
-%% jose_jws callbacks
+%%% jose_jws callbacks
 %%%=============================================================================
 
 from_map(F = #{<<"alg">> := <<"Poly1305">>}) ->
@@ -50,7 +50,7 @@ to_map(#'Poly1305'{nonce = Nonce}, F) ->
     F#{<<"alg">> => <<"Poly1305">>, <<"nonce">> => jose_jwa_base64url:encode(Nonce)}.
 
 %%%=============================================================================
-%% jose_jws_alg callbacks
+%%% jose_jws_alg callbacks
 %%%=============================================================================
 
 generate_key(#'Poly1305'{}, _Fields) ->
@@ -75,7 +75,7 @@ verify(#jose_jwk{kty = {KTYModule, KTY}}, Message, Signature, ALG = #'Poly1305'{
     KTYModule:verify(Message, ALG, Signature, KTY).
 
 %%%=============================================================================
-%% API functions
+%%% API functions
 %%%=============================================================================
 
 %%%-----------------------------------------------------------------------------
