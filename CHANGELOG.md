@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.11.9 (2024-04-08)
+
+* Fixes
+  * Change Elixir dependency on `dialyxer` to only be used in `dev` and `test`, thanks to [@requestben](https://github.com/requestben) and [@dvic](https://github.com/dvic); see [#162](https://github.com/potatosalad/erlang-jose/issues/162) and [#163](https://github.com/potatosalad/erlang-jose/issues/163).
+  * `rebar3` upgrade errors fixed; see [#160](https://github.com/potatosalad/erlang-jose/issues/160) and [#163](https://github.com/potatosalad/erlang-jose/issues/163).
+
 ## 1.11.8 (2024-04-07)
 
 * Fixes
