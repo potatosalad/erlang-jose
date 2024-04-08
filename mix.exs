@@ -4,7 +4,7 @@ defmodule JOSE.Mixfile do
   def project() do
     [
       app: :jose,
-      version: "1.11.8",
+      version: "1.11.9",
       elixir: "~> 1.13",
       erlc_options: erlc_options(),
       build_embedded: Mix.env() == :prod,
@@ -49,11 +49,11 @@ defmodule JOSE.Mixfile do
       {:libsodium, "~> 2.0.1", only: [:dev, :test]},
       {:ojson, "~> 1.0", only: [:dev, :test]},
       # Optionally used by JOSE.Poison.
-      {:poison, "~> 3.0 or ~> 4.0 or ~> 5.0", optional: true},
+      {:poison, "~> 3.0 or ~> 4.0 or ~> 5.0", only: [:dev, :test], optional: true},
       {:thoas, "~> 1.0", only: [:dev, :test]},
       {:ex_doc, "~> 0.30", only: :dev},
       {:earmark, "~> 1.4", only: :dev},
-      {:dialyxir, "~> 1.4.3"}
+      {:dialyxir, "~> 1.4.3", only: [:dev, :test], runtime: false}
     ]
   end
 

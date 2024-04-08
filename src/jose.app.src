@@ -6,7 +6,7 @@
 %%% % @format
 {application, jose, [
     {description, "JSON Object Signing and Encryption (JOSE) for Erlang and Elixir."},
-    {vsn, "1.11.8"},
+    {vsn, "1.11.9"},
     {id, "git"},
     {mod, {'jose_app', []}},
     {registered, []},
