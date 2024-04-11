@@ -261,7 +261,7 @@ defmodule JOSE.JWT do
   @doc """
   Verifies the `signed` using the `jwk` and calls `from/1` on the payload.  See `JOSE.JWS.verify/2`.
   """
-  @spec verify(t(), binary()) :: {valid? :: boolean(), jwt :: t(), jws :: JOSE.JWS.t()}
+  @spec verify(JOSE.JWK.t(), binary()) :: {valid? :: boolean(), jwt :: t(), jws :: JOSE.JWS.t()}
   def verify(jwk = %JOSE.JWK{}, signed), do: verify(JOSE.JWK.to_record(jwk), signed)
 
   def verify(jwk = [%JOSE.JWK{} | _], signed) do
@@ -309,7 +309,7 @@ defmodule JOSE.JWT do
   @doc """
   Verifies the `signed` using the `jwk`, whitelists the `"alg"` using `allow`, and calls `from/1` on the payload.  See `JOSE.JWS.verify_strict/3`.
   """
-  @spec verify_strict(t(), [String.t()], binary()) :: {valid? :: boolean(), jwt :: t(), jws :: JOSE.JWS.t()}
+  @spec verify_strict(JOSE.JWK.t(), [String.t()], binary()) :: {valid? :: boolean(), jwt :: t(), jws :: JOSE.JWS.t()}
   def verify_strict(jwk = %JOSE.JWK{}, allow, signed), do: verify_strict(JOSE.JWK.to_record(jwk), allow, signed)
 
   def verify_strict(jwk = [%JOSE.JWK{} | _], allow, signed) do
