@@ -587,7 +587,7 @@ defmodule JOSE.JWE do
 
   See `expand/1`.
   """
-  @spec compact(map()) :: {map(), binary()}
+  @spec compact(map() | {map(), map()}) :: {map(), binary()}
   defdelegate compact(encrypted), to: :jose_jwe
 
   @doc """
