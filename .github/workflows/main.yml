@@ -14,15 +14,23 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - elixir: 1.15.4
-            otp: 26.0.2
+          # TODO: Remove -rc.0 once Elixir 1.17 is released
+          # TODO: Lint in this version once Elixir 1.17 is released
+          - elixir: "1.17.0-rc.0"
+            otp: "27.0"
+
+          - elixir: "1.16.3"
+            otp: "26.2.5"
             lint: true
 
-          - elixir: 1.14.5
-            otp: 25.2
+          - elixir: "1.15.8"
+            otp: "26.2.5"
 
-          - elixir: 1.13.4
-            otp: 24.3.4.5
+          - elixir: "1.14.5"
+            otp: "25.3.2.12"
+
+          - elixir: "1.13.4"
+            otp: "24.3.4.17"
 
     steps:
       - uses: actions/checkout@v2
@@ -78,8 +86,9 @@ jobs:
         id: setupBeam
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: 1.15.4
-          otp-version: 26.0.2
+          # TODO: Update to OTP 27.0 and Elixir 1.17 once Elixir 1.17 is released
+          elixir-version: 1.16.3
+          otp-version: 26.2.5
 
       - name: Retrieve Mix Dependencies Cache
         uses: actions/cache@v1
