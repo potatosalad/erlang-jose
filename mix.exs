@@ -61,9 +61,7 @@ defmodule JOSE.Mixfile do
   end
 
   def erlc_options() do
-    extra_options = []
-
-    [:debug_info | if(Mix.env() == :prod, do: [], else: [:warnings_as_errors]) ++ extra_options]
+    [:debug_info]
   end
 
   defp package() do
