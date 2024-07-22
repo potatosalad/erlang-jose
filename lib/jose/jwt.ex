@@ -218,8 +218,14 @@ defmodule JOSE.JWT do
 
   See `JOSE.JWS.peek_protected/1`.
   """
-  @spec peek_protected(binary()) :: JOSE.JWS.t()
-  def peek_protected(signed), do: JOSE.JWS.from_record(:jose_jwt.peek_protected(signed))
+  @spec peek_protected(binary()) :: JOSE.JWS.t() | {:error, :token_malformed}
+  def peek_protected(signed) do
+    try do
+      JOSE.JWS.from_record(:jose_jwt.peek_protected(signed))
+    rescue
+      _error -> {:error, :token_malformed}
+    end
+  end
 
   @doc """
   Signs a `JOSE.JWT` using the `jwk` and the default signer algorithm `jws` for the key type.  See `sign/3`.
