@@ -204,7 +204,7 @@ defmodule JOSE.JWT do
 
   See `JOSE.JWS.peek_payload/1`.
   """
-  @spec peek_payload(binary()) :: t()
+  @spec peek_payload(binary()) :: t() | {:error, :token_malformed}
   def peek_payload(signed) do
     try do
       from_record(:jose_jwt.peek_payload(signed))
