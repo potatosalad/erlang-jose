@@ -215,6 +215,7 @@ defmodule JOSE.JWT do
 
   @doc """
   Returns the decoded protected as a `JOSE.JWS` of a signed binary or map without verifying the signature.
+  Returns an error in case of an invalid token.
 
   See `JOSE.JWS.peek_protected/1`.
   """
