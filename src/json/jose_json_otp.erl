@@ -11,10 +11,27 @@
 %% jose_json callbacks
 %%====================================================================
 
+-spec decode(binary()) -> dynamic().
 decode(Binary) -> json:decode(Binary).
 
-encode(Term) -> iolist_to_binary(json:encode(Term)).
+-spec encode(dynamic()) -> binary().
+encode(Term) -> iolist_to_binary(json:encode(Term, fun encoder/2)).
 
 %%%-------------------------------------------------------------------
 %%% Internal functions
 %%%-------------------------------------------------------------------
+
+%% @private
+-compile({inline, [dynamic_cast/1]}).
+-spec dynamic_cast(term()) -> dynamic().
+dynamic_cast(X) -> X.
+
+%% @private
+-spec encoder(dynamic(), json:encoder()) -> iodata().
+encoder(List, Encoder) when is_list(List) ->
+    json:encode_list(List, Encoder);
+encoder(Map, Encoder) when is_map(Map) ->
+    KeyValueList = maps:to_list(dynamic_cast(maps:iterator(Map, ordered))),
+    json:encode_key_value_list(KeyValueList, Encoder);
+encoder(Value, Encoder) ->
+    json:encode_value(Value, Encoder).
