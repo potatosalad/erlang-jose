@@ -10,5 +10,5 @@
 %%%-------------------------------------------------------------------
 -module(jose_json).
 
--callback decode(binary()) -> term().
--callback encode(term()) -> binary().
+-callback decode(binary()) -> dynamic().
+-callback encode(dynamic()) -> binary().
