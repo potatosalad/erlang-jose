@@ -37,7 +37,7 @@ jobs:
           make ct
 
       - name: Retrieve Mix Dependencies Cache
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         id: mix-cache
         with:
           path: deps
