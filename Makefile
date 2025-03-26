@@ -4,21 +4,21 @@ PROJECT_VERSION = 1.11.10
 
 TEST_DEPS = jiffy jsone jsx libdecaf libsodium ojson proper thoas
 
-dep_jiffy = hex 1.1.1
-dep_jsone = hex 1.8.0
+dep_jiffy = hex 1.1.2
+dep_jsone = hex 1.9.0
 dep_jsx = hex 3.1.0
 # dep_keccakf1600 = hex 3.0.0
 dep_libdecaf = hex 2.1.1
 dep_libsodium = hex 2.0.1
 dep_ojson = hex 1.0.0
-dep_thoas = hex 1.0.0
-dep_proper = git https://github.com/proper-testing/proper.git def84f172df92635cc62f3356e3e7ad054638eb4
+dep_thoas = hex 1.2.1
+dep_proper = git https://github.com/proper-testing/proper.git 5640d0715d4b346676267504d8e84398e2a29f75
 
 include erlang.mk
 
 .PHONY: docker-build docker-load docker-setup docker-save docker-shell docker-test docker-test-build
 
-DOCKER_OTP_VERSION ?= 26.0.2-alpine-3.18.2
+DOCKER_OTP_VERSION ?= 27.3-alpine-3.19.7
 CT_SUITES ?=
 
 docker-build::
