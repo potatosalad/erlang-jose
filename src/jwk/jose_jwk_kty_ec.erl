@@ -55,7 +55,13 @@
 %%====================================================================
 
 from_map(F = #{ <<"kty">> := <<"EC">>, <<"d">> := _ }) ->
-	from_map_ec_private_key(jose_jwa:ec_key_mode(), maps:remove(<<"kty">>, F), #'ECPrivateKey'{ version = 1 });
+	% Use the version format that matches the current OTP version
+	% This ensures compatibility with built-in public_key library functions
+	DefaultVersion = case list_to_integer(erlang:system_info(otp_release)) >= 28 of
+		true -> ecPrivkeyVer1;
+		false -> 1
+	end,
+	from_map_ec_private_key(jose_jwa:ec_key_mode(), maps:remove(<<"kty">>, F), #'ECPrivateKey'{ version = DefaultVersion });
 from_map(F = #{ <<"kty">> := <<"EC">> }) ->
 	from_map_ec_public_key(maps:remove(<<"kty">>, F), {#'ECPoint'{}, undefined}).
 
@@ -65,10 +71,11 @@ to_key(ECPublicKey={#'ECPoint'{}, _}) ->
 	ECPublicKey.
 
 to_map(#'ECPrivateKey'{
-		version = 1,
+		version = Version,
 		privateKey = D,
 		parameters = {namedCurve, Parameters},
-		publicKey = PublicKey}, Fields) when is_binary(D) andalso is_binary(PublicKey) ->
+		publicKey = PublicKey}, Fields) when (Version =:= 1 orelse Version =:= ecPrivkeyVer1) 
+		andalso is_binary(D) andalso is_binary(PublicKey) ->
 	{X, Y} = public_key_to_x_y(PublicKey),
 	Fields#{
 		<<"d">> => jose_jwa_base64url:encode(D),
@@ -88,10 +95,11 @@ to_map({#'ECPoint'{
 		<<"y">> => jose_jwa_base64url:encode(Y)
 	};
 to_map(ECPrivateKey0=#'ECPrivateKey'{
-		version = 1,
+		version = Version,
 		privateKey = D,
 		parameters = {namedCurve, _Parameters},
-		publicKey = {_, PublicKey}}, Fields) when is_list(D) andalso is_binary(PublicKey) ->
+		publicKey = {_, PublicKey}}, Fields) when (Version =:= 1 orelse Version =:= ecPrivkeyVer1) 
+		andalso is_list(D) andalso is_binary(PublicKey) ->
 	ECPrivateKey = ECPrivateKey0#'ECPrivateKey'{
 		privateKey = list_to_binary(D),
 		publicKey = PublicKey},
