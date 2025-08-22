@@ -16,6 +16,16 @@
 
 -include_lib("public_key/include/public_key.hrl").
 
+-ifdef(OTP_RELEASE).
+	-if(?OTP_RELEASE >= 28).
+		-define(EC_PIVATE_KEY_VERSION, ecPrivkeyVer1).
+	-else.
+		-define(EC_PIVATE_KEY_VERSION, 1).
+	-endif.
+-else.
+	-define(EC_PIVATE_KEY_VERSION, 1).
+-endif.
+
 %% jose_jwk callbacks
 -export([from_map/1]).
 -export([to_key/1]).
@@ -55,7 +65,7 @@
 %%====================================================================
 
 from_map(F = #{ <<"kty">> := <<"EC">>, <<"d">> := _ }) ->
-	from_map_ec_private_key(jose_jwa:ec_key_mode(), maps:remove(<<"kty">>, F), #'ECPrivateKey'{ version = 1 });
+	from_map_ec_private_key(jose_jwa:ec_key_mode(), maps:remove(<<"kty">>, F), #'ECPrivateKey'{ version = ?EC_PIVATE_KEY_VERSION });
 from_map(F = #{ <<"kty">> := <<"EC">> }) ->
 	from_map_ec_public_key(maps:remove(<<"kty">>, F), {#'ECPoint'{}, undefined}).
 
@@ -65,7 +75,7 @@ to_key(ECPublicKey={#'ECPoint'{}, _}) ->
 	ECPublicKey.
 
 to_map(#'ECPrivateKey'{
-		version = 1,
+		version = ?EC_PIVATE_KEY_VERSION,
 		privateKey = D,
 		parameters = {namedCurve, Parameters},
 		publicKey = PublicKey}, Fields) when is_binary(D) andalso is_binary(PublicKey) ->
@@ -88,7 +98,7 @@ to_map({#'ECPoint'{
 		<<"y">> => jose_jwa_base64url:encode(Y)
 	};
 to_map(ECPrivateKey0=#'ECPrivateKey'{
-		version = 1,
+		version = ?EC_PIVATE_KEY_VERSION,
 		privateKey = D,
 		parameters = {namedCurve, _Parameters},
 		publicKey = {_, PublicKey}}, Fields) when is_list(D) andalso is_binary(PublicKey) ->
