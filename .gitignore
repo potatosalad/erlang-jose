@@ -32,7 +32,7 @@ _tdeps
 /.erlang.mk
 /jose.d
 
-# Rebar3 exclusions.
+# rebar3 and erlang.mk related files.
 .rebar3
 _*
 .eunit
@@ -49,9 +49,12 @@ erl_crash.dump
 logs
 _build
 .idea
-.vscode/
+.vscode
 *.iml
 rebar3.crashdump
+*~
+/.elixir_ls/
+/.erlang.mk/
 /elp
 /erlfmt
 /rebar3
@@ -66,4 +69,4 @@ rebar3.crashdump
 /test/cavp_SUITE_data/keccaktestvectors
 /test/cavp_SUITE_data/kwtestvectors
 /test/cavp_SUITE_data/pkcs-1v2-1-vec
-/tmp
+/tmp/

@@ -26,8 +26,8 @@
 ]).
 
 %% Callbacks
--callback decode(JSON) -> Term when JSON :: jose_json:json(), Term :: term().
--callback encode(Term) -> JSON when Term :: term(), JSON :: jose_json:json().
+-callback decode(JSON) -> Term when JSON :: jose_json:json(), Term :: dynamic().
+-callback encode(Term) -> JSON when Term :: dynamic(), JSON :: jose_json:json().
 
 %% jose_support callbacks
 -export([

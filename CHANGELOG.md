@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.11.10 (2024-04-17)
+
+* Fixes
+  * Various type spec fixes; see [#165](https://github.com/potatosalad/erlang-jose/pull/165) and [#166](https://github.com/potatosalad/erlang-jose/pull/166).
+
 ## 1.11.9 (2024-04-08)
 
 * Fixes

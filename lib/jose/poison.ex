@@ -6,7 +6,7 @@ if Code.ensure_loaded?(Poison) do
     def lexical_encode!(value, options \\ %{}) do
       iodata = LexicalEncoder.encode(value, options)
 
-      unless options[:iodata] do
+      if !options[:iodata] do
         iodata |> IO.iodata_to_binary()
       else
         iodata

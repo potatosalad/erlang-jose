@@ -1,32 +1,24 @@
 PROJECT = jose
 PROJECT_DESCRIPTION = JSON Object Signing and Encryption (JOSE) for Erlang and Elixir.
-PROJECT_VERSION = 1.11.9
+PROJECT_VERSION = 1.11.10
 
-TEST_DEPS = \
-	jiffy \
-	jsone \
-	jsx \
-	libdecaf \
-	libsodium \
-	ojson \
-	proper \
-	thoas
+TEST_DEPS = jiffy jsone jsx libdecaf libsodium ojson proper thoas
 
-dep_jiffy = hex 1.1.1
-dep_jsone = hex 1.8.0
+dep_jiffy = hex 1.1.2
+dep_jsone = hex 1.9.0
 dep_jsx = hex 3.1.0
 # dep_keccakf1600 = hex 3.0.0
 dep_libdecaf = hex 2.1.1
 dep_libsodium = hex 2.0.1
 dep_ojson = hex 1.0.0
-dep_thoas = hex 1.0.0
-dep_proper = git https://github.com/proper-testing/proper.git def84f172df92635cc62f3356e3e7ad054638eb4
+dep_thoas = hex 1.2.1
+dep_proper = git https://github.com/proper-testing/proper.git 5640d0715d4b346676267504d8e84398e2a29f75
 
 include erlang.mk
 
 .PHONY: docker-build docker-load docker-setup docker-save docker-shell docker-test docker-test-build
 
-DOCKER_OTP_VERSION ?= 26.0.2-alpine-3.18.2
+DOCKER_OTP_VERSION ?= 27.3-alpine-3.19.7
 CT_SUITES ?=
 
 docker-build::
@@ -80,10 +72,80 @@ docker-test-build::
 		"${DOCKER_OTP_VERSION}" \
 		sh -c 'cd jose && make test-build'
 
+.PHONY: eqwalize eqwalize-all distclean-elp
+
+# Arch detection.
+
+ifeq ($(ARCH),)
+UNAME_M := $(shell uname -m)
+
+ifeq ($(UNAME_M),amd64)
+ARCH = x86_64
+else ifeq ($(UNAME_M),x86_64)
+ARCH = x86_64
+else ifeq ($(UNAME_M),arm64)
+ARCH = aarch64
+else ifeq ($(UNAME_M),aarch64)
+ARCH = aarch64
+else
+$(error Unable to detect architecture. Please open a ticket with the output of uname -s.)
+endif
+
+export ARCH
+endif
+
+# Configuration.
+ELP_VERSION ?= 2025-09-01
+ELP_OTP_VERSION ?= 28
+
+ELP ?= $(CURDIR)/elp
+export ELP
+
+ifeq ($(PLATFORM),darwin)
+	ELP_URL ?= https://github.com/WhatsApp/erlang-language-platform/releases/download/${ELP_VERSION}/elp-macos-${ARCH}-apple-darwin-otp-${ELP_OTP_VERSION}.tar.gz
+else
+	ELP_URL ?= https://github.com/WhatsApp/erlang-language-platform/releases/download/${ELP_VERSION}/elp-linux-${ARCH}-unknown-linux-gnu-otp-${ELP_OTP_VERSION}.tar.gz
+endif
+
+ELP_OPTS ?=
+ELP_BUILD_DIR ?= $(CURDIR)/_elp_build
+ELP_ARCHIVE = elp-$(ELP_VERSION).tar.gz
+
+# Core targets.
+
+help::
+	$(verbose) printf "%s\n" "" \
+		"elp targets:" \
+		"  eqwalize     Run 'elp eqwalize-app argo' on the current project" \
+		"  eqwalize-all Run 'elp eqwalize-all' on the current project"
+
+distclean:: distclean-elp
+
+# Plugin-specific targets.
+
+$(ELP):
+	$(verbose) mkdir -p $(ELP_BUILD_DIR)
+	$(verbose) echo "Downloading eqwalizer from: "$(ELP_URL)
+	$(verbose) $(call core_http_get,$(ELP_BUILD_DIR)/$(ELP_ARCHIVE),$(ELP_URL))
+	$(verbose) cd $(ELP_BUILD_DIR) && \
+		tar -xzf $(ELP_ARCHIVE)
+	$(gen_verbose) cp $(ELP_BUILD_DIR)/elp $(ELP)
+	$(verbose) chmod +x $(ELP)
+	$(verbose) rm -rf $(ELP_BUILD_DIR)
+
+eqwalize: $(ELP)
+	$(verbose) $(ELP) eqwalize $(PROJECT)
+
+eqwalize-all: $(ELP)
+	$(verbose) $(ELP) eqwalize-all
+
+distclean-elp:
+	$(gen_verbose) rm -rf $(ELP)
+
 .PHONY: erlfmt erlfmt-check distclean-erlfmt format
 
 # Configuration.
-ERLFMT_VERSION ?= 1.3.0
+ERLFMT_VERSION ?= 1.7.0
 
 ERLFMT ?= $(CURDIR)/erlfmt
 export ERLFMT
@@ -133,12 +195,14 @@ endif
 
 erlfmt: $(ERLFMT)
 	$(verbose) $(ERLFMT) --verbose --write --require-pragma --print-width=120 \
-		'{src,codegen,include,test}/**/*.{hrl,erl,app.src}' \
+		'{src,codegen,include,test}/**/*.{hrl,erl,app.src,app.src.script}' \
+		'test/**/*.config' \
 		'{rebar.config,rebar.config.script}'
 
 erlfmt-check: $(ERLFMT)
 	$(verbose) $(ERLFMT) --check --require-pragma --print-width=120 \
-		'{src,codegen,include,test}/**/*.{hrl,erl,app.src}' \
+		'{src,codegen,include,test}/**/*.{hrl,erl,app.src,app.src.script}' \
+		'test/**/*.config' \
 		'{rebar.config,rebar.config.script}'
 
 distclean-erlfmt:
@@ -146,51 +210,7 @@ distclean-erlfmt:
 
 format: $(ERLFMT)
 	$(verbose) $(MAKE) erlfmt
-
-.PHONY: eqwalizer distclean-eqwalizer
-
-# Configuration.
-EQWALIZER_VERSION ?= 0.25.3
-
-ELP ?= $(CURDIR)/elp
-export ELP
-
-ifeq ($(PLATFORM),darwin)
-	EQWALIZER_URL ?= https://github.com/WhatsApp/eqwalizer/releases/download/v$(EQWALIZER_VERSION)/elp-macos.tar.gz
-else
-	EQWALIZER_URL ?= https://github.com/WhatsApp/eqwalizer/releases/download/v$(EQWALIZER_VERSION)/elp-linux.tar.gz
-endif
-
-EQWALIZER_OPTS ?=
-EQWALIZER_BUILD_DIR ?= $(CURDIR)/_eqwalizer_build
-EQWALIZER_ARCHIVE = $(EQWALIZER_VERSION).tar.gz
-
-# Core targets.
-
-help::
-	$(verbose) printf "%s\n" "" \
-		"eqwalizer targets:" \
-		"  eqwalizer    Run 'elp eqwalize-all' on the current project"
-
-distclean:: distclean-eqwalizer
-
-# Plugin-specific targets.
-
-$(ELP):
-	$(verbose) mkdir -p $(EQWALIZER_BUILD_DIR)
-	$(verbose) echo "Downloading eqwalizer from: "$(EQWALIZER_URL)
-	$(verbose) $(call core_http_get,$(EQWALIZER_BUILD_DIR)/$(EQWALIZER_ARCHIVE),$(EQWALIZER_URL))
-	$(verbose) cd $(EQWALIZER_BUILD_DIR) && \
-		tar -xzf $(EQWALIZER_ARCHIVE)
-	$(gen_verbose) cp $(EQWALIZER_BUILD_DIR)/elp $(ELP)
-	$(verbose) chmod +x $(ELP)
-	$(verbose) rm -rf $(EQWALIZER_BUILD_DIR)
-
-eqwalizer: $(ELP)
-	$(verbose) $(ELP) eqwalize-all
-
-distclean-eqwalizer:
-	$(gen_verbose) rm -rf $(ELP)
+	$(verbose) mix format --migrate
 
 .PHONY: lint lint-dialyzer lint-eqwalizer lint-format lint-xref
 
@@ -199,7 +219,7 @@ lint:: lint-format lint-eqwalizer lint-xref lint-dialyzer
 lint-dialyzer:
 	$(verbose) rebar3 dialyzer
 
-lint-eqwalizer: eqwalizer
+lint-eqwalizer: eqwalize-all
 
 lint-format: erlfmt-check
 

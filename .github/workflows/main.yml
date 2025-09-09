@@ -14,18 +14,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - elixir: 1.15.4
-            otp: 26.0.2
+          - elixir: 1.18.3
+            otp: 27.3
             lint: true
 
-          - elixir: 1.14.5
-            otp: 25.2
-
-          - elixir: 1.13.4
-            otp: 24.3.4.5
+          - elixir: 1.16.3
+            otp: 26.2.5.9
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Setup Beam
         uses: erlef/setup-beam@v1
@@ -40,7 +37,7 @@ jobs:
           make ct
 
       - name: Retrieve Mix Dependencies Cache
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         id: mix-cache
         with:
           path: deps
@@ -61,7 +58,7 @@ jobs:
         run: mix test
 
       - name: Logs
-        uses: actions/upload-artifact@v2-preview
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: ct-logs-${{matrix.erlang}}
@@ -72,17 +69,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Setup Beam
         id: setupBeam
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: 1.15.4
-          otp-version: 26.0.2
+          elixir-version: 1.18.3
+          otp-version: 27.3
 
       - name: Retrieve Mix Dependencies Cache
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         id: mix-cache
         with:
           path: deps
