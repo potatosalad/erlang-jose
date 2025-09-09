@@ -1,5 +1,1 @@
-[{<<"eqwalizer_support">>,
-  {git_subdir,"https://github.com/WhatsApp/eqwalizer.git",
-              {ref,"1dbdbbd8afb5f9336efa1dd58bbb389f026ffba6"},
-              "eqwalizer_support"},
-  0}].
+[].
