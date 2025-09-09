@@ -54,15 +54,23 @@ parse_transform(Ast0, _Options) ->
     [Module] = [Module || {attribute, _Line, module, Module} <- Ast1],
     % io:format("Module = ~p~n", [Module]),
     Forms = epp:restore_typed_record_fields(
-        revert([Form || Form = {function, _Line, Name, _Arity, _Clauses} <- Ast1, Name =:= encode_char orelse Name =:= encode_pair])
+        revert([
+            Form
+         || Form = {function, _Line, Name, _Arity, _Clauses} <- Ast1, Name =:= encode_char orelse Name =:= encode_pair
+        ])
     ),
-    ok = lists:foreach(fun(Form = {function, _Line, Name, _Arity, _Clauses}) ->
-        Filename = unicode:characters_to_list(io_lib:format("~s.~s.erl", [Module, Name])),
-        Body = erlang:iolist_to_binary(binary:split(unicode:characters_to_binary(erl_pp:form(Form)), <<"\n">>, [global, trim_all])),
-        ok = file:write_file(Filename, <<"%%% % @format\n", Body/binary>>),
-        io:format("Wrote to ~s~n", [Filename]),
-        ok
-    end, Forms),
+    ok = lists:foreach(
+        fun(Form = {function, _Line, Name, _Arity, _Clauses}) ->
+            Filename = unicode:characters_to_list(io_lib:format("~s.~s.erl", [Module, Name])),
+            Body = erlang:iolist_to_binary(
+                binary:split(unicode:characters_to_binary(erl_pp:form(Form)), <<"\n">>, [global, trim_all])
+            ),
+            ok = file:write_file(Filename, <<"%%% % @format\n", Body/binary>>),
+            io:format("Wrote to ~s~n", [Filename]),
+            ok
+        end,
+        Forms
+    ),
     % Str = [
     %     io_lib:fwrite(
     %         "~s~n",
@@ -105,7 +113,9 @@ walk_body(Acc, [Statement | Ast]) ->
     walk_body([transform_statement(Statement) | Acc], Ast).
 
 %% @private
-transform_statement(Statement = {call, Line, {remote, _Line1, {atom, _Line2, ?MODULE}, {atom, _Line3, Function}}, Arguments}) ->
+transform_statement(
+    Statement = {call, Line, {remote, _Line1, {atom, _Line2, ?MODULE}, {atom, _Line3, Function}}, Arguments}
+) ->
     case transform_call(Function, Line, Arguments) of
         {ok, NewStatement} ->
             NewStatement;
@@ -137,9 +147,12 @@ transform_call(encode_char_as_case, _Line, [
 ]) ->
     {ok, Case};
 transform_call(encode_pair_as_case, Line, [
-    {'case', _Line1, Var, Clauses0 = [{clause, _Line2, [{integer, _Line3, 0}], [], [{char, _Line4, _}]} | _]}, {atom, _Line5, Type}
+    {'case', _Line1, Var, Clauses0 = [{clause, _Line2, [{integer, _Line3, 0}], [], [{char, _Line4, _}]} | _]},
+    {atom, _Line5, Type}
 ]) ->
-    Table = calculate_pairs([{Index, Value} || {clause, _, [{integer, _, Index}], [], [{char, _, Value}]} <- Clauses0], Type),
+    Table = calculate_pairs(
+        [{Index, Value} || {clause, _, [{integer, _, Index}], [], [{char, _, Value}]} <- Clauses0], Type
+    ),
     Clauses1 = [{clause, Line, [{integer, Line, Index}], [], [{integer, Line, Value}]} || {Index, Value} <- Table],
     Case = {'case', Line, Var, Clauses1},
     {ok, Case};
@@ -149,9 +162,12 @@ transform_call(encode_char_as_tuple_element_call, Line, [
     Pairs = [{Index, Value} || {clause, _, [{integer, _, Index}], [], [{char, _, Value}]} <- Clauses0],
     encode_as_tuple_element_call(Line, Var, Pairs);
 transform_call(encode_pair_as_tuple_element_call, Line, [
-    {'case', _Line1, Var, Clauses0 = [{clause, _Line2, [{integer, _Line3, 0}], [], [{char, _Line4, _}]} | _]}, {atom, _Line5, Type}
+    {'case', _Line1, Var, Clauses0 = [{clause, _Line2, [{integer, _Line3, 0}], [], [{char, _Line4, _}]} | _]},
+    {atom, _Line5, Type}
 ]) ->
-    Pairs = calculate_pairs([{Index, Value} || {clause, _, [{integer, _, Index}], [], [{char, _, Value}]} <- Clauses0], Type),
+    Pairs = calculate_pairs(
+        [{Index, Value} || {clause, _, [{integer, _, Index}], [], [{char, _, Value}]} <- Clauses0], Type
+    ),
     encode_as_tuple_element_call(Line, Var, Pairs);
 transform_call(_Function, _Line, _Arguments) ->
     error.

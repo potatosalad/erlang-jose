@@ -195,16 +195,14 @@ endif
 
 erlfmt: $(ERLFMT)
 	$(verbose) $(ERLFMT) --verbose --write --require-pragma --print-width=120 \
-		'apps/**/{src,include,test}/**/*.{hrl,erl,app.src}' \
-		'apps/**/{rebar.config,rebar.config.script}' \
-		'apps/**/test/**/*.config' \
+		'{src,codegen,include,test}/**/*.{hrl,erl,app.src,app.src.script}' \
+		'test/**/*.config' \
 		'{rebar.config,rebar.config.script}'
 
 erlfmt-check: $(ERLFMT)
 	$(verbose) $(ERLFMT) --check --require-pragma --print-width=120 \
-		'apps/**/{src,include,test}/**/*.{hrl,erl,app.src,app.src.script}' \
-		'apps/**/{rebar.config,rebar.config.script}' \
-		'apps/**/test/**/*.config' \
+		'{src,codegen,include,test}/**/*.{hrl,erl,app.src,app.src.script}' \
+		'test/**/*.config' \
 		'{rebar.config,rebar.config.script}'
 
 distclean-erlfmt:
