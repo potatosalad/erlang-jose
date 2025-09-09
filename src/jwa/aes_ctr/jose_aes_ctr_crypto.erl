@@ -39,13 +39,13 @@
 
 %% Records
 -record(jose_aes_128_ctr_crypto, {
-    crypto_state = undefined :: undefined | crypto:crypto_state()
+    crypto_state :: crypto:crypto_state()
 }).
 -record(jose_aes_192_ctr_crypto, {
-    crypto_state = undefined :: undefined | crypto:crypto_state()
+    crypto_state :: crypto:crypto_state()
 }).
 -record(jose_aes_256_ctr_crypto, {
-    crypto_state = undefined :: undefined | crypto:crypto_state()
+    crypto_state :: crypto:crypto_state()
 }).
 
 %%%=============================================================================
