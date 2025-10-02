@@ -51,6 +51,10 @@
 
 from_key(ECPrivateKey=#'ECPrivateKey'{}) ->
 	{?KTY_EC_MODULE, ?KTY_EC_MODULE:from_key(ECPrivateKey)};
+from_key({#'ECPoint'{point = PublicKey}, {namedCurve, ?'jose_id-EdDSA25519'}}) ->
+	{?KTY_OKP_Ed25519_MODULE, ?KTY_OKP_Ed25519_MODULE:from_key(#'jose_EdDSA25519PublicKey'{ publicKey = PublicKey })};
+from_key({#'ECPoint'{point = PublicKey}, {namedCurve, ?'jose_id-EdDSA448'}}) ->
+	{?KTY_OKP_Ed448_MODULE, ?KTY_OKP_Ed448_MODULE:from_key(#'jose_EdDSA448PublicKey'{ publicKey = PublicKey })};
 from_key(ECPublicKey={#'ECPoint'{}, _}) ->
 	{?KTY_EC_MODULE, ?KTY_EC_MODULE:from_key(ECPublicKey)};
 from_key(EdDSA25519PrivateKey=#'jose_EdDSA25519PrivateKey'{}) ->
