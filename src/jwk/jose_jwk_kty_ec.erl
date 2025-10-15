@@ -54,8 +54,20 @@
 %% jose_jwk callbacks
 %%====================================================================
 
+vsn_ge(App, TargetVsn) ->
+    {ok, VsnStr} = application:get_key(App, vsn),
+    parse_vsn(VsnStr) >= parse_vsn(TargetVsn).
+
+parse_vsn(VsnStr) ->
+    [list_to_integer(X) || X <- string:tokens(VsnStr, ".")].
+
 from_map(F = #{ <<"kty">> := <<"EC">>, <<"d">> := _ }) ->
-	from_map_ec_private_key(jose_jwa:ec_key_mode(), maps:remove(<<"kty">>, F), #'ECPrivateKey'{ version = 1 });
+	case vsn_ge(public_key, "1.18.3") of
+		true ->
+			from_map_ec_private_key(jose_jwa:ec_key_mode(), maps:remove(<<"kty">>, F), #'ECPrivateKey'{ version = ecPrivkeyVer1 });
+		false ->
+	from_map_ec_private_key(jose_jwa:ec_key_mode(), maps:remove(<<"kty">>, F), #'ECPrivateKey'{ version = 1 })
+	end;
 from_map(F = #{ <<"kty">> := <<"EC">> }) ->
 	from_map_ec_public_key(maps:remove(<<"kty">>, F), {#'ECPoint'{}, undefined}).
 
@@ -65,10 +77,10 @@ to_key(ECPublicKey={#'ECPoint'{}, _}) ->
 	ECPublicKey.
 
 to_map(#'ECPrivateKey'{
-		version = 1,
+		version = Vsn,
 		privateKey = D,
 		parameters = {namedCurve, Parameters},
-		publicKey = PublicKey}, Fields) when is_binary(D) andalso is_binary(PublicKey) ->
+		publicKey = PublicKey}, Fields) when (Vsn == 1 orelse Vsn == ecPrivkeyVer1) andalso is_binary(D) andalso is_binary(PublicKey) ->
 	{X, Y} = public_key_to_x_y(PublicKey),
 	Fields#{
 		<<"d">> => jose_jwa_base64url:encode(D),
@@ -88,10 +100,10 @@ to_map({#'ECPoint'{
 		<<"y">> => jose_jwa_base64url:encode(Y)
 	};
 to_map(ECPrivateKey0=#'ECPrivateKey'{
-		version = 1,
+		version = Vsn,
 		privateKey = D,
 		parameters = {namedCurve, _Parameters},
-		publicKey = {_, PublicKey}}, Fields) when is_list(D) andalso is_binary(PublicKey) ->
+		publicKey = {_, PublicKey}}, Fields) when (Vsn == 1 orelse Vsn == ecPrivkeyVer1) andalso is_list(D) andalso is_binary(PublicKey) ->
 	ECPrivateKey = ECPrivateKey0#'ECPrivateKey'{
 		privateKey = list_to_binary(D),
 		publicKey = PublicKey},
