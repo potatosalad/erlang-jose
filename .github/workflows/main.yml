@@ -14,12 +14,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - elixir: 1.18.3
-            otp: 27.3
+          - elixir: 1.19.3
+            otp: 28.1.1
+            rebar3: 3.25.1
             lint: true
 
-          - elixir: 1.16.3
-            otp: 26.2.5.9
+          - elixir: 1.18.4
+            otp: 27.3.4.6
+            rebar3: 3.25.1
 
     steps:
       - uses: actions/checkout@v4
@@ -75,8 +77,8 @@ jobs:
         id: setupBeam
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: 1.18.3
-          otp-version: 27.3
+          elixir-version: 1.19.3
+          otp-version: 28.1.1
 
       - name: Retrieve Mix Dependencies Cache
         uses: actions/cache@v4
