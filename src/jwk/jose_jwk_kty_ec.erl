@@ -50,12 +50,26 @@
 
 -export_type([key/0]).
 
+%% Macros
+-ifdef(OTP_RELEASE).
+-if(?OTP_RELEASE >= 28).
+-define(EC_PRIVATE_KEY_VERSION, ecPrivkeyVer1).
+-define(EC_PRIVATE_KEY_VERSION_COMPAT, 1).
+-else.
+-define(EC_PRIVATE_KEY_VERSION, 1).
+-define(EC_PRIVATE_KEY_VERSION_COMPAT, ecPrivkeyVer1).
+-endif.
+-else.
+-define(EC_PRIVATE_KEY_VERSION, 1).
+-define(EC_PRIVATE_KEY_VERSION_COMPAT, ecPrivkeyVer1).
+-endif.
+
 %%====================================================================
 %% jose_jwk callbacks
 %%====================================================================
 
 from_map(F = #{ <<"kty">> := <<"EC">>, <<"d">> := _ }) ->
-	from_map_ec_private_key(jose_jwa:ec_key_mode(), maps:remove(<<"kty">>, F), #'ECPrivateKey'{ version = 1 });
+	from_map_ec_private_key(jose_jwa:ec_key_mode(), maps:remove(<<"kty">>, F), #'ECPrivateKey'{ version = ?EC_PRIVATE_KEY_VERSION });
 from_map(F = #{ <<"kty">> := <<"EC">> }) ->
 	from_map_ec_public_key(maps:remove(<<"kty">>, F), {#'ECPoint'{}, undefined}).
 
@@ -65,7 +79,7 @@ to_key(ECPublicKey={#'ECPoint'{}, _}) ->
 	ECPublicKey.
 
 to_map(#'ECPrivateKey'{
-		version = 1,
+		version = ?EC_PRIVATE_KEY_VERSION,
 		privateKey = D,
 		parameters = {namedCurve, Parameters},
 		publicKey = PublicKey}, Fields) when is_binary(D) andalso is_binary(PublicKey) ->
@@ -88,13 +102,16 @@ to_map({#'ECPoint'{
 		<<"y">> => jose_jwa_base64url:encode(Y)
 	};
 to_map(ECPrivateKey0=#'ECPrivateKey'{
-		version = 1,
+		version = ?EC_PRIVATE_KEY_VERSION,
 		privateKey = D,
 		parameters = {namedCurve, _Parameters},
 		publicKey = {_, PublicKey}}, Fields) when is_list(D) andalso is_binary(PublicKey) ->
 	ECPrivateKey = ECPrivateKey0#'ECPrivateKey'{
 		privateKey = list_to_binary(D),
 		publicKey = PublicKey},
+	to_map(ECPrivateKey, Fields);
+to_map(ECPrivateKey0=#'ECPrivateKey'{version = ?EC_PRIVATE_KEY_VERSION_COMPAT}, Fields) ->
+	ECPrivateKey = ECPrivateKey0#'ECPrivateKey'{version = ?EC_PRIVATE_KEY_VERSION},
 	to_map(ECPrivateKey, Fields).
 
 to_public_map(K=#'ECPrivateKey'{}, F) ->

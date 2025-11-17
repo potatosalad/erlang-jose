@@ -144,6 +144,8 @@ der_decode(DER) when is_binary(DER) ->
 			Other
 	end.
 
+der_decode('EcpkParameters', EcpkParameters = {namedCurve, _}) ->
+	EcpkParameters;
 der_decode(ASN1Type, DER) when is_atom(ASN1Type) andalso is_binary(DER) ->
 	public_key:der_decode(ASN1Type, DER).
 
