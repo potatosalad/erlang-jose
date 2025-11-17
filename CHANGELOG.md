@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.11.11 (2025-11-17)
+
+* Fixes
+  * EC key decode/encode issues in OTP 28; see [#180](https://github.com/potatosalad/erlang-jose/pull/180), [#181](https://github.com/potatosalad/erlang-jose/pull/181), [#182](https://github.com/potatosalad/erlang-jose/pull/182), [#179](https://github.com/potatosalad/erlang-jose/pull/179)
+  * EdDSA key issues with OTP 27.1.3+; see [#177](https://github.com/potatosalad/erlang-jose/pull/177)
+* Notes
+  * This will hopefully be one of the last 1.x releases, next release will be [2.x](https://github.com/potatosalad/erlang-jose/tree/2.x)
+
 ## 1.11.10 (2024-04-17)
 
 * Fixes
