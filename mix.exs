@@ -5,7 +5,7 @@ defmodule JOSE.Mixfile do
     [
       app: :jose,
       version: "1.11.11",
-      elixir: "~> 1.16",
+      elixir: "~> 1.13",
       erlc_options: erlc_options(),
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
@@ -39,20 +39,20 @@ defmodule JOSE.Mixfile do
 
   defp deps() do
     [
-      # {:cutkey, github: "potatosalad/cutkey", only: [:dev, :test]},
-      {:jason, "~> 1.4", only: [:dev, :test]},
-      {:jsone, "~> 1.9", only: [:dev, :test]},
-      {:jsx, "~> 3.1", only: [:dev, :test]},
-      # {:keccakf1600, "~> 2.0.0", only: [:dev, :test]},
-      {:libdecaf, "~> 2.1.1", only: [:dev, :test]},
-      {:libsodium, "~> 2.0.1", only: [:dev, :test]},
-      {:ojson, "~> 1.0", only: [:dev, :test]},
+      # {:cutkey, github: "potatosalad/cutkey", only: [:test]},
+      {:jason, "~> 1.4", only: [:test]},
+      {:jsone, "~> 1.9", only: [:test]},
+      {:jsx, "~> 3.1", only: [:test]},
+      # {:keccakf1600, "~> 2.0.0", only: [:test]},
+      {:libdecaf, "~> 2.1.1", only: [:test]},
+      {:libsodium, "~> 2.0.1", only: [:test]},
+      {:ojson, "~> 1.0", only: [:test]},
       # Optionally used by JOSE.Poison.
-      {:poison, "~> 3.0 or ~> 4.0 or ~> 5.0 or ~> 6.0", only: [:dev, :test], optional: true},
-      {:thoas, "~> 1.2", only: [:dev, :test]},
+      {:poison, "~> 3.0 or ~> 4.0 or ~> 5.0 or ~> 6.0", only: [:test], optional: true},
+      {:thoas, "~> 1.2", only: [:test]},
       {:ex_doc, "~> 0.37", only: :dev},
       {:earmark, "~> 1.4", only: :dev},
-      {:dialyxir, "~> 1.4.5", only: [:dev, :test], runtime: false}
+      {:dialyxir, "~> 1.4.5", only: [:test], runtime: false}
     ]
   end
 

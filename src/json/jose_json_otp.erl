@@ -33,5 +33,7 @@ encoder(List, Encoder) when is_list(List) ->
 encoder(Map, Encoder) when is_map(Map) ->
     KeyValueList = maps:to_list(dynamic_cast(maps:iterator(Map, ordered))),
     json:encode_key_value_list(KeyValueList, Encoder);
+encoder('nil', Encoder) ->
+    json:encode_atom(null, Encoder);
 encoder(Value, Encoder) ->
     json:encode_value(Value, Encoder).
