@@ -40,6 +40,8 @@ Add `jose` to your project's dependencies in your `Makefile` for [`erlang.mk`](h
 
 #### JSON Encoder/Decoder
 
+_NOTE:_ The following only applies to versions prior to Erlang/OTP 27 when the `json` module was included.  If present, the builtin `json` module will be used unless overridden as described below.
+
 You will also need to specify either [jiffy](https://github.com/davisp/jiffy), [jsone](https://github.com/sile/jsone), [jsx](https://github.com/talentdeficit/jsx), [ojson](https://github.com/potatosalad/erlang-ojson), [Poison](https://github.com/devinus/poison), or [Jason](https://github.com/michalmuskala/jason) as a dependency.
 
 For example, with Elixir and `mix.exs`

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.11.12 (2025-11-20)
+
+* Fixes
+  * Properly handle `nil` from Elixir maps when encoding with the builtin `json` Erlang/OTP module; see [#184](https://github.com/potatosalad/erlang-jose/issues/184)
+  * Drop required Elixir version back from 1.16 -> 1.13; see [#185](https://github.com/potatosalad/erlang-jose/issues/185)
+
 ## 1.11.11 (2025-11-17)
 
 * Fixes
