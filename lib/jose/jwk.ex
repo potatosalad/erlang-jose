@@ -1033,6 +1033,24 @@ defmodule JOSE.JWK do
   def thumbprint(digest_type, jwk), do: :jose_jwk.thumbprint(digest_type, jwk)
 
   @doc """
+  Returns a JWK Thumbprint URI for a `JOSE.JWK` using the `:sha256` digest type.  See `thumbprint_uri/2`.
+  """
+  def thumbprint_uri(list) when is_list(list), do: for(element <- list, into: [], do: thumbprint_uri(element))
+  def thumbprint_uri(jwk = %JOSE.JWK{}), do: thumbprint_uri(to_record(jwk))
+  def thumbprint_uri(jwk), do: :jose_jwk.thumbprint_uri(jwk)
+
+  @doc """
+  Returns a JWK Thumbprint URI for a `JOSE.JWK` using the `digest_type`.
+
+  See JWK Thumbprint URI [RFC 9278](https://www.rfc-editor.org/rfc/rfc9278.html) for more information.
+  """
+  def thumbprint_uri(digest_type, list) when is_list(list),
+    do: for(element <- list, into: [], do: thumbprint_uri(digest_type, element))
+
+  def thumbprint_uri(digest_type, jwk = %JOSE.JWK{}), do: thumbprint_uri(digest_type, to_record(jwk))
+  def thumbprint_uri(digest_type, jwk), do: :jose_jwk.thumbprint_uri(digest_type, jwk)
+
+  @doc """
   Returns a verifier algorithm list for the key type.
   """
   def verifier(list) when is_list(list), do: for(element <- list, into: [], do: verifier(element))

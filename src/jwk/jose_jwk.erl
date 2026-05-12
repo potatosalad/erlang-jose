@@ -130,6 +130,8 @@
 -export([signer/1]).
 -export([thumbprint/1]).
 -export([thumbprint/2]).
+-export([thumbprint_uri/1]).
+-export([thumbprint_uri/2]).
 -export([thumbprint_concat/1]).
 -export([thumbprint_concat/2]).
 -export([verifier/1]).
@@ -1027,6 +1029,23 @@ thumbprint(DigestType, JWK=#jose_jwk{}) ->
 thumbprint(DigestType, Other) ->
 	thumbprint(DigestType, from(Other)).
 
+%% See https://www.rfc-editor.org/rfc/rfc9278.html
+thumbprint_uri(List) when is_list(List) ->
+	[thumbprint_uri(Element) || Element <- List];
+thumbprint_uri(JWK=#jose_jwk{}) ->
+	thumbprint_uri(sha256, JWK);
+thumbprint_uri(Other) ->
+	thumbprint_uri(from(Other)).
+
+thumbprint_uri(DigestType0, List) when is_list(List) ->
+	[thumbprint_uri(DigestType0, Element) || Element <- List];
+thumbprint_uri(DigestType0, JWK=#jose_jwk{}) ->
+	{DigestType, HashName} = thumbprint_uri_digest_type(DigestType0),
+	Thumbprint = thumbprint(DigestType, JWK),
+	<<"urn:ietf:params:oauth:jwk-thumbprint:", HashName/binary, $:, Thumbprint/binary>>;
+thumbprint_uri(DigestType, Other) ->
+	thumbprint_uri(DigestType, from(Other)).
+
 thumbprint_concat(List) when is_list(List) ->
 	thumbprint_concat(sha256, List).
 
@@ -1061,6 +1080,52 @@ do_thumbprint_concat([H | T]) ->
 	{_, ThumbprintMap} = to_thumbprint_map(H),
 	ThumbprintBinary = jose:encode(ThumbprintMap),
 	[ThumbprintBinary | do_thumbprint_concat(T)].
+
+%% @private
+thumbprint_uri_digest_type(sha256) ->
+	{sha256, <<"sha-256">>};
+thumbprint_uri_digest_type(sha384) ->
+	{sha384, <<"sha-384">>};
+thumbprint_uri_digest_type(sha512) ->
+	{sha512, <<"sha-512">>};
+thumbprint_uri_digest_type(sha3_224) ->
+	{sha3_224, <<"sha3-224">>};
+thumbprint_uri_digest_type(sha3_256) ->
+	{sha3_256, <<"sha3-256">>};
+thumbprint_uri_digest_type(sha3_384) ->
+	{sha3_384, <<"sha3-384">>};
+thumbprint_uri_digest_type(sha3_512) ->
+	{sha3_512, <<"sha3-512">>};
+thumbprint_uri_digest_type(<<"sha-256">>) ->
+	{sha256, <<"sha-256">>};
+thumbprint_uri_digest_type(<<"sha-384">>) ->
+	{sha384, <<"sha-384">>};
+thumbprint_uri_digest_type(<<"sha-512">>) ->
+	{sha512, <<"sha-512">>};
+thumbprint_uri_digest_type(<<"sha3-224">>) ->
+	{sha3_224, <<"sha3-224">>};
+thumbprint_uri_digest_type(<<"sha3-256">>) ->
+	{sha3_256, <<"sha3-256">>};
+thumbprint_uri_digest_type(<<"sha3-384">>) ->
+	{sha3_384, <<"sha3-384">>};
+thumbprint_uri_digest_type(<<"sha3-512">>) ->
+	{sha3_512, <<"sha3-512">>};
+thumbprint_uri_digest_type("sha-256") ->
+	{sha256, <<"sha-256">>};
+thumbprint_uri_digest_type("sha-384") ->
+	{sha384, <<"sha-384">>};
+thumbprint_uri_digest_type("sha-512") ->
+	{sha512, <<"sha-512">>};
+thumbprint_uri_digest_type("sha3-224") ->
+	{sha3_224, <<"sha3-224">>};
+thumbprint_uri_digest_type("sha3-256") ->
+	{sha3_256, <<"sha3-256">>};
+thumbprint_uri_digest_type("sha3-384") ->
+	{sha3_384, <<"sha3-384">>};
+thumbprint_uri_digest_type("sha3-512") ->
+	{sha3_512, <<"sha3-512">>};
+thumbprint_uri_digest_type(DigestType) ->
+	erlang:error({badarg, [DigestType]}).
 
 %% @private
 normalize_ecdh_1pu([<<"apu">> | Keys], Map, VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey) ->

@@ -576,6 +576,7 @@ EncryptedECDHES = jose_jwk:box_encrypt(AliceToBob, BobPublicJWK, AlicePrivateJWK
 ### Additional Specifications
 
 - [X] JSON Web Key (JWK) Thumbprint [RFC 7638](https://tools.ietf.org/html/rfc7638)
+- [X] JWK Thumbprint URI [RFC 9278](https://www.rfc-editor.org/rfc/rfc9278.html)
 - [X] JWS Unencoded Payload Option [RFC 7797](https://tools.ietf.org/html/rfc7797)
 
 <sup><a name="footnote-unsecured">unsecured</a></sup> This algorithm is disabled by default due to the unsecured signing vulnerability.  Use the [`unsecured_signing`](#unsecured-signing-vulnerability) setting to enable this algorithm.
