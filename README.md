@@ -55,6 +55,12 @@ defp deps() do
 end
 ```
 
+Then in `config/config.exs`
+
+```elixir
+config :jose, :json_module, Jason
+```
+
 Or with Erlang and `rebar.config`
 
 ```erlang
