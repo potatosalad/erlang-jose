@@ -70,6 +70,7 @@ defmodule JOSE do
 
     * [`libdecaf`](https://github.com/potatosalad/erlang-libdecaf)
     * [`libsodium`](https://github.com/potatosalad/erlang-libsodium)
+    * `crypto` - uses native OTP Ed25519 and X25519 operations when available
     * `jose_jwa_curve25519` - only supported when `crypto_fallback/0` is `true`
 
   Additional modules that implement the `jose_curve25519` behavior may also be used.
@@ -91,6 +92,7 @@ defmodule JOSE do
   Currently supported Curve448 modules (first found is used as default):
 
     * [`libdecaf`](https://github.com/potatosalad/erlang-libdecaf)
+    * `crypto` - uses native OTP Ed448 and X448 operations when available
     * `jose_jwa_curve448` - only supported when `crypto_fallback/0` is `true`
 
   Additional modules that implement the `jose_curve448` behavior may also be used.

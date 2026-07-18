@@ -38,8 +38,12 @@
 -export([supports/0]).
 -export([unsecured_signing/0]).
 -export([unsecured_signing/1]).
+%% Private API
+-export([crypto_supports_internal/0]).
+-export([crypto_supports_internal/1]).
 
 -define(TAB, ?MODULE).
+-define(CRYPTO_SUPPORTS_VERSION, eddsa_kat_v1).
 
 -define(MAYBE_START_JOSE(F), try
 	F
@@ -170,6 +174,15 @@ crypto_fallback(Boolean) when is_boolean(Boolean) ->
 	?MAYBE_START_JOSE(jose_server:config_change()).
 
 crypto_supports() ->
+	%% During a rolling code upgrade jose_jwa may be loaded before jose_server.
+	%% Keep the old direct path available until the serializing API is loaded.
+	case erlang:function_exported(jose_server, crypto_supports, 0) of
+		true -> ?MAYBE_START_JOSE(jose_server:crypto_supports());
+		false -> crypto_supports_internal()
+	end.
+
+%% @private
+crypto_supports_internal() ->
 	Ciphers = ?MAYBE_START_JOSE(ets:select(?TAB, [{
 		{{cipher, '$1'}, {'$2', '_'}},
 		[{'=/=', '$2', 'jose_jwa_unsupported'}],
@@ -185,18 +198,26 @@ crypto_supports() ->
 		[{'=/=', '$2', 'jose_jwa_unsupported'}],
 		['$1']
 	}])),
-	ExternalHashs = external_checks([
-		{poly1305, fun() -> jose_chacha20_poly1305:authenticate(<<>>, <<0:256>>, <<0:96>>) end},
-		{shake256, fun() -> jose_sha3:shake256(<<>>, 0) end}
-	]),
-	ExternalPublicKeys = external_checks([
-		{ed25519, fun jose_curve25519:eddsa_keypair/0},
-		{ed25519ph, fun jose_curve25519:eddsa_keypair/0},
-		{ed448, fun jose_curve448:eddsa_keypair/0},
-		{ed448ph, fun jose_curve448:eddsa_keypair/0},
-		{x25519, fun jose_curve25519:x25519_keypair/0},
-		{x448, fun jose_curve448:x448_keypair/0}
-	]),
+	{ExternalHashs, ExternalPublicKeys} = external_supports_legacy(),
+	crypto_supports_result(Ciphers, RSACrypt, RSASign, ExternalHashs, ExternalPublicKeys).
+
+%% @private
+crypto_supports_internal(Snapshot) ->
+	case external_supports(Snapshot) of
+		stale ->
+			jose_server:crypto_supports();
+		{ExternalHashs, ExternalPublicKeys} ->
+			crypto_supports_result(
+				maps:get(ciphers, Snapshot),
+				maps:get(rsa_crypt, Snapshot),
+				maps:get(rsa_sign, Snapshot),
+				ExternalHashs,
+				ExternalPublicKeys
+			)
+	end.
+
+%% @private
+crypto_supports_result(Ciphers, RSACrypt, RSASign, ExternalHashs, ExternalPublicKeys) ->
 	Supports = crypto:supports(),
 	RecommendedHashs = [md5, poly1305, sha, sha256, sha384, sha512, shake256],
 	Hashs = RecommendedHashs -- ((RecommendedHashs -- proplists:get_value(hashs, Supports)) -- ExternalHashs),
@@ -391,6 +412,14 @@ unsecured_signing(Boolean) when is_boolean(Boolean) ->
 %%%-------------------------------------------------------------------
 
 %% @private
+check_eddsa(Module, Sign, Verify) ->
+	{PK, SK} = Module:eddsa_keypair(),
+	Message = <<"jose_jwa:crypto_supports/0">>,
+	Signature = erlang:apply(Module, Sign, [Message, SK]),
+	true = erlang:apply(Module, Verify, [Signature, Message, PK]),
+	true.
+
+%% @private
 constant_time_compare(<< AH, AT/binary >>, << BH, BT/binary >>, R) ->
 	constant_time_compare(AT, BT, R bor (BH bxor AH));
 constant_time_compare(<<>>, <<>>, R) ->
@@ -411,6 +440,161 @@ external_checks([{Key, Check} | Checks], Acc) ->
 	end;
 external_checks([], Acc) ->
 	lists:reverse(Acc).
+
+%% @private
+external_supports(Snapshot) ->
+	CacheKey = external_supports_cache_key(
+		maps:get(crypto_fallback, Snapshot),
+		maps:get(chacha20_poly1305_module, Snapshot),
+		maps:get(sha3_module, Snapshot),
+		maps:get(curve25519_module, Snapshot),
+		maps:get(curve448_module, Snapshot)
+	),
+	case maps:get(crypto_supports_external, Snapshot) of
+		[{crypto_supports_external, CacheKey, ExternalHashs, ExternalPublicKeys}] ->
+			{ExternalHashs, ExternalPublicKeys};
+		_ ->
+			{ExternalHashs, ExternalPublicKeys} = check_external_supports(),
+			case CacheKey =:= external_supports_cache_key(
+				maps:get(crypto_fallback, Snapshot),
+				maps:get(chacha20_poly1305_module, Snapshot),
+				maps:get(sha3_module, Snapshot),
+				maps:get(curve25519_module, Snapshot),
+				maps:get(curve448_module, Snapshot)
+			) of
+				true ->
+					case jose_server:cache_crypto_supports(
+						maps:get(generation, Snapshot),
+						CacheKey,
+						ExternalHashs,
+						ExternalPublicKeys
+					) of
+						{ok, CachedHashs, CachedPublicKeys} ->
+							{CachedHashs, CachedPublicKeys};
+						stale ->
+							stale
+					end;
+				false ->
+					stale
+			end
+	end.
+
+%% @private
+external_supports_legacy() ->
+	CacheKey = external_supports_cache_key(
+		crypto_fallback(),
+		ets:lookup_element(?TAB, chacha20_poly1305_module, 2),
+		ets:lookup_element(?TAB, sha3_module, 2),
+		ets:lookup_element(?TAB, curve25519_module, 2),
+		ets:lookup_element(?TAB, curve448_module, 2)
+	),
+	case ets:lookup(?TAB, crypto_supports_external) of
+		[{crypto_supports_external, CacheKey, ExternalHashs, ExternalPublicKeys}] ->
+			{ExternalHashs, ExternalPublicKeys};
+		_ ->
+			check_external_supports()
+	end.
+
+%% @private
+external_supports_cache_key(Fallback, ChaCha20Poly1305Module, SHA3Module, Curve25519Module, Curve448Module) ->
+	{
+		?CRYPTO_SUPPORTS_VERSION,
+		Fallback,
+		ChaCha20Poly1305Module,
+		SHA3Module,
+		Curve25519Module,
+		Curve448Module,
+		external_supports_runtime_fingerprint([
+			ChaCha20Poly1305Module,
+			SHA3Module,
+			Curve25519Module,
+			Curve448Module
+		])
+	}.
+
+%% @private
+external_supports_runtime_fingerprint(Modules) ->
+	TransitiveModules = lists:append([external_supports_adapter_dependencies(Module) || Module <- Modules]),
+	{
+		crypto_fips_state(),
+		[{Module, module_fingerprint(Module)} || Module <- lists:usort([
+			crypto,
+			jose_chacha20_poly1305,
+			jose_curve25519,
+			jose_curve25519_fallback,
+			jose_curve448,
+			jose_curve448_fallback,
+			jose_jwa_curve25519,
+			jose_jwa_curve448,
+			jose_jwa_chacha20,
+			jose_jwa_ed25519,
+			jose_jwa_ed448,
+			jose_jwa_math,
+			jose_jwa_poly1305,
+			jose_jwa_sha3,
+			jose_jwa_x25519,
+			jose_jwa_x448,
+			jose_sha3
+			| Modules ++ TransitiveModules
+		])]
+	}.
+
+%% @private
+external_supports_adapter_dependencies(jose_chacha20_poly1305_libsodium) ->
+	[
+		libsodium_crypto_aead_chacha20poly1305,
+		libsodium_crypto_onetimeauth_poly1305,
+		libsodium_crypto_stream_chacha20
+	];
+external_supports_adapter_dependencies(jose_curve25519_libdecaf) ->
+	[libdecaf_curve25519];
+external_supports_adapter_dependencies(jose_curve25519_libsodium) ->
+	[
+		libsodium_crypto_box_curve25519xchacha20poly1305,
+		libsodium_crypto_scalarmult_curve25519,
+		libsodium_crypto_sign_ed25519,
+		libsodium_crypto_sign_ed25519ph
+	];
+external_supports_adapter_dependencies(jose_curve448_libdecaf) ->
+	[libdecaf_curve448];
+external_supports_adapter_dependencies(jose_sha3_keccakf1600_driver) ->
+	[keccakf1600_fips202];
+external_supports_adapter_dependencies(jose_sha3_keccakf1600_nif) ->
+	[keccakf1600];
+external_supports_adapter_dependencies(jose_sha3_libdecaf) ->
+	[libdecaf_sha3];
+external_supports_adapter_dependencies(_Module) ->
+	[].
+
+%% @private
+crypto_fips_state() ->
+	try crypto:info_fips()
+	catch
+		error:undef -> unsupported
+	end.
+
+%% @private
+module_fingerprint(Module) ->
+	try Module:module_info(md5)
+	catch
+		_:_ -> unavailable
+	end.
+
+%% @private
+check_external_supports() ->
+	ExternalHashs = external_checks([
+		{poly1305, fun() -> jose_chacha20_poly1305:authenticate(<<>>, <<0:256>>, <<0:96>>) end},
+		{shake256, fun() -> jose_sha3:shake256(<<>>, 0) end}
+	]),
+	ExternalPublicKeys = external_checks([
+		{ed25519, fun() -> check_eddsa(jose_curve25519, ed25519_sign, ed25519_verify) end},
+		{ed25519ph, fun() -> check_eddsa(jose_curve25519, ed25519ph_sign, ed25519ph_verify) end},
+		{ed448, fun() -> check_eddsa(jose_curve448, ed448_sign, ed448_verify) end},
+		{ed448ph, fun() -> check_eddsa(jose_curve448, ed448ph_sign, ed448ph_verify) end},
+		{x25519, fun jose_curve25519:x25519_keypair/0},
+		{x448, fun jose_curve448:x448_keypair/0}
+	]),
+	{ExternalHashs, ExternalPublicKeys}.
 
 %% @private
 rsa_crypt(Algorithm) ->

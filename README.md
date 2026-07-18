@@ -92,6 +92,8 @@ Curve25519 and Curve448 and their associated signing/key exchange functions are 
 
 Fallback support for `Ed25519`, `Ed25519ph`, `Ed448`, `Ed448ph`, `X25519`, and `X448` is provided.  See [`crypto_fallback`](#cryptographic-algorithm-fallback) below.
 
+When no preferred external backend is present, JOSE selects OTP's native `crypto` adapters after their capability checks pass.
+
 External support is also provided by the following libraries:
 
  * [libdecaf](https://github.com/potatosalad/erlang-libdecaf) - `Ed25519`, `Ed25519ph`, `Ed448`, `Ed448ph`, `X25519`, `X448`
@@ -102,10 +104,12 @@ If both libraries are present, libdecaf will be used by default.  Other modules 
 ```elixir
 # Curve25519
 JOSE.curve25519_module(:libdecaf)            # uses a fast Erlang NIF for libdecaf
+JOSE.curve25519_module(:crypto)              # uses native OTP crypto operations
 JOSE.curve25519_module(:jose_jwa_curve25519) # uses the pure Erlang implementation (slow)
 
 # Curve448
 JOSE.curve448_module(:libdecaf)          # uses a fast Erlang NIF for libdecaf
+JOSE.curve448_module(:crypto)            # uses native OTP crypto operations
 JOSE.curve448_module(:jose_jwa_curve448) # uses the pure Erlang implementation (slow)
 ```
 
