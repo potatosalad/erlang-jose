@@ -38,6 +38,8 @@
 %% Tests.
 -export([aead/0]).
 -export([aead/1]).
+-export([aead_tag_length/0]).
+-export([aead_tag_length/1]).
 -export([block/0]).
 -export([block/1]).
 
@@ -62,9 +64,9 @@ groups() ->
 		{aes_ecb128, [], [block]},
 		{aes_ecb192, [], [block]},
 		{aes_ecb256, [], [block]},
-		{aes_gcm128, [], [aead]},
-		{aes_gcm192, [], [aead]},
-		{aes_gcm256, [], [aead]}
+		{aes_gcm128, [], [aead, aead_tag_length]},
+		{aes_gcm192, [], [aead, aead_tag_length]},
+		{aes_gcm256, [], [aead, aead_tag_length]}
 	].
 
 init_per_suite(Config) ->
@@ -94,6 +96,12 @@ aead(Config) when is_list(Config) ->
 	AEADs = lazy_eval(proplists:get_value(aead, Config)),
 	lists:foreach(fun aead_cipher/1, AEADs).
 
+aead_tag_length() ->
+	[{doc, "AEAD ciphers must only ever verify a full 128-bit authentication tag"}].
+aead_tag_length(Config) when is_list(Config) ->
+	AEADs = lazy_eval(proplists:get_value(aead, Config)),
+	lists:foreach(fun aead_tag_length_cipher/1, AEADs).
+
 block() ->
 	[{doc, "Test block ciphers"}].
 block(Config) when is_list(Config) ->
@@ -119,6 +127,37 @@ aead_cipher({Type, Key, PlainText, IV, AAD, CipherText, CipherTag}) ->
 		Other1 ->
 			ct:fail({{jose_jwa_aes, block_decrypt, [CipherText]}, {expected, Plain}, {got, Other1}})
 	end.
+
+%% @private
+%% Regression for GHSA-6gxw-6f7r-cjr6: the authentication tag arrives
+%% verbatim from the attacker-supplied JWE token, so its length must never
+%% decide how many bits are verified.  Every truncation of the *correct*
+%% tag -- including the 8-bit prefix that used to be accepted -- must be
+%% rejected, and an over-length tag must return `error' rather than crash.
+aead_tag_length_cipher({Type, Key, PlainText, IV, AAD, CipherText, CipherTag}) ->
+	Plain = iolist_to_binary(PlainText),
+	128 = bit_size(CipherTag),
+	%% Sanity: the full-length tag still authenticates on both code paths.
+	Plain = jose_jwa_aes:block_decrypt(Type, Key, IV, {AAD, CipherText, CipherTag}),
+	Plain = jose_jwa:block_decrypt(Type, Key, IV, {AAD, CipherText, CipherTag}),
+	BadTags =
+		[binary:part(CipherTag, 0, Len) || Len <- lists:seq(0, 15)]
+		++ [<< CipherTag/binary, 0 >>, << CipherTag/binary, 0:64 >>],
+	_ = [begin
+		case catch jose_jwa_aes:block_decrypt(Type, Key, IV, {AAD, CipherText, BadTag}) of
+			error ->
+				ok;
+			Other0 ->
+				ct:fail({{jose_jwa_aes, block_decrypt, [Type, {tag_bits, bit_size(BadTag)}]}, {expected, error}, {got, Other0}})
+		end,
+		case catch jose_jwa:block_decrypt(Type, Key, IV, {AAD, CipherText, BadTag}) of
+			error ->
+				ok;
+			Other1 ->
+				ct:fail({{jose_jwa, block_decrypt, [Type, {tag_bits, bit_size(BadTag)}]}, {expected, error}, {got, Other1}})
+		end
+	end || BadTag <- BadTags],
+	ok.
 
 %% @private
 block_cipher({Type, Key, PlainText}) ->

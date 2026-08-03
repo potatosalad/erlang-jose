@@ -51,9 +51,24 @@ block_decrypt({aes_gcm, Bits}, Key, IV, {AAD, CipherText, CipherTag})
 		andalso bit_size(IV) > 0
 		andalso is_binary(AAD)
 		andalso is_binary(CipherText)
-		andalso is_binary(CipherTag) ->
+		andalso is_binary(CipherTag)
+		%% GCM tags are always 128 bits here.  Verifying a shorter tag
+		%% would compare only bit_size(CipherTag) bits of the real tag
+		%% (tag truncation forgery), and a longer one would crash the
+		%% bitstring match in gcm_block_decrypt/6.
+		andalso bit_size(CipherTag) =:= 128 ->
 	MasterKey = block_encrypt({aes_ecb, Bits}, Key, << 0:128 >>),
-	gcm_block_decrypt(MasterKey, Key, IV, AAD, CipherText, CipherTag).
+	gcm_block_decrypt(MasterKey, Key, IV, AAD, CipherText, CipherTag);
+block_decrypt({aes_gcm, Bits}, Key, IV, {AAD, CipherText, CipherTag})
+		when (Bits =:= 128
+			orelse Bits =:= 192
+			orelse Bits =:= 256)
+		andalso bit_size(Key) =:= Bits
+		andalso bit_size(IV) > 0
+		andalso is_binary(AAD)
+		andalso is_binary(CipherText)
+		andalso is_binary(CipherTag) ->
+	error.
 
 block_encrypt({aes_ecb, Bits}, Key, PlainText)
 		when (Bits =:= 128
