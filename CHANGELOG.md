@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+* Security Patches
+  * [GHSA-wfpv-qxp8-x5gm](https://github.com/potatosalad/erlang-jose/security/advisories/GHSA-wfpv-qxp8-x5gm): Add `jose:zip_size_maximum/0`.  `jose_jwe_zip:uncompress/2` now inflates incrementally with `zlib:safeInflate/2` and raises an error once the decompressed `zip: "DEF"` payload exceeds the maximum, which is 1 MiB (1,048,576 bytes) by default.  Previously `zlib:inflate/2` was called on the whole stream with no output-size bound, so an attacker holding only the recipient's public key could send a small JWE that inflated to roughly 770x its size on the victim's node.  Applications that legitimately decrypt larger compressed payloads can raise the limit with `jose:zip_size_maximum/1` or the `zip_size_maximum` application environment key.
+
 ## 1.11.12 (2025-11-20)
 
 * Fixes

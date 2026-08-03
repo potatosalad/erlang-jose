@@ -26,6 +26,7 @@
 -export([sha3_module/1]).
 -export([unsecured_signing/1]).
 -export([xchacha20_poly1305_module/1]).
+-export([zip_size_maximum/1]).
 
 %% gen_server callbacks
 -export([init/1]).
@@ -88,6 +89,10 @@ unsecured_signing(UnsecuredSigning) when is_boolean(UnsecuredSigning) ->
 xchacha20_poly1305_module(XChaCha20Poly1305Module) when is_atom(XChaCha20Poly1305Module) ->
 	gen_server:call(?SERVER, {xchacha20_poly1305_module, XChaCha20Poly1305Module}).
 
+-spec zip_size_maximum(ZipSizeMaximum) -> ok when ZipSizeMaximum :: non_neg_integer().
+zip_size_maximum(ZipSizeMaximum) when is_integer(ZipSizeMaximum) andalso ZipSizeMaximum >= 0 ->
+	gen_server:call(?SERVER, {zip_size_maximum, ZipSizeMaximum}).
+
 %%%===================================================================
 %%% gen_server callbacks
 %%%===================================================================
@@ -144,6 +149,9 @@ handle_call({xchacha20_poly1305_module, M}, _From, State) ->
 	_ = ets:select_delete(?TAB, [{{{cipher, '_'}, '_'}, [], [true]}]),
 	true = ets:insert(?TAB, Entries),
 	{reply, ok, State};
+handle_call({zip_size_maximum, ZipSizeMaximum}, _From, State) when is_integer(ZipSizeMaximum) andalso ZipSizeMaximum >= 0 ->
+	true = ets:insert(?TAB, {zip_size_maximum, ZipSizeMaximum}),
+	{reply, ok, State};
 handle_call(_Request, _From, State) ->
 	{reply, ignore, State}.
 
@@ -179,6 +187,11 @@ support_check() ->
 			V2 when is_boolean(V2) ->
 				V2
 		end,
+	ZipSizeMaximum =
+		case application:get_env(jose, zip_size_maximum, 1048576) of
+			V3 when is_integer(V3) andalso V3 >= 0 ->
+				V3
+		end,
 	Fallback = ?CRYPTO_FALLBACK,
 	Entries1 = lists:flatten(lists:foldl(fun(Check, Acc) ->
 		Check(Fallback, Acc)
@@ -195,7 +208,8 @@ support_check() ->
 	])),
 	Entries2 = [
 		{pbes2_count_maximum, PBES2CountMaximum},
-		{unsecured_signing, UnsecuredSigning}
+		{unsecured_signing, UnsecuredSigning},
+		{zip_size_maximum, ZipSizeMaximum}
 		| Entries1
 	],
 	true = ets:delete_all_objects(?TAB),

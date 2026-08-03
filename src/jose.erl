@@ -31,6 +31,8 @@
 -export([unsecured_signing/1]).
 -export([xchacha20_poly1305_module/0]).
 -export([xchacha20_poly1305_module/1]).
+-export([zip_size_maximum/0]).
+-export([zip_size_maximum/1]).
 %% Private API
 -export([start/0]).
 
@@ -113,6 +115,14 @@ xchacha20_poly1305_module() ->
 
 xchacha20_poly1305_module(XChaCha20Poly1305Module) when is_atom(XChaCha20Poly1305Module) ->
 	?MAYBE_START_JOSE(jose_server:xchacha20_poly1305_module(XChaCha20Poly1305Module)).
+
+-spec zip_size_maximum() -> non_neg_integer().
+zip_size_maximum() ->
+	?MAYBE_START_JOSE(ets:lookup_element(?TAB, zip_size_maximum, 2)).
+
+-spec zip_size_maximum(ZipSizeMaximum) -> ok when ZipSizeMaximum :: non_neg_integer().
+zip_size_maximum(ZipSizeMaximum) when is_integer(ZipSizeMaximum) andalso ZipSizeMaximum >= 0 ->
+	?MAYBE_START_JOSE(jose_server:zip_size_maximum(ZipSizeMaximum)).
 
 %%====================================================================
 %% Private API functions
