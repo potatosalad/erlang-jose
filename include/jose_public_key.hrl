@@ -25,6 +25,23 @@
 -define('id-aes256-CBC', {2,16,840,1,101,3,4,1,42}).
 -endif.
 
+%% PBES2 key-derivation defaults used when exporting a password-protected
+%% PKCS#8 private key. Shared by jose_jwk_der:to_binary/3 and
+%% jose_jwk_pem:to_binary/3 so that both export paths stay in sync.
+%%
+%% The OWASP "Password Storage Cheat Sheet" recommends 600,000 iterations for
+%% PBKDF2-HMAC-SHA256, and NIST SP 800-132 requires a salt of at least 128
+%% bits. Decoding is unaffected by these values: the salt and iteration count
+%% are always read back out of the PBES2 parameters carried in the blob, so
+%% keys exported by earlier releases keep importing unchanged.
+-ifndef(JOSE_PBES2_SALT_BYTES).
+-define(JOSE_PBES2_SALT_BYTES, 16).
+-endif.
+
+-ifndef(JOSE_PBES2_ITERATION_COUNT).
+-define(JOSE_PBES2_ITERATION_COUNT, 600000).
+-endif.
+
 -define('jose_id-X25519', {1,3,101,110}).
 -define('jose_id-X448', {1,3,101,111}).
 -define('jose_id-EdDSA25519', {1,3,101,112}).

@@ -5,6 +5,7 @@
 -include_lib("common_test/include/ct.hrl").
 
 -include("jose.hrl").
+-include("jose_public_key.hrl").
 
 %% ct.
 -export([all/0]).
@@ -16,6 +17,7 @@
 
 %% Tests.
 -export([encrypt_and_decrypt/1]).
+-export([password_export_uses_strong_pbes2_parameters/1]).
 -export([kty_ec_from_der_and_to_der/1]).
 -export([kty_ec_from_map_and_to_map/1]).
 -export([kty_ec_from_pem_and_to_pem/1]).
@@ -70,7 +72,8 @@ all() ->
 groups() ->
 	[
 		{jose_jwk, [parallel], [
-			encrypt_and_decrypt
+			encrypt_and_decrypt,
+			password_export_uses_strong_pbes2_parameters
 		]},
 		{jose_jwk_kty_ec, [parallel], [
 			kty_ec_from_der_and_to_der,
@@ -329,3 +332,42 @@ set_from_map_and_to_map(Config) ->
 	ct_property_test:quickcheck(
 		jose_jwk_set_props:prop_from_map_and_to_map(),
 		Config).
+
+%% GHSA-h4gx-8jq2-mfhc: exporting a password-protected PKCS#8 private key used
+%% to hardcode PBKDF2-HMAC-SHA256 with 2048 iterations and a 64-bit salt, on
+%% both the DER and the PEM export path. Assert that every blob we emit now
+%% meets current guidance -- OWASP recommends 600,000 iterations for
+%% PBKDF2-HMAC-SHA256 and NIST SP 800-132 requires at least a 128-bit salt --
+%% and that the stronger parameters still round-trip.
+password_export_uses_strong_pbes2_parameters(_Config) ->
+	Password = <<"correct-horse">>,
+	JWK = jose_jwk:generate_key({namedCurve, secp256r1}),
+	%% DER export, reached from Elixir as JOSE.JWK.to_der/2.
+	{_, DER} = jose_jwk:to_der(Password, JWK),
+	#'EncryptedPrivateKeyInfo'{encryptionAlgorithm = AlgorithmInfo} =
+		jose_public_key:der_decode(DER),
+	ok = assert_strong_pbes2(jose_public_key:decrypt_parameters(AlgorithmInfo)),
+	JWK = jose_jwk:from_der(Password, DER),
+	%% PEM export, reached from Elixir as JOSE.JWK.to_pem/2.
+	{_, PEM} = jose_jwk:to_pem(Password, JWK),
+	[{'PrivateKeyInfo', _, CipherInfo}] = jose_public_key:pem_decode(PEM),
+	ok = assert_strong_pbes2(CipherInfo),
+	JWK = jose_jwk:from_pem(Password, PEM),
+	ok.
+
+%% @private
+assert_strong_pbes2({_Cipher, #'PBES2-params'{keyDerivationFunc = KeyDerivationFunc}}) ->
+	#'PBES2-params_keyDerivationFunc'{
+		algorithm = ?'id-PBKDF2',
+		parameters = #'PBKDF2-params'{
+			salt = {specified, Salt},
+			iterationCount = IterationCount,
+			prf = #'PBKDF2-params_prf'{algorithm = ?'id-hmacWithSHA256'}
+		}
+	} = KeyDerivationFunc,
+	%% NIST SP 800-132: the salt must be at least 128 bits.
+	true = (bit_size(Salt) >= 128),
+	%% OWASP Password Storage Cheat Sheet: 600,000 iterations for
+	%% PBKDF2-HMAC-SHA256.
+	true = (IterationCount >= 600000),
+	ok.

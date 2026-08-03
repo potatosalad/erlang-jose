@@ -45,8 +45,8 @@ to_binary(Password, _KeyType, Key) ->
 		keyDerivationFunc = #'PBES2-params_keyDerivationFunc'{
 			algorithm = ?'id-PBKDF2',
 			parameters = #'PBKDF2-params'{
-				salt = {specified, crypto:strong_rand_bytes(8)},
-				iterationCount = 2048,
+				salt = {specified, crypto:strong_rand_bytes(?JOSE_PBES2_SALT_BYTES)},
+				iterationCount = ?JOSE_PBES2_ITERATION_COUNT,
 				keyLength = asn1_NOVALUE,
 				prf = #'PBKDF2-params_prf'{
 					algorithm = ?'id-hmacWithSHA256',
