@@ -49,6 +49,43 @@ jwk_jwe_gen() ->
 		jwk_jwe_maps(),
 		{Key, jose_jwk:from_map(JWKMap), jose_jwe:from_map(JWEMap)}).
 
+prop_ghsa_wfpv_qxp8_x5gm() ->
+	?FORALL({ZipSizeMaximum, Slack},
+		{range(1, 4096), range(1, 4096)},
+		begin
+			OriginalZipSizeMaximum = jose:zip_size_maximum(),
+			try jose:zip_size_maximum(ZipSizeMaximum) of
+				ok ->
+					%% A run of zero bytes is the classic DEFLATE bomb: it
+					%% compresses at roughly 1000:1, so `Greater` is a tiny
+					%% input that must not be allowed to inflate past the cap.
+					Maximum = binary:copy(<<0>>, ZipSizeMaximum),
+					Greater = binary:copy(<<0>>, ZipSizeMaximum + Slack),
+					MaximumCompressed = jose_jwe_zip:compress(Maximum, zlib),
+					GreaterCompressed = jose_jwe_zip:compress(Greater, zlib),
+					MaximumResult =
+						try
+							jose_jwe_zip:uncompress(MaximumCompressed, zlib)
+						catch
+							MaximumClass:MaximumReason ->
+								{MaximumClass, MaximumReason}
+						end,
+					GreaterResult =
+						try
+							jose_jwe_zip:uncompress(GreaterCompressed, zlib)
+						catch
+							GreaterClass:GreaterReason ->
+								{GreaterClass, GreaterReason}
+						end,
+					conjunction([
+						{maximum_uncompress, Maximum =:= MaximumResult},
+						{greater_uncompress, {error, badarg} =:= GreaterResult}
+					])
+			after
+				ok = jose:zip_size_maximum(OriginalZipSizeMaximum)
+			end
+		end).
+
 prop_from_map_and_to_map() ->
 	?FORALL(JWEMap,
 		?LET({{_Key, _JWKMap, JWEMap}, Extras},

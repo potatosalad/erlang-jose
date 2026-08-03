@@ -19,7 +19,8 @@
 	{links, [{"Github", "https://github.com/potatosalad/erlang-jose"}]},
 	{env, [
 		{crypto_fallback, true},
-		{pbes2_count_maximum, 10000}
+		{pbes2_count_maximum, 10000},
+		{zip_size_maximum, 1048576}
 	]}
 ]}.
 
