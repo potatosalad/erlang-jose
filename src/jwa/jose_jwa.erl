@@ -79,6 +79,20 @@ block_decrypt(Cipher, Key, IV, CipherText)
 		{Module, BlockCipher} ->
 			Module:block_decrypt(BlockCipher, Key, IV, CipherText)
 	end;
+%% Every AEAD cipher reachable through this dispatcher (AES-GCM,
+%% ChaCha20-Poly1305 and XChaCha20-Poly1305) authenticates with a
+%% 128-bit tag.  The tag arrives straight from the attacker-supplied
+%% JWE token, so a truncated tag must never be verified: doing so
+%% would only compare bit_size(CipherTag) bits of the real tag and
+%% drop forgery resistance to 2^-bit_size(CipherTag).  Reject any tag
+%% that is not exactly 128 bits, using the same `error' return that a
+%% failed authentication uses.
+block_decrypt(_Cipher, _Key, _IV, {AAD, CipherText, CipherTag})
+		when is_binary(AAD)
+		andalso is_binary(CipherText)
+		andalso is_binary(CipherTag)
+		andalso bit_size(CipherTag) =/= 128 ->
+	error;
 block_decrypt(Cipher, Key, IV, {AAD, CipherText, CipherTag})
 		when is_binary(AAD)
 		andalso is_binary(CipherText)
