@@ -961,6 +961,14 @@ merge(LeftOther, RightMap) when is_map(RightMap) ->
 
 shared_secret(#jose_jwk{kty={Module, YourKTY}}, #jose_jwk{kty={Module, MyKTY}}) ->
 	Module:derive_key(YourKTY, MyKTY);
+%% Both arguments are already decoded, but their "kty" modules differ (or one
+%% is absent), so no shared secret can be derived.  Fail closed here: the
+%% fallback clause below would call from/1 on two #jose_jwk{} records, which
+%% returns them unchanged, and re-enter shared_secret/2 with identical
+%% arguments -- an unbounded tail-recursive loop.  Only the module names are
+%% reported, because a #jose_jwk{} may carry private key material.
+shared_secret(#jose_jwk{kty=YourKTY}, #jose_jwk{kty=MyKTY}) ->
+	erlang:error({badarg, [kty_module(YourKTY), kty_module(MyKTY)]});
 shared_secret(YourJWK, MyJWK) ->
 	shared_secret(from(YourJWK), from(MyJWK)).
 
@@ -1061,6 +1069,12 @@ do_thumbprint_concat([H | T]) ->
 	{_, ThumbprintMap} = to_thumbprint_map(H),
 	ThumbprintBinary = jose:encode(ThumbprintMap),
 	[ThumbprintBinary | do_thumbprint_concat(T)].
+
+%% @private
+kty_module({Module, _KTY}) when is_atom(Module) ->
+	Module;
+kty_module(_) ->
+	undefined.
 
 %% @private
 normalize_ecdh_1pu([<<"apu">> | Keys], Map, VStaticPublicKey, UStaticSecretKey, UEphemeralSecretKey) ->
