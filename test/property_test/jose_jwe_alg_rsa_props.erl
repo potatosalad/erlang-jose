@@ -88,3 +88,38 @@ prop_key_encrypt_and_key_decrypt() ->
 			{EncKey, EncJWE} = jose_jwe:key_encrypt(AlicePublicJWK, DecKey, DecJWE),
 			DecKey =:= jose_jwe:key_decrypt(AlicePrivateJWK, EncKey, EncJWE)
 		end).
+
+%% GHSA-vwvr-f994-6j9j: RSA key unwrapping must not tell the caller whether the
+%% decrypted RSA block was well formed. RFC 7516, Section 11.5 (and RFC 3218)
+%% require that format, padding, and length errors of the JWE Encrypted Key be
+%% indistinguishable, and that a random CEK be substituted on failure. Anything
+%% else is the one-bit oracle a Bleichenbacher adaptive chosen-ciphertext attack
+%% against RSAES-PKCS1-v1_5 ("RSA1_5") consumes.
+%%
+%% Every ciphertext below is buildable by an attacker who knows only the public
+%% key, which is precisely the reported threat model.
+prop_ghsa_vwvr_f994_6j9j() ->
+	?FORALL({{AlicePrivateJWK, AlicePublicJWK}, JWE},
+		jwk_jwe_gen(),
+		begin
+			{DecKey, DecJWE} = jose_jwe:next_cek(AlicePublicJWK, JWE),
+			{EncKey, EncJWE} = jose_jwe:key_encrypt(AlicePublicJWK, DecKey, DecJWE),
+			K = byte_size(EncKey),
+			MalformedKeys = [
+				binary:copy(<< 16#00 >>, K),      % c = 0, decrypts to an all-zero block
+				binary:copy(<< 16#FF >>, K),      % c >= n, rejected by the modexp itself
+				crypto:strong_rand_bytes(K),      % non-conforming padding
+				binary:part(EncKey, 0, K - 1),    % length error (short)
+				<< EncKey/binary, 16#00 >>        % length error (long)
+			],
+			DecKey =:= jose_jwe:key_decrypt(AlicePrivateJWK, EncKey, EncJWE)
+				andalso lists:all(fun(MalformedKey) ->
+					case catch jose_jwe:key_decrypt(AlicePrivateJWK, MalformedKey, EncJWE) of
+						SubstituteKey when is_binary(SubstituteKey) ->
+							byte_size(SubstituteKey) =:= byte_size(DecKey)
+								andalso SubstituteKey =/= DecKey;
+						_Distinguishable ->
+							false
+					end
+				end, MalformedKeys)
+		end).
