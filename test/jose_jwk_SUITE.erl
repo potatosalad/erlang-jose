@@ -18,6 +18,7 @@
 %% Tests.
 -export([encrypt_and_decrypt/1]).
 -export([password_export_uses_strong_pbes2_parameters/1]).
+-export([shared_secret_mismatched_kty/1]).
 -export([kty_ec_from_der_and_to_der/1]).
 -export([kty_ec_from_map_and_to_map/1]).
 -export([kty_ec_from_pem_and_to_pem/1]).
@@ -73,7 +74,8 @@ groups() ->
 	[
 		{jose_jwk, [parallel], [
 			encrypt_and_decrypt,
-			password_export_uses_strong_pbes2_parameters
+			password_export_uses_strong_pbes2_parameters,
+			shared_secret_mismatched_kty
 		]},
 		{jose_jwk_kty_ec, [parallel], [
 			kty_ec_from_der_and_to_der,
@@ -157,6 +159,34 @@ encrypt_and_decrypt(Config) ->
 	ct_property_test:quickcheck(
 		jose_jwk_props:prop_encrypt_and_decrypt(),
 		Config).
+
+%% Regression test for GHSA-fpj2-9h59-32pp: two already-decoded JWKs whose
+%% "kty" modules differ used to fall through to shared_secret(from(Your),
+%% from(My)), and because from/1 returns a #jose_jwk{} unchanged, that
+%% re-entered shared_secret/2 with identical arguments forever.  Each call is
+%% bounded below so that a regression fails the suite instead of hanging it.
+shared_secret_mismatched_kty(_Config) ->
+	MySecretKey = jose_jwk:generate_key({ec, <<"P-256">>}),
+	YourECPublicKey = jose_jwk:to_public(jose_jwk:generate_key({ec, <<"P-256">>})),
+	YourRSAPublicKey = jose_jwk:to_public(jose_jwk:generate_key({rsa, 2048})),
+	YourOKPPublicKey = jose_jwk:to_public(jose_jwk:generate_key({okp, 'X25519'})),
+	{_, YourRSAPublicMap} = jose_jwk:to_map(YourRSAPublicKey),
+	%% matching kty modules still derive a shared secret
+	{ok, SharedSecret} = shared_secret(YourECPublicKey, MySecretKey),
+	true = is_binary(SharedSecret),
+	%% mismatched kty modules fail closed instead of looping
+	{error, {badarg, [jose_jwk_kty_rsa, jose_jwk_kty_ec]}} =
+		shared_secret(YourRSAPublicKey, MySecretKey),
+	{error, {badarg, [jose_jwk_kty_okp_x25519, jose_jwk_kty_ec]}} =
+		shared_secret(YourOKPPublicKey, MySecretKey),
+	%% ... including when the peer key arrives undecoded, the way it does from
+	%% a JWK document or a JWE "epk" header
+	{error, {badarg, [jose_jwk_kty_rsa, jose_jwk_kty_ec]}} =
+		shared_secret(YourRSAPublicMap, MySecretKey),
+	%% ... and when a key carries no "kty" at all, such as a JWK Set
+	{error, {badarg, [undefined, jose_jwk_kty_ec]}} =
+		shared_secret(jose_jwk:from_map(#{ <<"keys">> => [] }), MySecretKey),
+	ok.
 
 kty_ec_from_der_and_to_der(Config) ->
 	ct_property_test:quickcheck(
@@ -355,6 +385,10 @@ password_export_uses_strong_pbes2_parameters(_Config) ->
 	JWK = jose_jwk:from_pem(Password, PEM),
 	ok.
 
+%%====================================================================
+%% Internal functions
+%%====================================================================
+
 %% @private
 assert_strong_pbes2({_Cipher, #'PBES2-params'{keyDerivationFunc = KeyDerivationFunc}}) ->
 	#'PBES2-params_keyDerivationFunc'{
@@ -371,3 +405,28 @@ assert_strong_pbes2({_Cipher, #'PBES2-params'{keyDerivationFunc = KeyDerivationF
 	%% PBKDF2-HMAC-SHA256.
 	true = (IterationCount >= 600000),
 	ok.
+
+%% @private
+%% Calls jose_jwk:shared_secret/2 under a hard timeout so that an unbounded
+%% loop shows up as a test failure rather than a hung test run.
+shared_secret(YourJWK, MyJWK) ->
+	{Pid, Ref} = erlang:spawn_monitor(fun () ->
+		Result =
+			try jose_jwk:shared_secret(YourJWK, MyJWK) of
+				SharedSecret ->
+					{ok, SharedSecret}
+			catch
+				Class:Reason ->
+					{Class, Reason}
+			end,
+		erlang:exit({shared_secret, Result})
+	end),
+	receive
+		{'DOWN', Ref, process, Pid, {shared_secret, Result}} ->
+			Result
+	after
+		5000 ->
+			_ = erlang:demonitor(Ref, [flush]),
+			true = erlang:exit(Pid, kill),
+			ct:fail(shared_secret_did_not_terminate)
+	end.
