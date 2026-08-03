@@ -5,6 +5,27 @@
 %%% @copyright 2014-2022, Andrew Bennett
 %%% @doc Elliptic Curves for Security - X25519
 %%% See https://tools.ietf.org/html/rfc7748
+%%%
+%%% SECURITY WARNING: this pure Erlang implementation is NOT constant-time.
+%%%
+%%% `curve25519/2' is operation-count balanced (every step performs exactly
+%%% one `montgomery_add/3' and one `montgomery_double/1', and clamping fixes
+%%% the recursion depth), so the coarse "skipped operation" leak is absent.
+%%% It is still not constant-time: the ladder branches on individual bits of
+%%% the secret scalar to route its operands, and the underlying Erlang bignum
+%%% `*' / `rem' operations and the `expmod/3'-based field inversion all run in
+%%% value-dependent time. Execution time is therefore correlated with the
+%%% private scalar. Pure Erlang integer arithmetic cannot be made
+%%% constant-time.
+%%%
+%%% This module is a last-resort fallback for platforms with no native
+%%% implementation. `jose' prefers a constant-time native module
+%%% (`libdecaf', `libsodium', or OTP `crypto') whenever one works, so this
+%%% code is not reached for X25519 on a stock OTP build with `crypto' x25519
+%%% support. Do not select it explicitly for long-lived private keys in a
+%%% timing-observable context; use `jose_curve25519_crypto' (which calls
+%%% `crypto:generate_key/3' and `crypto:compute_key/4' with `x25519') or a
+%%% NIF-backed module instead.
 %%% @end
 %%% Created :  06 Jan 2016 by Andrew Bennett <potatosaladx@gmail.com>
 %%%-------------------------------------------------------------------

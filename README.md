@@ -132,6 +132,15 @@ See [ALGORITHMS.md](https://github.com/potatosalad/erlang-jose/blob/main/ALGORIT
 
 By default, the algorithm fallback is disabled, but can be enabled by setting the `crypto_fallback` application environment variable for `jose` to `true` or by calling `jose:crypto_fallback/1` or `JOSE.crypto_fallback/1` with `true`.
 
+> [!WARNING]
+> **The pure Erlang fallback implementations are not constant-time.**
+>
+> The pure Erlang elliptic curve modules (`jose_jwa_curve25519`/`jose_jwa_x25519` and `jose_jwa_curve448`/`jose_jwa_x448`) perform scalar multiplication with Erlang bignum arithmetic, whose execution time depends on operand values. They therefore leak timing information about the private scalar and should not be used with long-lived private keys in any context where an attacker can observe operation timing.
+>
+> These modules exist as a last-resort fallback for platforms with no native implementation. `jose` prefers a native constant-time implementation whenever one is available, probing `libdecaf`, `libsodium`, and then OTP `crypto` — on any OTP release whose `crypto` supports `x25519`/`x448` (OTP 22.1+ with OpenSSL 1.1.1+), the native module is selected and the pure Erlang curve code is *not* used for scalar multiplication, regardless of the `crypto_fallback` setting. Setting `crypto_fallback` to `true` only changes the last-resort fallback from "unsupported" to the pure Erlang implementation; it does not override a working native module.
+>
+> Selecting the pure Erlang curve modules explicitly (for example `jose:curve25519_module(jose_jwa_curve25519)` or `JOSE.curve25519_module(:jose_jwa_curve25519)`) opts out of the constant-time native path. Do not do this with long-lived keys in production.
+
 You may also review which algorithms are currently supported with the `jose_jwa:supports/0` or `JOSE.JWA.supports/0` functions.  For example, on Elixir 1.9.4 and OTP 22:
 
 ```elixir

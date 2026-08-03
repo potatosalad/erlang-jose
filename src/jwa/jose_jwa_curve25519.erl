@@ -3,8 +3,20 @@
 %%%-------------------------------------------------------------------
 %%% @author Andrew Bennett <potatosaladx@gmail.com>
 %%% @copyright 2014-2022, Andrew Bennett
-%%% @doc
+%%% @doc Pure Erlang `jose_curve25519' fallback.
 %%%
+%%% SECURITY WARNING: this implementation is NOT constant-time. The X25519
+%%% callbacks below delegate to `jose_jwa_x25519', whose scalar
+%%% multiplication runs in time correlated with the private scalar (see the
+%%% module documentation for `jose_jwa_x25519'). The Ed25519 signing
+%%% callbacks delegate to `jose_jwa_ed25519' and carry the same caveat.
+%%%
+%%% This module exists as a last-resort fallback for platforms with no
+%%% native implementation, and `jose' selects a constant-time native module
+%%% in preference to it whenever one is available. Selecting it explicitly
+%%% via `jose:curve25519_module/1' opts out of that protection; do not do so
+%%% for long-lived private keys in any context where an attacker can observe
+%%% operation timing.
 %%% @end
 %%% Created :  07 Jan 2016 by Andrew Bennett <potatosaladx@gmail.com>
 %%%-------------------------------------------------------------------
