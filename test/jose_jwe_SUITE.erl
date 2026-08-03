@@ -31,6 +31,7 @@
 -export([alg_pbes2_from_map_and_to_map/1]).
 -export([alg_pbes2_key_encrypt_and_key_decrypt/1]).
 -export([alg_rsa_from_map_and_to_map/1]).
+-export([alg_rsa_ghsa_vwvr_f994_6j9j/1]).
 -export([alg_rsa_key_encrypt_and_key_decrypt/1]).
 -export([alg_xc20p_kw_from_map_and_to_map/1]).
 -export([alg_xc20p_kw_key_encrypt_and_key_decrypt/1]).
@@ -72,7 +73,8 @@ groups() ->
 			alg_c20p_kw_key_encrypt_and_key_decrypt
 		]},
 		{jose_jwe_cve, [shuffle], [
-			alg_pbes2_cve_2023_50966
+			alg_pbes2_cve_2023_50966,
+			alg_rsa_ghsa_vwvr_f994_6j9j
 		]},
 		{jose_jwe_alg_dir, [parallel], [
 			alg_dir_from_map_and_to_map,
@@ -218,6 +220,11 @@ alg_pbes2_key_encrypt_and_key_decrypt(Config) ->
 alg_rsa_from_map_and_to_map(Config) ->
 	ct_property_test:quickcheck(
 		jose_jwe_alg_rsa_props:prop_from_map_and_to_map(),
+		Config).
+
+alg_rsa_ghsa_vwvr_f994_6j9j(Config) ->
+	ct_property_test:quickcheck(
+		jose_jwe_alg_rsa_props:prop_ghsa_vwvr_f994_6j9j(),
 		Config).
 
 alg_rsa_key_encrypt_and_key_decrypt(Config) ->

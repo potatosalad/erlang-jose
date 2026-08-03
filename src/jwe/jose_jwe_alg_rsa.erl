@@ -66,8 +66,26 @@ generate_key(_Fields, {ENCModule, ENC}, ?RSA_OAEP) ->
 generate_key(_Fields, {ENCModule, ENC}, ?RSA_OAEP_256) ->
 	jose_jwe_alg:generate_key({rsa, 2048}, <<"RSA-OAEP-256">>, ENCModule:algorithm(ENC)).
 
-key_decrypt(#jose_jwk{kty={KTYModule, KTY}}, {_ENCModule, _ENC, EncryptedKey}, #jose_jwe_alg_rsa{algorithm=Algorithm}) ->
-	KTYModule:decrypt_private(EncryptedKey, Algorithm, KTY).
+%% RFC 7516, Section 11.5 (and RFC 3218): the recipient MUST NOT distinguish
+%% between format, padding, and length errors of the JWE Encrypted Key, and
+%% SHOULD substitute a randomly generated CEK when the encrypted key is
+%% improperly formatted. Without this, RSAES-PKCS1-v1_5 ("RSA1_5") unwrapping
+%% hands the caller a one-bit padding-conformance signal, which is exactly the
+%% oracle a Bleichenbacher adaptive chosen-ciphertext attack consumes.
+%%
+%% Generating the substitute CEK unconditionally, before the private-key
+%% operation is inspected, keeps the amount of work on the failure path equal
+%% to the success path and funnels every malformed encrypted key into the
+%% AEAD/HMAC integrity check, which then fails uniformly.
+key_decrypt(#jose_jwk{kty={KTYModule, KTY}}, {ENCModule, ENC, EncryptedKey}, #jose_jwe_alg_rsa{algorithm=Algorithm}) ->
+	RandomKey = ENCModule:next_cek(ENC),
+	case catch KTYModule:decrypt_private(EncryptedKey, Algorithm, KTY) of
+		DecryptedKey when is_binary(DecryptedKey)
+				andalso byte_size(DecryptedKey) =:= byte_size(RandomKey) ->
+			DecryptedKey;
+		_BadDecryptedKey ->
+			RandomKey
+	end.
 
 key_encrypt(#jose_jwk{kty={KTYModule, KTY}}, DecryptedKey, JWERSA=#jose_jwe_alg_rsa{algorithm=Algorithm}) ->
 	{KTYModule:encrypt_public(DecryptedKey, Algorithm, KTY), JWERSA}.
