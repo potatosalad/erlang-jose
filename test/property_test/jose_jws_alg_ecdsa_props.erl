@@ -93,3 +93,24 @@ prop_sign_and_verify() ->
 			{true, Message, JWS} =:= jose_jws:verify(JWKVerifier, Signed)
 			andalso {true, Message, JWS} =:= jose_jws:verify(JWKVerifier, CompactSigned)
 		end).
+
+%% RFC 7518 3.4 fixes the ECDSA JWS Signature to the octet sequence R || S,
+%% each half zero-padded to the byte length of the curve order.  Prepending
+%% (or stripping) leading zero octets on both halves keeps the encoded
+%% integers identical, so a verifier that splits on byte_size div 2 accepts an
+%% unbounded family of distinct signatures for the same key and payload.
+%% See GHSA-44hw-rpw9-mwg4.
+prop_verify_rejects_non_canonical_signature_length() ->
+	?FORALL({{_CurveId, {JWKSigner, JWKVerifier}, JWS}, Message, Pad},
+		{jwk_jws_gen(), binary(), integer(1, 8)},
+		begin
+			{Modules, SignedMap = #{ <<"signature">> := SignatureB64 }} = jose_jws:sign(JWKSigner, Message, JWS),
+			Signature = jose_jwa_base64url:decode(SignatureB64),
+			HalfSize = byte_size(Signature) div 2,
+			<< R:HalfSize/binary, S:HalfSize/binary >> = Signature,
+			Zeros = binary:copy(<< 0 >>, Pad),
+			Repadded = << Zeros/binary, R/binary, Zeros/binary, S/binary >>,
+			Malleable = {Modules, SignedMap#{ <<"signature">> => jose_jwa_base64url:encode(Repadded) }},
+			{true, Message, JWS} =:= jose_jws:verify(JWKVerifier, {Modules, SignedMap})
+			andalso false =:= element(1, jose_jws:verify(JWKVerifier, Malleable))
+		end).

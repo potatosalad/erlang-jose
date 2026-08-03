@@ -275,12 +275,25 @@ verifier({#'ECPoint'{}, {namedCurve, Parameters}}, _Fields) ->
 verify(Message, JWSALG, Signature, ECPublicKey={#'ECPoint'{}, _}) ->
 	try jws_alg_to_digest_type(ECPublicKey, JWSALG) of
 		DigestType ->
-			SignatureLen = byte_size(Signature),
-			{RBin, SBin} = split_binary(Signature, (SignatureLen div 2)),
-			R = crypto:bytes_to_integer(RBin),
-			S = crypto:bytes_to_integer(SBin),
-			DERSignature = public_key:der_encode('ECDSA-Sig-Value', #'ECDSA-Sig-Value'{ r = R, s = S }),
-			public_key:verify(Message, DigestType, DERSignature, ECPublicKey)
+			%% Safe: jws_alg_to_digest_type/2 has already rejected every
+			%% JWSALG that jws_alg_to_r_s_size/1 does not handle.
+			RSSize = jws_alg_to_r_s_size(JWSALG),
+			%% RFC 7518 3.4 fixes the JWS Signature to the octet sequence
+			%% R || S, where each of R and S is left zero-padded to the
+			%% byte length of the curve order.  Any other length MUST be
+			%% rejected: splitting on byte_size(Signature) div 2 and then
+			%% relying on crypto:bytes_to_integer/1 (which ignores leading
+			%% zero octets) would otherwise accept an unbounded family of
+			%% distinct, re-padded encodings of the same (R, S) pair.
+			case Signature of
+				<< RBin:RSSize/binary, SBin:RSSize/binary >> ->
+					R = crypto:bytes_to_integer(RBin),
+					S = crypto:bytes_to_integer(SBin),
+					DERSignature = public_key:der_encode('ECDSA-Sig-Value', #'ECDSA-Sig-Value'{ r = R, s = S }),
+					public_key:verify(Message, DigestType, DERSignature, ECPublicKey);
+				_ ->
+					false
+			end
 	catch
 		error:{not_supported, _} ->
 			false
