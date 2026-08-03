@@ -51,6 +51,23 @@
 
 -export_type([key/0]).
 
+%% Bounds for the (n, e, d) -> CRT prime recovery performed by
+%% convert_sfm_to_crt/1.  Every integer involved comes straight from an
+%% untrusted JWK, so the recovery has to be bounded before it starts
+%% instead of being interrupted afterwards: a single crypto:mod_pow/3 is
+%% an uninterruptible NIF, so the watchdog in from_map_rsa_private_key/2
+%% cannot stop an oversized modular exponentiation once it is running.
+%%
+%% ?SFM_MAX_MODULUS_BITS keeps one modular exponentiation cheap enough
+%% for that watchdog to remain effective.  RSA moduli larger than this
+%% are still accepted when the CRT parameters are supplied directly.
+-define(SFM_MAX_MODULUS_BITS, 8192).
+%% Largest search base tried when looking for a non-trivial square root
+%% of 1.  For a genuine two-prime modulus at least half of the bases
+%% work, so 50 even bases fail with probability below 2^-50; anything
+%% that survives them is not a recoverable RSA key.
+-define(SFM_MAX_A, 100).
+
 %%====================================================================
 %% jose_jwk callbacks
 %%====================================================================
@@ -320,7 +337,7 @@ convert_sfm_to_crt(Key=#'RSAPrivateKey'{
 		when is_integer(D)
 		andalso is_integer(E)
 		andalso is_integer(N) ->
-	KTOT = D * E - 1,
+	KTOT = convert_sfm_to_crt_ktot(D, E, N),
 	T = convert_sfm_to_crt_find_t(KTOT),
 	A = 2,
 	K = T,
@@ -344,6 +361,33 @@ convert_sfm_to_crt(Key=#'RSAPrivateKey'{
 	}.
 
 %% @private
+%% Rejects (n, e, d) triples that cannot come from a two-prime RSA key
+%% before any attacker-sized work is done.  n must be an odd modulus of
+%% a sane size, e and d must be odd and smaller than n, and 2^(ed-1)
+%% must be 1 (mod n), which is exactly the property the square root
+%% search below relies on and which holds for every valid key because
+%% ed - 1 is a multiple of lambda(n).
+convert_sfm_to_crt_ktot(D, E, N)
+		when N > 3
+		andalso (N band 1) =:= 1
+		andalso N < (1 bsl ?SFM_MAX_MODULUS_BITS)
+		andalso E > 2
+		andalso E < N
+		andalso (E band 1) =:= 1
+		andalso D > 2
+		andalso D < N
+		andalso (D band 1) =:= 1 ->
+	KTOT = D * E - 1,
+	case jose_jwa_math:expmod(2, KTOT, N) of
+		1 ->
+			KTOT;
+		_ ->
+			erlang:error(badarg)
+	end;
+convert_sfm_to_crt_ktot(_D, _E, _N) ->
+	erlang:error(badarg).
+
+%% @private
 convert_sfm_to_crt_egcd(0, B) ->
 	{B, 0, 1};
 convert_sfm_to_crt_egcd(A, B) ->
@@ -351,6 +395,8 @@ convert_sfm_to_crt_egcd(A, B) ->
 	{G, X - (B div A) * Y, Y}.
 
 %% @private
+convert_sfm_to_crt_find_p(_KTOT, _T, _K, A, _N, _D) when A > ?SFM_MAX_A ->
+	erlang:error(badarg);
 convert_sfm_to_crt_find_p(KTOT, T, K, A, N, D) when K < KTOT ->
 	R = case jose_jwa_math:expmod(A, K, N) of
 		C when C =/= 1 andalso C =/= (N - 1) ->
@@ -436,7 +482,16 @@ from_map_rsa_private_key(F, Key0=#'RSAPrivateKey'{
 	Ref = erlang:make_ref(),
 	Parent = self(),
 	{Child, Monitor} = spawn_monitor(fun() ->
-		Parent ! {Ref, convert_sfm_to_crt(Key0)},
+		%% A rejected key exits quietly: the DOWN clauses below already
+		%% turn any failure into {badarg, [Key0]}, and letting the
+		%% exception escape would log the attacker supplied integers.
+		try convert_sfm_to_crt(Key0) of
+			Key ->
+				Parent ! {Ref, Key}
+		catch
+			_:_ ->
+				ok
+		end,
 		exit(normal)
 	end),
 	receive
