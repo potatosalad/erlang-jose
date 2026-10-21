@@ -12,7 +12,7 @@
 %%% callbacks delegate to `jose_jwa_ed25519' and carry the same caveat.
 %%%
 %%% This module exists as a last-resort fallback for platforms with no
-%%% native implementation, and `jose' selects a constant-time native module
+%%% native implementation, and `jose' selects a native module
 %%% in preference to it whenever one is available. Selecting it explicitly
 %%% via `jose:curve25519_module/1' opts out of that protection; do not do so
 %%% for long-lived private keys in any context where an attacker can observe

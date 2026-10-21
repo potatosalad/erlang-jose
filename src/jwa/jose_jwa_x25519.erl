@@ -19,7 +19,7 @@
 %%% constant-time.
 %%%
 %%% This module is a last-resort fallback for platforms with no native
-%%% implementation. `jose' prefers a constant-time native module
+%%% implementation. `jose' prefers a native module
 %%% (`libdecaf', `libsodium', or OTP `crypto') whenever one works, so this
 %%% code is not reached for X25519 on a stock OTP build with `crypto' x25519
 %%% support. Do not select it explicitly for long-lived private keys in a

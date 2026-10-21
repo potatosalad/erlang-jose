@@ -350,6 +350,9 @@ next_iv(#jose_jwe{enc={ENCModule, ENC}}) ->
 next_iv(Other) ->
 	next_iv(from(Other)).
 
+%% Authentication failure must never be passed to a decompressor.
+uncompress(error, #jose_jwe{}) ->
+	error;
 uncompress(CipherText, #jose_jwe{zip={Module, ZIP}}) ->
 	Module:uncompress(CipherText, ZIP);
 uncompress(CipherText, #jose_jwe{}) ->

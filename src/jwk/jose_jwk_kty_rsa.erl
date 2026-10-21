@@ -51,21 +51,22 @@
 
 -export_type([key/0]).
 
-%% Bounds for the (n, e, d) -> CRT prime recovery performed by
-%% convert_sfm_to_crt/1.  Every integer involved comes straight from an
-%% untrusted JWK, so the recovery has to be bounded before it starts
-%% instead of being interrupted afterwards: a single crypto:mod_pow/3 is
-%% an uninterruptible NIF, so the watchdog in from_map_rsa_private_key/2
-%% cannot stop an oversized modular exponentiation once it is running.
-%%
-%% ?SFM_MAX_MODULUS_BITS keeps one modular exponentiation cheap enough
-%% for that watchdog to remain effective.  RSA moduli larger than this
-%% are still accepted when the CRT parameters are supplied directly.
+%% Recovery accepts at most 8192-bit moduli and n-sized exponents before
+%% calling the uninterruptible crypto:mod_pow/3 NIF. CRT imports do not
+%% perform this search and are not subject to these recovery limits.
 -define(SFM_MAX_MODULUS_BITS, 8192).
-%% Largest search base tried when looking for a non-trivial square root
-%% of 1. This finite, deterministic search bounds invalid inputs; keys
-%% not recovered within it must supply their CRT parameters explicitly.
--define(SFM_MAX_A, 100).
+%% Random bases avoid rejecting valid keys whose factors have matching
+%% quadratic characters for every small deterministic base. Each trial
+%% performs one exponentiation, then reuses successive modular squares.
+-define(SFM_MAX_TRIALS, 32).
+-define(SFM_MAX_SQUARES, 256).
+%% Check before every expensive operation; a NIF already in progress may
+%% finish after this deadline. The outer 1000 ms watchdog is a last resort,
+%% not the recovery work budget. Supply CRT parameters on budget exhaustion.
+-define(SFM_BUDGET_MS, 200).
+%% Large legitimate imports need several more costly trials. The separate
+%% deadline still leaves room for one bounded NIF before the outer watchdog.
+-define(SFM_LARGE_BUDGET_MS, 500).
 
 %%====================================================================
 %% jose_jwk callbacks
@@ -338,10 +339,17 @@ convert_sfm_to_crt(Key=#'RSAPrivateKey'{
 		andalso is_integer(N) ->
 	KTOT = convert_sfm_to_crt_ktot(D, E, N),
 	T = convert_sfm_to_crt_find_t(KTOT),
-	A = 2,
-	K = T,
-	P0 = convert_sfm_to_crt_find_p(KTOT, T, K, A, N, D),
+	Budget = case N < (1 bsl 6144) of
+		true -> ?SFM_BUDGET_MS;
+		false -> ?SFM_LARGE_BUDGET_MS
+	end,
+	Deadline = erlang:monotonic_time(millisecond) + Budget,
+	P0 = convert_sfm_to_crt_find_p(T, KTOT div T, N,
+		?SFM_MAX_TRIALS, ?SFM_MAX_SQUARES, Deadline),
 	Q0 = N div P0,
+	%% A recovered factor alone does not validate the supplied exponents.
+	true = (P0 > 1 andalso Q0 > 1 andalso P0 * Q0 =:= N
+		andalso KTOT rem (P0 - 1) =:= 0 andalso KTOT rem (Q0 - 1) =:= 0),
 	{P, Q} = case Q0 > P0 of
 	  true ->
 	    {Q0, P0};
@@ -351,6 +359,7 @@ convert_sfm_to_crt(Key=#'RSAPrivateKey'{
 	DP = jose_jwa_math:mod(D, P - 1),
 	DQ = jose_jwa_math:mod(D, Q - 1),
 	QI = convert_sfm_to_crt_mod_inverse(Q, P),
+	true = is_integer(QI),
 	Key#'RSAPrivateKey'{
 		exponent1 = DP,
 		exponent2 = DQ,
@@ -360,12 +369,9 @@ convert_sfm_to_crt(Key=#'RSAPrivateKey'{
 	}.
 
 %% @private
-%% Rejects (n, e, d) triples that cannot come from a two-prime RSA key
-%% before any attacker-sized work is done.  n must be an odd modulus of
-%% a sane size, e and d must be odd and smaller than n, and 2^(ed-1)
-%% must be 1 (mod n), which is exactly the property the square root
-%% search below relies on and which holds for every valid key because
-%% ed - 1 is a multiple of lambda(n).
+%% Reject structurally invalid triples before attacker-sized arithmetic.
+%% ed - 1 must be a positive even multiple of lambda(n) for a valid key.
+%% The recovery trials below also check this consistency for each base.
 convert_sfm_to_crt_ktot(D, E, N)
 		when N > 3
 		andalso (N band 1) =:= 1
@@ -373,16 +379,10 @@ convert_sfm_to_crt_ktot(D, E, N)
 		andalso E > 2
 		andalso E < N
 		andalso (E band 1) =:= 1
-		andalso D > 2
+		andalso D > 0
 		andalso D < N
 		andalso (D band 1) =:= 1 ->
-	KTOT = D * E - 1,
-	case jose_jwa_math:expmod(2, KTOT, N) of
-		1 ->
-			KTOT;
-		_ ->
-			erlang:error(badarg)
-	end;
+	D * E - 1;
 convert_sfm_to_crt_ktot(_D, _E, _N) ->
 	erlang:error(badarg).
 
@@ -394,29 +394,44 @@ convert_sfm_to_crt_egcd(A, B) ->
 	{G, X - (B div A) * Y, Y}.
 
 %% @private
-convert_sfm_to_crt_find_p(_KTOT, _T, _K, A, _N, _D) when A > ?SFM_MAX_A ->
+convert_sfm_to_crt_find_p(_T, _S, _N, 0, _Squares, _Deadline) ->
 	erlang:error(badarg);
-convert_sfm_to_crt_find_p(KTOT, T, K, A, N, D) when K < KTOT ->
-	R = case jose_jwa_math:expmod(A, K, N) of
-		C when C =/= 1 andalso C =/= (N - 1) ->
-			case jose_jwa_math:expmod(C, 2, N) of
-				1 ->
-					P0 = convert_sfm_to_crt_gcd(C + 1, N),
-					{true, P0};
-				_ ->
-					false
+convert_sfm_to_crt_find_p(T, S, N, Trials, Squares, Deadline) ->
+	ok = convert_sfm_to_crt_check_budget(Squares, Deadline),
+	%% The extra 128 random bits make reduction bias negligible while
+	%% avoiding an unbounded rejection-sampling loop.
+	Bytes = byte_size(binary:encode_unsigned(N)) + 16,
+	A = 2 + (crypto:bytes_to_integer(crypto:strong_rand_bytes(Bytes)) rem (N - 3)),
+	case convert_sfm_to_crt_gcd(A, N) of
+		1 ->
+			C = jose_jwa_math:expmod(A, T, N),
+			case convert_sfm_to_crt_square(C, S, N, Squares, Deadline) of
+				{factor, P} -> P;
+				{next, Remaining} ->
+					convert_sfm_to_crt_find_p(T, S, N, Trials - 1, Remaining, Deadline)
 			end;
-		_ ->
-			false
-	end,
-	case R of
-		{true, P} ->
-			P;
-		false ->
-			convert_sfm_to_crt_find_p(KTOT, T, K * 2, A, N, D)
-	end;
-convert_sfm_to_crt_find_p(KTOT, T, _K, A, N, D) ->
-	convert_sfm_to_crt_find_p(KTOT, T, T, A + 2, N, D).
+		P -> P
+	end.
+
+%% @private
+convert_sfm_to_crt_square(C, _S, N, Squares, _Deadline) when C =:= 1; C =:= N - 1 ->
+	{next, Squares};
+convert_sfm_to_crt_square(_C, 1, _N, _Squares, _Deadline) ->
+	%% A valid key must reach 1 (mod n) after all the squarings.
+	erlang:error(badarg);
+convert_sfm_to_crt_square(C, S, N, Squares, Deadline) ->
+	ok = convert_sfm_to_crt_check_budget(Squares, Deadline),
+	case (C * C) rem N of
+		1 -> {factor, convert_sfm_to_crt_gcd(C + 1, N)};
+		Next -> convert_sfm_to_crt_square(Next, S div 2, N, Squares - 1, Deadline)
+	end.
+
+%% @private
+convert_sfm_to_crt_check_budget(Squares, Deadline) ->
+	case Squares > 0 andalso erlang:monotonic_time(millisecond) < Deadline of
+		true -> ok;
+		false -> erlang:error(badarg)
+	end.
 
 %% @private
 convert_sfm_to_crt_find_t(T) when T > 0 andalso T rem 2 =:= 0 ->

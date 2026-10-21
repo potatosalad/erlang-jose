@@ -8,12 +8,12 @@
 
 -export([all/0, init_per_suite/1, end_per_suite/1]).
 -export([gcm_tag_lengths/1, gcm_public_forgery/1, ecdsa_lengths/1,
-         zip_public_limit/1, rsa_public_rejection/1, shared_secret_types/1,
+         zip_public_limit/1, zip_authentication_failures/1, rsa_public_rejection/1, shared_secret_types/1,
          password_export_and_legacy_import/1, curve_providers/1]).
 
 %% Configuration mutations below must run serially and be restored.
 all() ->
-    [gcm_tag_lengths, gcm_public_forgery, ecdsa_lengths, zip_public_limit,
+    [gcm_tag_lengths, gcm_public_forgery, ecdsa_lengths, zip_public_limit, zip_authentication_failures,
      rsa_public_rejection, shared_secret_types, password_export_and_legacy_import,
      curve_providers].
 
@@ -125,6 +125,38 @@ zip_public_limit(_Config) ->
         Compressed = jose_jwe_zip:compress(Plain, zlib),
         rejects(fun() -> jose_jwe_zip:uncompress(binary:part(Compressed, 0, byte_size(Compressed) - 2), zlib) end),
         Plain = jose_jwe_zip:uncompress(Compressed, zlib)
+    after
+        ok = jose:zip_size_maximum(Original)
+    end,
+    ok.
+
+%% Exercise both JWE AAD branches and authenticated cipher families.
+%% Setting the decompression cap below the plaintext makes an accidental
+%% decompression of any unauthenticated result observable as an exception.
+zip_authentication_failures(_Config) ->
+    Original = jose:zip_size_maximum(),
+    try
+        lists:foreach(fun({Enc, Bytes}) ->
+            Key = jose_jwk:from_oct(crypto:strong_rand_bytes(Bytes)),
+            Header = #{<<"alg">> => <<"dir">>, <<"enc">> => Enc, <<"zip">> => <<"DEF">>},
+            Plain = <<"compressed authentication control">>,
+            lists:foreach(fun(Block) ->
+                ok = jose:zip_size_maximum(byte_size(Plain)),
+                {Mods, Map} = jose_jwe:block_encrypt(Key, Block, Header),
+                {Plain, _} = jose_jwe:block_decrypt(Key, {Mods, Map}),
+                <<First, Rest/binary>> = jose_jwa_base64url:decode(maps:get(<<"tag">>, Map)),
+                Attack = Map#{<<"tag">> => b64(<<(First bxor 1), Rest/binary>>)},
+                ok = jose:zip_size_maximum(0),
+                {error, _} = jose_jwe:block_decrypt(Key, {Mods, Attack}),
+                case maps:is_key(<<"aad">>, Map) of
+                    false ->
+                        {_, Compact} = jose_jwe:compact({Mods, Attack}),
+                        {error, _} = jose_jwe:block_decrypt(Key, Compact);
+                    true -> ok
+                end
+            end, [Plain, {<<"external aad">>, Plain}])
+        end, [{<<"A256GCM">>, 32}, {<<"A128CBC-HS256">>, 32},
+              {<<"A192CBC-HS384">>, 48}, {<<"A256CBC-HS512">>, 64}])
     after
         ok = jose:zip_size_maximum(Original)
     end,
