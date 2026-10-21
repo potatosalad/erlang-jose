@@ -17,7 +17,7 @@
 -include_lib("public_key/include/public_key.hrl").
 
 %% ct.
--export([all/0]).
+-export([all/0, init_per_suite/1, end_per_suite/1]).
 
 %% Tests.
 -export([sfm_key_still_recovers_crt_parameters/1]).
@@ -50,6 +50,15 @@ all() ->
 		sfm_small_base_residue_key_still_imports,
 		sfm_large_valid_keys_still_import_and_operate
 	].
+
+%% Public signing/decryption controls start JOSE. Stop it at the suite
+%% boundary so the next suite can apply its own application environment.
+init_per_suite(Config) ->
+	{ok, _} = application:ensure_all_started(jose),
+	Config.
+
+end_per_suite(_Config) ->
+	ok = application:stop(jose).
 
 %%====================================================================
 %% Tests
