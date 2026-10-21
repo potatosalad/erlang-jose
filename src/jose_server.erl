@@ -376,6 +376,11 @@ check_curve25519_module_does_it_work(Fallback, Module) ->
 	Signature = Module:ed25519_sign(Message, SK),
 	true = Module:ed25519_verify(Signature, Message, PK),
 	true = Fallback:ed25519_verify(Signature, Message, PK),
+	{XPK, XSK} = Module:x25519_keypair(),
+	XPK = Module:x25519_secret_to_public(XSK),
+	{PeerPK, PeerSK} = Module:x25519_keypair(),
+	Shared = Module:x25519_shared_secret(XSK, PeerPK),
+	Shared = Module:x25519_shared_secret(PeerSK, XPK),
 	%% NOTE: Ed25519ctx and Ed25519ph are lower priority, no need to check for now.
 	% Ctx = <<"ctx">>,
 	% CtxSignature = Module:ed25519ctx_sign(Message, SK, Ctx),
@@ -448,7 +453,17 @@ check_curve448_module_does_it_work(Fallback, Module) ->
 	Message = crypto:strong_rand_bytes(16),
 	Signature = Module:ed448_sign(Message, SK),
 	true = Module:ed448_verify(Signature, Message, PK),
-	true = Fallback:ed448_verify(Signature, Message, PK),
+	%% The pure verifier needs SHAKE256, which may be unavailable when
+	%% fallback is disabled. Do not reject a working native provider for that.
+	case ?CRYPTO_FALLBACK of
+		true -> true = Fallback:ed448_verify(Signature, Message, PK);
+		false -> ok
+	end,
+	{XPK, XSK} = Module:x448_keypair(),
+	XPK = Module:x448_secret_to_public(XSK),
+	{PeerPK, PeerSK} = Module:x448_keypair(),
+	Shared = Module:x448_shared_secret(XSK, PeerPK),
+	Shared = Module:x448_shared_secret(PeerSK, XPK),
 	%% NOTE: Ed448ph is lower priority, no need to check for now.
 	% Ctx = <<"ctx">>,
 	% CtxSignature = Module:ed448_sign(Message, SK, Ctx),

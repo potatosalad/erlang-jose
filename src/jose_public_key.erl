@@ -32,6 +32,10 @@
 %% API functions
 %%====================================================================
 
+cipher(DecryptedDER, CipherInfo={Cipher, #'PBES2-params'{}}, Password)
+		when Cipher == "AES-128-CBC" orelse Cipher == "AES-192-CBC" orelse Cipher == "AES-256-CBC" ->
+	{true, EncryptedDER} = pem_cipher(DecryptedDER, CipherInfo, Password),
+	EncryptedDER;
 cipher(DecryptedDER, CipherInfo, Password) ->
 	try
 		pubkey_pem:cipher(DecryptedDER, CipherInfo, Password)
@@ -45,6 +49,10 @@ cipher(DecryptedDER, CipherInfo, Password) ->
 			end
 	end.
 
+decipher({_, EncryptedDER, CipherInfo={Cipher, #'PBES2-params'{}}}, Password)
+		when Cipher == "AES-128-CBC" orelse Cipher == "AES-192-CBC" orelse Cipher == "AES-256-CBC" ->
+	{true, DecryptedDER} = pem_decipher(EncryptedDER, CipherInfo, Password),
+	DecryptedDER;
 decipher(Encrypted = {_, EncryptedDER, CipherInfo}, Password) ->
 	try
 		pubkey_pem:decipher(Encrypted, Password)
@@ -217,7 +225,13 @@ pem_entry_decode(PEMEntry) ->
 pem_entry_decode(PEMEntry, Password) ->
 	Result =
 		try
-			public_key:pem_entry_decode(PEMEntry, Password)
+			case PEMEntry of
+				{Type, _, {Cipher, #'PBES2-params'{}}}
+						when Cipher == "AES-128-CBC" orelse Cipher == "AES-192-CBC" orelse Cipher == "AES-256-CBC" ->
+					public_key:pem_entry_decode({Type, decipher(PEMEntry, Password), not_encrypted});
+				_ ->
+					public_key:pem_entry_decode(PEMEntry, Password)
+			end
 		catch
 			?COMPAT_CATCH(Class, Reason, ST) ->
 				case pem_entry_dec(PEMEntry, Password) of
@@ -253,6 +267,10 @@ pem_entry_encode(ASN1Type, Entity) ->
 			end
 	end.
 
+pem_entry_encode('PrivateKeyInfo', Entity, Password={{Cipher, #'PBES2-params'{}}, _})
+		when Cipher == "AES-128-CBC" orelse Cipher == "AES-192-CBC" orelse Cipher == "AES-256-CBC" ->
+	{true, Encoded} = pem_entry_enc1('PrivateKeyInfo', Entity, Password),
+	Encoded;
 pem_entry_encode(ASN1Type, Entity, Password) ->
 	try
 		public_key:pem_entry_encode(ASN1Type, Entity, Password)
@@ -678,7 +696,15 @@ derived_key_length(Cipher,_) when (Cipher == "AES-256-CBC"); (Cipher == ?'id-aes
 %% @private
 password_to_key_and_iv(Password, _Cipher, Params = #'PBES2-params'{}) ->
 	{Salt, ItrCount, KeyLen, PseudoRandomFunction, PseudoHash, PseudoOtputLen, IV} = key_derivation_params(Params),
-	<<Key:KeyLen/binary, _/binary>> = pubkey_pbe:pbdkdf2(Password, Salt, ItrCount, KeyLen, PseudoRandomFunction, PseudoHash, PseudoOtputLen),
+	%% Use the native implementation for the strengthened export defaults when
+	%% available (OTP 24+). Older runtimes keep the existing derivation path.
+	KeyMaterial = case erlang:function_exported(crypto, pbkdf2_hmac, 5) of
+		true ->
+			crypto:pbkdf2_hmac(PseudoHash, iolist_to_binary(Password), iolist_to_binary(Salt), ItrCount, KeyLen);
+		false ->
+			pubkey_pbe:pbdkdf2(Password, Salt, ItrCount, KeyLen, PseudoRandomFunction, PseudoHash, PseudoOtputLen)
+	end,
+	<<Key:KeyLen/binary, _/binary>> = KeyMaterial,
 	{Key, IV};
 password_to_key_and_iv(Password, _Cipher, {#'PBEParameter'{salt = Salt, iterationCount = Count}, Hash}) ->
 	<<Key:8/binary, IV:8/binary, _/binary>> = pubkey_pbe:pbdkdf1(Password, Salt, Count, Hash),

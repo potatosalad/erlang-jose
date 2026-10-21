@@ -63,9 +63,8 @@
 %% are still accepted when the CRT parameters are supplied directly.
 -define(SFM_MAX_MODULUS_BITS, 8192).
 %% Largest search base tried when looking for a non-trivial square root
-%% of 1.  For a genuine two-prime modulus at least half of the bases
-%% work, so 50 even bases fail with probability below 2^-50; anything
-%% that survives them is not a recoverable RSA key.
+%% of 1. This finite, deterministic search bounds invalid inputs; keys
+%% not recovered within it must supply their CRT parameters explicitly.
 -define(SFM_MAX_A, 100).
 
 %%====================================================================

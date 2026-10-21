@@ -1,9 +1,21 @@
 # Changelog
 
-## Unreleased
+## 1.11.13 (Unreleased)
 
 * Security Patches
-  * [GHSA-wfpv-qxp8-x5gm](https://github.com/potatosalad/erlang-jose/security/advisories/GHSA-wfpv-qxp8-x5gm): Add `jose:zip_size_maximum/0`.  `jose_jwe_zip:uncompress/2` now inflates incrementally with `zlib:safeInflate/2` and raises an error once the decompressed `zip: "DEF"` payload exceeds the maximum, which is 1 MiB (1,048,576 bytes) by default.  Previously `zlib:inflate/2` was called on the whole stream with no output-size bound, so an attacker holding only the recipient's public key could send a small JWE that inflated to roughly 770x its size on the victim's node.  Applications that legitimately decrypt larger compressed payloads can raise the limit with `jose:zip_size_maximum/1` or the `zip_size_maximum` application environment key.
+  * [GHSA-wfpv-qxp8-x5gm](https://github.com/potatosalad/erlang-jose/security/advisories/GHSA-wfpv-qxp8-x5gm), [GHSA-wh8p-p48q-3vw2](https://github.com/potatosalad/erlang-jose/security/advisories/GHSA-wh8p-p48q-3vw2): Bound incremental JWE `zip: "DEF"` decompression to 1 MiB by default. Applications requiring larger compressed plaintexts can set `jose:zip_size_maximum/1` or the `zip_size_maximum` application environment key.
+  * [GHSA-44hw-rpw9-mwg4](https://github.com/potatosalad/erlang-jose/security/advisories/GHSA-44hw-rpw9-mwg4): Require the canonical ECDSA signature length for ES256, ES384, ES512 and ES256K.
+  * [GHSA-6gxw-6f7r-cjr6](https://github.com/potatosalad/erlang-jose/security/advisories/GHSA-6gxw-6f7r-cjr6): Reject AEAD tags other than 128 bits before provider dispatch, and in the AES-GCM fallback.
+  * [GHSA-3m45-vrpj-xmrq](https://github.com/potatosalad/erlang-jose/security/advisories/GHSA-3m45-vrpj-xmrq): Bound RSA private-key prime recovery and reject invalid or oversized `(n, e, d)` inputs before expensive arithmetic. Keys above 8192 bits must supply CRT parameters.
+  * [GHSA-fpj2-9h59-32pp](https://github.com/potatosalad/erlang-jose/security/advisories/GHSA-fpj2-9h59-32pp): Reject mismatched shared-secret key types instead of recursing indefinitely.
+  * [GHSA-h4gx-8jq2-mfhc](https://github.com/potatosalad/erlang-jose/security/advisories/GHSA-h4gx-8jq2-mfhc): Strengthen encrypted PKCS#8 DER and PEM exports to PBKDF2-HMAC-SHA256 with 600,000 iterations and 16-byte salts. Previously exported keys remain readable. Use native PBKDF2 when available.
+  * [GHSA-vwvr-f994-6j9j](https://github.com/potatosalad/erlang-jose/security/advisories/GHSA-vwvr-f994-6j9j): Substitute a random CEK of the required length on RSA JWE unwrap failure, then authenticate the content. Low-level RSA padding helpers still report errors; this mitigation does not guarantee constant-time RSA. Prefer RSA-OAEP or RSA-OAEP-256.
+  * [GHSA-xvr2-gggj-h2pp](https://github.com/potatosalad/erlang-jose/security/advisories/GHSA-xvr2-gggj-h2pp): Correct the shipped `crypto_fallback` default to `false` and document the variable-time pure Erlang curve implementations. Explicitly enabled fallback remains variable-time and should not handle long-lived private keys where timing is observable.
+* Fixes
+  * Preserve native Ed448/X448 selection when fallback SHAKE256 is unavailable; include X25519/X448 agreement in provider checks.
+  * Add public API security regressions and independent legacy PKCS#8 import checks.
+* Notes
+  * Deployments relying on unavailable native algorithms must explicitly enable `crypto_fallback` and review the timing limitations. Native providers remain preferred. No release has been published from this candidate.
 
 ## 1.11.12 (2025-11-20)
 

@@ -73,10 +73,10 @@ generate_key(_Fields, {ENCModule, ENC}, ?RSA_OAEP_256) ->
 %% hands the caller a one-bit padding-conformance signal, which is exactly the
 %% oracle a Bleichenbacher adaptive chosen-ciphertext attack consumes.
 %%
-%% Generating the substitute CEK unconditionally, before the private-key
-%% operation is inspected, keeps the amount of work on the failure path equal
-%% to the success path and funnels every malformed encrypted key into the
-%% AEAD/HMAC integrity check, which then fails uniformly.
+%% Generate the substitute CEK unconditionally and funnel malformed encrypted
+%% keys into the content authentication check. This hides the padding error
+%% result, but does not make the underlying RSA operation constant-time.
+%% Prefer RSA-OAEP or RSA-OAEP-256 for new applications.
 key_decrypt(#jose_jwk{kty={KTYModule, KTY}}, {ENCModule, ENC, EncryptedKey}, #jose_jwe_alg_rsa{algorithm=Algorithm}) ->
 	RandomKey = ENCModule:next_cek(ENC),
 	case catch KTYModule:decrypt_private(EncryptedKey, Algorithm, KTY) of
