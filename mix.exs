@@ -48,7 +48,7 @@ defmodule JOSE.Mixfile do
       {:libsodium, "~> 2.0.1", only: [:test]},
       {:ojson, "~> 1.0", only: [:test]},
       # Optionally used by JOSE.Poison.
-      {:poison, "~> 3.0 or ~> 4.0 or ~> 5.0 or ~> 6.0", only: [:test], optional: true},
+      {:poison, "~> 3.0 or ~> 4.0 or ~> 5.0 or ~> 6.0", optional: true},
       {:thoas, "~> 1.2", only: [:test]},
       {:ex_doc, "~> 0.37", only: :dev},
       {:earmark, "~> 1.4", only: :dev},
