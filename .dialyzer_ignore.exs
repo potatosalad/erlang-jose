@@ -2,7 +2,6 @@
   # Initially all files are ignored
   # TODO: When fixing / completing specs & types of files, please remove the
   # corresponding entry below
-  {"lib/jose/jwa.ex", :unknown_type},
   {"lib/jose/jwa.ex", :invalid_contract},
   {"lib/jose/jwe.ex", :call},
   {"lib/jose/jwe.ex", :pattern_match_cov},

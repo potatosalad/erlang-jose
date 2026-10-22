@@ -13,6 +13,20 @@
 -include("jose_compat.hrl").
 -include("jose_public_key.hrl").
 
+%% Macros
+%% OTP 28 regenerated the public_key ASN.1 bindings: the AlgorithmIdentifier
+%% parameters for an EC SubjectPublicKeyInfo are now the decoded EcpkParameters
+%% value instead of its DER-encoded binary form.
+-ifdef(OTP_RELEASE).
+-if(?OTP_RELEASE >= 28).
+-define(EC_SPKI_PARAMETERS(ECParameters), ECParameters).
+-else.
+-define(EC_SPKI_PARAMETERS(ECParameters), der_encode('EcpkParameters', ECParameters)).
+-endif.
+-else.
+-define(EC_SPKI_PARAMETERS(ECParameters), der_encode('EcpkParameters', ECParameters)).
+-endif.
+
 %% API
 -export([cipher/3]).
 -export([decipher/2]).
@@ -791,6 +805,18 @@ encode_handle_open_type_wrapper(Type) ->
 	{asn1_OPENTYPE, Type}.
 
 %% @private
+%% OTP 28 decodes the PKCS #8 privateKeyAlgorithm field as a
+%% #'PrivateKeyAlgorithmIdentifier'{} record instead of the
+%% #'PrivateKeyInfo_privateKeyAlgorithm'{} record matched below, so
+%% normalize it before matching.
+i2k(PrivateKeyInfo = #'PrivateKeyInfo'{privateKeyAlgorithm = {'PrivateKeyAlgorithmIdentifier', Algorithm, Parameters}}) ->
+	i2k(PrivateKeyInfo#'PrivateKeyInfo'{
+		privateKeyAlgorithm =
+			#'PrivateKeyInfo_privateKeyAlgorithm'{
+				algorithm = Algorithm,
+				parameters = Parameters
+			}
+	});
 i2k(#'PrivateKeyInfo'{
 	privateKeyAlgorithm =
 		#'PrivateKeyInfo_privateKeyAlgorithm'{
@@ -1029,7 +1055,7 @@ k2i({#'ECPoint'{point=ECPublicKey}, ECParameters}) ->
 		algorithm =
 			#'AlgorithmIdentifier'{
 				algorithm = ?'id-ecPublicKey',
-				parameters = der_encode('EcpkParameters', ECParameters)
+				parameters = ?EC_SPKI_PARAMETERS(ECParameters)
 			},
 		subjectPublicKey = ECPublicKey
 	};

@@ -367,7 +367,7 @@ defmodule JOSE.JWE do
 
   """
 
-  record = Record.extract(:jose_jwe, from_lib: "jose/include/jose_jwe.hrl")
+  record = Record.extract(:jose_jwe, from: "include/jose_jwe.hrl")
   keys = :lists.map(&elem(&1, 0), record)
   vals = :lists.map(&{&1, [], nil}, keys)
   pairs = :lists.zip(keys, vals)

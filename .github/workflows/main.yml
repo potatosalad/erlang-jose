@@ -4,6 +4,10 @@ on: [push, pull_request]
 
 env:
   MIX_ENV: test
+  # libsodium's autogen.sh re-downloads config.guess/config.sub from GNU
+  # Savannah (curl without -f, so an outage saves an HTML error page as the
+  # script). autoreconf already installs working copies from automake.
+  DO_NOT_UPDATE_CONFIG_SCRIPTS: "1"
 
 jobs:
   test:
@@ -14,14 +18,18 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - elixir: 1.19.3
-            otp: 28.1.1
-            rebar3: 3.25.1
+          - elixir: 1.20.2
+            otp: 29.0.3
+            rebar3: 3.27.0
             lint: true
 
-          - elixir: 1.18.4
-            otp: 27.3.4.6
-            rebar3: 3.25.1
+          - elixir: 1.20.2
+            otp: 28.5.0.3
+            rebar3: 3.27.0
+
+          - elixir: 1.20.2
+            otp: 27.3.4.14
+            rebar3: 3.27.0
 
     steps:
       - uses: actions/checkout@v4
@@ -31,6 +39,7 @@ jobs:
         with:
           elixir-version: ${{ matrix.elixir }}
           otp-version: ${{ matrix.otp }}
+          rebar3-version: ${{ matrix.rebar3 }}
 
       - name: Erlang Tests
         run: |
@@ -63,7 +72,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: ct-logs-${{matrix.erlang}}
+          name: ct-logs-${{matrix.otp}}
           path: logs/*
   
   dialyzer:
@@ -77,8 +86,8 @@ jobs:
         id: setupBeam
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: 1.19.3
-          otp-version: 28.1.1
+          elixir-version: 1.20.2
+          otp-version: 29.0.3
 
       - name: Retrieve Mix Dependencies Cache
         uses: actions/cache@v4

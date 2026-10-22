@@ -5,7 +5,7 @@ defmodule JOSE.JWK do
   JWK stands for JSON Web Key which is defined in [RFC 7517](https://tools.ietf.org/html/rfc7517).
   """
 
-  record = Record.extract(:jose_jwk, from_lib: "jose/include/jose_jwk.hrl")
+  record = Record.extract(:jose_jwk, from: "include/jose_jwk.hrl")
   keys = :lists.map(&elem(&1, 0), record)
   vals = :lists.map(&{&1, [], nil}, keys)
   pairs = :lists.zip(keys, vals)

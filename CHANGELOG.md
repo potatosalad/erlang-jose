@@ -267,7 +267,7 @@ element(2, jose_jwk:to_map(JWK)) =:= #{
 ## 1.7.4 (2016-05-13)
 
 * Enhancements
-  * More detailed documentation on [key generation](https://hexdocs.pm/jose/key-generation.html).
+  * More detailed documentation on [key generation](https://jose.hexdocs.pm/key-generation.html).
 
 * Fixes
   * Replaced usage of `crypto:rand_bytes/1` with `crypto:strong_rand_bytes/1` in preparation for Elixir 1.3 and OTP 19 (thanks to [@asonge](https://github.com/asonge) for [#17](https://github.com/potatosalad/erlang-jose/pull/17)).
@@ -363,7 +363,7 @@ iex> JOSE.JWS.merge(jws, %{"typ" => "JWT"}) |> JOSE.JWS.to_map |> elem(1)
 ## 1.5.2 (2016-01-19)
 
 * Enhancements
-  * Documentation of the encryption algorithms, specifically [`JOSE.JWE`](https://hexdocs.pm/jose/JOSE.JWE.html).
+  * Documentation of the encryption algorithms, specifically [`JOSE.JWE`](https://jose.hexdocs.pm/JOSE.JWE.html).
 
 * Fixes
   * Corrected optional callbacks issue for Elixir.

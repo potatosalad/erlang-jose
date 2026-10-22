@@ -38,7 +38,7 @@ defmodule JOSE.JWT do
 
   """
 
-  record = Record.extract(:jose_jwt, from_lib: "jose/include/jose_jwt.hrl")
+  record = Record.extract(:jose_jwt, from: "include/jose_jwt.hrl")
   keys = :lists.map(&elem(&1, 0), record)
   vals = :lists.map(&{&1, [], nil}, keys)
   pairs = :lists.zip(keys, vals)

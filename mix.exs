@@ -81,7 +81,7 @@ defmodule JOSE.Mixfile do
         "src"
       ],
       licenses: ["MIT"],
-      links: %{"Github" => "https://github.com/potatosalad/erlang-jose", "Docs" => "https://hexdocs.pm/jose"}
+      links: %{"Github" => "https://github.com/potatosalad/erlang-jose", "Docs" => "https://jose.hexdocs.pm"}
     ]
   end
 
