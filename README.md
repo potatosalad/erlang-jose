@@ -55,6 +55,12 @@ defp deps() do
 end
 ```
 
+Then in `config/config.exs`
+
+```elixir
+config :jose, :json_module, Jason
+```
+
 Or with Erlang and `rebar.config`
 
 ```erlang
@@ -64,7 +70,7 @@ Or with Erlang and `rebar.config`
 ]}.
 ```
 
-`jose` will attempt to find a suitable JSON encoder/decoder and will try to use (in order) ojson, Jason, Poison, jiffy, jsone, or jsx.
+`jose` will attempt to find a suitable JSON encoder/decoder and will try to use (in order) otp json, ojson, Jason, Poison, jiffy, jsone, or jsx.
 
 You may also specify a different `json_module` as an application environment variable to `jose` or by using `jose:json_module/1` or `JOSE.json_module/1`.
 
