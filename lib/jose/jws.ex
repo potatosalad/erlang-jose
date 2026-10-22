@@ -612,6 +612,8 @@ defmodule JOSE.JWS do
   @doc """
   Verifies the `signed` using the `jwk`.
 
+  The return value has the shape `{valid?, payload, %JOSE.JWS{}}`.
+
       iex> jwk = JOSE.JWK.from(%{"k" => "qUg4Yw", "kty" => "oct"})
       %JOSE.JWK{fields: %{}, keys: :undefined,
        kty: {:jose_jwk_kty_oct, <<169, 72, 56, 99>>}}
@@ -648,6 +650,17 @@ defmodule JOSE.JWS do
           %JOSE.JWS{alg: {:jose_jws_alg_hmac, :HS256}, b64: :undefined,
            fields: %{}}}]}]
 
+  > #### Important {: .warning}
+  >
+  > When you need to verify that a signature is valid, ensure to pattern match
+  > on the first-element being true. For example:
+  > 
+  > ```elixir
+  > case JOSE.JWS.verify(jwk, token) do
+  >   {false, _, _} -> {:error, :invalid_signature}
+  >   {true, payload, _} -> {:ok, do_something_with(payload)}
+  > end
+  > ```
   """
   def verify(jwk = %JOSE.JWK{}, signed), do: verify(JOSE.JWK.to_record(jwk), signed)
 
