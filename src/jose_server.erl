@@ -487,7 +487,7 @@ check_json(_Fallback, Entries) ->
 				undefined ->
 					case code:ensure_loaded(elixir) of
 						{module, elixir} ->
-							check_json_modules([json, ojson, 'Elixir.Jason', 'Elixir.Poison', jiffy, jsone, jsx, thoas]);
+							check_json_modules(['Elixir.JSON', json, ojson, 'Elixir.Jason', 'Elixir.Poison', jiffy, jsone, jsx, thoas]);
 						_ ->
 							check_json_modules([json, ojson, jiffy, jsone, jsx, thoas])
 					end;
@@ -510,6 +510,8 @@ check_json_module(ojson) ->
 	jose_json_ojson;
 check_json_module(thoas) ->
 	jose_json_thoas;
+check_json_module('Elixir.JSON') ->
+   jose_json_elixir;
 check_json_module('Elixir.Jason') ->
 	jose_json_jason;
 check_json_module('Elixir.Poison') ->
