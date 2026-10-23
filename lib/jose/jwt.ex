@@ -189,24 +189,44 @@ defmodule JOSE.JWT do
   @doc """
   Same as `peek_payload/1`.
   """
-  @spec peek(binary()) :: t()
-  def peek(signed), do: from_record(:jose_jwt.peek(signed))
+  @spec peek(binary()) :: t() | {:error, :token_malformed}
+  def peek(signed) do
+    try do
+      from_record(:jose_jwt.peek(signed))
+    rescue
+      _error -> {:error, :token_malformed}
+    end
+  end
 
   @doc """
   Returns the decoded payload as a `JOSE.JWT` of a signed binary or map without verifying the signature.
+  Returns an error in case of an invalid token.
 
   See `JOSE.JWS.peek_payload/1`.
   """
-  @spec peek_payload(binary()) :: t()
-  def peek_payload(signed), do: from_record(:jose_jwt.peek_payload(signed))
+  @spec peek_payload(binary()) :: t() | {:error, :token_malformed}
+  def peek_payload(signed) do
+    try do
+      from_record(:jose_jwt.peek_payload(signed))
+    rescue
+      _error -> {:error, :token_malformed}
+    end
+  end
 
   @doc """
   Returns the decoded protected as a `JOSE.JWS` of a signed binary or map without verifying the signature.
+  Returns an error in case of an invalid token.
 
   See `JOSE.JWS.peek_protected/1`.
   """
-  @spec peek_protected(binary()) :: JOSE.JWS.t()
-  def peek_protected(signed), do: JOSE.JWS.from_record(:jose_jwt.peek_protected(signed))
+  @spec peek_protected(binary()) :: JOSE.JWS.t() | {:error, :token_malformed}
+  def peek_protected(signed) do
+    try do
+      JOSE.JWS.from_record(:jose_jwt.peek_protected(signed))
+    rescue
+      _error -> {:error, :token_malformed}
+    end
+  end
 
   @doc """
   Signs a `JOSE.JWT` using the `jwk` and the default signer algorithm `jws` for the key type.  See `sign/3`.
