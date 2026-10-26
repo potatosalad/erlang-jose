@@ -24,7 +24,7 @@ defmodule JOSE.Mixfile do
       end,
       description: description(),
       package: package(),
-      aliases: [docs: ["compile", &edoc_chunks/1, "docs"]],
+      aliases: [docs: [&ensure_case_sensitive_docs/1, "compile", &edoc_chunks/1, "docs"]],
       dialyzer: [list_unused_filters: true]
     ]
   end
@@ -82,6 +82,20 @@ defmodule JOSE.Mixfile do
       licenses: ["MIT"],
       links: %{"Github" => "https://github.com/potatosalad/erlang-jose", "Docs" => "https://hexdocs.pm/jose"}
     ]
+  end
+
+  # ExDoc writes the Elixir JOSE module to JOSE.html and the Erlang jose
+  # module to jose.html, which overwrite each other on a case-insensitive
+  # file system (the macOS default).
+  defp ensure_case_sensitive_docs(_args) do
+    base_path = Path.dirname(__ENV__.file)
+
+    if File.exists?(Path.join(base_path, "MIX.EXS")) do
+      Mix.raise(
+        "Docs must be built on a case-sensitive file system: JOSE.html (Elixir JOSE) " <>
+          "and jose.html (Erlang :jose) would overwrite each other in #{base_path}"
+      )
+    end
   end
 
   defp edoc_chunks(_args) do
