@@ -40,19 +40,18 @@ defmodule JOSE.Mixfile do
   defp deps() do
     [
       # {:cutkey, github: "potatosalad/cutkey", only: [:test]},
-      {:jason, "~> 1.4", only: [:test]},
+      {:jason, "~> 1.4.5", only: [:test]},
       {:jsone, "~> 1.9", only: [:test]},
       {:jsx, "~> 3.1", only: [:test]},
       # {:keccakf1600, "~> 2.0.0", only: [:test]},
       {:libdecaf, "~> 3.0.0", only: [:test]},
-      {:libsodium, "~> 3.0.0", only: [:test]},
+      {:libsodium, "~> 3.0.1", only: [:test]},
       {:ojson, "~> 1.0", only: [:test]},
       # Optionally used by JOSE.Poison.
       {:poison, "~> 3.0 or ~> 4.0 or ~> 5.0 or ~> 6.0", only: [:test], optional: true},
       {:thoas, "~> 1.2", only: [:test]},
-      {:ex_doc, "~> 0.37", only: :dev},
-      {:earmark, "~> 1.4", only: :dev},
-      {:dialyxir, "~> 1.4.5", only: [:test], runtime: false}
+      {:ex_doc, "~> 0.40.4", only: :dev},
+      {:dialyxir, "~> 1.4.8", only: [:test], runtime: false}
     ]
   end
 
