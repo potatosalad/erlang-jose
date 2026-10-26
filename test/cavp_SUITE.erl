@@ -1536,13 +1536,18 @@ fips_aes_gcm_encrypt_and_decrypt([
 			andalso bit_size(PT) =:= PTlen ->
 	case rand:uniform(?config(one_in, Config)) of
 		1 ->
+			%% Truncated tags are rejected; only the full 128-bit tag authenticates.
+			Expected = case Taglen of
+				128 -> PT;
+				_ -> error
+			end,
 			case jose_jwa_aes:block_decrypt(Cipher, Key, IV, {AAD, CT, Tag}) of
-				PT ->
+				Expected ->
 					fips_aes_gcm_encrypt_and_decrypt(Vectors, {Cipher, decrypt, {Keylen, IVlen, PTlen, AADlen, Taglen, << Counts/binary, (integer_to_binary(Count))/binary, "..." >>}}, Config);
 				OtherDecrypt ->
 					io:format("\t\tCounts = ~s", [<< Counts/binary, (integer_to_binary(Count))/binary, "..." >>]),
 					io:format("{Cipher, Key, IV, CT, AAD, Tag, PT} = ~w~n", [{Cipher, Key, IV, CT, AAD, Tag, PT}]),
-					ct:fail({{jose_jwa_aes, block_decrypt, [Cipher, Key, IV, {AAD, CT, Tag}]}, {expected, PT}, {got, OtherDecrypt}})
+					ct:fail({{jose_jwa_aes, block_decrypt, [Cipher, Key, IV, {AAD, CT, Tag}]}, {expected, Expected}, {got, OtherDecrypt}})
 			end;
 		_ ->
 			fips_aes_gcm_encrypt_and_decrypt(Vectors, {Cipher, decrypt, {Keylen, IVlen, PTlen, AADlen, Taglen, << Counts/binary, (integer_to_binary(Count))/binary, "..." >>}}, Config)
