@@ -14,13 +14,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - elixir: 1.19.3
-            otp: 28.1.1
+          - elixir: 1.20.4
+            otp: 29.1.2
             rebar3: 3.25.1
             lint: true
 
-          - elixir: 1.18.4
-            otp: 27.3.4.6
+          - elixir: 1.19.3
+            otp: 28.5.0.8
             rebar3: 3.25.1
 
     steps:
@@ -63,7 +63,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: ct-logs-${{matrix.erlang}}
+          name: ct-logs-${{matrix.otp}}
           path: logs/*
   
   dialyzer:
@@ -77,8 +77,8 @@ jobs:
         id: setupBeam
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: 1.19.3
-          otp-version: 28.1.1
+          elixir-version: 1.20.4
+          otp-version: 29.1.2
 
       - name: Retrieve Mix Dependencies Cache
         uses: actions/cache@v4

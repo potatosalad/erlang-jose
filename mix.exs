@@ -44,7 +44,7 @@ defmodule JOSE.Mixfile do
       {:jsone, "~> 1.9", only: [:test]},
       {:jsx, "~> 3.1", only: [:test]},
       # {:keccakf1600, "~> 2.0.0", only: [:test]},
-      {:libdecaf, "~> 2.1.1", only: [:test]},
+      {:libdecaf, "~> 3.0.0", only: [:test]},
       {:libsodium, "~> 2.0.1", only: [:test]},
       {:ojson, "~> 1.0", only: [:test]},
       # Optionally used by JOSE.Poison.
