@@ -323,6 +323,11 @@ der_enc('EdDSA448PrivateKey', K=#'jose_EdDSA448PrivateKey'{}) ->
 der_enc('EdDSA448PublicKey', K=#'jose_EdDSA448PublicKey'{}) ->
 	EncodedDER = public_key:der_encode('SubjectPublicKeyInfo', k2i(K)),
 	{true, EncodedDER};
+%% OTP 29+ expects the ECParameters as a term instead of a DER binary, so
+%% let public_key build the AlgorithmIdentifier for the running version.
+der_enc('SubjectPublicKeyInfo', K={#'ECPoint'{}, _ECParameters}) ->
+	{'SubjectPublicKeyInfo', EncodedDER, not_encrypted} = public_key:pem_entry_encode('SubjectPublicKeyInfo', K),
+	{true, EncodedDER};
 der_enc('SubjectPublicKeyInfo', K)  ->
 	EncodedDER = public_key:der_encode('SubjectPublicKeyInfo', k2i(K)),
 	{true, EncodedDER};
@@ -791,6 +796,17 @@ encode_handle_open_type_wrapper(Type) ->
 	{asn1_OPENTYPE, Type}.
 
 %% @private
+%% OTP 29+ decodes the algorithm as 'PrivateKeyAlgorithmIdentifier'.
+i2k(PrivateKeyInfo=#'PrivateKeyInfo'{
+	privateKeyAlgorithm = {'PrivateKeyAlgorithmIdentifier', Algorithm, Parameters}
+}) ->
+	i2k(PrivateKeyInfo#'PrivateKeyInfo'{
+		privateKeyAlgorithm =
+			#'PrivateKeyInfo_privateKeyAlgorithm'{
+				algorithm = Algorithm,
+				parameters = Parameters
+			}
+	});
 i2k(#'PrivateKeyInfo'{
 	privateKeyAlgorithm =
 		#'PrivateKeyInfo_privateKeyAlgorithm'{
@@ -1024,15 +1040,6 @@ k2i(#'jose_X448PublicKey'{publicKey=PublicKey}) ->
 		subjectPublicKey = << PublicKey:56/binary >>
 	};
 % public_key compat
-k2i({#'ECPoint'{point=ECPublicKey}, ECParameters}) ->
-	#'SubjectPublicKeyInfo'{
-		algorithm =
-			#'AlgorithmIdentifier'{
-				algorithm = ?'id-ecPublicKey',
-				parameters = der_encode('EcpkParameters', ECParameters)
-			},
-		subjectPublicKey = ECPublicKey
-	};
 k2i(PrivateKey=#'ECPrivateKey'{parameters=ECParameters}) ->
 	#'PrivateKeyInfo'{
 		version = v1,

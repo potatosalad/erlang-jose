@@ -81,6 +81,11 @@ from_key(#'PrivateKeyInfo'{privateKeyAlgorithm=#'PrivateKeyInfo_privateKeyAlgori
 	from_key(public_key:der_decode('RSAPrivateKey', PrivateKey));
 from_key(#'PrivateKeyInfo'{privateKeyAlgorithm=#'PrivateKeyInfo_privateKeyAlgorithm'{algorithm=?'id-ecPublicKey'}, privateKey=PrivateKey}) ->
 	from_key(public_key:der_decode('ECPrivateKey', PrivateKey));
+%% OTP 29+
+from_key(#'PrivateKeyInfo'{privateKeyAlgorithm={'PrivateKeyAlgorithmIdentifier', ?rsaEncryption, _}, privateKey=PrivateKey}) ->
+	from_key(public_key:der_decode('RSAPrivateKey', PrivateKey));
+from_key(#'PrivateKeyInfo'{privateKeyAlgorithm={'PrivateKeyAlgorithmIdentifier', ?'id-ecPublicKey', _}, privateKey=PrivateKey}) ->
+	from_key(public_key:der_decode('ECPrivateKey', PrivateKey));
 from_key(UnknownKey) ->
 	{error, {unknown_key, UnknownKey}}.
 
