@@ -36,6 +36,10 @@ defmodule JOSE.HexDocs do
     tarball = File.read!(path)
     check!(tarball)
 
+    # `mix run` prunes the code path to the project's applications; Hex's HTTP
+    # client also needs these.
+    Mix.ensure_application!(:inets)
+    Mix.ensure_application!(:ssl)
     Hex.start()
     progress = Mix.Tasks.Hex.progress(byte_size(tarball))
 

@@ -79,10 +79,11 @@ docker-test-build::
 
 # ExDoc writes the Elixir JOSE module to JOSE.html and the Erlang jose module to
 # jose.html, which overwrite each other on a case-insensitive file system. Build
-# and pack the docs inside a container from a git ref (committed files only),
-# then publish the tarball from the host without unpacking it.
+# and pack the docs inside a container from a git ref (committed files only,
+# the release tag by default), then publish the tarball from the host without
+# unpacking it, e.g. `HEX_OTP=123456 make hexdocs-publish`.
 DOCKER_DOCS_IMAGE ?= elixir:1.20.4-otp-29
-DOCS_REF ?= HEAD
+DOCS_REF ?= $(PROJECT_VERSION)
 HEXDOCS_DIR ?= $(CURDIR)/_build/hexdocs
 
 docker-docs::
