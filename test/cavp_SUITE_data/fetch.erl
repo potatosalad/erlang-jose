@@ -37,22 +37,22 @@ fetch(URL = "ftp" ++ _, OutputFile) ->
 								ok ->
 									case ftp:recv_bin(Pid, FileString) of
 										{ok, Body} ->
-											_ = (catch ftp:close(Pid)),
+											_ = try ftp:close(Pid) catch _:_ -> ok end,
 											file:write_file(OutputFile, Body);
 										RecvError ->
-											_ = (catch ftp:close(Pid)),
+											_ = try ftp:close(Pid) catch _:_ -> ok end,
 											RecvError
 									end;
 								CdError ->
-									_ = (catch ftp:close(Pid)),
+									_ = try ftp:close(Pid) catch _:_ -> ok end,
 									CdError
 							end;
 						TypeError ->
-							_ = (catch ftp:close(Pid)),
+							_ = try ftp:close(Pid) catch _:_ -> ok end,
 							TypeError
 					end;
 				UserError ->
-					_ = (catch ftp:close(Pid)),
+					_ = try ftp:close(Pid) catch _:_ -> ok end,
 					UserError
 			end;
 		OpenError ->

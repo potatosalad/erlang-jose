@@ -114,11 +114,14 @@ prop_ghsa_vwvr_f994_6j9j() ->
 			],
 			DecKey =:= jose_jwe:key_decrypt(AlicePrivateJWK, EncKey, EncJWE)
 				andalso lists:all(fun(MalformedKey) ->
-					case catch jose_jwe:key_decrypt(AlicePrivateJWK, MalformedKey, EncJWE) of
+					try jose_jwe:key_decrypt(AlicePrivateJWK, MalformedKey, EncJWE) of
 						SubstituteKey when is_binary(SubstituteKey) ->
 							byte_size(SubstituteKey) =:= byte_size(DecKey)
 								andalso SubstituteKey =/= DecKey;
 						_Distinguishable ->
+							false
+					catch
+						_:_ ->
 							false
 					end
 				end, MalformedKeys)

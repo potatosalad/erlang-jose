@@ -144,17 +144,23 @@ aead_tag_length_cipher({Type, Key, PlainText, IV, AAD, CipherText, CipherTag}) -
 		[binary:part(CipherTag, 0, Len) || Len <- lists:seq(0, 15)]
 		++ [<< CipherTag/binary, 0 >>, << CipherTag/binary, 0:64 >>],
 	_ = [begin
-		case catch jose_jwa_aes:block_decrypt(Type, Key, IV, {AAD, CipherText, BadTag}) of
+		try jose_jwa_aes:block_decrypt(Type, Key, IV, {AAD, CipherText, BadTag}) of
 			error ->
 				ok;
 			Other0 ->
 				ct:fail({{jose_jwa_aes, block_decrypt, [Type, {tag_bits, bit_size(BadTag)}]}, {expected, error}, {got, Other0}})
+		catch
+			Class0:Reason0 ->
+				ct:fail({{jose_jwa_aes, block_decrypt, [Type, {tag_bits, bit_size(BadTag)}]}, {expected, error}, {got, {Class0, Reason0}}})
 		end,
-		case catch jose_jwa:block_decrypt(Type, Key, IV, {AAD, CipherText, BadTag}) of
+		try jose_jwa:block_decrypt(Type, Key, IV, {AAD, CipherText, BadTag}) of
 			error ->
 				ok;
 			Other1 ->
 				ct:fail({{jose_jwa, block_decrypt, [Type, {tag_bits, bit_size(BadTag)}]}, {expected, error}, {got, Other1}})
+		catch
+			Class1:Reason1 ->
+				ct:fail({{jose_jwa, block_decrypt, [Type, {tag_bits, bit_size(BadTag)}]}, {expected, error}, {got, {Class1, Reason1}}})
 		end
 	end || BadTag <- BadTags],
 	ok.

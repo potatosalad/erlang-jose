@@ -139,7 +139,7 @@ handle_call({sha3_module, M}, _From, State) ->
 handle_call({unsecured_signing, UnsecuredSigning}, _From, State) when is_boolean(UnsecuredSigning) ->
 	true = ets:insert(?TAB, {unsecured_signing, UnsecuredSigning}),
 	_ = spawn(fun() ->
-		_ = catch jose_jwa:unsecured_signing(UnsecuredSigning),
+		_ = try jose_jwa:unsecured_signing(UnsecuredSigning) catch _:_ -> ok end,
 		exit(normal)
 	end),
 	{reply, ok, State};
@@ -823,39 +823,57 @@ has_cipher(aes_gcm, KeySize) ->
 
 %% @private
 has_block_cipher(Cipher, {Key, PlainText}) ->
-	case catch jose_crypto_compat:crypto_one_time(Cipher, Key, PlainText, true) of
+	try jose_crypto_compat:crypto_one_time(Cipher, Key, PlainText, true) of
 		CipherText when is_binary(CipherText) ->
-			case catch jose_crypto_compat:crypto_one_time(Cipher, Key, CipherText, false) of
+			try jose_crypto_compat:crypto_one_time(Cipher, Key, CipherText, false) of
 				PlainText ->
 					{true, Cipher};
 				_ ->
 					false
+			catch
+				_:_ ->
+					false
 			end;
 		_ ->
+			false
+	catch
+		_:_ ->
 			false
 	end;
 has_block_cipher(Cipher, {Key, IV, PlainText}) ->
-	case catch jose_crypto_compat:crypto_one_time(Cipher, Key, IV, PlainText, true) of
+	try jose_crypto_compat:crypto_one_time(Cipher, Key, IV, PlainText, true) of
 		CipherText when is_binary(CipherText) ->
-			case catch jose_crypto_compat:crypto_one_time(Cipher, Key, IV, CipherText, false) of
+			try jose_crypto_compat:crypto_one_time(Cipher, Key, IV, CipherText, false) of
 				PlainText ->
 					{true, Cipher};
 				_ ->
+					false
+			catch
+				_:_ ->
 					false
 			end;
 		_ ->
 			false
+	catch
+		_:_ ->
+			false
 	end;
 has_block_cipher(Cipher, {Key, IV, AAD, PlainText}) ->
-	case catch jose_crypto_compat:crypto_one_time(Cipher, Key, IV, {AAD, PlainText}, true) of
+	try jose_crypto_compat:crypto_one_time(Cipher, Key, IV, {AAD, PlainText}, true) of
 		{CipherText, CipherTag} when is_binary(CipherText) andalso is_binary(CipherTag) ->
-			case catch jose_crypto_compat:crypto_one_time(Cipher, Key, IV, {AAD, CipherText, CipherTag}, false) of
+			try jose_crypto_compat:crypto_one_time(Cipher, Key, IV, {AAD, CipherText, CipherTag}, false) of
 				PlainText ->
 					{true, Cipher};
 				_ ->
 					false
+			catch
+				_:_ ->
+					false
 			end;
 		_ ->
+			false
+	catch
+		_:_ ->
 			false
 	end.
 
@@ -863,21 +881,30 @@ has_block_cipher(Cipher, {Key, IV, AAD, PlainText}) ->
 has_rsa_crypt(Algorithm, future, _LegacyOptions, FutureOptions) ->
 	PlainText = << 0:8 >>,
 	PublicKey = rsa_public_key(),
-	case catch public_key:encrypt_public(PlainText, PublicKey, FutureOptions) of
+	try public_key:encrypt_public(PlainText, PublicKey, FutureOptions) of
 		CipherText when is_binary(CipherText) ->
 			PrivateKey = rsa_private_key(),
-			case catch public_key:decrypt_private(CipherText, PrivateKey, FutureOptions) of
+			try public_key:decrypt_private(CipherText, PrivateKey, FutureOptions) of
 				PlainText ->
-					case catch public_key:decrypt_private(rsa_ciphertext(Algorithm), PrivateKey, FutureOptions) of
+					try public_key:decrypt_private(rsa_ciphertext(Algorithm), PrivateKey, FutureOptions) of
 						<<"ciphertext">> ->
 							{true, public_key, FutureOptions};
 						_ ->
 							false
+					catch
+						_:_ ->
+							false
 					end;
 				_ ->
 					false
+			catch
+				_:_ ->
+					false
 			end;
 		_ ->
+			false
+	catch
+		_:_ ->
 			false
 	end;
 has_rsa_crypt(_Algorithm, legacy, notsup, _FutureOptions) ->
@@ -885,21 +912,30 @@ has_rsa_crypt(_Algorithm, legacy, notsup, _FutureOptions) ->
 has_rsa_crypt(Algorithm, legacy, LegacyOptions, _FutureOptions) ->
 	PlainText = << 0:8 >>,
 	PublicKey = rsa_public_key(),
-	case catch public_key:encrypt_public(PlainText, PublicKey, LegacyOptions) of
+	try public_key:encrypt_public(PlainText, PublicKey, LegacyOptions) of
 		CipherText when is_binary(CipherText) ->
 			PrivateKey = rsa_private_key(),
-			case catch public_key:decrypt_private(CipherText, PrivateKey, LegacyOptions) of
+			try public_key:decrypt_private(CipherText, PrivateKey, LegacyOptions) of
 				PlainText ->
-					case catch public_key:decrypt_private(rsa_ciphertext(Algorithm), PrivateKey, LegacyOptions) of
+					try public_key:decrypt_private(rsa_ciphertext(Algorithm), PrivateKey, LegacyOptions) of
 						<<"ciphertext">> ->
 							{true, public_key, LegacyOptions};
 						_ ->
 							false
+					catch
+						_:_ ->
+							false
 					end;
 				_ ->
 					false
+			catch
+				_:_ ->
+					false
 			end;
 		_ ->
+			false
+	catch
+		_:_ ->
 			false
 	end.
 
@@ -908,31 +944,43 @@ has_rsa_sign(Padding, future, DigestType) ->
 	Message = << 0:8 >>,
 	PrivateKey = rsa_private_key(),
 	Options = [{rsa_padding, Padding}],
-	case catch public_key:sign(Message, DigestType, PrivateKey, Options) of
+	try public_key:sign(Message, DigestType, PrivateKey, Options) of
 		Signature when is_binary(Signature) ->
 			PublicKey = rsa_public_key(),
-			case catch public_key:verify(Message, DigestType, Signature, PublicKey, Options) of
+			try public_key:verify(Message, DigestType, Signature, PublicKey, Options) of
 				true ->
 					{true, public_key, Options};
 				_ ->
 					false
+			catch
+				_:_ ->
+					false
 			end;
 		_ ->
+			false
+	catch
+		_:_ ->
 			false
 	end;
 has_rsa_sign(rsa_pkcs1_padding, legacy, DigestType) ->
 	Message = << 0:8 >>,
 	PrivateKey = rsa_private_key(),
-	case catch public_key:sign(Message, DigestType, PrivateKey) of
+	try public_key:sign(Message, DigestType, PrivateKey) of
 		Signature when is_binary(Signature) ->
 			PublicKey = rsa_public_key(),
-			case catch public_key:verify(Message, DigestType, Signature, PublicKey) of
+			try public_key:verify(Message, DigestType, Signature, PublicKey) of
 				true ->
 					{true, public_key};
 				_ ->
 					false
+			catch
+				_:_ ->
+					false
 			end;
 		_ ->
+			false
+	catch
+		_:_ ->
 			false
 	end;
 has_rsa_sign(_Padding, legacy, _DigestType) ->

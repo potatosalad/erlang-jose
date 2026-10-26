@@ -79,7 +79,7 @@ loop(Ref, TRef) ->
 			loop(Ref, TRef);
 		{stop, Parent, Ref} when is_pid(Parent) ->
 			io:format(user, "~n", []),
-			catch timer:cancel(TRef),
+			_ = try timer:cancel(TRef) catch _:_ -> ok end,
 			Parent ! Ref,
 			exit(normal);
 		Info ->

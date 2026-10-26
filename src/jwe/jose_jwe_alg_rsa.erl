@@ -79,11 +79,14 @@ generate_key(_Fields, {ENCModule, ENC}, ?RSA_OAEP_256) ->
 %% Prefer RSA-OAEP or RSA-OAEP-256 for new applications.
 key_decrypt(#jose_jwk{kty={KTYModule, KTY}}, {ENCModule, ENC, EncryptedKey}, #jose_jwe_alg_rsa{algorithm=Algorithm}) ->
 	RandomKey = ENCModule:next_cek(ENC),
-	case catch KTYModule:decrypt_private(EncryptedKey, Algorithm, KTY) of
+	try KTYModule:decrypt_private(EncryptedKey, Algorithm, KTY) of
 		DecryptedKey when is_binary(DecryptedKey)
 				andalso byte_size(DecryptedKey) =:= byte_size(RandomKey) ->
 			DecryptedKey;
 		_BadDecryptedKey ->
+			RandomKey
+	catch
+		_:_ ->
 			RandomKey
 	end.
 

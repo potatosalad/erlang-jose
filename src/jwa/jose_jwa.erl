@@ -241,42 +241,57 @@ ec_key_mode() ->
 	?MAYBE_START_JOSE(ets:lookup_element(?TAB, ec_key_mode, 2)).
 
 is_block_cipher_supported(Cipher) ->
-	case catch block_cipher(Cipher) of
+	try block_cipher(Cipher) of
 		{crypto, _} ->
 			true;
 		_ ->
 			false
+	catch
+		_:_ ->
+			false
 	end.
 
 is_chacha20_poly1305_supported() ->
-	case catch ?MAYBE_START_JOSE(ets:lookup_element(?TAB, chacha20_poly1305_module, 2)) of
+	try ?MAYBE_START_JOSE(ets:lookup_element(?TAB, chacha20_poly1305_module, 2)) of
 		jose_chacha20_poly1305_unsupported ->
 			false;
 		_ ->
 			true
+	catch
+		_:_ ->
+			true
 	end.
 
 is_rsa_crypt_supported(Padding) ->
-	case catch rsa_crypt(Padding) of
+	try rsa_crypt(Padding) of
 		{public_key, _} ->
 			true;
 		_ ->
+			false
+	catch
+		_:_ ->
 			false
 	end.
 
 is_rsa_sign_supported(Padding) ->
-	case catch rsa_sign(Padding) of
+	try rsa_sign(Padding) of
 		{public_key, _} ->
 			true;
 		_ ->
 			false
+	catch
+		_:_ ->
+			false
 	end.
 
 is_xchacha20_poly1305_supported() ->
-	case catch ?MAYBE_START_JOSE(ets:lookup_element(?TAB, xchacha20_poly1305_module, 2)) of
+	try ?MAYBE_START_JOSE(ets:lookup_element(?TAB, xchacha20_poly1305_module, 2)) of
 		jose_xchacha20_poly1305_unsupported ->
 			false;
 		_ ->
+			true
+	catch
+		_:_ ->
 			true
 	end.
 
