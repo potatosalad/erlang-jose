@@ -55,6 +55,7 @@ rebar3.crashdump
 *~
 /.elixir_ls/
 /.erlang.mk/
+/lock.mk
 /elp
 /erlfmt
 /rebar3
