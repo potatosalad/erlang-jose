@@ -93,8 +93,7 @@ defmodule JOSE.Mixfile do
     if File.exists?(Path.join(base_path, "MIX.EXS")) do
       Mix.raise(
         "Docs must be built on a case-sensitive file system: JOSE.html (Elixir JOSE) " <>
-          "and jose.html (Erlang :jose) would overwrite each other in #{base_path}. " <>
-          "Publish with `mix hex.publish package` and let the Docs workflow publish the docs."
+          "and jose.html (Erlang :jose) would overwrite each other in #{base_path}"
       )
     end
   end
