@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.11.13 (Unreleased)
+## 1.11.13 (2026-10-26)
 
 * Security Patches
   * [GHSA-wfpv-qxp8-x5gm](https://github.com/potatosalad/erlang-jose/security/advisories/GHSA-wfpv-qxp8-x5gm), [GHSA-wh8p-p48q-3vw2](https://github.com/potatosalad/erlang-jose/security/advisories/GHSA-wh8p-p48q-3vw2): Bound incremental JWE `zip: "DEF"` decompression to 1 MiB by default. Applications requiring larger compressed plaintexts can set `jose:zip_size_maximum/1` or the `zip_size_maximum` application environment key.
@@ -15,8 +15,12 @@
   * Return compressed JWE authentication failures without invoking decompression, including external AAD.
   * Preserve native Ed448/X448 selection when fallback SHAKE256 is unavailable; include X25519/X448 agreement in provider checks.
   * Add public API security regressions and independent legacy PKCS#8 import checks.
+  * Treat a random base sharing a factor with the modulus as a failed RSA prime recovery trial, so inconsistent `(n, e, d)` keys are rejected instead of imported with a composite factor.
+  * Return `<<>>` from Concat KDF for a zero key length instead of looping indefinitely, and reject negative lengths with `badarg`.
+  * Erlang/OTP 29 compatibility: decode X25519/X448 PKCS#8 private keys, encode EC `SubjectPublicKeyInfo` DER, and replace deprecated `catch Expr` expressions.
 * Notes
-  * Deployments relying on unavailable native algorithms must explicitly enable `crypto_fallback` and review the timing limitations. Native providers remain preferred. No release has been published from this candidate.
+  * Deployments relying on unavailable native algorithms must explicitly enable `crypto_fallback` and review the timing limitations. Native providers remain preferred.
+  * Tested on Erlang/OTP 28 and 29.
 
 ## 1.11.12 (2025-11-20)
 
