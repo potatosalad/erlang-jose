@@ -33,6 +33,7 @@
 -export([aes_kw_wrap_and_unwrap/1]).
 -export([concat_kdf/1]).
 -export([concat_kdf_keylen/1]).
+-export([concat_kdf_keylen_bounds/1]).
 -export([constant_time_compare/1]).
 -export([curve25519_eddsa_secret_to_public/1]).
 -export([curve448_eddsa_secret_to_public/1]).
@@ -94,7 +95,8 @@ groups() ->
 		]},
 		{jose_jwa_concat_kdf, [parallel], [
 			concat_kdf,
-			concat_kdf_keylen
+			concat_kdf_keylen,
+			concat_kdf_keylen_bounds
 		]},
 		{jose_jwa_curve25519, [parallel], [
 			curve25519_eddsa_secret_to_public,
@@ -264,6 +266,18 @@ concat_kdf_keylen(Config) ->
 	ct_property_test:quickcheck(
 		jose_jwa_concat_kdf_props:prop_kdf_keylen(),
 		Config).
+
+%% KeyDataLen = 0 used to loop forever while accumulating hash output.
+concat_kdf_keylen_bounds(_Config) ->
+	OtherInfo = {<<"A128GCM">>, <<>>, <<>>},
+	<<>> = jose_jwa_concat_kdf:kdf(sha256, <<"z">>, OtherInfo, 0),
+	<<_:1/bitstring>> = jose_jwa_concat_kdf:kdf(sha256, <<"z">>, OtherInfo, 1),
+	<<_:257/bitstring>> = jose_jwa_concat_kdf:kdf(sha256, <<"z">>, OtherInfo, 257),
+	try jose_jwa_concat_kdf:kdf(sha256, <<"z">>, OtherInfo, -1) of
+		Other -> ct:fail({expected, badarg, got, Other})
+	catch
+		error:{badarg, _} -> ok
+	end.
 
 constant_time_compare(Config) ->
 	ct_property_test:quickcheck(

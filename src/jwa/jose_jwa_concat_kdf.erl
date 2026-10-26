@@ -31,6 +31,11 @@ kdf(Hash, Z, OtherInfo, KeyDataLen)
 	HashLen = bit_size(Hash(<<>>)),
 	Reps = ceiling(KeyDataLen / HashLen),
 	case Reps of
+		%% derive_key/6 counts up from 1, so it must never see Reps < 1.
+		_ when KeyDataLen < 0 ->
+			erlang:error({badarg, [Hash, Z, OtherInfo, KeyDataLen]});
+		0 ->
+			<<>>;
 		1 ->
 			Concatenation = << 0, 0, 0, 1, Z/binary, OtherInfo/binary >>,
 			<< DerivedKey:KeyDataLen/bitstring, _/bitstring >> = Hash(Concatenation),
