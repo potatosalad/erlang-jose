@@ -2,6 +2,9 @@ PROJECT = jose
 PROJECT_DESCRIPTION = JSON Object Signing and Encryption (JOSE) for Erlang and Elixir.
 PROJECT_VERSION = 1.11.13
 
+# The Elixir sources under lib/ are built by Mix, not erlang.mk.
+ELIXIR = disable
+
 TEST_DEPS = jiffy jsone jsx libdecaf libsodium ojson proper thoas
 
 dep_jiffy = hex 2.0.2

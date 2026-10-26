@@ -2,7 +2,6 @@
   # Initially all files are ignored
   # TODO: When fixing / completing specs & types of files, please remove the
   # corresponding entry below
-  {"lib/jose/jwa.ex", :unknown_type},
   {"lib/jose/jwa.ex", :invalid_contract},
   {"lib/jose/jwe.ex", :call},
   {"lib/jose/jwe.ex", :pattern_match_cov},
@@ -17,11 +16,16 @@
   {"src/jose_public_key.erl", :call},
   {"src/jose_public_key.erl", :no_return},
   {"src/jose_server.erl", :pattern_match},
+  {"src/jose_server.erl", :pattern_match_cov},
   {"src/json/jose_json_jiffy.erl", :unknown_function},
   {"src/jwa/curve25519/jose_curve25519_crypto.erl", :callback_arg_type_mismatch},
+  {"src/jwa/curve25519/jose_curve25519_libdecaf.erl", :callback_arg_type_mismatch},
+  {"src/jwa/curve25519/jose_curve25519_libsodium.erl", :callback_arg_type_mismatch},
   {"src/jwa/curve448/jose_curve448_crypto.erl", :callback_arg_type_mismatch},
   {"src/jwa/curve448/jose_curve448_fallback.erl", :callback_spec_arg_type_mismatch},
   {"src/jwa/curve448/jose_curve448_fallback.erl", :callback_spec_type_mismatch},
+  {"src/jwa/curve448/jose_curve448_libdecaf.erl", :callback_arg_type_mismatch},
+  {"src/jwa/curve448/jose_curve448_libdecaf.erl", :callback_type_mismatch},
   {"src/jwa/jose_jwa_curve25519.erl", :callback_arg_type_mismatch},
   {"src/jwa/jose_jwa_curve448.erl", :callback_arg_type_mismatch},
   {"src/jwa/jose_jwa_curve448.erl", :callback_type_mismatch},
