@@ -28,6 +28,7 @@
 -export([sfm_large_consistent_primes_have_a_work_budget/1]).
 -export([sfm_large_exponents_have_a_work_budget/1]).
 -export([sfm_recovered_factors_validate_exponents/1]).
+-export([sfm_shared_factor_bases_are_not_returned_as_primes/1]).
 -export([sfm_small_base_residue_key_still_imports/1]).
 -export([sfm_large_valid_keys_still_import_and_operate/1]).
 
@@ -47,6 +48,7 @@ all() ->
 		sfm_large_consistent_primes_have_a_work_budget,
 		sfm_large_exponents_have_a_work_budget,
 		sfm_recovered_factors_validate_exponents,
+		sfm_shared_factor_bases_are_not_returned_as_primes,
 		sfm_small_base_residue_key_still_imports,
 		sfm_large_valid_keys_still_import_and_operate
 	].
@@ -158,6 +160,23 @@ sfm_recovered_factors_validate_exponents(_Config) ->
 	rejects_public_quickly(sfm_map(9, 5, 5)),
 	{_, #{}} = jose_jwk_kty_rsa:from_map(sfm_map(21, 5, 5)),
 	ok.
+
+%% 2^64 - 1 has many small factors, so roughly half of the random bases
+%% share one with n. Returning gcd(A, n) as a prime skipped the
+%% A^(ed-1) = 1 (mod n) check and imported p = 3, q = n / 3 (composite)
+%% for about a quarter of these inconsistent keys. Repeat enough times
+%% that the old behavior cannot pass by chance (0.75^64 < 2^-26).
+sfm_shared_factor_bases_are_not_returned_as_primes(_Config) ->
+	N = (1 bsl 64) - 1,
+	Map = sfm_map(N, N - 2, N - 2),
+	lists:foreach(fun(_) ->
+		Result = try jose_jwk:from_map(Map) of
+			Other -> {returned, Other}
+		catch
+			Class:Reason -> {Class, Reason}
+		end,
+		{error, {badarg, [#'RSAPrivateKey'{}]}} = Result
+	end, lists:seq(1, 64)).
 
 %% These two primes have matching characters for all 50 old even bases.
 %% The original unbounded search imports the key; the inherited finite

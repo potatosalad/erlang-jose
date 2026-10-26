@@ -410,7 +410,12 @@ convert_sfm_to_crt_find_p(T, S, N, Trials, Squares, Deadline) ->
 				{next, Remaining} ->
 					convert_sfm_to_crt_find_p(T, S, N, Trials - 1, Remaining, Deadline)
 			end;
-		P -> P
+		_ ->
+			%% A shared factor skips the A^(ed-1) = 1 (mod n) consistency
+			%% check, so it must not be returned as a prime. Valid two-prime
+			%% moduli practically never reach this; moduli with small factors
+			%% (e.g. 2^k - 1) would otherwise import inconsistent keys.
+			convert_sfm_to_crt_find_p(T, S, N, Trials - 1, Squares, Deadline)
 	end.
 
 %% @private
