@@ -75,6 +75,32 @@ docker-test-build::
 		"${DOCKER_OTP_VERSION}" \
 		sh -c 'cd jose && make test-build'
 
+.PHONY: docker-docs hexdocs-publish
+
+# ExDoc writes the Elixir JOSE module to JOSE.html and the Erlang jose module to
+# jose.html, which overwrite each other on a case-insensitive file system. Build
+# and pack the docs inside a container from a git ref (committed files only),
+# then publish the tarball from the host without unpacking it.
+DOCKER_DOCS_IMAGE ?= elixir:1.20.4-otp-29
+DOCS_REF ?= HEAD
+HEXDOCS_DIR ?= $(CURDIR)/_build/hexdocs
+
+docker-docs::
+	$(verbose) mkdir -p "$(HEXDOCS_DIR)"
+	$(gen_verbose) docker run --rm \
+		--volume "$(CURDIR)":/src:ro \
+		--volume "$(HEXDOCS_DIR)":/out \
+		"$(DOCKER_DOCS_IMAGE)" \
+		sh -euc 'git config --global --add safe.directory "*" && \
+			git clone --quiet /src /build && cd /build && \
+			git -c advice.detachedHead=false checkout --quiet "$(DOCS_REF)" && \
+			mix local.hex --force && mix local.rebar --force && \
+			mix deps.get && mix docs && \
+			mix run --no-start /src/scripts/hexdocs.exs pack /out'
+
+hexdocs-publish::
+	$(verbose) mix run --no-start --no-compile --no-deps-check scripts/hexdocs.exs publish "$(HEXDOCS_DIR)"
+
 .PHONY: eqwalize eqwalize-all distclean-elp
 
 # Arch detection.
